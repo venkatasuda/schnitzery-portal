@@ -13,7 +13,7 @@ export default function ExportPage() {
     setLoading(true);
     const res = await getPayrollExport(m);
     if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); setLoading(false); return; }
-    setRows(res.rows); setMonth(res.month);
+    setRows(res.rows); setMonth(res.month || "");
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
