@@ -16,10 +16,12 @@ export default function ClockDisplayPage() {
   async function fetchCode() {
     const res = await getCurrentClockCode();
     if (res.ok) {
-      setCode(res.code);
-      setQrPayload(res.qrPayload);
-      setSecondsLeft(res.secondsLeft);
-      setRotateSeconds(res.rotateSeconds);
+      
+      setCode(res.code || "");
+      setQrPayload(res.qrPayload || "");
+      
+      setSecondsLeft(res.secondsLeft || 0);
+      setRotateSeconds(res.rotateSeconds || 30);
       setError(null);
     } else {
       setError(res.error || "Could not load code.");
