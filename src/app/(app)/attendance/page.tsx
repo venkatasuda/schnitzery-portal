@@ -37,7 +37,7 @@ export default function AttendancePage() {
   async function refresh() {
     const res = await getMyStatus();
     if (res.ok) {
-      setClockedIn(res.clockedIn);
+      setClockedIn(res.clockedIn || false);
       setOnBreak(res.onBreak || false);
       setSession(res.session);
     } else setMessage(res.error || "Could not load status.");
