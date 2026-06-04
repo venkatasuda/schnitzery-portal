@@ -11,7 +11,7 @@ export default function HoursPage() {
   async function load(m?: string) {
     setLoading(true);
     const res = await getMyHours(m);
-    if (res.ok) { setData(res); setMonth(res.month); }
+    if (res.ok) { setData(res); setMonth(res.month || ""); }
     setLoading(false);
   }
   useEffect(() => { load(); }, []);

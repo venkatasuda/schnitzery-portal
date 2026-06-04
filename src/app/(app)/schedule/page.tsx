@@ -30,7 +30,7 @@ export default function SchedulePage() {
     setLoading(true);
     const ws = await getWeekStart(offset);
     const res = await getMyShifts(ws);
-    if (res.ok) { setShifts(res.shifts); setWeekStart(res.weekStart); }
+    if (res.ok) { setShifts(res.shifts); setWeekStart(res.weekStart || ""); }
     setLoading(false);
   }
 
