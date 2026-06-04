@@ -37,7 +37,8 @@ export default function RosterPage() {
       setLoading(false);
       return;
     }
-    setWeekStart(res.weekStart);
+    
+    setWeekStart(res.weekStart || "");
     setRoster(res.roster || {});
     setStaff(res.staff || []);
     setLoading(false);
