@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
+import ThemeToggle from "@/components/ThemeToggle";
 
-// Protected layout — header + content + role-aware bottom nav.
+// Protected layout — header (with theme toggle) + content + role-aware bottom nav.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,7 +26,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="brand">Schnitzery Portal</div>
           <div className="sub">{roleLabel[role]}</div>
         </div>
-        <span style={{ fontSize: 12, color: "#9a8f8f" }}>{profile?.full_name || user?.email}</span>
+        <div className="header-right">
+          <span className="header-name">{profile?.full_name || user?.email}</span>
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="screen-wrap fade-up">{children}</div>
