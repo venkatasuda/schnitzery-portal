@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Role-aware bottom navigation.
-//  staff   → Home · Shifts · Time Off · Profile
-//  manager → Home · Stats · Schedule · Inventory · Profile
-//  owner   → Home · Branches · Stats · Inventory · Profile
+// Hub-based bottom navigation — mirrors the old app's clean structure.
+//  staff   → Home · My Day · Shifts · Profile
+//  manager → Home · Schedule · Attendance · Inventory · Profile
+//  owner   → Home · Branches · Schedule · Inventory · Profile
+//
+// "My Day" (/my-day) is a hub that groups Availability, Time Off and Hours,
+// so staff get one tidy button instead of four separate nav items.
 export default function BottomNav({ role }: { role: string }) {
   const path = usePathname();
   const isOwner = ["franchise_owner", "brand_owner"].includes(role);
@@ -14,21 +17,21 @@ export default function BottomNav({ role }: { role: string }) {
 
   const staffItems = [
     { href: "/", label: "Home", icon: <HomeIcon /> },
+    { href: "/my-day", label: "My Day", icon: <CalIcon /> },
     { href: "/schedule", label: "Shifts", icon: <ClockIcon /> },
-    { href: "/leave", label: "Time Off", icon: <CalIcon /> },
     { href: "/profile", label: "Profile", icon: <UserIcon /> },
   ];
   const managerItems = [
-    { href: "/", label: "Home", icon: <HomeIcon /> },
-    { href: "/dashboard", label: "Stats", icon: <GridIcon /> },
+    { href: "/", label: "Home", icon: <GridIcon /> },
     { href: "/roster", label: "Schedule", icon: <CalIcon /> },
+    { href: "/attendance", label: "Attendance", icon: <ClockIcon /> },
     { href: "/inventory", label: "Inventory", icon: <BoxIcon /> },
     { href: "/profile", label: "Profile", icon: <UserIcon /> },
   ];
   const ownerItems = [
-    { href: "/", label: "Home", icon: <HomeIcon /> },
+    { href: "/", label: "Home", icon: <GridIcon /> },
     { href: "/branches", label: "Branches", icon: <BuildingIcon /> },
-    { href: "/dashboard", label: "Stats", icon: <GridIcon /> },
+    { href: "/roster", label: "Schedule", icon: <CalIcon /> },
     { href: "/inventory", label: "Inventory", icon: <BoxIcon /> },
     { href: "/profile", label: "Profile", icon: <UserIcon /> },
   ];
