@@ -138,21 +138,17 @@ function ManagerDash({ stats }: { stats: { clockedIn: number; staffCount: number
 
       <div className="section-label">Today at a Glance</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-        <Stat value={s.clockedIn} label="Working Now" color="#58d68d" />
-        <Stat value={s.staffCount} label="Team Size" />
-        <Stat value={s.pendingApprovals} label="Approvals" color={s.pendingApprovals > 0 ? "#e8a35a" : "var(--white)"} />
-        <Stat value={s.openIncidents} label="Incidents" color={s.openIncidents > 0 ? "#ec7063" : "var(--white)"} />
-        <Stat value={s.lowStock} label="Low Stock" color={s.lowStock > 0 ? "#e8a35a" : "var(--white)"} />
-        <Stat value={`${s.checklistDone}/${s.checklistTotal}`} label="Checklist" color={s.checklistTotal > 0 && s.checklistDone === s.checklistTotal ? "#58d68d" : "var(--white)"} />
+        <TileLink href="/attendance-hub" value={s.clockedIn} label="Working Now" color="#58d68d" />
+        <TileLink href="/staff" value={s.staffCount} label="Team Size" color="var(--white)" />
+        <TileLink href="/approvals" value={s.pendingApprovals} label="Approvals" color={s.pendingApprovals > 0 ? "#e8a35a" : "var(--white)"} />
+        <TileLink href="/incidents" value={s.openIncidents} label="Incidents" color={s.openIncidents > 0 ? "#ec7063" : "var(--white)"} />
+        <TileLink href="/inventory" value={s.lowStock} label="Low Stock" color={s.lowStock > 0 ? "#e8a35a" : "var(--white)"} />
+        <TileLink href="/checklist" value={`${s.checklistDone}/${s.checklistTotal}`} label="Checklist" color={s.checklistTotal > 0 && s.checklistDone === s.checklistTotal ? "#58d68d" : "var(--white)"} />
       </div>
 
-      <div className="section-label">Manage</div>
-      <Shortcut href="/dashboard" icon="🔴" grad="linear-gradient(135deg,#922b21,#c0392b)" title="Live Attendance" sub="Who's working, on break, completed" />
-      <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title="Weekly Roster" sub="Build & publish the schedule" />
-      <Shortcut href="/approvals" icon="✅" grad="linear-gradient(135deg,#1e8449,#27ae60)" title="Approvals" sub="Leave & swap requests" />
-      <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#6b2fa0,#9b59b6)" title="People & Team" sub="Staff, directory & notes" />
-      <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#b9770e,#e67e22)" title="Post Announcement" sub="Send news to all staff" />
-      <Shortcut href="/settings-hub" icon="⚙️" grad="linear-gradient(135deg,#555,#777)" title="Settings" sub="Config, reports & tools" />
+      <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center", marginTop: 4 }}>
+        Tap a tile to jump in · Schedule, Attendance &amp; Inventory are in the bar below
+      </div>
     </>
   );
 }
@@ -195,6 +191,16 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
       <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
     </div>
+  );
+}
+
+// Tappable stat tile — the manager dashboard's glance + navigation in one.
+function TileLink({ href, value, label, color }: { href: string; value: string | number; label: string; color?: string }) {
+  return (
+    <Link href={href} style={{ textDecoration: "none", background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 10px", textAlign: "center", display: "block" }}>
+      <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
+    </Link>
   );
 }
 

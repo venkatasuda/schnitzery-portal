@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { getWeekStart, getRoster, saveRoster } from "@/lib/queries/schedule";
 
-type Tab = "roster" | "insights" | "conflicts" | "tools";
+type Tab = "roster" | "team" | "insights" | "conflicts" | "tools";
 
 export default function ScheduleHubPage() {
   const [tab, setTab] = useState<Tab>("roster");
@@ -69,6 +69,7 @@ export default function ScheduleHubPage() {
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "roster" ? " active" : ""}`} onClick={() => setTab("roster")}>📋 Roster</button>
+        <button className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>👥 Team</button>
         <button className={`hub-tab${tab === "insights" ? " active" : ""}`} onClick={() => setTab("insights")}>📊 Insights</button>
         <button className={`hub-tab${tab === "conflicts" ? " active" : ""}`} onClick={() => setTab("conflicts")}>⚖️ Conflicts</button>
         <button className={`hub-tab${tab === "tools" ? " active" : ""}`} onClick={() => setTab("tools")}>🔧 Tools</button>
@@ -100,6 +101,27 @@ export default function ScheduleHubPage() {
               <Link href="/approvals" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e8449,#27ae60)" }}>✅</div>
                 <div style={{ flex: 1 }}><div className="feature-title">Requests</div><div className="feature-sub">Leave &amp; shift-swap approvals</div></div>
+                <span className="feature-chev">›</span>
+              </Link>
+            </div>
+          )}
+
+          {/* ───────── TEAM ───────── */}
+          {tab === "team" && (
+            <div className="hub-tab-panel active">
+              <Link href="/staff" className="feature-card">
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>👥</div>
+                <div style={{ flex: 1 }}><div className="feature-title">Staff Management</div><div className="feature-sub">Profiles, contracts &amp; accounts</div></div>
+                <span className="feature-chev">›</span>
+              </Link>
+              <Link href="/directory" className="feature-card">
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}>📇</div>
+                <div style={{ flex: 1 }}><div className="feature-title">Team Directory</div><div className="feature-sub">Browse &amp; contact everyone</div></div>
+                <span className="feature-chev">›</span>
+              </Link>
+              <Link href="/notes" className="feature-card">
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#922b21,#c0392b)" }}>📝</div>
+                <div style={{ flex: 1 }}><div className="feature-title">Notes &amp; Recognition</div><div className="feature-sub">Performance notes &amp; shout-outs</div></div>
                 <span className="feature-chev">›</span>
               </Link>
             </div>

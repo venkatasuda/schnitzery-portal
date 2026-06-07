@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getMyProfile, updateMyProfile } from "@/lib/queries/people";
 import LogoutButton from "@/components/LogoutButton";
 
@@ -112,6 +113,28 @@ export default function ProfilePage() {
         )}
         {msg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--gold)", textAlign: "center" }}>{msg}</div>}
       </div>
+
+      {/* Settings & Admin — managers & owners only */}
+      {isManager && (
+        <>
+          <div className="section-label">Settings &amp; Admin</div>
+          <Link href="/settings" className="feature-card">
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#555,#777)" }}>⚙️</div>
+            <div style={{ flex: 1 }}><div className="feature-title">Branch Settings</div><div className="feature-sub">QR clock-in, GPS check &amp; options</div></div>
+            <span className="feature-chev">›</span>
+          </Link>
+          <Link href="/export" className="feature-card">
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}>📤</div>
+            <div style={{ flex: 1 }}><div className="feature-title">Payroll Export</div><div className="feature-sub">Monthly hours per staff — CSV</div></div>
+            <span className="feature-chev">›</span>
+          </Link>
+          <Link href="/audit" className="feature-card">
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}>🔒</div>
+            <div style={{ flex: 1 }}><div className="feature-title">Audit Log</div><div className="feature-sub">Every manager action, time-stamped</div></div>
+            <span className="feature-chev">›</span>
+          </Link>
+        </>
+      )}
 
       <LogoutButton />
     </div>
