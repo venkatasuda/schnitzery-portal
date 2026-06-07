@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getMyProfile, updateMyProfile } from "@/lib/queries/people";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -111,6 +112,8 @@ export default function ProfilePage() {
         )}
         {msg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--gold)", textAlign: "center" }}>{msg}</div>}
       </div>
+
+      <LogoutButton />
     </div>
   );
 }
