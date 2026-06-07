@@ -8,8 +8,10 @@ import { usePathname } from "next/navigation";
 //  manager → Home · Schedule · Attendance · Inventory · Profile
 //  owner   → Home · Branches · Schedule · Inventory · Profile
 //
-// "My Day" (/my-day) is a hub that groups Availability, Time Off and Hours,
-// so staff get one tidy button instead of four separate nav items.
+// The hub routes group many features behind one tidy button:
+//   /my-day         → Availability · Time Off · Hours      (staff)
+//   /schedule-hub   → Roster · Requests · Export           (manager/owner)
+//   /attendance-hub → Live · No-Shows · Display            (manager)
 export default function BottomNav({ role }: { role: string }) {
   const path = usePathname();
   const isOwner = ["franchise_owner", "brand_owner"].includes(role);
@@ -23,15 +25,15 @@ export default function BottomNav({ role }: { role: string }) {
   ];
   const managerItems = [
     { href: "/", label: "Home", icon: <GridIcon /> },
-    { href: "/roster", label: "Schedule", icon: <CalIcon /> },
-    { href: "/attendance", label: "Attendance", icon: <ClockIcon /> },
+    { href: "/schedule-hub", label: "Schedule", icon: <CalIcon /> },
+    { href: "/attendance-hub", label: "Attendance", icon: <ClockIcon /> },
     { href: "/inventory", label: "Inventory", icon: <BoxIcon /> },
     { href: "/profile", label: "Profile", icon: <UserIcon /> },
   ];
   const ownerItems = [
     { href: "/", label: "Home", icon: <GridIcon /> },
     { href: "/branches", label: "Branches", icon: <BuildingIcon /> },
-    { href: "/roster", label: "Schedule", icon: <CalIcon /> },
+    { href: "/schedule-hub", label: "Schedule", icon: <CalIcon /> },
     { href: "/inventory", label: "Inventory", icon: <BoxIcon /> },
     { href: "/profile", label: "Profile", icon: <UserIcon /> },
   ];
