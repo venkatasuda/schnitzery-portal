@@ -150,8 +150,9 @@ function ManagerDash({ stats }: { stats: { clockedIn: number; staffCount: number
       <Shortcut href="/dashboard" icon="🔴" grad="linear-gradient(135deg,#922b21,#c0392b)" title="Live Attendance" sub="Who's working, on break, completed" />
       <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title="Weekly Roster" sub="Build & publish the schedule" />
       <Shortcut href="/approvals" icon="✅" grad="linear-gradient(135deg,#1e8449,#27ae60)" title="Approvals" sub="Leave & swap requests" />
-      <Shortcut href="/staff" icon="👥" grad="linear-gradient(135deg,#6b2fa0,#9b59b6)" title="Staff Management" sub="Your team & accounts" />
+      <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#6b2fa0,#9b59b6)" title="People & Team" sub="Staff, directory & notes" />
       <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#b9770e,#e67e22)" title="Post Announcement" sub="Send news to all staff" />
+      <Shortcut href="/settings-hub" icon="⚙️" grad="linear-gradient(135deg,#555,#777)" title="Settings" sub="Config, reports & tools" />
     </>
   );
 }
@@ -180,10 +181,9 @@ function OwnerDash({ stats }: { stats: { clockedIn: number; staffCount: number; 
 
       <div className="section-label">Manage</div>
       <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title="Weekly Roster" sub="Build the schedule" />
-      <Shortcut href="/staff" icon="👥" grad="linear-gradient(135deg,#922b21,#c0392b)" title="Staff Management" sub="Manage team & create accounts" />
+      <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#922b21,#c0392b)" title="People & Team" sub="Staff, directory & notes" />
       <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,#8b6914,#d4a847)" title="Inventory" sub="Stock counts & alerts" />
-      <Shortcut href="/export" icon="📤" grad="linear-gradient(135deg,#117a65,#16a085)" title="Payroll Export" sub="Hours per staff + CSV" />
-      <Shortcut href="/settings" icon="⚙️" grad="linear-gradient(135deg,#555,#777)" title="Settings" sub="Branch configuration" />
+      <Shortcut href="/settings-hub" icon="⚙️" grad="linear-gradient(135deg,#555,#777)" title="Settings" sub="Config, payroll export & audit" />
     </>
   );
 }
