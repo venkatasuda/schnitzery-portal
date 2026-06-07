@@ -31,8 +31,7 @@ export default function AttendancePage() {
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [histLoading, setHistLoading] = useState(false);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [histTab, setHistTab] = useState<"week" | "month">("week");
 
   async function refresh() {
     const res = await getMyStatus();
@@ -73,16 +72,21 @@ export default function AttendancePage() {
     setWorking(false);
   }
 
-  async function loadHistory() {
+  async function loadHistory(tab: "week" | "month") {
     setHistLoading(true);
-    const res = await getMyHistory(from || undefined, to || undefined);
+    const { from, to } = rangeFor(tab);
+    const res = await getMyHistory(from, to);
     if (res.ok) setHistory(res.sessions || []);
     setHistLoading(false);
   }
   function toggleHistory() {
     const next = !showHistory;
     setShowHistory(next);
-    if (next && history.length === 0) loadHistory();
+    if (next) loadHistory(histTab);
+  }
+  function switchHistTab(tab: "week" | "month") {
+    setHistTab(tab);
+    loadHistory(tab);
   }
 
   function openCode(mode: "in" | "out") {
@@ -139,6 +143,11 @@ export default function AttendancePage() {
 
   const breaks = parseBreaks(session?.breaks);
   const totalBreakMin = Math.round(computeBreakMs(session?.breaks) / 60000);
+
+  // history stats (days worked + total hours for the selected week/month)
+  const histDaysWorked = new Set(history.filter((s) => s.status === "complete").map((s) => s.work_date)).size;
+  const histMins = history.reduce((sum, s) => sum + (s.duration_mins || 0), 0);
+  const histHours = `${Math.floor(histMins / 60)}h ${String(histMins % 60).padStart(2, "0")}m`;
 
   // Build the day's timeline events
   const timeline: { label: string; time: string; extra?: string; color: string }[] = [];
@@ -288,15 +297,37 @@ export default function AttendancePage() {
 
       {showHistory && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 12, flexWrap: "wrap" }}>
-            <div><label style={lbl}>From</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={dateInput} /></div>
-            <div><label style={lbl}>To</label><input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={dateInput} /></div>
-            <button onClick={loadHistory} style={filterBtn}>Filter</button>
-            {(from || to) && <button onClick={() => { setFrom(""); setTo(""); setTimeout(loadHistory, 0); }} style={{ ...filterBtn, background: "transparent", border: "1px solid rgba(128,128,128,0.3)", color: "var(--white)" }}>Clear</button>}
+          {/* week / month tabs */}
+          <div className="hub-tabs">
+            <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}>📅 This Week</button>
+            <button className={`hub-tab${histTab === "month" ? " active" : ""}`} onClick={() => switchHistTab("month")}>🗓 This Month</button>
           </div>
-          {histLoading ? <div style={{ color: "var(--gray)", fontSize: 13 }}>Loading…</div>
-          : history.length === 0 ? <div style={{ color: "var(--gray)", fontSize: 13, padding: 20, textAlign: "center" }}>No records.</div>
-          : history.map((s) => {
+
+          {/* days worked + hours stats */}
+          <div className="card" style={{ display: "flex", padding: "16px 0", marginBottom: 12 }}>
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histDaysWorked}</div>
+              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>Days Worked</div>
+            </div>
+            <div style={{ width: 1, background: "rgba(128,128,128,0.15)" }} />
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histHours}</div>
+              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? "This Week" : "This Month"}</div>
+            </div>
+          </div>
+
+          {/* records */}
+          {histLoading ? (
+            <div style={{ color: "var(--gray)", fontSize: 13, padding: 20, textAlign: "center" }}>
+              <div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…
+            </div>
+          ) : history.length === 0 ? (
+            <div className="card" style={{ color: "var(--gray)", fontSize: 13, padding: 30, textAlign: "center" }}>
+              <div style={{ fontSize: 26, marginBottom: 6 }}>📭</div>
+              No attendance records for this {histTab}.
+            </div>
+          ) : (
+            history.map((s) => {
               const bmin = Math.round(computeBreakMs(s.breaks) / 60000);
               return (
                 <div key={s.id} className="card" style={{ padding: 14, marginBottom: 8 }}>
@@ -311,7 +342,8 @@ export default function AttendancePage() {
                   </div>
                 </div>
               );
-            })}
+            })
+          )}
         </div>
       )}
     </div>
@@ -342,10 +374,21 @@ function computeBreakMs(raw: any): number {
   return ms;
 }
 
+// date ranges for the history tabs (Monday-start week, calendar month)
+function isoDate(d: Date) { return d.toISOString().slice(0, 10); }
+function rangeFor(tab: "week" | "month"): { from: string; to: string } {
+  const now = new Date();
+  if (tab === "week") {
+    const dow = now.getDay(); // 0 Sun .. 6 Sat
+    const back = dow === 0 ? 6 : dow - 1; // days since Monday
+    const mon = new Date(now); mon.setDate(now.getDate() - back);
+    return { from: isoDate(mon), to: isoDate(now) };
+  }
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  return { from: isoDate(first), to: isoDate(now) };
+}
+
 // styles (CSS-variable based so light mode works)
-const lbl: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--gray)", marginBottom: 4 };
-const dateInput: React.CSSProperties = { padding: "8px 10px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 13 };
-const filterBtn: React.CSSProperties = { padding: "9px 16px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" };
 const historyToggle: React.CSSProperties = { width: "100%", marginTop: 14, padding: "13px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 12, color: "var(--white)", fontSize: 14, cursor: "pointer" };
 
 function bigBtn(bg: string, disabled: boolean): React.CSSProperties {
