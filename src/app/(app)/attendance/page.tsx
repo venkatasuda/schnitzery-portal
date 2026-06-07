@@ -76,7 +76,7 @@ export default function AttendancePage() {
   async function loadHistory() {
     setHistLoading(true);
     const res = await getMyHistory(from || undefined, to || undefined);
-    if (res.ok) setHistory(res.sessions);
+    if (res.ok) setHistory(res.sessions || []);
     setHistLoading(false);
   }
   function toggleHistory() {
@@ -152,103 +152,118 @@ export default function AttendancePage() {
   });
   if (session?.clock_out) timeline.push({ label: "Clock Out", time: fmtTime(session.clock_out), color: "#ec7063" });
 
-  const statusLabel = onBreak ? "☕ ON BREAK" : clockedIn ? "🟢 WORKING" : "⚪ NOT CLOCKED IN";
-  const statusColor = onBreak ? "#e8a35a" : clockedIn ? "#58d68d" : "#bbb";
+  const statusLabel = onBreak ? "ON BREAK" : clockedIn ? "WORKING" : "NOT CLOCKED IN";
+  const statusColor = onBreak ? "#e8a35a" : clockedIn ? "#58d68d" : "var(--gray)";
+  const statusEmoji = onBreak ? "☕" : clockedIn ? "🟢" : "⚪";
 
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 2px", fontFamily: "Georgia, serif" }}>🕐 Clock In / Out</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 18, minHeight: 16 }}>
-        {todayLabel}
-      </p>
+    <div className="fade-up">
+      <div className="page-title">🕐 Clock In / Out</div>
+      <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
-      <div style={card}>
+      <div className="card" style={{ padding: 24 }}>
         {loading ? (
-          <div style={{ textAlign: "center", color: "#9a8f8f", padding: 30 }}>Loading…</div>
+          <div style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>
+            <div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…
+          </div>
         ) : (
           <>
+            {/* STATUS */}
             <div style={{ textAlign: "center", marginBottom: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1, color: statusColor }}>{statusLabel}</span>
-              <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 4 }}>
-                {clockedIn ? (onBreak ? "On a break (timer still running)" : "Currently working") : "Ready to start your shift"}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, letterSpacing: 1.5, color: statusColor }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: statusColor, boxShadow: clockedIn ? `0 0 10px ${statusColor}` : "none" }} />
+                {statusEmoji} {statusLabel}
+              </span>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5 }}>
+                {clockedIn ? (onBreak ? "On a break — timer still running" : "Currently working") : "Ready to start your shift"}
               </div>
             </div>
 
-            <div style={{ textAlign: "center", margin: "18px 0 8px" }}>
-              <div style={{ fontSize: 46, fontWeight: 700, fontFamily: "Georgia, serif", color: "#d4a847", lineHeight: 1 }}>
-                {tt.h}h {String(tt.m).padStart(2, "0")}m {String(tt.s).padStart(2, "0")}s
+            {/* STOPWATCH */}
+            <div style={{ textAlign: "center", margin: "20px 0 18px" }}>
+              <div style={{ fontSize: 48, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1, letterSpacing: 1 }}>
+                {tt.h}<span style={{ fontSize: 24, color: "var(--gray)" }}>h </span>
+                {String(tt.m).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>m </span>
+                {String(tt.s).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>s</span>
               </div>
-              <div style={{ fontSize: 11, letterSpacing: 2, color: "#9a8f8f", marginTop: 6 }}>TOTAL TIME TODAY</div>
+              <div style={{ fontSize: 10, letterSpacing: 2.5, color: "var(--gray)", marginTop: 8, textTransform: "uppercase" }}>Total Time Today</div>
+            </div>
+
+            {/* STATUS ROW: In / Break / Out / Total */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 18 }}>
+              <StatCell label="In" value={fmtTime(session?.clock_in)} color="#58d68d" />
+              <StatCell label="Break" value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="#e8a35a" />
+              <StatCell label="Out" value={fmtTime(session?.clock_out)} color="#ec7063" />
+              <StatCell label="Total" value={session?.clock_out ? fmtDur(session.duration_mins) : (clockedIn ? `${tt.h}h ${String(tt.m).padStart(2, "0")}m` : "—")} color="var(--gold)" />
             </div>
 
             {/* ACTION BUTTONS */}
             {!clockedIn ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button onClick={() => doAction(clockIn, "✅ Clocked in!")} disabled={working} style={bigBtn("#27ae60", working)}>▶  Clock In Now</button>
+                <button onClick={() => doAction(clockIn, "✅ Clocked in!")} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>▶  Clock In Now</button>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={{ ...bigBtn("#34495e", working), fontSize: 14 }}>📷  Scan QR</button>
-                  <button onClick={() => openCode("in")} disabled={working} style={{ ...bigBtn("#2c3e50", working), fontSize: 14 }}>📲  Code</button>
+                  <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>📷  Scan QR</button>
+                  <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>📲  Code</button>
                 </div>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {!onBreak ? (
-                  <button onClick={() => doAction(startBreak, "☕ Break started")} disabled={working} style={bigBtn("#e67e22", working)}>☕  Start Break</button>
+                  <button onClick={() => doAction(startBreak, "☕ Break started")} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>☕  Start Break</button>
                 ) : (
-                  <button onClick={() => doAction(endBreak, "✅ Break ended")} disabled={working} style={bigBtn("#16a085", working)}>✅  End Break</button>
+                  <button onClick={() => doAction(endBreak, "✅ Break ended")} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>✅  End Break</button>
                 )}
-                <button onClick={() => doAction(clockOut, "✅ Clocked out!")} disabled={working || onBreak} style={bigBtn("#c0392b", working || onBreak)}>⏹  Clock Out</button>
+                <button onClick={() => doAction(clockOut, "✅ Clocked out!")} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>⏹  Clock Out</button>
                 {!onBreak && (
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={{ ...bigBtn("#34495e", working), fontSize: 14 }}>📷  Scan QR</button>
-                    <button onClick={() => openCode("out")} disabled={working} style={{ ...bigBtn("#2c3e50", working), fontSize: 14 }}>📲  Code</button>
+                    <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>📷  Scan QR</button>
+                    <button onClick={() => openCode("out")} disabled={working} style={secBtn(working)}>📲  Code</button>
                   </div>
                 )}
-                {onBreak && <div style={{ fontSize: 11, color: "#9a8f8f", textAlign: "center" }}>End your break before clocking out.</div>}
+                {onBreak && <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center" }}>End your break before clocking out.</div>}
               </div>
             )}
 
-            {message && <div style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: "#d4a847" }}>{message}</div>}
-
-            {/* TODAY'S TIMELINE */}
-            {timeline.length > 0 && (
-              <div style={{ marginTop: 22 }}>
-                <div style={{ fontSize: 11, letterSpacing: 1, color: "#9a8f8f", marginBottom: 10 }}>TODAY&apos;S TIMELINE</div>
-                {timeline.map((e, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: 14, color: "#fff" }}>{e.label}</span>
-                    {e.extra && <span style={{ fontSize: 12, color: "#e8a35a" }}>{e.extra}</span>}
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#d4a847" }}>{e.time}</span>
-                  </div>
-                ))}
-                {/* summary */}
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 13 }}>
-                  <span style={{ color: "#9a8f8f" }}>Total break time</span>
-                  <span style={{ color: "#e8a35a", fontWeight: 600 }}>{totalBreakMin} min</span>
-                </div>
-                {session?.clock_out && (
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 13 }}>
-                    <span style={{ color: "#9a8f8f" }}>Total time (clock-in to out)</span>
-                    <span style={{ color: "#d4a847", fontWeight: 700 }}>{fmtDur(session.duration_mins)}</span>
-                  </div>
-                )}
-              </div>
-            )}
+            {message && <div style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: "var(--gold)" }}>{message}</div>}
           </>
         )}
       </div>
+
+      {/* TODAY'S TIMELINE */}
+      {timeline.length > 0 && (
+        <div className="card">
+          <div className="card-title">Today&apos;s Timeline</div>
+          {timeline.map((e, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 14, color: "var(--white)" }}>{e.label}</span>
+              {e.extra && <span style={{ fontSize: 12, color: "#e8a35a" }}>{e.extra}</span>}
+              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gold)" }}>{e.time}</span>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 13 }}>
+            <span style={{ color: "var(--gray)" }}>Total break time</span>
+            <span style={{ color: "#e8a35a", fontWeight: 600 }}>{totalBreakMin} min</span>
+          </div>
+          {session?.clock_out && (
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 13 }}>
+              <span style={{ color: "var(--gray)" }}>Total time (clock-in to out)</span>
+              <span style={{ color: "var(--gold)", fontWeight: 700 }}>{fmtDur(session.duration_mins)}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {showScan && <QrScanner onScan={handleScan} onClose={() => setShowScan(false)} />}
 
       {/* CODE ENTRY MODAL */}
       {showCode && (
         <div onClick={() => setShowCode(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ ...card, maxWidth: 360, width: "100%" }}>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+          <div onClick={(e) => e.stopPropagation()} className="card" style={{ maxWidth: 360, width: "100%", padding: 24 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, color: "var(--white)" }}>
               {codeMode === "out" ? "Clock Out with Code" : "Clock In with Code"}
             </div>
-            <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 16 }}>
               Enter the 6-digit code shown on the restaurant display.
             </div>
             <input
@@ -258,12 +273,12 @@ export default function AttendancePage() {
               onKeyDown={(e) => e.key === "Enter" && submitCode()}
               placeholder="000000"
               inputMode="numeric"
-              style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", boxSizing: "border-box" }}
             />
             {codeErr && <div style={{ color: "#ec7063", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowCode(false)} style={{ ...bigBtn("transparent", false), border: "1px solid rgba(255,255,255,0.15)", fontSize: 14 }}>Cancel</button>
-              <button onClick={submitCode} disabled={working} style={{ ...bigBtn("#27ae60", working), fontSize: 14 }}>{working ? "…" : "Confirm"}</button>
+              <button onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>Cancel</button>
+              <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : "Confirm"}</button>
             </div>
           </div>
         </div>
@@ -277,21 +292,21 @@ export default function AttendancePage() {
             <div><label style={lbl}>From</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={dateInput} /></div>
             <div><label style={lbl}>To</label><input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={dateInput} /></div>
             <button onClick={loadHistory} style={filterBtn}>Filter</button>
-            {(from || to) && <button onClick={() => { setFrom(""); setTo(""); setTimeout(loadHistory, 0); }} style={{ ...filterBtn, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}>Clear</button>}
+            {(from || to) && <button onClick={() => { setFrom(""); setTo(""); setTimeout(loadHistory, 0); }} style={{ ...filterBtn, background: "transparent", border: "1px solid rgba(128,128,128,0.3)", color: "var(--white)" }}>Clear</button>}
           </div>
-          {histLoading ? <div style={{ color: "#9a8f8f", fontSize: 13 }}>Loading…</div>
-          : history.length === 0 ? <div style={{ color: "#9a8f8f", fontSize: 13, padding: 20, textAlign: "center" }}>No records.</div>
+          {histLoading ? <div style={{ color: "var(--gray)", fontSize: 13 }}>Loading…</div>
+          : history.length === 0 ? <div style={{ color: "var(--gray)", fontSize: 13, padding: 20, textAlign: "center" }}>No records.</div>
           : history.map((s) => {
               const bmin = Math.round(computeBreakMs(s.breaks) / 60000);
               return (
-                <div key={s.id} style={{ ...card, padding: 14, marginBottom: 8 }}>
+                <div key={s.id} className="card" style={{ padding: 14, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{fmtDate(s.work_date)}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#d4a847" }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{fmtDate(s.work_date)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>
                       {s.status === "active" || s.status === "on-break" ? "in progress" : fmtDur(s.duration_mins)}
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 4 }}>
+                  <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>
                     In {fmtTime(s.clock_in)} → Out {fmtTime(s.clock_out)}{bmin > 0 && ` · ☕ ${bmin} min break`}
                   </div>
                 </div>
@@ -299,6 +314,16 @@ export default function AttendancePage() {
             })}
         </div>
       )}
+    </div>
+  );
+}
+
+// at-a-glance status cell
+function StatCell({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.12)", borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 9, color: "var(--gray)", marginTop: 4, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
     </div>
   );
 }
@@ -317,12 +342,15 @@ function computeBreakMs(raw: any): number {
   return ms;
 }
 
-// styles
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24 };
-const lbl: React.CSSProperties = { display: "block", fontSize: 11, color: "#9a8f8f", marginBottom: 4 };
-const dateInput: React.CSSProperties = { padding: "8px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 13 };
-const filterBtn: React.CSSProperties = { padding: "9px 16px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" };
-const historyToggle: React.CSSProperties = { width: "100%", marginTop: 14, padding: "13px", background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, color: "#fff", fontSize: 14, cursor: "pointer" };
-function bigBtn(color: string, disabled: boolean): React.CSSProperties {
-  return { width: "100%", padding: "16px", background: disabled ? "#555" : color, color: "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: disabled ? "default" : "pointer" };
+// styles (CSS-variable based so light mode works)
+const lbl: React.CSSProperties = { display: "block", fontSize: 11, color: "var(--gray)", marginBottom: 4 };
+const dateInput: React.CSSProperties = { padding: "8px 10px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 13 };
+const filterBtn: React.CSSProperties = { padding: "9px 16px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const historyToggle: React.CSSProperties = { width: "100%", marginTop: 14, padding: "13px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 12, color: "var(--white)", fontSize: 14, cursor: "pointer" };
+
+function bigBtn(bg: string, disabled: boolean): React.CSSProperties {
+  return { width: "100%", padding: "16px", background: disabled ? "var(--dark3)" : bg, color: disabled ? "var(--gray)" : "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: disabled ? "default" : "pointer", transition: "transform 0.1s" };
+}
+function secBtn(disabled: boolean): React.CSSProperties {
+  return { flex: 1, padding: "13px", background: "var(--dark3)", color: disabled ? "var(--gray)" : "var(--white)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: disabled ? "default" : "pointer" };
 }
