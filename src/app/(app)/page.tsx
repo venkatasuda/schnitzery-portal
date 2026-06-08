@@ -2,12 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getDashboardStats } from "@/lib/queries/admin";
 import { getMyHours } from "@/lib/queries/timepay";
 import { getMyStatus } from "@/lib/queries/attendance";
+import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attendance";
+import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import Link from "next/link";
 
-// Role-based home DASHBOARD (replaces the old card-wall). Each role gets a
-// focused, glanceable screen — live stats up top, then a short set of primary
-// shortcuts. Everything else now lives in the hub nav (My Day / Schedule /
-// Attendance) so the home stays clean.
+const fmtH = (mins: number) => `${Math.floor((mins || 0) / 60)}h ${String((mins || 0) % 60).padStart(2, "0")}m`;
+
+// Role-based home dashboard. Managers get a full operational dashboard;
+// staff and owners keep their focused views.
 export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -27,19 +29,29 @@ export default async function HomePage() {
     staff: "Employee", manager: "Manager",
     franchise_owner: "Franchise Owner", brand_owner: "Brand Owner",
   };
-
   const hour = new Date().getHours();
   const greeting = hour < 5 ? "Good evening" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  // Fetch only the data each role needs
+  // ── data ──
   let staffHours: { totalHours: number; shifts: number; targetHours: number | null } | null = null;
-  let staffClockedIn = false;
-  let staffOnBreak = false;
-  let mgrStats: { clockedIn: number; staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null = null;
+  let staffClockedIn = false, staffOnBreak = false;
+  let ownerStats: { clockedIn: number; staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null = null;
+  let mOps: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null = null;
+  let mLive: { workingNow: number; completed: number; late: number; totalMins: number } | null = null;
+  let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
+  let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
 
-  if (isManager) {
+  if (isOwner) {
     const d = await getDashboardStats();
-    if (d.ok) mgrStats = d.stats;
+    if (d.ok) ownerStats = d.stats;
+  } else if (isManager) {
+    const [dRes, liveRes, otRes, schedRes] = await Promise.all([
+      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(),
+    ]);
+    if (dRes.ok) mOps = dRes.stats;
+    if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0 };
+    if (otRes.ok) mOt = { totalWorkedMins: otRes.totalWorkedMins || 0, totalOvertimeMins: otRes.totalOvertimeMins || 0, peopleOver: otRes.peopleOver || 0 };
+    if (schedRes.ok) mSched = { submissionCount: schedRes.submissionCount || 0, staffCount: schedRes.staffCount || 0, rosterExists: schedRes.rosterExists || false };
   } else {
     const h = await getMyHours();
     if (h.ok) staffHours = { totalHours: h.totalHours || 0, shifts: h.shifts || 0, targetHours: h.targetHours ?? null };
@@ -49,24 +61,18 @@ export default async function HomePage() {
 
   return (
     <div className="fade-up">
-      {/* Greeting profile pill */}
       <div className="profile-pill">
-        <div className={`avatar${isManager ? " mgr" : ""}`}>
-          {(profile?.full_name || "?")[0].toUpperCase()}
-        </div>
+        <div className={`avatar${isManager ? " mgr" : ""}`}>{(profile?.full_name || "?")[0].toUpperCase()}</div>
         <div>
-          <div className="profile-name">
-            {greeting}, {firstName}
-            <span className="mgr-badge">{roleLabel[role]}</span>
-          </div>
+          <div className="profile-name">{greeting}, {firstName}<span className="mgr-badge">{roleLabel[role]}</span></div>
           <div className="profile-sub">{profile?.team || roleLabel[role]} · Schnitzery Stuttgart</div>
         </div>
       </div>
 
       {isOwner ? (
-        <OwnerDash stats={mgrStats} />
+        <OwnerDash stats={ownerStats} />
       ) : isManager ? (
-        <ManagerDash stats={mgrStats} />
+        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} />
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} />
       )}
@@ -86,7 +92,6 @@ function StaffDash({ hours, clockedIn, onBreak }: {
 
   return (
     <>
-      {/* Clock status hero */}
       <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))" }}>
         <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>🕐</div>
         <div style={{ flex: 1 }}>
@@ -96,7 +101,6 @@ function StaffDash({ hours, clockedIn, onBreak }: {
         <span className="feature-chev">›</span>
       </Link>
 
-      {/* This month stat tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, margin: "4px 0 14px" }}>
         <Stat value={`${hours?.totalHours ?? 0}h`} label="This Month" color="var(--gold-light)" />
         <Stat value={hours?.shifts ?? 0} label="Shifts" />
@@ -117,38 +121,90 @@ function StaffDash({ hours, clockedIn, onBreak }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ stats }: { stats: { clockedIn: number; staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null }) {
-  const s = stats || { clockedIn: 0, staffCount: 0, pendingApprovals: 0, openIncidents: 0, lowStock: 0, checklistDone: 0, checklistTotal: 0 };
-  const attention = s.pendingApprovals + s.openIncidents + s.lowStock;
+function ManagerDash({ ops, live, ot, sched }: {
+  ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
+  live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
+  ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
+  sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
+}) {
+  const o = ops || { staffCount: 0, pendingApprovals: 0, openIncidents: 0, lowStock: 0, checklistDone: 0, checklistTotal: 0 };
+  const lv = live || { workingNow: 0, completed: 0, late: 0, totalMins: 0 };
+  const otd = ot || { totalWorkedMins: 0, totalOvertimeMins: 0, peopleOver: 0 };
+  const sc = sched || { submissionCount: 0, staffCount: 0, rosterExists: false };
+
+  const missing = Math.max(0, sc.staffCount - sc.submissionCount);
+  const alerts: { icon: string; href: string; text: string; color: string }[] = [];
+  if (o.pendingApprovals > 0) alerts.push({ icon: "✅", href: "/approvals", text: `${o.pendingApprovals} approval${o.pendingApprovals === 1 ? "" : "s"} waiting`, color: "#e8a35a" });
+  if (o.openIncidents > 0) alerts.push({ icon: "🚨", href: "/incidents", text: `${o.openIncidents} open incident${o.openIncidents === 1 ? "" : "s"}`, color: "#ec7063" });
+  if (o.lowStock > 0) alerts.push({ icon: "📦", href: "/inventory", text: `${o.lowStock} low-stock item${o.lowStock === 1 ? "" : "s"}`, color: "#e8a35a" });
+  if (missing > 0) alerts.push({ icon: "📋", href: "/noshow", text: `${missing} haven't submitted availability`, color: "#e8a35a" });
+
+  const checklistPct = o.checklistTotal > 0 ? Math.round((o.checklistDone / o.checklistTotal) * 100) : 0;
+  const checklistDone = o.checklistTotal > 0 && o.checklistDone === o.checklistTotal;
 
   return (
     <>
-      {attention > 0 && (
-        <div className="card" style={{ background: "linear-gradient(135deg,rgba(230,126,34,0.12),rgba(20,20,20,0.3))", borderColor: "rgba(230,126,34,0.3)" }}>
-          <div style={{ fontSize: 13, color: "var(--white)", fontWeight: 600 }}>
-            🔔 {attention} thing{attention === 1 ? "" : "s"} need your attention
-          </div>
-          <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 4 }}>
-            {s.pendingApprovals > 0 && `${s.pendingApprovals} approval${s.pendingApprovals === 1 ? "" : "s"} · `}
-            {s.openIncidents > 0 && `${s.openIncidents} open incident${s.openIncidents === 1 ? "" : "s"} · `}
-            {s.lowStock > 0 && `${s.lowStock} low-stock item${s.lowStock === 1 ? "" : "s"}`}
-          </div>
+      {/* NEEDS ATTENTION */}
+      <div className="section-label">Needs Attention</div>
+      {alerts.length === 0 ? (
+        <div className="card" style={{ display: "flex", alignItems: "center", gap: 12, borderColor: "rgba(39,174,96,0.25)" }}>
+          <span style={{ fontSize: 20 }}>✅</span>
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: "#58d68d" }}>All clear</div><div style={{ fontSize: 11, color: "var(--gray)" }}>Nothing needs your attention right now.</div></div>
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 6 }}>
+          {alerts.map((a, i) => (
+            <Link key={i} href={a.href} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 10px", borderBottom: i < alerts.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none", textDecoration: "none" }}>
+              <span style={{ fontSize: 17 }}>{a.icon}</span>
+              <span style={{ flex: 1, fontSize: 14, color: "var(--white)" }}>{a.text}</span>
+              <span style={{ color: a.color, fontSize: 18 }}>›</span>
+            </Link>
+          ))}
         </div>
       )}
 
-      <div className="section-label">Today at a Glance</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-        <TileLink href="/attendance-hub" value={s.clockedIn} label="Working Now" color="#58d68d" />
-        <TileLink href="/staff" value={s.staffCount} label="Team Size" color="var(--white)" />
-        <TileLink href="/approvals" value={s.pendingApprovals} label="Approvals" color={s.pendingApprovals > 0 ? "#e8a35a" : "var(--white)"} />
-        <TileLink href="/incidents" value={s.openIncidents} label="Incidents" color={s.openIncidents > 0 ? "#ec7063" : "var(--white)"} />
-        <TileLink href="/inventory" value={s.lowStock} label="Low Stock" color={s.lowStock > 0 ? "#e8a35a" : "var(--white)"} />
-        <TileLink href="/checklist" value={`${s.checklistDone}/${s.checklistTotal}`} label="Checklist" color={s.checklistTotal > 0 && s.checklistDone === s.checklistTotal ? "#58d68d" : "var(--white)"} />
+      {/* TODAY */}
+      <div className="section-label">Today</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
+        <Stat value={lv.workingNow} label="Working" color="#58d68d" />
+        <Stat value={lv.completed} label="Done" />
+        <Stat value={lv.late} label="Late" color={lv.late > 0 ? "#ec7063" : "var(--white)"} />
+        <Stat value={fmtH(lv.totalMins)} label="Hours" color="var(--gold)" />
       </div>
+      <Link href="/checklist" className="feature-card">
+        <div className="feature-icon" style={{ background: checklistDone ? "linear-gradient(135deg,#1e8449,#27ae60)" : "linear-gradient(135deg,#b9770e,#e67e22)" }}>{checklistDone ? "✅" : "📋"}</div>
+        <div style={{ flex: 1 }}>
+          <div className="feature-title">Daily Checklist {o.checklistTotal > 0 && <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {o.checklistDone}/{o.checklistTotal}</span>}</div>
+          <div className="feature-sub">{checklistDone ? "All tasks done today 🎉" : "Opening & closing tasks"}</div>
+          {o.checklistTotal > 0 && (
+            <div style={{ height: 5, background: "rgba(128,128,128,0.15)", borderRadius: 4, marginTop: 7, overflow: "hidden" }}>
+              <div style={{ width: `${checklistPct}%`, height: "100%", background: checklistDone ? "#58d68d" : "var(--gold)" }} />
+            </div>
+          )}
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
 
-      <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center", marginTop: 4 }}>
-        Tap a tile to jump in · Schedule, Attendance &amp; Inventory are in the bar below
+      {/* THIS MONTH (analytics) */}
+      <div className="section-label">This Month</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+        <Stat value={fmtH(otd.totalWorkedMins)} label="Hours Worked" color="var(--gold-light)" />
+        <Stat value={fmtH(otd.totalOvertimeMins)} label="Overtime" color={otd.totalOvertimeMins > 0 ? "#e8a35a" : "var(--white)"} />
+        <Stat value={otd.peopleOver} label="Over Contract" color={otd.peopleOver > 0 ? "#e8a35a" : "#58d68d"} />
       </div>
+      <Link href="/schedule-hub" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+        <span style={{ fontSize: 18 }}>📅</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>Next week&apos;s roster — {sc.rosterExists ? "Built" : "Open"}</div>
+          <div style={{ fontSize: 11, color: "var(--gray)" }}>{sc.submissionCount}/{sc.staffCount} availability submitted</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
+
+      {/* DAILY OPERATIONS */}
+      <div className="section-label">Daily Operations</div>
+      <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title="Report Incident" sub="Log accidents, hazards & issues" />
+      <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#922b21,#c0392b)" title="Post Announcement" sub="Send news to all staff" />
     </>
   );
 }
@@ -184,23 +240,13 @@ function OwnerDash({ stats }: { stats: { clockedIn: number; staffCount: number; 
   );
 }
 
-// ─────────── SHARED BITS ───────────
+// ─────────── SHARED ───────────
 function Stat({ value, label, color }: { value: string | number; label: string; color?: string }) {
   return (
-    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 10px", textAlign: "center" }}>
-      <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
+    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
+      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
+      <div style={{ fontSize: 9, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
     </div>
-  );
-}
-
-// Tappable stat tile — the manager dashboard's glance + navigation in one.
-function TileLink({ href, value, label, color }: { href: string; value: string | number; label: string; color?: string }) {
-  return (
-    <Link href={href} style={{ textDecoration: "none", background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 10px", textAlign: "center", display: "block" }}>
-      <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
-    </Link>
   );
 }
 
