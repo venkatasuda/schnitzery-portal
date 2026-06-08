@@ -107,14 +107,8 @@ function StaffDash({ hours, clockedIn, onBreak }: {
         <Stat value={target != null ? `${pct}%` : "—"} label="Of Target" color={pct >= 80 ? "#58d68d" : "var(--white)"} />
       </div>
 
-      <div className="section-label">Quick Actions</div>
-      <Shortcut href="/schedule" icon="📅" grad="linear-gradient(135deg,#1e8449,#27ae60)" title="My Shifts" sub="Your weekly schedule & swaps" />
-      <Shortcut href="/my-day" icon="🗓" grad="linear-gradient(135deg,#8b6914,#d4a847)" title="My Day" sub="Availability · time off · hours" />
-
       <div className="section-label">Workplace</div>
-      <Shortcut href="/checklist" icon="✅" grad="linear-gradient(135deg,#1e8449,#27ae60)" title="Daily Checklist" sub="Opening & closing tasks" />
       <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#922b21,#c0392b)" title="Announcements" sub="Team news & updates" />
-      <Shortcut href="/directory" icon="📇" grad="linear-gradient(135deg,#2c3e50,#34495e)" title="Team Directory" sub="Find & contact colleagues" />
       <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title="Report Incident" sub="Accidents, hazards & issues" />
     </>
   );

@@ -7,7 +7,7 @@ import Link from "next/link";
 // using the old app's hub-tab pattern, so the bottom nav stays at 4 tidy items.
 // Each tab links through to the full feature page (which already works).
 export default function MyDayPage() {
-  const [tab, setTab] = useState<"avail" | "timeoff" | "hours">("avail");
+  const [tab, setTab] = useState<"avail" | "timeoff" | "hours" | "work">("avail");
 
   return (
     <div className="fade-up">
@@ -23,6 +23,9 @@ export default function MyDayPage() {
         </button>
         <button className={`hub-tab${tab === "hours" ? " active" : ""}`} onClick={() => setTab("hours")}>
           ⏱ My Hours
+        </button>
+        <button className={`hub-tab${tab === "work" ? " active" : ""}`} onClick={() => setTab("work")}>
+          🧰 Workplace
         </button>
       </div>
 
@@ -79,11 +82,27 @@ export default function MyDayPage() {
           />
         </div>
       )}
+      {tab === "work" && (
+        <div className="hub-tab-panel active">
+          <HubLink
+            href="/checklist"
+            icon="✅"
+            grad="linear-gradient(135deg,#1e8449,#27ae60)"
+            title="Daily Checklist"
+            sub="Opening & closing tasks for your shift"
+          />
+          <HubLink
+            href="/directory"
+            icon="📇"
+            grad="linear-gradient(135deg,#2c3e50,#34495e)"
+            title="Team Directory"
+            sub="Find & contact colleagues"
+          />
+        </div>
+      )}
     </div>
   );
 }
-
-function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
       <div className="feature-icon" style={{ background: grad }}>{icon}</div>
