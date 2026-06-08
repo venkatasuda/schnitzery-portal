@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getMyProfile, updateMyProfile } from "@/lib/queries/people";
 import LogoutButton from "@/components/LogoutButton";
 import AvatarUpload from "@/components/AvatarUpload";
+import DocumentsSection from "@/components/DocumentsSection";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -112,6 +113,9 @@ export default function ProfilePage() {
         )}
         {msg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--gold)", textAlign: "center" }}>{msg}</div>}
       </div>
+
+      {/* Documents — everyone (upload visa, ID, contract, certificates) */}
+      <DocumentsSection />
 
       {/* Settings & Admin — managers & owners only */}
       {isManager && (
