@@ -103,6 +103,8 @@ export default function MyDayPage() {
     </div>
   );
 }
+
+function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
       <div className="feature-icon" style={{ background: grad }}>{icon}</div>
