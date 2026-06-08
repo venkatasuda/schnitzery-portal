@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getMyProfile, updateMyProfile } from "@/lib/queries/people";
 import LogoutButton from "@/components/LogoutButton";
+import AvatarUpload from "@/components/AvatarUpload";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -60,9 +61,7 @@ export default function ProfilePage() {
       <div className="card" style={{ padding: 24 }}>
         {/* avatar + name */}
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-          <div className={`avatar${isManager ? " mgr" : ""}`} style={{ width: 64, height: 64, fontSize: 26 }}>
-            {(profile.full_name || "?")[0].toUpperCase()}
-          </div>
+          <AvatarUpload currentUrl={profile.avatar_url} name={profile.full_name} isManager={isManager} />
           <div>
             <div style={{ fontSize: 18, fontWeight: 700, color: "var(--white)" }}>
               {profile.full_name || "—"}
