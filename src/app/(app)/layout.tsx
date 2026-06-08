@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
 
-// Protected layout — header (with theme toggle) + content + role-aware bottom nav.
+// Protected layout — header (notifications + theme toggle) + content + nav.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -14,6 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     profile = data;
   }
   const role = profile?.role || "staff";
+  const isManager = ["manager", "franchise_owner", "brand_owner"].includes(role);
   const roleLabel: Record<string, string> = {
     staff: "Staff", manager: "Manager",
     franchise_owner: "Franchise Owner", brand_owner: "Brand Owner",
@@ -28,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <div className="header-right">
           <span className="header-name">{profile?.full_name || user?.email}</span>
+          {isManager && <NotificationBell />}
           <ThemeToggle />
         </div>
       </header>
