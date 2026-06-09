@@ -4,6 +4,8 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStaffDetail, getStaffHours, getStaffDocuments, getStaffDocumentUrl } from "@/lib/queries/staff-detail";
+import { getStaffLeaveBalance, setLeaveAllowance } from "@/lib/queries/leave-balance";
+import { toast } from "@/components/Toast";
 
 const fmtH = (m: number) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
 const DOC_LABEL: Record<string, string> = {
@@ -28,6 +30,8 @@ export default function StaffDetailPage() {
   const [staff, setStaff] = useState<any>(null);
   const [hours, setHours] = useState<any>(null);
   const [docs, setDocs] = useState<any[]>([]);
+  const [bal, setBal] = useState<any>(null);
+  const [allowance, setAllowance] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,11 +39,12 @@ export default function StaffDetailPage() {
     if (!id) return;
     (async () => {
       setLoading(true);
-      const [d, h, dc] = await Promise.all([getStaffDetail(id), getStaffHours(id), getStaffDocuments(id)]);
+      const [d, h, dc, lb] = await Promise.all([getStaffDetail(id), getStaffHours(id), getStaffDocuments(id), getStaffLeaveBalance(id)]);
       if (d.ok) setStaff(d.staff);
       else setError(d.error || "Could not load.");
       if (h.ok) setHours(h);
       if (dc.ok) setDocs(dc.documents || []);
+      if (lb.ok) { setBal(lb); setAllowance(String(lb.allowance ?? "")); }
       setLoading(false);
     })();
   }, [id]);
@@ -48,6 +53,14 @@ export default function StaffDetailPage() {
     const res = await getStaffDocumentUrl(filePath);
     if (res.ok && res.url) window.open(res.url, "_blank");
     else alert(res.error || "Could not open document.");
+  }
+
+  async function saveAllowance() {
+    const days = parseFloat(allowance);
+    if (isNaN(days) || days < 0) { toast("Enter a valid number of days.", "error"); return; }
+    const res = await setLeaveAllowance(id, days);
+    if (res.ok) { toast("Allowance saved.", "success"); const lb = await getStaffLeaveBalance(id); if (lb.ok) setBal(lb); }
+    else toast(res.error || "Could not save.", "error");
   }
 
   if (loading) return <div style={{ color: "var(--gray)", textAlign: "center", padding: 40 }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>;
@@ -112,6 +125,28 @@ export default function StaffDetailPage() {
         <Stat value={hours?.shifts ?? 0} label="Shifts" />
         <Stat value={overPct != null ? `${overPct}%` : "—"} label="Of Contract" color={overPct != null && overPct > 100 ? "#e8a35a" : "var(--white)"} />
       </div>
+
+      {/* vacation */}
+      {bal && (
+        <>
+          <div className="section-label">Vacation · {bal.year}</div>
+          <div className="card" style={{ marginBottom: 4 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
+              <Stat value={bal.allowance} label="Allowance" />
+              <Stat value={bal.used} label="Taken" color="#e8a35a" />
+              <Stat value={bal.remaining} label="Remaining" color="var(--gold)" />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <label style={{ fontSize: 12, color: "var(--gray)" }}>Annual days</label>
+              <input
+                type="number" min="0" step="0.5" value={allowance} onChange={(e) => setAllowance(e.target.value)}
+                style={{ width: 80, padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 14 }}
+              />
+              <button onClick={saveAllowance} style={{ padding: "8px 14px", background: "var(--gold)", color: "#1a1a1a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save</button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* documents */}
       <div className="section-label">Documents</div>
