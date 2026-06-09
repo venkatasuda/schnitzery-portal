@@ -1,95 +1,98 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getPayrollExport } from "@/lib/queries/timepay";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { getPayrollSummary } from "@/lib/queries/payroll";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
-export default function ExportPage() {
+const eur = (n: number | null) => (n == null ? "—" : `€${n.toFixed(2)}`);
+
+export default function PayrollExportPage() {
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [rows, setRows] = useState<any[]>([]);
+  const [totals, setTotals] = useState<{ hours: number; gross: number }>({ hours: 0, gross: 0 });
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
-  const [month, setMonth] = useState("");
 
-  async function load(m?: string) {
+  useEffect(() => {
     setLoading(true);
-    const res = await getPayrollExport(m);
-    if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); setLoading(false); return; }
-    setRows(res.rows); setMonth(res.month || "");
-    setLoading(false);
-  }
-  useEffect(() => { load(); }, []);
+    getPayrollSummary(month).then((r) => {
+      if (r.ok) { setRows(r.rows || []); setTotals(r.totals || { hours: 0, gross: 0 }); }
+      else if (r.error?.includes("Managers")) setDenied(true);
+      setLoading(false);
+    });
+  }, [month]);
 
-  function shiftMonth(delta: number) {
-    const [y, m] = month.split("-").map(Number);
-    const d = new Date(y, m - 1 + delta, 1);
-    load(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-  }
-
-  function downloadCSV() {
-    const header = ["Name", "Employee Code", "Shifts", "Hours", "Contract Hours"];
-    const lines = rows.map((r) => [r.name, r.code, r.shifts, r.hours, r.contract ?? ""].join(","));
-    const csv = [header.join(","), ...lines].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+  function downloadCsv() {
+    if (rows.length === 0) { toast("Nothing to export for this month.", "error"); return; }
+    const esc = (v: any) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+    const header = ["Employee Code", "Name", "Team", "Shifts", "Hours", "Hourly Wage (EUR)", "Gross (EUR)"];
+    const lines = [header.join(",")];
+    for (const r of rows) lines.push([r.code, r.name, r.team, r.shifts, r.hours, r.wage ?? "", r.gross ?? ""].map(esc).join(","));
+    lines.push(["", "TOTAL", "", "", totals.hours, "", totals.gross].map(esc).join(","));
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `payroll_${month}.csv`; a.click();
+    a.href = url; a.download = `payroll-${month}.csv`; a.click();
     URL.revokeObjectURL(url);
+    toast("CSV downloaded.", "success");
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
-
-  const monthLabel = month ? new Date(month + "-01").toLocaleDateString([], { month: "long", year: "numeric" }) : "";
-  const totalHours = rows.reduce((s, r) => s + (r.hours || 0), 0).toFixed(1);
+  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📤 Payroll Export</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Hours per staff member for the month.</p>
+    <div className="fade-up">
+      <div className="page-title">📤 Payroll Export</div>
+      <div className="page-sub">Monthly hours per staff · download as CSV</div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => shiftMonth(-1)} style={navBtn}>‹ Prev</button>
-          <span style={{ fontSize: 14, color: "#d4a847", fontWeight: 600, padding: "8px 4px" }}>{monthLabel}</span>
-          <button onClick={() => shiftMonth(1)} style={navBtn}>Next ›</button>
-        </div>
-        {rows.length > 0 && <button onClick={downloadCSV} style={{ ...primaryBtn, width: "auto", padding: "10px 20px" }}>⬇ Download CSV</button>}
+      <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <label style={{ fontSize: 12, color: "var(--gray)" }}>Month</label>
+        <input
+          type="month" value={month} onChange={(e) => setMonth(e.target.value)}
+          style={{ padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 14 }}
+        />
+        <div style={{ flex: 1 }} />
+        <button onClick={downloadCsv} disabled={loading || rows.length === 0}
+          style={{ padding: "9px 16px", background: rows.length === 0 ? "var(--dark3)" : "var(--gold)", color: rows.length === 0 ? "var(--gray)" : "#1a1a1a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: rows.length === 0 ? "default" : "pointer" }}>
+          ⬇ Download CSV
+        </button>
       </div>
 
-      {loading ? <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
-      : rows.length === 0 ? <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>No completed shifts this month.</div>
-      : (
-        <div style={{ ...card, padding: 0, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: "rgba(255,255,255,0.04)" }}>
-                <Th>Name</Th><Th>Code</Th><Th right>Shifts</Th><Th right>Hours</Th><Th right>Contract</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <Td>{r.name}</Td><Td>{r.code || "—"}</Td><Td right>{r.shifts}</Td>
-                  <Td right><b style={{ color: "#d4a847" }}>{r.hours}h</b></Td>
-                  <Td right>{r.contract != null ? `${r.contract}h` : "—"}</Td>
-                </tr>
-              ))}
-              <tr style={{ borderTop: "2px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
-                <Td><b>Total</b></Td><Td></Td><Td right></Td>
-                <Td right><b style={{ color: "#d4a847" }}>{totalHours}h</b></Td><Td right></Td>
-              </tr>
-            </tbody>
-          </table>
+      {loading ? (
+        <CardSkeleton rows={4} />
+      ) : rows.length === 0 ? (
+        <div className="card" style={{ textAlign: "center", padding: 30, color: "var(--gray)" }}>No recorded hours for this month.</div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 0.7fr 0.6fr 0.7fr 0.9fr", gap: 8, padding: "10px 14px", fontSize: 11, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid rgba(128,128,128,0.15)" }}>
+            <span>Name</span><span style={{ textAlign: "center" }}>Shifts</span><span style={{ textAlign: "right" }}>Hours</span><span style={{ textAlign: "right" }}>Wage</span><span style={{ textAlign: "right" }}>Gross</span>
+          </div>
+          {rows.map((r, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1.6fr 0.7fr 0.6fr 0.7fr 0.9fr", gap: 8, padding: "11px 14px", fontSize: 13, alignItems: "center", borderBottom: i < rows.length - 1 ? "1px solid rgba(128,128,128,0.08)" : "none" }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, color: "var(--white)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div>
+                <div style={{ fontSize: 11, color: "var(--gray)" }}>{r.team}</div>
+              </div>
+              <span style={{ textAlign: "center", color: "var(--white)" }}>{r.shifts}</span>
+              <span style={{ textAlign: "right", color: "var(--white)" }}>{r.hours}h</span>
+              <span style={{ textAlign: "right", color: r.wage == null ? "#e8a35a" : "var(--gray)" }}>{r.wage == null ? "set" : eur(r.wage)}</span>
+              <span style={{ textAlign: "right", color: "var(--gold)", fontWeight: 700 }}>{eur(r.gross)}</span>
+            </div>
+          ))}
+          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 0.7fr 0.6fr 0.7fr 0.9fr", gap: 8, padding: "12px 14px", fontSize: 13, fontWeight: 700, background: "rgba(212,168,71,0.07)", borderTop: "1px solid rgba(128,128,128,0.15)" }}>
+            <span style={{ color: "var(--white)" }}>Total</span><span /><span style={{ textAlign: "right", color: "var(--white)" }}>{totals.hours}h</span><span /><span style={{ textAlign: "right", color: "var(--gold)" }}>{eur(totals.gross)}</span>
+          </div>
         </div>
       )}
+
+      {rows.some((r) => r.wage == null) && (
+        <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 10 }}>
+          Rows marked <span style={{ color: "#e8a35a" }}>set</span> have no hourly wage yet — add it on the <Link href="/labor" style={{ color: "var(--gold)", textDecoration: "none" }}>Labor</Link> page and their gross will fill in.
+        </div>
+      )}
+
+      <Link href="/profile" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>‹ Back to profile</Link>
     </div>
   );
 }
-
-function Th({ children, right }: any) {
-  return <th style={{ padding: "12px 14px", textAlign: right ? "right" : "left", fontSize: 11, color: "#9a8f8f", fontWeight: 600, letterSpacing: 0.5 }}>{children}</th>;
-}
-function Td({ children, right }: any) {
-  return <td style={{ padding: "11px 14px", textAlign: right ? "right" : "left", color: "#e8e0e0" }}>{children}</td>;
-}
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };
-const navBtn: React.CSSProperties = { padding: "8px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 13, cursor: "pointer" };
-const primaryBtn: React.CSSProperties = { padding: "10px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" };
