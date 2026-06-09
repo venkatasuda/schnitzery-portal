@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let profile = null;
   if (user) {
     const { data } = await supabase
-      .from("users").select("full_name, role").eq("id", user.id).single();
+      .from("users").select("full_name, role, avatar_url").eq("id", user.id).single();
     profile = data;
   }
   const role = profile?.role || "staff";
@@ -33,6 +33,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <span className="header-name">{profile?.full_name || user?.email}</span>
           {isManager && <NotificationBell />}
           <ThemeToggle />
+          {profile?.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+          ) : (
+            <div className={`avatar${isManager ? " mgr" : ""}`} style={{ width: 32, height: 32, fontSize: 13 }}>{(profile?.full_name || user?.email || "?")[0].toUpperCase()}</div>
+          )}
         </div>
       </header>
 

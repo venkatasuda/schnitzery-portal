@@ -16,10 +16,10 @@ export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let profile: { full_name: string | null; role: string | null; team: string | null } | null = null;
+  let profile: { full_name: string | null; role: string | null; team: string | null; avatar_url: string | null } | null = null;
   if (user) {
     const { data } = await supabase
-      .from("users").select("full_name, role, team").eq("id", user.id).single();
+      .from("users").select("full_name, role, team, avatar_url").eq("id", user.id).single();
     profile = data;
   }
   const role = profile?.role || "staff";
@@ -76,7 +76,12 @@ export default async function HomePage() {
   return (
     <div className="fade-up">
       <div className="profile-pill">
-        <div className={`avatar${isManager ? " mgr" : ""}`}>{(profile?.full_name || "?")[0].toUpperCase()}</div>
+        {profile?.avatar_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className={`avatar${isManager ? " mgr" : ""}`} src={profile.avatar_url} alt="" style={{ objectFit: "cover" }} />
+        ) : (
+          <div className={`avatar${isManager ? " mgr" : ""}`}>{(profile?.full_name || "?")[0].toUpperCase()}</div>
+        )}
         <div>
           <div className="profile-name">{greeting}, {firstName}<span className="mgr-badge">{roleLabel[role]}</span></div>
           <div className="profile-sub">{profile?.team || roleLabel[role]} · Schnitzery Stuttgart</div>
