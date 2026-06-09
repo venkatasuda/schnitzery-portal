@@ -43,12 +43,12 @@ export default async function HomePage() {
 
   if (isOwner) {
     const d = await getDashboardStats();
-    if (d.ok) ownerStats = d.stats;
+    if (d.ok) ownerStats = d.stats ?? null;
   } else if (isManager) {
     const [dRes, liveRes, otRes, schedRes] = await Promise.all([
       getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(),
     ]);
-    if (dRes.ok) mOps = dRes.stats;
+    if (dRes.ok) mOps = dRes.stats ?? null;
     if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0 };
     if (otRes.ok) mOt = { totalWorkedMins: otRes.totalWorkedMins || 0, totalOvertimeMins: otRes.totalOvertimeMins || 0, peopleOver: otRes.peopleOver || 0 };
     if (schedRes.ok) mSched = { submissionCount: schedRes.submissionCount || 0, staffCount: schedRes.staffCount || 0, rosterExists: schedRes.rosterExists || false };
