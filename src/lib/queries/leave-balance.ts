@@ -83,29 +83,29 @@ function isManager(r?: string | null) {
 export async function getMyLeaveBalance() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not logged in." };
+  if (!user) return { ok: false as const, error: "Not logged in." };
   const { data: me } = await supabase.from("users").select("annual_leave_days").eq("id", user.id).single();
   const b = await computeBalance(supabase, user.id, me?.annual_leave_days ?? null);
-  return { ok: true, ...b };
+  return { ok: true as const, ...b };
 }
 
 export async function getStaffLeaveBalance(userId: string) {
   const { supabase, user, role, branchId } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-  if (!isManager(role)) return { ok: false, error: "Managers only." };
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (!isManager(role)) return { ok: false as const, error: "Managers only." };
   const { data: tgt } = await supabase.from("users").select("branch_id, annual_leave_days").eq("id", userId).single();
-  if (!tgt || tgt.branch_id !== branchId) return { ok: false, error: "Not in your branch." };
+  if (!tgt || tgt.branch_id !== branchId) return { ok: false as const, error: "Not in your branch." };
   const b = await computeBalance(supabase, userId, tgt.annual_leave_days ?? null);
-  return { ok: true, ...b };
+  return { ok: true as const, ...b };
 }
 
 export async function setLeaveAllowance(userId: string, days: number) {
   const { supabase, user, role, branchId } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-  if (!isManager(role)) return { ok: false, error: "Managers only." };
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (!isManager(role)) return { ok: false as const, error: "Managers only." };
   const { data: tgt } = await supabase.from("users").select("branch_id").eq("id", userId).single();
-  if (!tgt || tgt.branch_id !== branchId) return { ok: false, error: "Not in your branch." };
+  if (!tgt || tgt.branch_id !== branchId) return { ok: false as const, error: "Not in your branch." };
   const { error } = await supabase.from("users").update({ annual_leave_days: days }).eq("id", userId);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const };
 }
