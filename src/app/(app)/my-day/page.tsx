@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getMyLeaveBalance } from "@/lib/queries/leave-balance";
 
 // Staff "My Day" hub — groups the three planning features under one nav button
 // using the old app's hub-tab pattern, so the bottom nav stays at 4 tidy items.
 // Each tab links through to the full feature page (which already works).
 export default function MyDayPage() {
   const [tab, setTab] = useState<"avail" | "timeoff" | "hours" | "work">("avail");
+  const [bal, setBal] = useState<any>(null);
+  useEffect(() => { getMyLeaveBalance().then((r) => { if (r.ok) setBal(r); }); }, []);
 
   return (
     <div className="fade-up">
@@ -47,6 +50,18 @@ export default function MyDayPage() {
 
       {tab === "timeoff" && (
         <div className="hub-tab-panel active">
+          {bal && (
+            <div className="card" style={{ marginBottom: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--white)" }}>🌴 Vacation {bal.year}</span>
+                <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{bal.remaining} days left</span>
+              </div>
+              <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{ width: `${bal.allowance > 0 ? Math.min(100, Math.round((bal.used / bal.allowance) * 100)) : 0}%`, height: "100%", background: "var(--gold)" }} />
+              </div>
+              <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 6 }}>{bal.used} of {bal.allowance} days taken</div>
+            </div>
+          )}
           <HubLink
             href="/leave"
             icon="🌴"
