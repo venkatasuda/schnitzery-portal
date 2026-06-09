@@ -4,9 +4,11 @@ import { getMyHours } from "@/lib/queries/timepay";
 import { getMyStatus } from "@/lib/queries/attendance";
 import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attendance";
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
+import { listMyDocuments } from "@/lib/queries/profile-uploads";
 import Link from "next/link";
 
 const fmtH = (mins: number) => `${Math.floor((mins || 0) / 60)}h ${String((mins || 0) % 60).padStart(2, "0")}m`;
+const DOC_LABEL: Record<string, string> = { id_card: "ID Card / Passport", visa: "Visa / Residence Permit", work_permit: "Work Permit", contract: "Contract", certificate: "Certificate", other: "Document" };
 
 // Role-based home dashboard. Managers get a full operational dashboard;
 // staff and owners keep their focused views.
@@ -59,6 +61,18 @@ export default async function HomePage() {
     if (st.ok) { staffClockedIn = st.clockedIn || false; staffOnBreak = st.onBreak || false; }
   }
 
+  // the logged-in user's own documents expiring within 60 days (any role)
+  const myExpiring: { label: string; days: number }[] = [];
+  const docsRes = await listMyDocuments();
+  if (docsRes.ok) {
+    for (const d of docsRes.docs || []) {
+      if (!d.expiry_date) continue;
+      const days = Math.ceil((new Date(d.expiry_date).getTime() - Date.now()) / 86400000);
+      if (days <= 60) myExpiring.push({ label: DOC_LABEL[d.doc_type] || "Document", days });
+    }
+    myExpiring.sort((a, b) => a.days - b.days);
+  }
+
   return (
     <div className="fade-up">
       <div className="profile-pill">
@@ -68,6 +82,18 @@ export default async function HomePage() {
           <div className="profile-sub">{profile?.team || roleLabel[role]} · Schnitzery Stuttgart</div>
         </div>
       </div>
+
+      {myExpiring.length > 0 && (
+        <div className="card" style={{ borderColor: "rgba(231,76,60,0.4)", background: "rgba(231,76,60,0.08)", marginBottom: 14 }}>
+          <div style={{ fontWeight: 700, color: "#ec7063", fontSize: 14, marginBottom: 4 }}>⚠️ Document{myExpiring.length > 1 ? "s" : ""} need attention</div>
+          {myExpiring.slice(0, 3).map((e, i) => (
+            <div key={i} style={{ fontSize: 13, color: "var(--white)", marginTop: 2 }}>
+              Your {e.label} {e.days < 0 ? `expired ${Math.abs(e.days)} days ago` : e.days === 0 ? "expires today" : `expires in ${e.days} days`} — please renew.
+            </div>
+          ))}
+          <Link href="/profile" style={{ fontSize: 12, color: "var(--gold)", textDecoration: "none", display: "inline-block", marginTop: 8 }}>Update in Profile ›</Link>
+        </div>
+      )}
 
       {isOwner ? (
         <OwnerDash stats={ownerStats} />
