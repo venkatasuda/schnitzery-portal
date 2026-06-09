@@ -10,6 +10,7 @@ export async function getManagerAlerts() {
   if (!d.ok) return { ok: false, error: d.error || "Could not load alerts." };
 
   const stats = d.stats;
+  if (!stats) return { ok: false, error: "Could not load alerts." };
   const missing = s.ok ? Math.max(0, (s.staffCount || 0) - (s.submissionCount || 0)) : 0;
 
   const items: { type: string; icon: string; href: string; label: string; count: number }[] = [];

@@ -27,7 +27,7 @@ export default function DocumentsSection() {
   async function load() {
     setLoading(true);
     const res = await listMyDocuments();
-    if (res.ok) setDocs(res.documents || []);
+    if (res.ok) setDocs(res.docs || []);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);

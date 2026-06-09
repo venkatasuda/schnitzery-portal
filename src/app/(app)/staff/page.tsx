@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getStaffList, updateStaff } from "@/lib/queries/people";
 
 const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier"];
@@ -146,6 +147,7 @@ export default function StaffPage() {
                 <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "#9a8f8f" }}>· {p.employee_code}</span>}</div>
                 <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team || "No team"} · {p.role} · {p.contract_type || "—"}</div>
               </div>
+              <Link href={`/staff/${p.id}`} style={{ ...editBtn, textDecoration: "none" }}>View</Link>
               <button onClick={() => startEdit(p)} style={editBtn}>Edit</button>
             </div>
           ) : (

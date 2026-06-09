@@ -6,6 +6,7 @@ import { getMyProfile, updateMyProfile } from "@/lib/queries/people";
 import LogoutButton from "@/components/LogoutButton";
 import AvatarUpload from "@/components/AvatarUpload";
 import DocumentsSection from "@/components/DocumentsSection";
+import ProfileSettings from "@/components/ProfileSettings";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -138,6 +139,9 @@ export default function ProfilePage() {
           </Link>
         </>
       )}
+
+      {/* Preferences + Account — shared across all roles */}
+      <ProfileSettings />
 
       <LogoutButton />
     </div>
