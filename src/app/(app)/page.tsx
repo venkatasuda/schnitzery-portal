@@ -213,6 +213,15 @@ function ManagerDash({ ops, live, ot, sched }: {
         <span className="feature-chev">›</span>
       </Link>
 
+      <Link href="/compliance" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
+        <span style={{ fontSize: 18 }}>⚖️</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>Compliance</div>
+          <div style={{ fontSize: 11, color: "var(--gray)" }}>Break &amp; rest checks (German ArbZG)</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
+
       {/* DAILY OPERATIONS */}
       <div className="section-label">Daily Operations</div>
       <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title="Report Incident" sub="Log accidents, hazards & issues" />
