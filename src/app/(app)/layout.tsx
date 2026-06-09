@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
+import ToastHost from "@/components/Toast";
 
 // Protected layout — header (notifications + theme toggle) + content + nav.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -36,6 +37,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       <div className="screen-wrap fade-up">{children}</div>
+
+      <ToastHost />
 
       <BottomNav role={role} />
     </div>

@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { addDocument, listMyDocuments, getDocumentUrl, deleteDocument } from "@/lib/queries/profile-uploads";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const DOC_TYPES = [
   { key: "id_card", label: "ID Card / Passport", icon: "🪪" },
@@ -20,7 +22,6 @@ export default function DocumentsSection() {
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
   const typeRef = useRef<string>("other");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -34,16 +35,15 @@ export default function DocumentsSection() {
 
   function pickType(typeKey: string) {
     typeRef.current = typeKey;
-    setErr(null);
-    fileRef.current?.click(); // open the OS file picker for the chosen type
+    fileRef.current?.click();
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (fileRef.current) fileRef.current.value = "";
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setErr("File must be under 5 MB."); return; }
-    setBusy(true); setErr(null);
+    if (file.size > 5 * 1024 * 1024) { toast("File must be under 5 MB.", "error"); return; }
+    setBusy(true);
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -55,9 +55,10 @@ export default function DocumentsSection() {
       const res = await addDocument(typeRef.current, path, file.name);
       if (!res.ok) throw new Error(res.error || "Save failed");
       setSheet(false);
+      toast("Document uploaded.", "success");
       await load();
     } catch (e: any) {
-      setErr("Upload failed: " + (e?.message || "unknown error"));
+      toast("Upload failed: " + (e?.message || "unknown error"), "error");
     }
     setBusy(false);
   }
@@ -65,25 +66,25 @@ export default function DocumentsSection() {
   async function view(filePath: string) {
     const res = await getDocumentUrl(filePath);
     if (res.ok && res.url) window.open(res.url, "_blank");
-    else alert(res.error || "Could not open document.");
+    else toast(res.error || "Could not open document.", "error");
   }
 
   async function remove(id: string, filePath: string) {
     if (!confirm("Delete this document?")) return;
     const res = await deleteDocument(id, filePath);
-    if (res.ok) setDocs((d) => d.filter((x) => x.id !== id));
-    else alert(res.error || "Delete failed.");
+    if (res.ok) { setDocs((d) => d.filter((x) => x.id !== id)); toast("Document deleted.", "success"); }
+    else toast(res.error || "Delete failed.", "error");
   }
 
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "22px 0 10px" }}>
         <div className="section-label" style={{ margin: 0 }}>My Documents</div>
-        <button onClick={() => { setErr(null); setSheet(true); }} style={uploadBtn}>+ Upload</button>
+        <button onClick={() => setSheet(true)} style={uploadBtn}>+ Upload</button>
       </div>
 
       {loading ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>Loading…</div>
+        <CardSkeleton rows={2} />
       ) : docs.length === 0 ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13, lineHeight: 1.6 }}>
           No documents yet.<br />Tap <b style={{ color: "var(--gold)" }}>+ Upload</b> to add visa, ID, contract, etc.
@@ -104,12 +105,8 @@ export default function DocumentsSection() {
         </div>
       )}
 
-      {err && <div style={{ fontSize: 12, color: "#ec7063", textAlign: "center", marginTop: 8 }}>{err}</div>}
-
-      {/* hidden picker — opened after a type is chosen */}
       <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,application/pdf,image/*" onChange={onFile} style={{ display: "none" }} />
 
-      {/* type-selection bottom sheet */}
       {sheet && (
         <div onClick={() => !busy && setSheet(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 100 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 820, background: "var(--dark2)", borderRadius: "18px 18px 0 0", padding: "10px 16px calc(20px + env(safe-area-inset-bottom))", boxShadow: "0 -8px 40px rgba(0,0,0,0.5)" }}>

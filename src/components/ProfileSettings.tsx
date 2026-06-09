@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "@/components/Toast";
 
 // Shared profile footer for every role: Light Mode (reuses the same theme
 // mechanism as the header toggle) + a working Change Password via Supabase auth.
@@ -21,21 +22,19 @@ export default function ProfileSettings() {
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   async function changePassword() {
-    setMsg(null);
-    if (pw.length < 8) { setMsg({ type: "err", text: "Password must be at least 8 characters." }); return; }
-    if (pw !== pw2) { setMsg({ type: "err", text: "The two passwords don't match." }); return; }
+    if (pw.length < 8) { toast("Password must be at least 8 characters.", "error"); return; }
+    if (pw !== pw2) { toast("The two passwords don't match.", "error"); return; }
     setBusy(true);
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ password: pw });
       if (error) throw error;
-      setMsg({ type: "ok", text: "✅ Password updated." });
+      toast("Password updated.", "success");
       setPw(""); setPw2(""); setOpen(false);
     } catch (e: any) {
-      setMsg({ type: "err", text: e?.message || "Could not change password." });
+      toast(e?.message || "Could not change password.", "error");
     }
     setBusy(false);
   }
@@ -66,7 +65,7 @@ export default function ProfileSettings() {
       <div className="section-label">Account</div>
       <div className="card" style={{ padding: 8 }}>
         <button
-          onClick={() => { setOpen((o) => !o); setMsg(null); }}
+          onClick={() => setOpen((o) => !o)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 10px", background: "none", border: "none", cursor: "pointer", color: "var(--white)", fontSize: 14, fontWeight: 600 }}
         >
           <span>🔒 Change Password</span>
@@ -81,10 +80,6 @@ export default function ProfileSettings() {
               {busy ? "Saving…" : "Update Password"}
             </button>
           </div>
-        )}
-
-        {msg && (
-          <div style={{ color: msg.type === "ok" ? "#58d68d" : "#ec7063", fontSize: 12, textAlign: "center", padding: "4px 0 8px" }}>{msg.text}</div>
         )}
       </div>
     </>
