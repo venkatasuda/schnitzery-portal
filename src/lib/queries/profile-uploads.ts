@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 
 // ── AVATAR ──
-// Saves the uploaded avatar's public URL onto the user's row.
 export async function setAvatarUrl(url: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,7 +14,8 @@ export async function setAvatarUrl(url: string) {
 
 // ── DOCUMENTS ──
 // Record a freshly-uploaded document (file already in the 'documents' bucket).
-export async function addDocument(docType: string, filePath: string, fileName: string) {
+// issueDate / expiryDate are optional ("" → stored as null).
+export async function addDocument(docType: string, filePath: string, fileName: string, issueDate?: string, expiryDate?: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not logged in." };
@@ -27,6 +27,8 @@ export async function addDocument(docType: string, filePath: string, fileName: s
     doc_type: docType,
     file_path: filePath,
     file_name: fileName,
+    issue_date: issueDate || null,
+    expiry_date: expiryDate || null,
   });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
@@ -39,7 +41,7 @@ export async function listMyDocuments() {
 
   const { data, error } = await supabase
     .from("user_documents")
-    .select("id, doc_type, file_path, file_name, created_at")
+    .select("id, doc_type, file_path, file_name, issue_date, expiry_date, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   if (error) return { ok: false, error: error.message };

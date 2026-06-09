@@ -13,6 +13,13 @@ const DOC_LABEL: Record<string, string> = {
 const DOC_ICON: Record<string, string> = {
   id_card: "🪪", visa: "🛂", work_permit: "💼", contract: "📄", certificate: "🎓", other: "📁",
 };
+function expiryStatus(expiry?: string | null): { label: string; color: string } | null {
+  if (!expiry) return null;
+  const days = Math.ceil((new Date(expiry).getTime() - Date.now()) / 86400000);
+  if (days < 0) return { label: `Expired ${Math.abs(days)}d ago`, color: "#ec7063" };
+  if (days <= 60) return { label: `Expires in ${days}d`, color: "#e8a35a" };
+  return { label: `Valid until ${new Date(expiry).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" })}`, color: "#58d68d" };
+}
 
 export default function StaffDetailPage() {
   const params = useParams<{ id: string }>();
@@ -118,6 +125,7 @@ export default function StaffDetailPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{DOC_LABEL[d.doc_type] || "Document"}</div>
                 <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.file_name}</div>
+                {expiryStatus(d.expiry_date) && <div style={{ fontSize: 11, fontWeight: 600, color: expiryStatus(d.expiry_date)!.color, marginTop: 2 }}>{expiryStatus(d.expiry_date)!.label}</div>}
               </div>
               <button onClick={() => view(d.file_path)} style={viewBtn}>View</button>
             </div>
