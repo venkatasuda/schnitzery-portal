@@ -16,12 +16,10 @@ export default function ClockDisplayPage() {
   async function fetchCode() {
     const res = await getCurrentClockCode();
     if (res.ok) {
-      
-      setCode(res.code || "");
-      setQrPayload(res.qrPayload || "");
-      
-      setSecondsLeft(res.secondsLeft || 0);
-      setRotateSeconds(res.rotateSeconds || 30);
+      setCode(res.code ?? "------");
+      setQrPayload(res.qrPayload ?? "");
+      setSecondsLeft(res.secondsLeft ?? 30);
+      setRotateSeconds(res.rotateSeconds ?? 30);
       setError(null);
     } else {
       setError(res.error || "Could not load code.");
@@ -34,9 +32,7 @@ export default function ClockDisplayPage() {
     tickRef.current = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
-          // fetchCode must not be called inside a state updater (pure fn required).
-          // Defer it so it runs after this render cycle.
-          setTimeout(fetchCode, 0);
+          fetchCode();
           return rotateSeconds;
         }
         return s - 1;
