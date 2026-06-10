@@ -12,7 +12,7 @@ export default function TimesheetPage() {
   async function load(m?: string) {
     setLoading(true);
     const res = await getMyTimesheet(m);
-    if (res.ok) { setRows(res.rows); setMonth(res.month); }
+    if (res.ok) { setRows(res.rows); setMonth(res.month ?? ""); }
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
