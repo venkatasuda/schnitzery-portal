@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { submitLeave, getMyLeave } from "@/lib/queries/leave";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 export default function LeavePage() {
   const [tab, setTab] = useState<"request" | "mine">("request");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [reason, setReason] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,15 +24,14 @@ export default function LeavePage() {
   useEffect(() => { loadMine(); }, []);
 
   async function submit() {
-    setMsg(null);
     setWorking(true);
     const res = await submitLeave(fromDate, toDate, reason);
     setWorking(false);
     if (res.ok) {
-      setMsg("✅ Leave request submitted!");
+      toast("Leave request submitted", "success");
       setFromDate(""); setToDate(""); setReason("");
       loadMine();
-    } else setMsg(res.error || "Failed.");
+    } else toast(res.error || "Failed to submit.", "error");
   }
 
   const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -64,13 +64,12 @@ export default function LeavePage() {
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Family event" rows={3} style={{ ...input, resize: "vertical" }} />
           </Field>
           <button onClick={submit} disabled={working} style={primaryBtn}>{working ? "Submitting…" : "Submit Request"}</button>
-          {msg && <div style={{ marginTop: 12, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
         </div>
       )}
 
       {tab === "mine" && (
         <div>
-          {loading ? <div style={{ color: "#9a8f8f", fontSize: 13, padding: 20, textAlign: "center" }}>Loading…</div>
+          {loading ? <CardSkeleton rows={3} />
           : requests.length === 0 ? <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>No leave requests yet.</div>
           : requests.map((r) => (
             <div key={r.id} style={{ ...card, marginBottom: 8 }}>

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getMyAvailability, saveAvailability, getNextWeekStart } from "@/lib/queries/availability";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SHIFTS = [
@@ -15,7 +17,6 @@ export default function AvailabilityPage() {
   const [days, setDays] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -36,10 +37,11 @@ export default function AvailabilityPage() {
   }
 
   async function save() {
-    setSaving(true); setMsg(null);
+    setSaving(true);
     const res = await saveAvailability(weekStart, days);
     setSaving(false);
-    setMsg(res.ok ? "✅ Availability saved!" : res.error || "Failed.");
+    if (res.ok) toast("Availability saved", "success");
+    else toast(res.error || "Failed to save.", "error");
   }
 
   const weekLabel = (() => {
@@ -57,7 +59,7 @@ export default function AvailabilityPage() {
       </p>
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={4} />
       ) : (
         <>
           {DAYS.map((day) => (
@@ -82,7 +84,6 @@ export default function AvailabilityPage() {
           <button onClick={save} disabled={saving} style={{ ...primaryBtn, marginTop: 8 }}>
             {saving ? "Saving…" : "💾 Save Availability"}
           </button>
-          {msg && <div style={{ marginTop: 12, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
         </>
       )}
     </div>

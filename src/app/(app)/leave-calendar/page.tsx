@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getTeamLeave } from "@/lib/queries/leave";
+import { CardSkeleton } from "@/components/Skeleton";
 
 export default function LeaveCalendarPage() {
   const [leave, setLeave] = useState<any[]>([]);
@@ -31,7 +32,7 @@ export default function LeaveCalendarPage() {
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Approved upcoming time off across the team.</p>
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={3} />
       ) : leave.length === 0 ? (
         <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}>☀️<br />No upcoming leave booked.</div>
       ) : (
