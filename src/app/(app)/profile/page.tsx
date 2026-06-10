@@ -7,13 +7,14 @@ import LogoutButton from "@/components/LogoutButton";
 import AvatarUpload from "@/components/AvatarUpload";
 import DocumentsSection from "@/components/DocumentsSection";
 import ProfileSettings from "@/components/ProfileSettings";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
 
   // editable fields
   const [fullName, setFullName] = useState("");
@@ -34,17 +35,19 @@ export default function ProfilePage() {
   useEffect(() => { load(); }, []);
 
   async function save() {
-    setSaving(true); setMsg(null);
+    setSaving(true);
     const skills = skillsText.split(",").map((s) => s.trim()).filter(Boolean);
     const res = await updateMyProfile({ full_name: fullName, phone, skills });
     setSaving(false);
-    if (res.ok) { setMsg("✅ Profile updated!"); setEditing(false); load(); }
-    else setMsg(res.error || "Failed.");
+    if (res.ok) { toast("Profile updated", "success"); setEditing(false); load(); }
+    else toast(res.error || "Failed to update.", "error");
   }
 
   if (loading) return (
-    <div style={{ color: "var(--gray)", padding: 40, textAlign: "center" }}>
-      <div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…
+    <div className="fade-up">
+      <div className="page-title">👤 My Profile</div>
+      <div className="page-sub">Your details and skills</div>
+      <CardSkeleton rows={5} />
     </div>
   );
   if (!profile) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>Could not load profile.</div>;
@@ -112,7 +115,6 @@ export default function ProfilePage() {
             </div>
           </>
         )}
-        {msg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--gold)", textAlign: "center" }}>{msg}</div>}
       </div>
 
       {/* Documents — everyone (upload visa, ID, contract, certificates) */}
