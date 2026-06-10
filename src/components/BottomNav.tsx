@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLang } from "@/components/LanguageProvider";
 
 // Hub-based bottom navigation — mirrors the old app's clean structure.
 //  staff   → Home · My Day · Shifts · Profile
@@ -14,28 +15,29 @@ import { usePathname } from "next/navigation";
 //   /attendance-hub → Live · No-Shows · Display            (manager)
 export default function BottomNav({ role }: { role: string }) {
   const path = usePathname();
+  const { t } = useLang();
   const isOwner = ["franchise_owner", "brand_owner"].includes(role);
   const isManager = ["manager", "franchise_owner", "brand_owner"].includes(role);
 
   const staffItems = [
-    { href: "/", label: "Home", icon: <HomeIcon /> },
-    { href: "/my-day", label: "My Day", icon: <CalIcon /> },
-    { href: "/schedule", label: "Shifts", icon: <ClockIcon /> },
-    { href: "/profile", label: "Profile", icon: <UserIcon /> },
+    { href: "/", label: t("nav.home"), icon: <HomeIcon /> },
+    { href: "/my-day", label: t("nav.myDay"), icon: <CalIcon /> },
+    { href: "/schedule", label: t("nav.shifts"), icon: <ClockIcon /> },
+    { href: "/profile", label: t("nav.profile"), icon: <UserIcon /> },
   ];
   const managerItems = [
-    { href: "/", label: "Home", icon: <GridIcon /> },
-    { href: "/schedule-hub", label: "Schedule", icon: <CalIcon /> },
-    { href: "/attendance-hub", label: "Attendance", icon: <ClockIcon /> },
-    { href: "/inventory", label: "Inventory", icon: <BoxIcon /> },
-    { href: "/profile", label: "Profile", icon: <UserIcon /> },
+    { href: "/", label: t("nav.home"), icon: <GridIcon /> },
+    { href: "/schedule-hub", label: t("nav.schedule"), icon: <CalIcon /> },
+    { href: "/attendance-hub", label: t("nav.attendance"), icon: <ClockIcon /> },
+    { href: "/inventory", label: t("nav.inventory"), icon: <BoxIcon /> },
+    { href: "/profile", label: t("nav.profile"), icon: <UserIcon /> },
   ];
   const ownerItems = [
-    { href: "/", label: "Home", icon: <GridIcon /> },
-    { href: "/branches", label: "Branches", icon: <BuildingIcon /> },
-    { href: "/schedule-hub", label: "Schedule", icon: <CalIcon /> },
-    { href: "/inventory", label: "Inventory", icon: <BoxIcon /> },
-    { href: "/profile", label: "Profile", icon: <UserIcon /> },
+    { href: "/", label: t("nav.home"), icon: <GridIcon /> },
+    { href: "/branches", label: t("nav.branches"), icon: <BuildingIcon /> },
+    { href: "/schedule-hub", label: t("nav.schedule"), icon: <CalIcon /> },
+    { href: "/inventory", label: t("nav.inventory"), icon: <BoxIcon /> },
+    { href: "/profile", label: t("nav.profile"), icon: <UserIcon /> },
   ];
 
   const items = isOwner ? ownerItems : isManager ? managerItems : staffItems;

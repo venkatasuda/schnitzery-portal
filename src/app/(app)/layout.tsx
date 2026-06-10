@@ -3,9 +3,13 @@ import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
 import ToastHost from "@/components/Toast";
+import LanguageProvider from "@/components/LanguageProvider";
+import LanguageToggle from "@/components/LanguageToggle";
+import { getLocale } from "@/lib/i18n/server";
 
 // Protected layout — header (notifications + theme toggle) + content + nav.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -23,6 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   };
 
   return (
+    <LanguageProvider initialLocale={locale}>
     <div>
       <header className="app-header">
         <div>
@@ -32,6 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="header-right">
           <span className="header-name">{profile?.full_name || user?.email}</span>
           {isManager && <NotificationBell />}
+          <LanguageToggle />
           <ThemeToggle />
           {profile?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -48,5 +54,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <BottomNav role={role} />
     </div>
+    </LanguageProvider>
   );
 }
