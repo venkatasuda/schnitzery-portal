@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/Toast";
+import { useLang } from "@/components/LanguageProvider";
 
 // Shared profile footer for every role: Light Mode (reuses the same theme
 // mechanism as the header toggle) + a working Change Password via Supabase auth.
 export default function ProfileSettings() {
+  const { t } = useLang();
   // ── Light Mode (same source of truth as the header ThemeToggle) ──
   const [light, setLight] = useState(false);
   useEffect(() => { setLight(document.documentElement.classList.contains("light")); }, []);
@@ -24,17 +26,17 @@ export default function ProfileSettings() {
   const [busy, setBusy] = useState(false);
 
   async function changePassword() {
-    if (pw.length < 8) { toast("Password must be at least 8 characters.", "error"); return; }
-    if (pw !== pw2) { toast("The two passwords don't match.", "error"); return; }
+    if (pw.length < 8) { toast(t("settings.pwTooShort"), "error"); return; }
+    if (pw !== pw2) { toast(t("settings.pwMismatch"), "error"); return; }
     setBusy(true);
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ password: pw });
       if (error) throw error;
-      toast("Password updated.", "success");
+      toast(t("settings.pwUpdated"), "success");
       setPw(""); setPw2(""); setOpen(false);
     } catch (e: any) {
-      toast(e?.message || "Could not change password.", "error");
+      toast(e?.message || t("settings.pwError"), "error");
     }
     setBusy(false);
   }
@@ -42,12 +44,12 @@ export default function ProfileSettings() {
   return (
     <>
       {/* PREFERENCES */}
-      <div className="section-label">Preferences</div>
+      <div className="section-label">{t("settings.preferences")}</div>
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>Light Mode</div>
-            <div style={{ fontSize: 12, color: "var(--gray)" }}>Switch between light &amp; dark theme</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{t("settings.lightMode")}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("settings.lightModeSub")}</div>
           </div>
           <button
             onClick={toggleTheme}
@@ -62,22 +64,22 @@ export default function ProfileSettings() {
       </div>
 
       {/* ACCOUNT */}
-      <div className="section-label">Account</div>
+      <div className="section-label">{t("settings.account")}</div>
       <div className="card" style={{ padding: 8 }}>
         <button
           onClick={() => setOpen((o) => !o)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 10px", background: "none", border: "none", cursor: "pointer", color: "var(--white)", fontSize: 14, fontWeight: 600 }}
         >
-          <span>🔒 Change Password</span>
+          <span>🔒 {t("settings.changePassword")}</span>
           <span style={{ color: "var(--gray)" }}>{open ? "▲" : "▼"}</span>
         </button>
 
         {open && (
           <div style={{ padding: "6px 10px 10px" }}>
-            <input type="password" placeholder="New password (min 8 characters)" value={pw} onChange={(e) => setPw(e.target.value)} style={inputStyle} />
-            <input type="password" placeholder="Confirm new password" value={pw2} onChange={(e) => setPw2(e.target.value)} style={inputStyle} />
+            <input type="password" placeholder={t("settings.newPwPlaceholder")} value={pw} onChange={(e) => setPw(e.target.value)} style={inputStyle} />
+            <input type="password" placeholder={t("settings.confirmPwPlaceholder")} value={pw2} onChange={(e) => setPw2(e.target.value)} style={inputStyle} />
             <button onClick={changePassword} disabled={busy} style={{ width: "100%", padding: 12, background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: busy ? "default" : "pointer" }}>
-              {busy ? "Saving…" : "Update Password"}
+              {busy ? t("common.saving") : t("settings.updatePassword")}
             </button>
           </div>
         )}

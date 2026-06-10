@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { addDocument, listMyDocuments, getDocumentUrl, deleteDocument } from "@/lib/queries/profile-uploads";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { useLang } from "@/components/LanguageProvider";
 
 const DOC_TYPES = [
   { key: "id_card", label: "ID Card / Passport", icon: "🪪" },
@@ -14,7 +15,6 @@ const DOC_TYPES = [
   { key: "certificate", label: "Certificate", icon: "🎓" },
   { key: "other", label: "Other", icon: "📁" },
 ];
-const labelOf = (k: string) => DOC_TYPES.find((t) => t.key === k)?.label || "Document";
 const iconOf = (k: string) => DOC_TYPES.find((t) => t.key === k)?.icon || "📁";
 
 // Shared expiry-status helper (used here and on the staff detail page).
@@ -27,6 +27,8 @@ export function expiryStatus(expiry?: string | null): { label: string; color: st
 }
 
 export default function DocumentsSection() {
+  const { t } = useLang();
+  const docLabel = (k: string) => t("documents.type_" + (DOC_TYPES.some((x) => x.key === k) ? k : "other"));
   const [docs, setDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState(false);
@@ -52,7 +54,7 @@ export default function DocumentsSection() {
     const file = e.target.files?.[0];
     if (fileRef.current) fileRef.current.value = "";
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast("File must be under 5 MB.", "error"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast(t("documents.tooBig"), "error"); return; }
     setBusy(true);
     try {
       const supabase = createClient();
@@ -65,10 +67,10 @@ export default function DocumentsSection() {
       const res = await addDocument(chosenType, path, file.name, issueDate, expiryDate);
       if (!res.ok) throw new Error(res.error || "Save failed");
       setSheet(false);
-      toast("Document uploaded.", "success");
+      toast(t("documents.uploaded"), "success");
       await load();
     } catch (e: any) {
-      toast("Upload failed: " + (e?.message || "unknown error"), "error");
+      toast(t("documents.uploadFailed") + (e?.message || "unknown error"), "error");
     }
     setBusy(false);
   }
@@ -76,28 +78,28 @@ export default function DocumentsSection() {
   async function view(filePath: string) {
     const res = await getDocumentUrl(filePath);
     if (res.ok && res.url) window.open(res.url, "_blank");
-    else toast(res.error || "Could not open document.", "error");
+    else toast(res.error || t("documents.couldNotOpen"), "error");
   }
 
   async function remove(id: string, filePath: string) {
-    if (!confirm("Delete this document?")) return;
+    if (!confirm(t("documents.confirmDelete"))) return;
     const res = await deleteDocument(id, filePath);
-    if (res.ok) { setDocs((d) => d.filter((x) => x.id !== id)); toast("Document deleted.", "success"); }
-    else toast(res.error || "Delete failed.", "error");
+    if (res.ok) { setDocs((d) => d.filter((x) => x.id !== id)); toast(t("documents.deleted"), "success"); }
+    else toast(res.error || t("documents.deleteFailed"), "error");
   }
 
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "22px 0 10px" }}>
-        <div className="section-label" style={{ margin: 0 }}>My Documents</div>
-        <button onClick={openSheet} style={uploadBtn}>+ Upload</button>
+        <div className="section-label" style={{ margin: 0 }}>{t("documents.title")}</div>
+        <button onClick={openSheet} style={uploadBtn}>{t("documents.upload")}</button>
       </div>
 
       {loading ? (
         <CardSkeleton rows={2} />
       ) : docs.length === 0 ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13, lineHeight: 1.6 }}>
-          No documents yet.<br />Tap <b style={{ color: "var(--gold)" }}>+ Upload</b> to add visa, ID, contract, etc.
+          {t("documents.none")}<br />{t("documents.noneHint")}
         </div>
       ) : (
         <div className="card" style={{ padding: 8 }}>
@@ -107,11 +109,11 @@ export default function DocumentsSection() {
               <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < docs.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                 <span style={{ fontSize: 20 }}>{iconOf(d.doc_type)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{labelOf(d.doc_type)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{docLabel(d.doc_type)}</div>
                   <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.file_name}</div>
                   {st && <div style={{ fontSize: 11, color: st.color, fontWeight: 600, marginTop: 2 }}>{st.label}</div>}
                 </div>
-                <button onClick={() => view(d.file_path)} style={viewBtn}>View</button>
+                <button onClick={() => view(d.file_path)} style={viewBtn}>{t("documents.view")}</button>
                 <button onClick={() => remove(d.id, d.file_path)} style={{ background: "none", border: "none", color: "#ec7063", cursor: "pointer", fontSize: 18, padding: "0 4px" }}>×</button>
               </div>
             );
@@ -128,37 +130,37 @@ export default function DocumentsSection() {
 
             {stage === "type" ? (
               <>
-                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>Upload Document</div>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>Select the type — max 5 MB · PDF / JPG / PNG / HEIC</div>
-                {DOC_TYPES.map((t) => (
-                  <button key={t.key} onClick={() => pickType(t.key)} style={typeRow}>
-                    <span style={{ fontSize: 20 }}>{t.icon}</span>
-                    <span style={{ flex: 1, textAlign: "left", fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t.label}</span>
+                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{t("documents.uploadTitle")}</div>
+                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("documents.typeHint")}</div>
+                {DOC_TYPES.map((dt) => (
+                  <button key={dt.key} onClick={() => pickType(dt.key)} style={typeRow}>
+                    <span style={{ fontSize: 20 }}>{dt.icon}</span>
+                    <span style={{ flex: 1, textAlign: "left", fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{docLabel(dt.key)}</span>
                     <span style={{ color: "var(--gray)" }}>›</span>
                   </button>
                 ))}
-                <button onClick={() => setSheet(false)} style={cancelBtn}>Cancel</button>
+                <button onClick={() => setSheet(false)} style={cancelBtn}>{t("common.cancel")}</button>
               </>
             ) : busy ? (
-              <div style={{ textAlign: "center", padding: 30, color: "var(--gray)", fontSize: 13 }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Uploading…</div>
+              <div style={{ textAlign: "center", padding: 30, color: "var(--gray)", fontSize: 13 }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("documents.uploading")}</div>
             ) : (
               <>
-                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{iconOf(chosenType)} {labelOf(chosenType)}</div>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>Add dates (optional), then choose the file.</div>
+                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{iconOf(chosenType)} {docLabel(chosenType)}</div>
+                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("documents.datesHint")}</div>
                 <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={lbl}>Issued</div>
+                    <div style={lbl}>{t("documents.issued")}</div>
                     <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} style={input} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={lbl}>Expires</div>
+                    <div style={lbl}>{t("documents.expires")}</div>
                     <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={input} />
                   </div>
                 </div>
                 <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 13, background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                  Choose File &amp; Upload
+                  {t("documents.chooseUpload")}
                 </button>
-                <button onClick={() => setStage("type")} style={cancelBtn}>‹ Back</button>
+                <button onClick={() => setStage("type")} style={cancelBtn}>‹ {t("common.back")}</button>
               </>
             )}
           </div>

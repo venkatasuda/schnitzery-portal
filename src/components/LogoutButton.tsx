@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useLang } from "@/components/LanguageProvider";
 
 // Signs the user out (clears the Supabase auth cookie) then does a hard
 // navigation to /login so the server re-reads the now-empty session.
 export default function LogoutButton() {
   const [busy, setBusy] = useState(false);
+  const { t } = useLang();
 
   async function logout() {
     if (busy) return;
@@ -38,7 +40,7 @@ export default function LogoutButton() {
         opacity: busy ? 0.6 : 1,
       }}
     >
-      {busy ? "Signing out…" : "↪  Log Out"}
+      {busy ? t("auth.signingOut") : "↪  " + t("auth.logOut")}
     </button>
   );
 }

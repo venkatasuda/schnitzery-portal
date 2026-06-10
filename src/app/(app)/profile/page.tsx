@@ -7,10 +7,12 @@ import LogoutButton from "@/components/LogoutButton";
 import AvatarUpload from "@/components/AvatarUpload";
 import DocumentsSection from "@/components/DocumentsSection";
 import ProfileSettings from "@/components/ProfileSettings";
+import { useLang } from "@/components/LanguageProvider";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 
 export default function ProfilePage() {
+  const { t } = useLang();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -45,23 +47,20 @@ export default function ProfilePage() {
 
   if (loading) return (
     <div className="fade-up">
-      <div className="page-title">👤 My Profile</div>
-      <div className="page-sub">Your details and skills</div>
+      <div className="page-title">👤 {t("profile.title")}</div>
+      <div className="page-sub">{t("profile.subtitle")}</div>
       <CardSkeleton rows={5} />
     </div>
   );
-  if (!profile) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>Could not load profile.</div>;
+  if (!profile) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("profile.couldNotLoad")}</div>;
 
-  const roleLabel: Record<string, string> = {
-    brand_owner: "Brand Owner", franchise_owner: "Franchise Owner", manager: "Manager", staff: "Staff",
-  };
   const isManager = ["manager", "franchise_owner", "brand_owner"].includes(profile.role);
   const skillsArr: string[] = profile.skills || [];
 
   return (
     <div className="fade-up">
-      <div className="page-title">👤 My Profile</div>
-      <div className="page-sub">Your details and skills</div>
+      <div className="page-title">👤 {t("profile.title")}</div>
+      <div className="page-sub">{t("profile.subtitle")}</div>
 
       <div className="card" style={{ padding: 24 }}>
         {/* avatar + name */}
@@ -70,26 +69,26 @@ export default function ProfilePage() {
           <div>
             <div style={{ fontSize: 18, fontWeight: 700, color: "var(--white)" }}>
               {profile.full_name || "—"}
-              {isManager && <span className="mgr-badge">{roleLabel[profile.role]}</span>}
+              {isManager && <span className="mgr-badge">{t("roles." + profile.role)}</span>}
             </div>
             <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 2 }}>
-              {!isManager && `${roleLabel[profile.role] || profile.role} · `}{profile.team || "No team"}
+              {!isManager && `${t("roles." + profile.role)} · `}{profile.team || "—"}
             </div>
           </div>
         </div>
 
         {!editing ? (
           <>
-            <Row label="Employee code" value={profile.employee_code || "—"} />
-            <Row label="Email" value={profile.email || "—"} />
-            <Row label="Phone" value={profile.phone || "—"} />
-            <Row label="Contract" value={profile.contract_type || "—"} />
-            <Row label="Contract hours" value={profile.contract_hours != null ? `${profile.contract_hours}h` : "—"} />
-            <Row label="Status" value={profile.status || "active"} />
+            <Row label={t("profile.employeeCode")} value={profile.employee_code || "—"} />
+            <Row label={t("profile.email")} value={profile.email || "—"} />
+            <Row label={t("profile.phone")} value={profile.phone || "—"} />
+            <Row label={t("profile.contract")} value={profile.contract_type || "—"} />
+            <Row label={t("profile.contractHours")} value={profile.contract_hours != null ? `${profile.contract_hours}h` : "—"} />
+            <Row label={t("profile.status")} value={profile.status || "active"} />
 
             {/* skills as chips */}
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>Skills</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>{t("profile.skills")}</div>
               {skillsArr.length ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {skillsArr.map((s, i) => (
@@ -97,21 +96,21 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div style={{ fontSize: 13, color: "var(--gray)" }}>No skills listed.</div>
+                <div style={{ fontSize: 13, color: "var(--gray)" }}>{t("profile.noSkills")}</div>
               )}
             </div>
 
-            <button onClick={() => setEditing(true)} style={{ ...primaryBtn, marginTop: 20 }}>Edit Profile</button>
+            <button onClick={() => setEditing(true)} style={{ ...primaryBtn, marginTop: 20 }}>{t("profile.editProfile")}</button>
           </>
         ) : (
           <>
-            <Field label="Full name"><input value={fullName} onChange={(e) => setFullName(e.target.value)} style={input} /></Field>
-            <Field label="Phone"><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+49 …" style={input} /></Field>
-            <Field label="Skills (comma-separated)"><input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder="Grill, Cashier, Opening" style={input} /></Field>
-            <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>Team, contract & role are set by your manager.</div>
+            <Field label={t("profile.fullName")}><input value={fullName} onChange={(e) => setFullName(e.target.value)} style={input} /></Field>
+            <Field label={t("profile.phone")}><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+49 …" style={input} /></Field>
+            <Field label={t("profile.skillsLabel")}><input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder={t("profile.skillsPlaceholder")} style={input} /></Field>
+            <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>{t("profile.managerNote")}</div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => { setEditing(false); load(); }} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(128,128,128,0.3)", color: "var(--white)" }}>Cancel</button>
-              <button onClick={save} disabled={saving} style={{ ...primaryBtn, opacity: saving ? 0.6 : 1 }}>{saving ? "Saving…" : "Save"}</button>
+              <button onClick={() => { setEditing(false); load(); }} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(128,128,128,0.3)", color: "var(--white)" }}>{t("common.cancel")}</button>
+              <button onClick={save} disabled={saving} style={{ ...primaryBtn, opacity: saving ? 0.6 : 1 }}>{saving ? t("common.saving") : t("common.save")}</button>
             </div>
           </>
         )}
@@ -123,20 +122,20 @@ export default function ProfilePage() {
       {/* Settings & Admin — managers & owners only */}
       {isManager && (
         <>
-          <div className="section-label">Settings &amp; Admin</div>
+          <div className="section-label">{t("profile.settingsAdmin")}</div>
           <Link href="/settings" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#555,#777)" }}>⚙️</div>
-            <div style={{ flex: 1 }}><div className="feature-title">Branch Settings</div><div className="feature-sub">QR clock-in, GPS check &amp; options</div></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("profile.branchSettings")}</div><div className="feature-sub">{t("profile.branchSettingsSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/export" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}>📤</div>
-            <div style={{ flex: 1 }}><div className="feature-title">Payroll Export</div><div className="feature-sub">Monthly hours per staff — CSV</div></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("profile.payrollExport")}</div><div className="feature-sub">{t("profile.payrollExportSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/audit" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}>🔒</div>
-            <div style={{ flex: 1 }}><div className="feature-title">Audit Log</div><div className="feature-sub">Every manager action, time-stamped</div></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("profile.auditLog")}</div><div className="feature-sub">{t("profile.auditLogSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
         </>
