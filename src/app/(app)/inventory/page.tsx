@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 import { getProducts, getCounts, saveCount, addProduct, removeProduct, getOrderAlert } from "@/lib/queries/inventory";
 
 export default function InventoryPage() {
@@ -10,7 +12,6 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [activeCat, setActiveCat] = useState<string>("");
-  const [msg, setMsg] = useState<string | null>(null);
 
   // count entry: product -> typed value
   const [entry, setEntry] = useState<Record<string, string>>({});
@@ -44,19 +45,19 @@ export default function InventoryPage() {
 
   async function doSaveCount(p: any) {
     const val = entry[p.product];
-    if (val === undefined || val === "") { setMsg("Enter a count first."); return; }
+    if (val === undefined || val === "") { toast("Enter a count first.", "error"); return; }
     setSavingP(p.product);
     const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit);
     setSavingP(null);
-    if (res.ok) { setMsg(`✅ ${p.product} counted.`); setEntry((e) => ({ ...e, [p.product]: "" })); load(); }
-    else { setMsg(res.error || "Failed."); if (res.error?.includes("Managers")) setDenied(true); }
+    if (res.ok) { toast(`${p.product} counted`, "success"); setEntry((e) => ({ ...e, [p.product]: "" })); load(); }
+    else { toast(res.error || "Failed.", "error"); if (res.error?.includes("Managers")) setDenied(true); }
   }
 
   async function doAddProduct() {
-    if (!np.category || !np.product) { setMsg("Category + product required."); return; }
+    if (!np.category || !np.product) { toast("Category + product required.", "error"); return; }
     const res = await addProduct(np.category, np.product, Number(np.soll) || 0, np.unit);
-    if (res.ok) { setMsg("✅ Product added."); setNp({ category: "", product: "", soll: "", unit: "" }); setShowAdd(false); load(); }
-    else setMsg(res.error || "Failed.");
+    if (res.ok) { toast("Product added", "success"); setNp({ category: "", product: "", soll: "", unit: "" }); setShowAdd(false); load(); }
+    else toast(res.error || "Failed.", "error");
   }
 
   if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
@@ -69,10 +70,9 @@ export default function InventoryPage() {
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📦 Inventory</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Stock counts by date · low-stock alerts.</p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={4} />
       ) : (
         <>
           {/* ORDER ALERT */}

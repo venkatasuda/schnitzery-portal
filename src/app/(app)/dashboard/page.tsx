@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardSkeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { getDashboardStats } from "@/lib/queries/admin";
 
@@ -26,7 +27,7 @@ export default function DashboardPage() {
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 18 }}>Live overview of your branch.</p>
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={3} />
       ) : !stats ? (
         <div style={{ ...card, textAlign: "center", color: "#9a8f8f" }}>No data.</div>
       ) : (

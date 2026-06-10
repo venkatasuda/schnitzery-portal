@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardSkeleton } from "@/components/Skeleton";
 import { getDirectory } from "@/lib/queries/people";
 
 const TEAM_COLORS: Record<string, string> = {
@@ -34,7 +35,7 @@ export default function DirectoryPage() {
         style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={3} />
       ) : filtered.length === 0 ? (
         <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>No colleagues found.</div>
       ) : (

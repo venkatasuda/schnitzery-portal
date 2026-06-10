@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardSkeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getBranchDetail } from "@/lib/queries/owner";
@@ -21,7 +22,7 @@ export default function BranchDetailPage() {
     })();
   }, [branchId]);
 
-  if (loading) return <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>;
+  if (loading) return <CardSkeleton rows={3} />;
   if (error) return (
     <div>
       <Link href="/branches" style={{ color: "#d4a847", fontSize: 13, textDecoration: "none" }}>‹ Back to branches</Link>

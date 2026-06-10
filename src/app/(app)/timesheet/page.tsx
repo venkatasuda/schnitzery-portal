@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardSkeleton } from "@/components/Skeleton";
 import { getMyTimesheet } from "@/lib/queries/timepay";
 
 export default function TimesheetPage() {
@@ -11,7 +12,7 @@ export default function TimesheetPage() {
   async function load(m?: string) {
     setLoading(true);
     const res = await getMyTimesheet(m);
-    if (res.ok) { setRows(res.rows); setMonth(res.month || ""); }
+    if (res.ok) { setRows(res.rows); setMonth(res.month); }
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
@@ -39,7 +40,7 @@ export default function TimesheetPage() {
         <button onClick={() => shiftMonth(1)} style={navBtn}>Next ›</button>
       </div>
 
-      {loading ? <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+      {loading ? <CardSkeleton rows={3} />
       : rows.length === 0 ? <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>No shifts this month.</div>
       : (
         <>

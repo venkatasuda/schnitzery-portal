@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardSkeleton } from "@/components/Skeleton";
 import { getMyHours } from "@/lib/queries/timepay";
 
 export default function HoursPage() {
@@ -11,7 +12,7 @@ export default function HoursPage() {
   async function load(m?: string) {
     setLoading(true);
     const res = await getMyHours(m);
-    if (res.ok) { setData(res); setMonth(res.month || ""); }
+    if (res.ok) { setData(res); setMonth(res.month); }
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
@@ -38,7 +39,7 @@ export default function HoursPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={3} />
       ) : !data ? (
         <div style={{ ...card, textAlign: "center", color: "#9a8f8f" }}>No data.</div>
       ) : (

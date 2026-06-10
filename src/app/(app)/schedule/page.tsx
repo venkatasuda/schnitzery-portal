@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardSkeleton } from "@/components/Skeleton";
 import {
   getMyShifts, getWeekStart, getStaffForSwap, submitSwap, getMySwaps,
 } from "@/lib/queries/schedule";
@@ -111,9 +112,7 @@ export default function SchedulePage() {
 
           {/* shifts list */}
           {loading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 20, textAlign: "center" }}>
-              <div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…
-            </div>
+            <CardSkeleton rows={3} />
           ) : shifts.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>
               <div style={{ fontSize: 28, marginBottom: 6 }}>🗓</div>No shifts assigned this week.

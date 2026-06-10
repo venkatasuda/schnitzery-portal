@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 import { getTodayChecklist, addChecklistTask, toggleTask, deleteTask } from "@/lib/queries/operations";
 
 export default function ChecklistPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [canManage, setCanManage] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // add task
@@ -31,7 +32,7 @@ export default function ChecklistPage() {
   async function add() {
     if (!newTask.trim()) return;
     const res = await addChecklistTask(newType, newTask);
-    if (res.ok) { setNewTask(""); load(); } else setMsg(res.error || "Failed.");
+    if (res.ok) { setNewTask(""); load(); toast("Task added", "success"); } else toast(res.error || "Failed to add.", "error");
   }
   async function del(id: string) {
     setBusyId(id);
@@ -66,10 +67,10 @@ export default function ChecklistPage() {
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>✅ Daily Checklist</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
-        {loading ? "Loading…" : `${doneCount}/${tasks.length} done today`}
+        {loading ? "Opening & closing tasks" : `${doneCount}/${tasks.length} done today`}
       </p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
+      {loading && <CardSkeleton rows={4} />}
 
       {!loading && (
         <>

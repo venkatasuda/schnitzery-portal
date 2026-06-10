@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CardSkeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { getBranchStats } from "@/lib/queries/owner";
 
@@ -32,7 +33,7 @@ export default function BranchesPage() {
       <p className="page-sub">Live overview across {totals?.branches || 0} branches.</p>
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={3} />
       ) : (
         <>
           {/* ORG TOTALS */}
