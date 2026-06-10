@@ -5,6 +5,7 @@ import {
   getMyStatus, clockIn, clockOut, getMyHistory, startBreak, endBreak,
 } from "@/lib/queries/attendance";
 import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
+import { Skeleton, CardSkeleton } from "@/components/Skeleton";
 import QrScanner from "./QrScanner";
 
 export default function AttendancePage() {
@@ -172,8 +173,10 @@ export default function AttendancePage() {
 
       <div className="card" style={{ padding: 24 }}>
         {loading ? (
-          <div style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>
-            <div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…
+          <div style={{ padding: "10px 0" }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><Skeleton height={15} width={130} /></div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}><Skeleton height={118} width={118} radius={60} /></div>
+            <Skeleton height={46} radius={12} />
           </div>
         ) : (
           <>
@@ -318,9 +321,7 @@ export default function AttendancePage() {
 
           {/* records */}
           {histLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 20, textAlign: "center" }}>
-              <div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…
-            </div>
+            <CardSkeleton rows={3} />
           ) : history.length === 0 ? (
             <div className="card" style={{ color: "var(--gray)", fontSize: 13, padding: 30, textAlign: "center" }}>
               <div style={{ fontSize: 26, marginBottom: 6 }}>📭</div>
