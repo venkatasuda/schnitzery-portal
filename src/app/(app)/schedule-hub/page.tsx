@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { getWeekStart, getRoster, saveRoster } from "@/lib/queries/schedule";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 type Tab = "roster" | "team" | "insights" | "conflicts" | "tools";
 
@@ -14,7 +16,6 @@ export default function ScheduleHubPage() {
   const [denied, setDenied] = useState(false);
 
   const [copyBusy, setCopyBusy] = useState(false);
-  const [copyMsg, setCopyMsg] = useState<string | null>(null);
 
   async function loadOverview() {
     setLoading(true);
@@ -26,20 +27,20 @@ export default function ScheduleHubPage() {
   useEffect(() => { loadOverview(); }, []);
 
   async function copyForward() {
-    setCopyBusy(true); setCopyMsg(null);
+    setCopyBusy(true);
     try {
       const thisWk = await getWeekStart(0);
       const nextWk = await getWeekStart(1);
       const src = await getRoster(thisWk);
       if (!src.ok || !src.roster || Object.keys(src.roster).length === 0) {
-        setCopyMsg("This week's roster is empty — nothing to copy.");
+        toast("This week's roster is empty — nothing to copy.", "error");
       } else {
         const res = await saveRoster(nextWk, src.roster);
-        setCopyMsg(res.ok ? "✅ Copied this week's roster to next week." : (res.error || "Copy failed."));
-        if (res.ok) loadOverview();
+        if (res.ok) { toast("Copied this week's roster to next week.", "success"); loadOverview(); }
+        else toast(res.error || "Copy failed.", "error");
       }
     } catch {
-      setCopyMsg("Copy failed.");
+      toast("Copy failed.", "error");
     }
     setCopyBusy(false);
   }
@@ -76,7 +77,7 @@ export default function ScheduleHubPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>
+        <CardSkeleton rows={4} />
       ) : (
         <>
           {/* ───────── ROSTER ───────── */}
@@ -206,7 +207,6 @@ export default function ScheduleHubPage() {
                 <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? "Copying…" : "Copy This Week → Next"}</div><div className="feature-sub">Duplicate the current roster forward</div></div>
                 <span className="feature-chev">›</span>
               </button>
-              {copyMsg && <div style={{ fontSize: 13, color: "var(--gold)", textAlign: "center", marginBottom: 10 }}>{copyMsg}</div>}
 
               <Link href="/export" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}>📤</div>

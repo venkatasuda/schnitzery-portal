@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { reportIncident, getIncidents, resolveIncident } from "@/lib/queries/operations";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const CATEGORIES = ["Safety", "Equipment", "Hygiene", "Customer", "Security", "Other"];
 const SEVERITIES = ["low", "medium", "high"];
@@ -11,7 +13,6 @@ export default function IncidentsPage() {
   const [list, setList] = useState<any[]>([]);
   const [canManage, setCanManage] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState<string | null>(null);
 
   // report form
   const [showForm, setShowForm] = useState(false);
@@ -33,18 +34,18 @@ export default function IncidentsPage() {
   useEffect(() => { load(); }, []);
 
   async function submit() {
-    if (!description.trim()) { setMsg("Describe what happened."); return; }
-    setPosting(true); setMsg(null);
+    if (!description.trim()) { toast("Describe what happened.", "error"); return; }
+    setPosting(true);
     const res = await reportIncident(category, severity, description);
     setPosting(false);
-    if (res.ok) { setMsg("✅ Incident reported."); setDescription(""); setCategory("Safety"); setSeverity("medium"); setShowForm(false); load(); }
-    else setMsg(res.error || "Failed.");
+    if (res.ok) { toast("Incident reported", "success"); setDescription(""); setCategory("Safety"); setSeverity("medium"); setShowForm(false); load(); }
+    else toast(res.error || "Failed to report.", "error");
   }
 
   async function doResolve(id: string) {
     const res = await resolveIncident(id, resolveNote);
-    if (res.ok) { setResolveId(null); setResolveNote(""); load(); }
-    else setMsg(res.error || "Failed.");
+    if (res.ok) { toast("Incident resolved", "success"); setResolveId(null); setResolveNote(""); load(); }
+    else toast(res.error || "Failed to resolve.", "error");
   }
 
   const fmt = (iso: string) => new Date(iso).toLocaleDateString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -52,9 +53,7 @@ export default function IncidentsPage() {
   return (
     <div style={{ maxWidth: 620, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>🚨 Incidents</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Report accidents, hazards & issues.</p>
-
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Report accidents, hazards &amp; issues.</p>
 
       <button onClick={() => setShowForm(!showForm)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
         {showForm ? "Close" : "➕ Report an Incident"}
@@ -72,7 +71,7 @@ export default function IncidentsPage() {
       )}
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={3} />
       ) : list.length === 0 ? (
         <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}>✅<br />No incidents reported.</div>
       ) : (

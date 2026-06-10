@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getAnnouncements, postAnnouncement, togglePin, deleteAnnouncement } from "@/lib/queries/announcements";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const CATEGORIES = ["General", "Urgent", "Schedule", "Policy", "Event"];
 const CAT_COLORS: Record<string, string> = {
@@ -12,7 +14,6 @@ export default function AnnouncementsPage() {
   const [list, setList] = useState<any[]>([]);
   const [canPost, setCanPost] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // post form
@@ -32,14 +33,14 @@ export default function AnnouncementsPage() {
   useEffect(() => { load(); }, []);
 
   async function post() {
-    if (!message.trim()) { setMsg("Write a message first."); return; }
-    setPosting(true); setMsg(null);
+    if (!message.trim()) { toast("Write a message first.", "error"); return; }
+    setPosting(true);
     const res = await postAnnouncement(title, message, category, pinned);
     setPosting(false);
     if (res.ok) {
-      setMsg("✅ Posted!"); setTitle(""); setMessage(""); setCategory("General"); setPinned(false); setShowPost(false);
+      toast("Announcement posted", "success"); setTitle(""); setMessage(""); setCategory("General"); setPinned(false); setShowPost(false);
       load();
-    } else setMsg(res.error || "Failed.");
+    } else toast(res.error || "Failed to post.", "error");
   }
 
   async function pin(a: any) {
@@ -70,8 +71,6 @@ export default function AnnouncementsPage() {
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📣 Announcements</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>News and updates for the team.</p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
-
       {canPost && (
         <>
           <button onClick={() => setShowPost(!showPost)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
@@ -100,7 +99,7 @@ export default function AnnouncementsPage() {
       )}
 
       {loading ? (
-        <div style={{ color: "#9a8f8f", padding: 30, textAlign: "center" }}>Loading…</div>
+        <CardSkeleton rows={3} />
       ) : list.length === 0 ? (
         <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}>📭<br />No announcements yet.</div>
       ) : (
