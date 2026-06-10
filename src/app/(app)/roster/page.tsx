@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { getRoster, saveRoster, getWeekStart } from "@/lib/queries/schedule";
 import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
+import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TEAMS = Object.keys(SHIFT_MODEL); // Manager, Preparation, Kitchen
@@ -18,7 +20,6 @@ export default function RosterPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
   const [denied, setDenied] = useState(false);
 
   // add-shift form (per selected day)
@@ -29,7 +30,6 @@ export default function RosterPage() {
 
   async function load(offset: number) {
     setLoading(true);
-    setMsg(null);
     const ws = await getWeekStart(offset);
     const res = await getRoster(ws);
     if (!res.ok) {
@@ -52,7 +52,7 @@ export default function RosterPage() {
   }
 
   function addEntry() {
-    if (!activeDay || !selStaff) { setMsg("Pick a staff member."); return; }
+    if (!activeDay || !selStaff) { toast("Pick a staff member.", "error"); return; }
     const person = staff.find((p) => p.id === selStaff);
     if (!person) return;
     const entry: Entry = { user_id: person.id, name: person.full_name, team: selTeam, shift: selShift };
@@ -76,10 +76,10 @@ export default function RosterPage() {
 
   async function doSave() {
     setSaving(true);
-    setMsg(null);
     const res = await saveRoster(weekStart, roster);
     setSaving(false);
-    setMsg(res.ok ? "✅ Roster saved!" : res.error || "Save failed.");
+    if (res.ok) toast("Roster saved", "success");
+    else toast(res.error || "Save failed.", "error");
   }
 
   const weekLabel = (() => {
@@ -114,12 +114,9 @@ export default function RosterPage() {
           {saving ? "Saving…" : "💾 Save Roster"}
         </button>
       </div>
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "var(--gold)", textAlign: "center" }}>{msg}</div>}
 
       {loading ? (
-        <div style={{ color: "var(--gray)", padding: 30, textAlign: "center" }}>
-          <div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…
-        </div>
+        <CardSkeleton rows={4} />
       ) : (
         <>
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
