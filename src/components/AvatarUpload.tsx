@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { setAvatarUrl } from "@/lib/queries/profile-uploads";
+import { toast } from "@/components/Toast";
 
 // Shows the user's avatar (uploaded photo or initials) with a small camera
 // button to pick + upload a new image to the 'avatars' storage bucket.
@@ -15,7 +16,7 @@ export default function AvatarUpload({ currentUrl, name, isManager }: { currentU
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("Image must be under 5 MB."); return; }
+    if (file.size > 5 * 1024 * 1024) { toast("Image must be under 5 MB.", "error"); return; }
     setBusy(true);
     try {
       const supabase = createClient();
@@ -30,8 +31,9 @@ export default function AvatarUpload({ currentUrl, name, isManager }: { currentU
       const res = await setAvatarUrl(publicUrl);
       if (!res.ok) throw new Error(res.error || "Save failed");
       setUrl(publicUrl + "?t=" + Date.now()); // cache-bust
+      toast("Photo updated.", "success");
     } catch (err: any) {
-      alert("Upload failed: " + (err?.message || "unknown error"));
+      toast("Upload failed: " + (err?.message || "unknown error"), "error");
     }
     setBusy(false);
     if (inputRef.current) inputRef.current.value = "";

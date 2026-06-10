@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getStaffDetail, getStaffHours, getStaffDocuments, getStaffDocumentUrl } from "@/lib/queries/staff-detail";
 import { getStaffLeaveBalance, setLeaveAllowance } from "@/lib/queries/leave-balance";
 import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const fmtH = (m: number) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
 const DOC_LABEL: Record<string, string> = {
@@ -52,7 +53,7 @@ export default function StaffDetailPage() {
   async function view(filePath: string) {
     const res = await getStaffDocumentUrl(filePath);
     if (res.ok && res.url) window.open(res.url, "_blank");
-    else alert(res.error || "Could not open document.");
+    else toast(res.error || "Could not open document.", "error");
   }
 
   async function saveAllowance() {
@@ -63,7 +64,7 @@ export default function StaffDetailPage() {
     else toast(res.error || "Could not save.", "error");
   }
 
-  if (loading) return <div style={{ color: "var(--gray)", textAlign: "center", padding: 40 }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>;
+  if (loading) return <div className="fade-up"><div style={{ height: 18 }} /><CardSkeleton rows={4} /></div>;
   if (error || !staff) return (
     <div className="fade-up">
       <Link href="/staff" style={backLink}>‹ Back to Staff</Link>

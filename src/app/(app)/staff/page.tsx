@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getStaffList, updateStaff } from "@/lib/queries/people";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier"];
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
@@ -135,6 +136,8 @@ export default function StaffPage() {
           </div>
         </div>
       )}
+
+      {loading && <CardSkeleton rows={5} />}
 
       {staff.map((p) => (
         <div key={p.id} style={{ ...card, marginBottom: 8 }}>
