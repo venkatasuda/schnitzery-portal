@@ -1,25 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import Link from "next/link";
 
 // Manager/Owner "People" hub — groups team management, the directory, and
 // notes/recognition under one screen with the old app's hub-tab pattern.
 // Reached from the home dashboard's "People & Team" shortcut.
 export default function PeopleHubPage() {
+  const { t } = useLang();
   const [tab, setTab] = useState<"team" | "notes">("team");
 
   return (
     <div className="fade-up">
-      <div className="page-title">👥 People</div>
-      <div className="page-sub">Manage your team · directory · notes</div>
+      <div className="page-title">👥 {t("ph.title")}</div>
+      <div className="page-sub">{t("ph.subtitle")}</div>
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>
-          👥 Team
+          {t("ph.tabTeam")}
         </button>
         <button className={`hub-tab${tab === "notes" ? " active" : ""}`} onClick={() => setTab("notes")}>
-          📝 Notes
+          {t("ph.tabNotes")}
         </button>
       </div>
 
@@ -29,15 +31,15 @@ export default function PeopleHubPage() {
             href="/staff"
             icon="👥"
             grad="linear-gradient(135deg,#6b2fa0,#9b59b6)"
-            title="Staff Management"
-            sub="Edit profiles, contracts & create accounts"
+            title={t("staff.title")}
+            sub={t("ph.staffSub")}
           />
           <HubLink
             href="/directory"
             icon="📇"
             grad="linear-gradient(135deg,#2c3e50,#34495e)"
-            title="Team Directory"
-            sub="Browse & contact everyone on the team"
+            title={t("directory.title")}
+            sub={t("ph.dirSub")}
           />
         </div>
       )}
@@ -48,12 +50,11 @@ export default function PeopleHubPage() {
             href="/notes"
             icon="📝"
             grad="linear-gradient(135deg,#922b21,#c0392b)"
-            title="Notes & Recognition"
-            sub="Private performance notes and shout-outs"
+            title={t("schedhub.notes")}
+            sub={t("ph.notesSub")}
           />
           <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
-            Performance notes are private to managers. Mark a note as recognition to
-            celebrate a team member's great work.
+            {t("ph.noteHint")}
           </div>
         </div>
       )}

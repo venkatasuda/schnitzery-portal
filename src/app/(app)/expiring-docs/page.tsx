@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import Link from "next/link";
 import { getBranchExpiringDocs } from "@/lib/queries/doc-expiry";
 import { CardSkeleton } from "@/components/Skeleton";
 
 export default function ExpiringDocsPage() {
+  const { t } = useLang();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
@@ -18,26 +20,26 @@ export default function ExpiringDocsPage() {
     });
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
+  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   function statusOf(days: number) {
-    if (days < 0) return { label: `Expired ${Math.abs(days)}d ago`, color: "#ec7063" };
-    if (days === 0) return { label: "Expires today", color: "#ec7063" };
-    return { label: `Expires in ${days}d`, color: days <= 30 ? "#ec7063" : "#e8a35a" };
+    if (days < 0) return { label: t("staffd.expired", { n: Math.abs(days) }), color: "#ec7063" };
+    if (days === 0) return { label: t("exp.expiresToday"), color: "#ec7063" };
+    return { label: t("staffd.expiresIn", { n: days }), color: days <= 30 ? "#ec7063" : "#e8a35a" };
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title">📑 Expiring Documents</div>
-      <div className="page-sub">Within 60 days · your branch</div>
+      <div className="page-title">📑 {t("exp.title")}</div>
+      <div className="page-sub">{t("exp.subtitle")}</div>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : items.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 32 }}>
           <div style={{ fontSize: 30, marginBottom: 8 }}>✅</div>
-          <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>Nothing expiring</div>
-          <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>No staff documents expire in the next 60 days.</div>
+          <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("exp.nothing")}</div>
+          <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("exp.nothingSub")}</div>
         </div>
       ) : (
         <div className="card" style={{ padding: 8 }}>
@@ -61,7 +63,7 @@ export default function ExpiringDocsPage() {
         </div>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>‹ Back to dashboard</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }

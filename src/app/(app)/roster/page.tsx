@@ -5,6 +5,7 @@ import { getRoster, saveRoster, getWeekStart } from "@/lib/queries/schedule";
 import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { useLang } from "@/components/LanguageProvider";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TEAMS = Object.keys(SHIFT_MODEL); // Manager, Preparation, Kitchen
@@ -14,6 +15,10 @@ type Entry = { user_id: string; name: string; team: string; shift: string };
 type Roster = Record<string, Entry[]>;
 
 export default function RosterPage() {
+  const { t } = useLang();
+  const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
+  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
   const [weekOffset, setWeekOffset] = useState(0);
   const [weekStart, setWeekStart] = useState("");
   const [roster, setRoster] = useState<Roster>({});
@@ -52,7 +57,7 @@ export default function RosterPage() {
   }
 
   function addEntry() {
-    if (!activeDay || !selStaff) { toast("Pick a staff member.", "error"); return; }
+    if (!activeDay || !selStaff) { toast(t("roster.pickStaff"), "error"); return; }
     const person = staff.find((p) => p.id === selStaff);
     if (!person) return;
     const entry: Entry = { user_id: person.id, name: person.full_name, team: selTeam, shift: selShift };
@@ -78,8 +83,8 @@ export default function RosterPage() {
     setSaving(true);
     const res = await saveRoster(weekStart, roster);
     setSaving(false);
-    if (res.ok) toast("Roster saved", "success");
-    else toast(res.error || "Save failed.", "error");
+    if (res.ok) toast(t("roster.saved"), "success");
+    else toast(res.error || t("roster.saveFailed"), "error");
   }
 
   const weekLabel = (() => {
@@ -93,25 +98,25 @@ export default function RosterPage() {
   const totalAssigned = DAYS.reduce((sum, d) => sum + (roster[d]?.length || 0), 0);
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>Only managers can edit the roster.</div>;
+    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("roster.managersOnly")}</div>;
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title">📋 Weekly Roster</div>
-      <div className="page-sub">Assign staff to shifts · {weekLabel || "…"}</div>
+      <div className="page-title">📋 {t("roster.title")}</div>
+      <div className="page-sub">{t("roster.subtitle", { week: weekLabel || "…" })}</div>
 
       {/* week nav + save */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => changeWeek(-1)} style={navBtn}>‹ Prev</button>
+          <button onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
           <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--gold)", fontWeight: 600, padding: "0 4px" }}>
-            {weekOffset === 0 ? "This week" : weekOffset > 0 ? `+${weekOffset}w` : `${weekOffset}w`}
+            {weekOffset === 0 ? t("roster.thisWeek") : weekOffset > 0 ? t("roster.weeksPlus", { n: weekOffset }) : t("roster.weeksMinus", { n: weekOffset })}
           </span>
-          <button onClick={() => changeWeek(1)} style={navBtn}>Next ›</button>
+          <button onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
         </div>
         <button onClick={doSave} disabled={saving} style={{ ...primaryBtn, width: "auto", padding: "10px 24px", opacity: saving ? 0.6 : 1 }}>
-          {saving ? "Saving…" : "💾 Save Roster"}
+          {saving ? t("common.saving") : t("roster.saveRoster")}
         </button>
       </div>
 
@@ -121,7 +126,7 @@ export default function RosterPage() {
         <>
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
           <div className="card" style={{ marginBottom: 12 }}>
-            <div className="card-title">Week at a Glance · {totalAssigned} shift{totalAssigned !== 1 ? "s" : ""}</div>
+            <div className="card-title">{t("roster.weekGlance", { n: totalAssigned })}</div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
               {DAYS.map((d) => {
                 const count = roster[d]?.length || 0;
@@ -132,7 +137,7 @@ export default function RosterPage() {
                     onClick={() => setActiveDay(isActive ? null : d)}
                     style={{ flex: 1, textAlign: "center", padding: "8px 2px", borderRadius: 8, border: "none", cursor: "pointer", background: isActive ? "rgba(212,168,71,0.18)" : count > 0 ? "var(--dark3)" : "transparent" }}
                   >
-                    <div style={{ fontSize: 12, color: isActive ? "var(--gold)" : "var(--gray)", fontWeight: isActive ? 700 : 500 }}>{d[0]}</div>
+                    <div style={{ fontSize: 12, color: isActive ? "var(--gold)" : "var(--gray)", fontWeight: isActive ? 700 : 500 }}>{dayLabel(d)[0]}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, marginTop: 3, color: count > 0 ? "var(--white)" : "rgba(128,128,128,0.4)" }}>{count}</div>
                   </button>
                 );
@@ -148,13 +153,13 @@ export default function RosterPage() {
               <div key={day} className="card" style={{ marginBottom: 10, borderColor: isActive ? "rgba(212,168,71,0.3)" : undefined }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: entries.length ? 10 : 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>
-                    {day}
+                    {dayLabel(day)}
                     {entries.length > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--gold)", marginLeft: 8 }}>{entries.length} assigned</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--gold)", marginLeft: 8 }}>{t("roster.assigned", { n: entries.length })}</span>
                     )}
                   </div>
                   <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--gold)" : "var(--dark3)", color: isActive ? "#1a0e0e" : "var(--white)", fontWeight: 600 }}>
-                    {isActive ? "Close" : "+ Add"}
+                    {isActive ? t("common.close") : t("roster.add")}
                   </button>
                 </div>
 
@@ -163,7 +168,7 @@ export default function RosterPage() {
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAM_COLORS[e.team] || "#888", flexShrink: 0 }} />
                     <div style={{ flex: 1, fontSize: 13, color: "var(--white)" }}>
-                      <b>{e.name}</b> <span style={{ color: "var(--gray)" }}>· {e.team} · {e.shift}</span>
+                      <b>{e.name}</b> <span style={{ color: "var(--gray)" }}>· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
                     <button onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "#ec7063", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
                   </div>
@@ -173,30 +178,30 @@ export default function RosterPage() {
                 {isActive && (
                   <div style={{ marginTop: 12, padding: 12, background: "var(--dark3)", borderRadius: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
                     <div style={{ flex: "1 1 140px" }}>
-                      <label style={miniLbl}>Staff</label>
+                      <label style={miniLbl}>{t("roster.staff")}</label>
                       <select value={selStaff} onChange={(e) => setSelStaff(e.target.value)} style={miniSelect}>
-                        <option value="">Select…</option>
+                        <option value="">{t("roster.select")}</option>
                         {staff.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                       </select>
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
-                      <label style={miniLbl}>Team</label>
+                      <label style={miniLbl}>{t("roster.team")}</label>
                       <select value={selTeam} onChange={(e) => { setSelTeam(e.target.value); setSelShift(SHIFT_MODEL[e.target.value][0].shift); }} style={miniSelect}>
-                        {TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
+                        {TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
                       </select>
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
-                      <label style={miniLbl}>Shift</label>
+                      <label style={miniLbl}>{t("roster.shift")}</label>
                       <select value={selShift} onChange={(e) => setSelShift(e.target.value)} style={miniSelect}>
-                        {SHIFT_MODEL[selTeam].map((s) => <option key={s.shift} value={s.shift}>{s.shift} ({s.time})</option>)}
+                        {SHIFT_MODEL[selTeam].map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time})</option>)}
                       </select>
                     </div>
-                    <button onClick={addEntry} style={{ ...primaryBtn, width: "auto", padding: "10px 18px", flex: "0 0 auto" }}>Add</button>
+                    <button onClick={addEntry} style={{ ...primaryBtn, width: "auto", padding: "10px 18px", flex: "0 0 auto" }}>{t("common.add")}</button>
                   </div>
                 )}
 
                 {entries.length === 0 && !isActive && (
-                  <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, opacity: 0.7 }}>No one assigned.</div>
+                  <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, opacity: 0.7 }}>{t("roster.noOne")}</div>
                 )}
               </div>
             );

@@ -1,28 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import Link from "next/link";
 
 // Manager/Owner "Settings" hub — groups branch configuration, reports, and
 // tools under one screen with the old app's hub-tab pattern. Reached from the
 // home dashboard's "Settings" shortcut.
 export default function SettingsHubPage() {
+  const { t } = useLang();
   const [tab, setTab] = useState<"config" | "reports" | "tools">("config");
 
   return (
     <div className="fade-up">
-      <div className="page-title">⚙️ Settings</div>
-      <div className="page-sub">Configuration · reports · tools</div>
+      <div className="page-title">⚙️ {t("sh.title")}</div>
+      <div className="page-sub">{t("sh.subtitle")}</div>
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "config" ? " active" : ""}`} onClick={() => setTab("config")}>
-          ⚙️ Config
+          {t("sh.tabConfig")}
         </button>
         <button className={`hub-tab${tab === "reports" ? " active" : ""}`} onClick={() => setTab("reports")}>
-          📊 Reports
+          {t("sh.tabReports")}
         </button>
         <button className={`hub-tab${tab === "tools" ? " active" : ""}`} onClick={() => setTab("tools")}>
-          🔧 Tools
+          {t("sh.tabTools")}
         </button>
       </div>
 
@@ -32,8 +34,8 @@ export default function SettingsHubPage() {
             href="/settings"
             icon="⚙️"
             grad="linear-gradient(135deg,#555,#777)"
-            title="Branch Settings"
-            sub="QR clock-in, GPS check & branch options"
+            title={t("profile.branchSettings")}
+            sub={t("sh.branchSettingsSub2")}
           />
         </div>
       )}
@@ -44,15 +46,15 @@ export default function SettingsHubPage() {
             href="/export"
             icon="📤"
             grad="linear-gradient(135deg,#117a65,#16a085)"
-            title="Payroll Export"
-            sub="Monthly hours per staff — download CSV"
+            title={t("profile.payrollExport")}
+            sub={t("sh.payrollSub2")}
           />
           <HubLink
             href="/audit"
             icon="🔒"
             grad="linear-gradient(135deg,#2c3e50,#34495e)"
-            title="Audit Log"
-            sub="Every manager action, time-stamped"
+            title={t("profile.auditLog")}
+            sub={t("profile.auditLogSub")}
           />
         </div>
       )}
@@ -63,8 +65,8 @@ export default function SettingsHubPage() {
             href="/clock-display"
             icon="📲"
             grad="linear-gradient(135deg,#1a6b8a,#3498db)"
-            title="Clock-In Display"
-            sub="Rotating QR + code screen for on-site clock-in"
+            title={t("sh.clockDisplay")}
+            sub={t("sh.clockDisplaySub")}
           />
         </div>
       )}

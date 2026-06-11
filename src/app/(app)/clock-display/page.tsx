@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import { getCurrentClockCode } from "@/lib/queries/clockcode";
 
 // MANAGER DISPLAY — show this on a tablet/screen at the restaurant.
 // Staff scan the QR or type the 6-digit code to clock in/out.
 export default function ClockDisplayPage() {
+  const { t } = useLang();
   const [code, setCode] = useState("------");
   const [qrPayload, setQrPayload] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(30);
@@ -22,7 +24,7 @@ export default function ClockDisplayPage() {
       setRotateSeconds(res.rotateSeconds ?? 30);
       setError(null);
     } else {
-      setError(res.error || "Could not load code.");
+      setError(res.error || t("cd.couldNotLoad"));
     }
   }
 
@@ -50,10 +52,10 @@ export default function ClockDisplayPage() {
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", textAlign: "center" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 4 }}>
-        📲 Clock-In Display
+        📲 {t("cd.title")}
       </h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 24 }}>
-        Staff: scan this QR or enter the code in your app.
+        {t("cd.subtitle")}
       </p>
 
       <div style={{ background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 32 }}>
@@ -71,7 +73,7 @@ export default function ClockDisplayPage() {
             </div>
 
             {/* CODE */}
-            <div style={{ fontSize: 13, letterSpacing: 2, color: "#9a8f8f", marginBottom: 6 }}>OR ENTER CODE</div>
+            <div style={{ fontSize: 13, letterSpacing: 2, color: "#9a8f8f", marginBottom: 6 }}>{t("cd.orEnterCode")}</div>
             <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: 8, color: "#d4a847", fontFamily: "Georgia, serif" }}>
               {code}
             </div>
@@ -82,7 +84,7 @@ export default function ClockDisplayPage() {
                 <div style={{ height: "100%", width: `${pct}%`, background: "#d4a847", transition: "width 1s linear" }} />
               </div>
               <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 8 }}>
-                New code in {secondsLeft}s
+                {t("cd.newCodeIn", { n: secondsLeft })}
               </div>
             </div>
           </>
@@ -90,7 +92,7 @@ export default function ClockDisplayPage() {
       </div>
 
       <p style={{ fontSize: 11, color: "#6f6565", marginTop: 16 }}>
-        The code changes every {rotateSeconds} seconds to prevent remote clock-ins.
+        {t("cd.codeChanges", { n: rotateSeconds })}
       </p>
     </div>
   );

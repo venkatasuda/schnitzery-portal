@@ -6,10 +6,14 @@ import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { getWeekStart, getRoster, saveRoster } from "@/lib/queries/schedule";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { useLang } from "@/components/LanguageProvider";
 
 type Tab = "roster" | "team" | "insights" | "conflicts" | "tools";
 
 export default function ScheduleHubPage() {
+  const { t } = useLang();
+  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const dayLabel = (k: string) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(String(k).toLowerCase()) ? t("days." + String(k).toLowerCase()) : k);
   const [tab, setTab] = useState<Tab>("roster");
   const [ov, setOv] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -33,14 +37,14 @@ export default function ScheduleHubPage() {
       const nextWk = await getWeekStart(1);
       const src = await getRoster(thisWk);
       if (!src.ok || !src.roster || Object.keys(src.roster).length === 0) {
-        toast("This week's roster is empty — nothing to copy.", "error");
+        toast(t("schedhub.emptyCopy"), "error");
       } else {
         const res = await saveRoster(nextWk, src.roster);
-        if (res.ok) { toast("Copied this week's roster to next week.", "success"); loadOverview(); }
-        else toast(res.error || "Copy failed.", "error");
+        if (res.ok) { toast(t("schedhub.copied"), "success"); loadOverview(); }
+        else toast(res.error || t("schedhub.copyFailed"), "error");
       }
     } catch {
-      toast("Copy failed.", "error");
+      toast(t("schedhub.copyFailed"), "error");
     }
     setCopyBusy(false);
   }
@@ -54,26 +58,26 @@ export default function ScheduleHubPage() {
   })();
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>Managers only.</div>;
+    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("common.managersOnly")}</div>;
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title">📅 Schedule</div>
-      <div className="page-sub">Plan · analyse · fix</div>
+      <div className="page-title">📅 {t("schedhub.title")}</div>
+      <div className="page-sub">{t("schedhub.subtitle")}</div>
 
       {/* quick actions */}
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-        <Link href="/announcements" style={quickBtn}>📣 Broadcast</Link>
-        <Link href="/noshow" style={quickBtn}>🔔 Reminders</Link>
+        <Link href="/announcements" style={quickBtn}>{t("schedhub.broadcast")}</Link>
+        <Link href="/noshow" style={quickBtn}>{t("schedhub.reminders")}</Link>
       </div>
 
       <div className="hub-tabs">
-        <button className={`hub-tab${tab === "roster" ? " active" : ""}`} onClick={() => setTab("roster")}>📋 Roster</button>
-        <button className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>👥 Team</button>
-        <button className={`hub-tab${tab === "insights" ? " active" : ""}`} onClick={() => setTab("insights")}>📊 Insights</button>
-        <button className={`hub-tab${tab === "conflicts" ? " active" : ""}`} onClick={() => setTab("conflicts")}>⚖️ Conflicts</button>
-        <button className={`hub-tab${tab === "tools" ? " active" : ""}`} onClick={() => setTab("tools")}>🔧 Tools</button>
+        <button className={`hub-tab${tab === "roster" ? " active" : ""}`} onClick={() => setTab("roster")}>{t("schedhub.tabRoster")}</button>
+        <button className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>{t("schedhub.tabTeam")}</button>
+        <button className={`hub-tab${tab === "insights" ? " active" : ""}`} onClick={() => setTab("insights")}>{t("schedhub.tabInsights")}</button>
+        <button className={`hub-tab${tab === "conflicts" ? " active" : ""}`} onClick={() => setTab("conflicts")}>{t("schedhub.tabConflicts")}</button>
+        <button className={`hub-tab${tab === "tools" ? " active" : ""}`} onClick={() => setTab("tools")}>{t("schedhub.tabTools")}</button>
       </div>
 
       {loading ? (
@@ -85,23 +89,23 @@ export default function ScheduleHubPage() {
             <div className="hub-tab-panel active">
               <Link href="/roster" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>📋</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Open Roster Editor</div><div className="feature-sub">Build &amp; publish next week&apos;s schedule</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.openEditor")}</div><div className="feature-sub">{t("schedhub.openEditorSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 
               {/* This Week panel */}
               <div className="card">
-                <div className="card-title">Upcoming Week</div>
+                <div className="card-title">{t("schedhub.upcomingWeek")}</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                  <Mini label="Week" value={weekLabel} small color="var(--white)" />
-                  <Mini label="Submissions" value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color={(ov?.submissionCount ?? 0) > 0 ? "#58d68d" : "#ec7063"} />
-                  <Mini label="Status" value={ov?.rosterExists ? "Built" : "Open"} color={ov?.rosterExists ? "#58d68d" : "#e8a35a"} />
+                  <Mini label={t("schedhub.week")} value={weekLabel} small color="var(--white)" />
+                  <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color={(ov?.submissionCount ?? 0) > 0 ? "#58d68d" : "#ec7063"} />
+                  <Mini label={t("schedhub.statusLabel")} value={ov?.rosterExists ? t("schedhub.built") : t("schedhub.open")} color={ov?.rosterExists ? "#58d68d" : "#e8a35a"} />
                 </div>
               </div>
 
               <Link href="/approvals" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e8449,#27ae60)" }}>✅</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Requests</div><div className="feature-sub">Leave &amp; shift-swap approvals</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.requests")}</div><div className="feature-sub">{t("schedhub.requestsSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
             </div>
@@ -112,17 +116,17 @@ export default function ScheduleHubPage() {
             <div className="hub-tab-panel active">
               <Link href="/staff" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>👥</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Staff Management</div><div className="feature-sub">Profiles, contracts &amp; accounts</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("staff.title")}</div><div className="feature-sub">{t("schedhub.staffMgmtSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
               <Link href="/directory" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}>📇</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Team Directory</div><div className="feature-sub">Browse &amp; contact everyone</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("directory.title")}</div><div className="feature-sub">{t("schedhub.directorySub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
               <Link href="/notes" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#922b21,#c0392b)" }}>📝</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Notes &amp; Recognition</div><div className="feature-sub">Performance notes &amp; shout-outs</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.notes")}</div><div className="feature-sub">{t("schedhub.notesSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
             </div>
@@ -132,33 +136,33 @@ export default function ScheduleHubPage() {
           {tab === "insights" && (
             <div className="hub-tab-panel active">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                <Mini label="Total Shifts" value={ov?.totalShifts ?? 0} color="var(--gold)" />
-                <Mini label="Submissions" value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="#58d68d" />
+                <Mini label={t("schedhub.totalShifts")} value={ov?.totalShifts ?? 0} color="var(--gold)" />
+                <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="#58d68d" />
               </div>
 
               {(ov?.totalShifts ?? 0) === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>No roster built for next week yet.</div>
+                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>{t("schedhub.noRoster")}</div>
               ) : (
                 <>
                   <div className="card">
-                    <div className="card-title">Shifts by Team</div>
-                    {(ov?.byTeamArr || []).map((t: any) => (
-                      <BarRow key={t.team} label={t.team} count={t.count} max={ov.totalShifts} color="#3498db" />
+                    <div className="card-title">{t("schedhub.shiftsByTeam")}</div>
+                    {(ov?.byTeamArr || []).map((tm: any) => (
+                      <BarRow key={tm.team} label={teamLabel(tm.team)} count={tm.count} max={ov.totalShifts} color="#3498db" />
                     ))}
                   </div>
                   <div className="card">
-                    <div className="card-title">Most Scheduled</div>
+                    <div className="card-title">{t("schedhub.mostScheduled")}</div>
                     {(ov?.byPersonArr || []).slice(0, 6).map((p: any) => (
                       <div key={p.name} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid rgba(128,128,128,0.1)", fontSize: 13 }}>
                         <span style={{ color: "var(--white)" }}>{p.name}</span>
-                        <span style={{ color: "var(--gold)", fontWeight: 600 }}>{p.count} shift{p.count !== 1 ? "s" : ""}</span>
+                        <span style={{ color: "var(--gold)", fontWeight: 600 }}>{t("schedhub.shiftsCount", { n: p.count })}</span>
                       </div>
                     ))}
                   </div>
                   <div className="card">
-                    <div className="card-title">By Day</div>
+                    <div className="card-title">{t("schedhub.byDay")}</div>
                     {(ov?.byDayArr || []).map((d: any) => (
-                      <BarRow key={d.day} label={d.day} count={d.count} max={Math.max(1, ...(ov.byDayArr || []).map((x: any) => x.count))} color="#d4a847" />
+                      <BarRow key={d.day} label={dayLabel(d.day)} count={d.count} max={Math.max(1, ...(ov.byDayArr || []).map((x: any) => x.count))} color="#d4a847" />
                     ))}
                   </div>
                 </>
@@ -172,22 +176,22 @@ export default function ScheduleHubPage() {
               {(ov?.conflicts || []).length === 0 ? (
                 <div className="card" style={{ textAlign: "center", padding: 28 }}>
                   <div style={{ fontSize: 26, marginBottom: 6 }}>✅</div>
-                  <div style={{ color: "#58d68d", fontSize: 14, fontWeight: 600 }}>No conflicts</div>
-                  <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 4 }}>Everyone&apos;s scheduled within their availability, no double-bookings.</div>
+                  <div style={{ color: "#58d68d", fontSize: 14, fontWeight: 600 }}>{t("schedhub.noConflicts")}</div>
+                  <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 4 }}>{t("schedhub.noConflictsSub")}</div>
                 </div>
               ) : (
                 <div className="card">
-                  <div className="card-title">{ov.conflicts.length} Conflict{ov.conflicts.length !== 1 ? "s" : ""} to Review</div>
+                  <div className="card-title">{t("schedhub.conflictsToReview", { n: ov.conflicts.length })}</div>
                   {ov.conflicts.map((c: any, i: number) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < ov.conflicts.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                       <span style={{ fontSize: 16 }}>{c.type === "Double-booked" ? "🔁" : "⚠️"}</span>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{c.name} <span style={{ color: "var(--gray)", fontWeight: 400, fontSize: 12 }}>· {c.day}</span></div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{c.name} <span style={{ color: "var(--gray)", fontWeight: 400, fontSize: 12 }}>· {dayLabel(c.day)}</span></div>
                         <div style={{ fontSize: 11, color: "#e8a35a" }}>{c.type} — {c.detail}</div>
                       </div>
                     </div>
                   ))}
-                  <Link href="/roster" style={{ display: "block", textAlign: "center", marginTop: 12, fontSize: 13, color: "var(--gold)", textDecoration: "none" }}>Open Roster Editor to fix →</Link>
+                  <Link href="/roster" style={{ display: "block", textAlign: "center", marginTop: 12, fontSize: 13, color: "var(--gold)", textDecoration: "none" }}>{t("schedhub.openEditorFix")}</Link>
                 </div>
               )}
             </div>
@@ -198,25 +202,25 @@ export default function ScheduleHubPage() {
             <div className="hub-tab-panel active">
               <Link href="/roster" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>📋</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Open Roster Editor</div><div className="feature-sub">Full editing view</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.openEditor")}</div><div className="feature-sub">{t("schedhub.fullEditing")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 
               <button onClick={copyForward} disabled={copyBusy} className="feature-card" style={{ width: "100%", textAlign: "left", cursor: copyBusy ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>📑</div>
-                <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? "Copying…" : "Copy This Week → Next"}</div><div className="feature-sub">Duplicate the current roster forward</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? t("schedhub.copying") : t("schedhub.copyWeek")}</div><div className="feature-sub">{t("schedhub.copyWeekSub")}</div></div>
                 <span className="feature-chev">›</span>
               </button>
 
               <Link href="/export" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}>📤</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Payroll Export</div><div className="feature-sub">Monthly hours per staff — CSV</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("profile.payrollExport")}</div><div className="feature-sub">{t("profile.payrollExportSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 
               <Link href="/noshow" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}>📋</div>
-                <div style={{ flex: 1 }}><div className="feature-title">Availability Check</div><div className="feature-sub">Who hasn&apos;t submitted for next week</div></div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.availCheck")}</div><div className="feature-sub">{t("schedhub.availCheckSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
             </div>

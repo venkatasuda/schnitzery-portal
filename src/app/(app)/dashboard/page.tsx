@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import { CardSkeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { getDashboardStats } from "@/lib/queries/admin";
 
 export default function DashboardPage() {
+  const { t } = useLang();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
@@ -19,35 +21,35 @@ export default function DashboardPage() {
     })();
   }, []);
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
+  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   return (
     <div style={{ maxWidth: 760, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📊 Dashboard</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 18 }}>Live overview of your branch.</p>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📊 {t("dash.title")}</h1>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 18 }}>{t("dash.subtitle")}</p>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : !stats ? (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f" }}>No data.</div>
+        <div style={{ ...card, textAlign: "center", color: "#9a8f8f" }}>{t("hours.noData")}</div>
       ) : (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 16 }}>
-            <StatCard icon="🟢" value={stats.clockedIn} label="Working now" color="#58d68d" href="/clock-display" />
-            <StatCard icon="👥" value={stats.staffCount} label="Active staff" color="#3498db" href="/staff" />
-            <StatCard icon="✅" value={stats.pendingApprovals} label="Pending approvals" color={stats.pendingApprovals ? "#d4a847" : "#58d68d"} href="/approvals" />
-            <StatCard icon="🚨" value={stats.openIncidents} label="Open incidents" color={stats.openIncidents ? "#ec7063" : "#58d68d"} href="/incidents" />
-            <StatCard icon="📦" value={stats.lowStock} label="Low-stock items" color={stats.lowStock ? "#e8a35a" : "#58d68d"} href="/inventory" />
-            <StatCard icon="✔️" value={`${stats.checklistDone}/${stats.checklistTotal}`} label="Checklist today" color="#9b59b6" href="/checklist" />
+            <StatCard icon="🟢" value={stats.clockedIn} label={t("dash.workingNow")} color="#58d68d" href="/clock-display" />
+            <StatCard icon="👥" value={stats.staffCount} label={t("dash.activeStaff")} color="#3498db" href="/staff" />
+            <StatCard icon="✅" value={stats.pendingApprovals} label={t("dash.pendingApprovals")} color={stats.pendingApprovals ? "#d4a847" : "#58d68d"} href="/approvals" />
+            <StatCard icon="🚨" value={stats.openIncidents} label={t("dash.openIncidents")} color={stats.openIncidents ? "#ec7063" : "#58d68d"} href="/incidents" />
+            <StatCard icon="📦" value={stats.lowStock} label={t("dash.lowStock")} color={stats.lowStock ? "#e8a35a" : "#58d68d"} href="/inventory" />
+            <StatCard icon="✔️" value={`${stats.checklistDone}/${stats.checklistTotal}`} label={t("dash.checklistToday")} color="#9b59b6" href="/checklist" />
           </div>
 
           <div style={{ ...card }}>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Quick actions</div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{t("dash.quickActions")}</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <QuickLink href="/roster">📋 Build Roster</QuickLink>
-              <QuickLink href="/announcements">📣 Post Announcement</QuickLink>
-              <QuickLink href="/export">📤 Payroll Export</QuickLink>
-              <QuickLink href="/settings">⚙️ Settings</QuickLink>
+              <QuickLink href="/roster">{t("dash.buildRoster")}</QuickLink>
+              <QuickLink href="/announcements">{t("home.postAnnouncement")}</QuickLink>
+              <QuickLink href="/export">📤 {t("profile.payrollExport")}</QuickLink>
+              <QuickLink href="/settings">{t("dash.settings")}</QuickLink>
             </div>
           </div>
         </>
