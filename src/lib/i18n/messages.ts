@@ -130,6 +130,10 @@ export const messages = {
       noRecordsWeek: "No attendance records for this week.", noRecordsMonth: "No attendance records for this month.",
       inProgress: "in progress", recordIn: "In", recordOut: "Out", minBreak: "min break",
     },
+    login: {
+      subtitle: "Sign in to your account", email: "Email", password: "Password",
+      signIn: "Sign In", signingIn: "Signing in…",
+    },
 
     profile: {
       title: "My Profile", subtitle: "Your details and skills",
@@ -301,6 +305,10 @@ export const messages = {
       weekLabel: "Diese Woche", monthLabel: "Diesen Monat", daysWorked: "Gearbeitete Tage",
       noRecordsWeek: "Keine Anwesenheitsdaten für diese Woche.", noRecordsMonth: "Keine Anwesenheitsdaten für diesen Monat.",
       inProgress: "läuft", recordIn: "Ein", recordOut: "Aus", minBreak: "Min. Pause",
+    },
+    login: {
+      subtitle: "Melde dich bei deinem Konto an", email: "E-Mail", password: "Passwort",
+      signIn: "Anmelden", signingIn: "Anmeldung…",
     },
 
     profile: {
