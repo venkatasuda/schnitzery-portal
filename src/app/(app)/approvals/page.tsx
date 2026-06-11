@@ -6,6 +6,7 @@ import { getPendingApprovals, decideLeave, decideSwap } from "@/lib/queries/leav
 import { getAttendanceApprovals, setAttendanceApproval } from "@/lib/queries/live-attendance";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { useLang } from "@/components/LanguageProvider";
 
 type Kind = "leave" | "swap" | "attendance";
 type Item = { kind: Kind; id: string; icon: string; name: string; detail: string };
@@ -15,6 +16,8 @@ const fmtH = (m: number) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 6
 const fmtD = (d?: string | null) => (d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short" }) : "—");
 
 export default function ApprovalsPage() {
+  const { t } = useLang();
+  const dayLabel = (k: string) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(k.toLowerCase()) ? t("days." + k.toLowerCase()) : (k || "?"));
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
@@ -28,14 +31,14 @@ export default function ApprovalsPage() {
 
     const out: Item[] = [];
     for (const l of (pa.ok && pa.leave) || []) {
-      out.push({ kind: "leave", id: l.id, icon: "🌴", name: (l as any).users?.full_name || "Someone", detail: `Time off · ${fmtD(l.from_date)} → ${fmtD(l.to_date)}${l.reason ? ` · ${l.reason}` : ""}` });
+      out.push({ kind: "leave", id: l.id, icon: "🌴", name: (l as any).users?.full_name || t("approvals.someone"), detail: `${t("approvals.timeOff")} · ${fmtD(l.from_date)} → ${fmtD(l.to_date)}${l.reason ? ` · ${l.reason}` : ""}` });
     }
     for (const s of (pa.ok && pa.swaps) || []) {
       const other = (s as any).other?.full_name;
-      out.push({ kind: "swap", id: s.id, icon: "🔄", name: (s as any).requester?.full_name || "Someone", detail: `Swap · ${s.my_day || "?"} ↔ ${s.their_day || "?"}${other ? ` with ${other}` : ""}` });
+      out.push({ kind: "swap", id: s.id, icon: "🔄", name: (s as any).requester?.full_name || t("approvals.someone"), detail: `${t("approvals.swap")} · ${dayLabel(s.my_day)} ↔ ${dayLabel(s.their_day)}${other ? ` ${t("approvals.with")} ${other}` : ""}` });
     }
     for (const r of (att.ok && att.rows) || []) {
-      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${r.late_mins > 0 ? ` · ${r.late_mins}m late` : ""}${r.overtime ? " · overtime" : ""}` });
+      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${r.late_mins > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.overtime ? ` · ${t("approvals.overtime")}` : ""}` });
     }
     setItems(out);
     setLoading(false);
@@ -51,25 +54,25 @@ export default function ApprovalsPage() {
     setBusyId(null);
     if (res.ok) {
       setItems((cur) => cur.filter((x) => !(x.kind === item.kind && x.id === item.id)));
-      toast(approve ? "Approved." : "Rejected.", "success");
-    } else toast(res.error || "Action failed.", "error");
+      toast(approve ? t("approvals.approved") : t("approvals.rejected"), "success");
+    } else toast(res.error || t("approvals.actionFailed"), "error");
   }
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
+  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const shown = items.filter((i) => filter === "all" || i.kind === filter);
   const count = (k: Kind) => items.filter((i) => i.kind === k).length;
 
   return (
     <div className="fade-up">
-      <div className="page-title">✅ Approvals</div>
-      <div className="page-sub">Everything needing your decision · one place</div>
+      <div className="page-title">✅ {t("approvals.title")}</div>
+      <div className="page-sub">{t("approvals.subtitle")}</div>
 
       <div className="hub-tabs">
-        <button className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>All {items.length > 0 ? `· ${items.length}` : ""}</button>
-        <button className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}>🌴 Leave {count("leave") || ""}</button>
-        <button className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}>🔄 Swaps {count("swap") || ""}</button>
-        <button className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}>🕐 Time {count("attendance") || ""}</button>
+        <button className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>
+        <button className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}>🌴 {t("approvals.tabLeave")} {count("leave") || ""}</button>
+        <button className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}>🔄 {t("approvals.tabSwaps")} {count("swap") || ""}</button>
+        <button className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}>🕐 {t("approvals.tabTime")} {count("attendance") || ""}</button>
       </div>
 
       {loading ? (
@@ -77,8 +80,8 @@ export default function ApprovalsPage() {
       ) : shown.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 34 }}>
           <div style={{ fontSize: 30, marginBottom: 8 }}>🎉</div>
-          <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>Nothing to approve</div>
-          <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>You&apos;re all caught up.</div>
+          <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
+          <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("approvals.caughtUp")}</div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -99,7 +102,7 @@ export default function ApprovalsPage() {
         </div>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>‹ Back to dashboard</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }

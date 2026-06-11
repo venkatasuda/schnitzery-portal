@@ -134,6 +134,23 @@ export const messages = {
       subtitle: "Sign in to your account", email: "Email", password: "Password",
       signIn: "Sign In", signingIn: "Signing in…",
     },
+    approvals: {
+      title: "Approvals", subtitle: "Everything needing your decision · one place",
+      tabAll: "All", tabLeave: "Leave", tabSwaps: "Swaps", tabTime: "Time",
+      nothing: "Nothing to approve", caughtUp: "You're all caught up.", back: "‹ Back to dashboard",
+      approved: "Approved.", rejected: "Rejected.", actionFailed: "Action failed.", someone: "Someone",
+      timeOff: "Time off", swap: "Swap", with: "with", mLate: "m late", overtime: "overtime",
+    },
+    inv: {
+      title: "Inventory", subtitle: "Stock counts by date · low-stock alerts.",
+      belowTarget: "⚠️ {n} item(s) below target", allAtTarget: "✅ All counted items at or above target", short: "short",
+      addToCatalog: "➕ Add Product to Catalog", category: "Category", product: "Product", target: "Target (soll)", unit: "Unit",
+      phCategory: "Meat", phProduct: "Chicken Schnitzel", phUnit: "kg / pcs",
+      addProduct: "Add Product", noProducts: "No products yet. Add some to the catalog above.",
+      targetShort: "Target:", counted: "Counted:", count: "Count",
+      enterCount: "Enter a count first.", countedToast: "counted", failed: "Failed.",
+      catProductRequired: "Category + product required.", productAdded: "Product added",
+    },
 
     profile: {
       title: "My Profile", subtitle: "Your details and skills",
@@ -309,6 +326,23 @@ export const messages = {
     login: {
       subtitle: "Melde dich bei deinem Konto an", email: "E-Mail", password: "Passwort",
       signIn: "Anmelden", signingIn: "Anmeldung…",
+    },
+    approvals: {
+      title: "Genehmigungen", subtitle: "Alles, was deine Entscheidung braucht · an einem Ort",
+      tabAll: "Alle", tabLeave: "Urlaub", tabSwaps: "Tausch", tabTime: "Zeit",
+      nothing: "Nichts zu genehmigen", caughtUp: "Alles erledigt.", back: "‹ Zurück zum Dashboard",
+      approved: "Genehmigt.", rejected: "Abgelehnt.", actionFailed: "Aktion fehlgeschlagen.", someone: "Jemand",
+      timeOff: "Urlaub", swap: "Tausch", with: "mit", mLate: " Min. zu spät", overtime: "Überstunden",
+    },
+    inv: {
+      title: "Inventar", subtitle: "Bestandszählung nach Datum · Warnungen bei niedrigem Bestand.",
+      belowTarget: "⚠️ {n} Artikel unter Ziel", allAtTarget: "✅ Alle gezählten Artikel auf oder über Ziel", short: "fehlt",
+      addToCatalog: "➕ Produkt zum Katalog hinzufügen", category: "Kategorie", product: "Produkt", target: "Ziel (Soll)", unit: "Einheit",
+      phCategory: "Fleisch", phProduct: "Hähnchenschnitzel", phUnit: "kg / Stk",
+      addProduct: "Produkt hinzufügen", noProducts: "Noch keine Produkte. Füge oben welche zum Katalog hinzu.",
+      targetShort: "Ziel:", counted: "Gezählt:", count: "Zählen",
+      enterCount: "Bitte zuerst einen Bestand eingeben.", countedToast: "gezählt", failed: "Fehlgeschlagen.",
+      catProductRequired: "Kategorie + Produkt erforderlich.", productAdded: "Produkt hinzugefügt",
     },
 
     profile: {
