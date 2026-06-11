@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getDirectory } from "@/lib/queries/people";
+import { useLang } from "@/components/LanguageProvider";
 
 const TEAM_COLORS: Record<string, string> = {
   Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60", Cashier: "#9b59b6",
 };
 
 export default function DirectoryPage() {
+  const { t } = useLang();
+  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const [people, setPeople] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -28,16 +31,16 @@ export default function DirectoryPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📇 Team Directory</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Find and contact colleagues.</p>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📇 {t("directory.title")}</h1>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("directory.subtitle")}</p>
 
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="🔍 Search by name or team…"
+      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}
         style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : filtered.length === 0 ? (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>No colleagues found.</div>
+        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>{t("directory.empty")}</div>
       ) : (
         filtered.map((p) => (
           <div key={p.id} style={{ ...card, marginBottom: 8, display: "flex", alignItems: "center", gap: 14 }}>
@@ -45,13 +48,13 @@ export default function DirectoryPage() {
               {(p.full_name || "?")[0].toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"}{p.status === "inactive" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> (inactive)</span>}</div>
-              <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team || "No team"}</div>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"}{p.status === "inactive" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> ({t("directory.inactive")})</span>}</div>
+              <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")}</div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              {p.phone && <a href={`tel:${p.phone}`} style={iconBtn} title="Call">📞</a>}
+              {p.phone && <a href={`tel:${p.phone}`} style={iconBtn} title={t("directory.call")}>📞</a>}
               {p.phone && <a href={`https://wa.me/${p.phone.replace(/[^0-9]/g, "")}`} target="_blank" style={iconBtn} title="WhatsApp">💬</a>}
-              {p.email && <a href={`mailto:${p.email}`} style={iconBtn} title="Email">✉️</a>}
+              {p.email && <a href={`mailto:${p.email}`} style={iconBtn} title={t("directory.email")}>✉️</a>}
             </div>
           </div>
         ))

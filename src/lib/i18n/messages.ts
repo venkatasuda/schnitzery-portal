@@ -98,6 +98,17 @@ export const messages = {
       describeFirst: "Describe what happened.", reported: "Incident reported", failReport: "Failed to report.",
       resolved: "Incident resolved", failResolve: "Failed to resolve.",
     },
+    checklist: {
+      title: "Daily Checklist", subLoading: "Opening & closing tasks", doneToday: "{done}/{total} done today",
+      noTasks: "No tasks.", openingTasks: "🌅 Opening Tasks", closingTasks: "🌙 Closing Tasks",
+      addTask: "Add a task for today", opening: "Opening", closing: "Closing",
+      taskPlaceholder: "e.g. Check fridge temps", taskAdded: "Task added", failAdd: "Failed to add.",
+    },
+    directory: {
+      title: "Team Directory", subtitle: "Find and contact colleagues.",
+      searchPlaceholder: "🔍 Search by name or team…", empty: "No colleagues found.",
+      inactive: "inactive", noTeam: "No team", call: "Call", email: "Email",
+    },
 
     profile: {
       title: "My Profile", subtitle: "Your details and skills",
@@ -237,6 +248,17 @@ export const messages = {
       resolve: "Lösen", markResolved: "Als gelöst markieren",
       describeFirst: "Beschreibe, was passiert ist.", reported: "Vorfall gemeldet", failReport: "Melden fehlgeschlagen.",
       resolved: "Vorfall gelöst", failResolve: "Lösen fehlgeschlagen.",
+    },
+    checklist: {
+      title: "Tägliche Checkliste", subLoading: "Öffnungs- & Schließaufgaben", doneToday: "{done}/{total} heute erledigt",
+      noTasks: "Keine Aufgaben.", openingTasks: "🌅 Öffnungsaufgaben", closingTasks: "🌙 Schließaufgaben",
+      addTask: "Aufgabe für heute hinzufügen", opening: "Öffnung", closing: "Schließung",
+      taskPlaceholder: "z. B. Kühlschranktemperatur prüfen", taskAdded: "Aufgabe hinzugefügt", failAdd: "Hinzufügen fehlgeschlagen.",
+    },
+    directory: {
+      title: "Team-Verzeichnis", subtitle: "Kollegen finden und kontaktieren.",
+      searchPlaceholder: "🔍 Nach Name oder Team suchen…", empty: "Keine Kollegen gefunden.",
+      inactive: "inaktiv", noTeam: "Kein Team", call: "Anrufen", email: "E-Mail",
     },
 
     profile: {
