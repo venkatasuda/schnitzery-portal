@@ -5,6 +5,7 @@ import { CardSkeleton } from "@/components/Skeleton";
 import {
   getMyShifts, getWeekStart, getStaffForSwap, submitSwap, getMySwaps,
 } from "@/lib/queries/schedule";
+import { useLang } from "@/components/LanguageProvider";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TEAM_COLORS: Record<string, string> = {
@@ -12,6 +13,9 @@ const TEAM_COLORS: Record<string, string> = {
 };
 
 export default function SchedulePage() {
+  const { t } = useLang();
+  const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
+  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const [tab, setTab] = useState<"my" | "request" | "mine">("my");
   const [weekOffset, setWeekOffset] = useState(0);
   const [weekStart, setWeekStart] = useState("");
@@ -56,8 +60,8 @@ export default function SchedulePage() {
   async function doSubmitSwap() {
     setSwapMsg(null);
     const r = await submitSwap(myDay, otherId, otherDay);
-    if (r.ok) { setSwapMsg("✅ Swap request submitted!"); setMyDay(""); setOtherId(""); setOtherDay(""); }
-    else setSwapMsg(r.error || "Failed.");
+    if (r.ok) { setSwapMsg(t("shifts.swapSubmitted")); setMyDay(""); setOtherId(""); setOtherDay(""); }
+    else setSwapMsg(r.error || t("shifts.swapFailed"));
   }
 
   const weekLabel = (() => {
@@ -70,14 +74,14 @@ export default function SchedulePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📅 Shifts</div>
-      <div className="page-sub">{weekLabel || "Loading…"}</div>
+      <div className="page-title">📅 {t("shifts.title")}</div>
+      <div className="page-sub">{weekLabel || t("common.loading")}</div>
 
       {/* TABS */}
       <div className="hub-tabs">
-        <button className={`hub-tab${tab === "my" ? " active" : ""}`} onClick={() => setTab("my")}>My Shifts</button>
-        <button className={`hub-tab${tab === "request" ? " active" : ""}`} onClick={() => setTab("request")}>Request Swap</button>
-        <button className={`hub-tab${tab === "mine" ? " active" : ""}`} onClick={() => { setTab("mine"); loadSwaps(); }}>My Requests</button>
+        <button className={`hub-tab${tab === "my" ? " active" : ""}`} onClick={() => setTab("my")}>{t("shifts.tabMy")}</button>
+        <button className={`hub-tab${tab === "request" ? " active" : ""}`} onClick={() => setTab("request")}>{t("shifts.tabRequest")}</button>
+        <button className={`hub-tab${tab === "mine" ? " active" : ""}`} onClick={() => { setTab("mine"); loadSwaps(); }}>{t("shifts.tabMine")}</button>
       </div>
 
       {/* MY SHIFTS */}
@@ -85,28 +89,28 @@ export default function SchedulePage() {
         <div className="hub-tab-panel active">
           {/* week nav */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <button onClick={() => changeWeek(-1)} style={navBtn}>‹ Prev</button>
-            <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{weekOffset === 0 ? "This week" : weekOffset > 0 ? `+${weekOffset} week(s)` : `${weekOffset} week(s)`}</span>
-            <button onClick={() => changeWeek(1)} style={navBtn}>Next ›</button>
+            <button onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
+            <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{weekOffset === 0 ? t("shifts.thisWeek") : weekOffset > 0 ? t("shifts.weeksPlus", { n: weekOffset }) : t("shifts.weeksMinus", { n: weekOffset })}</span>
+            <button onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
           </div>
 
           {/* week strip */}
           <div className="card" style={{ marginBottom: 10 }}>
-            <div className="card-title">This Week</div>
+            <div className="card-title">{t("shifts.thisWeekTitle")}</div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
               {DAYS.map((d) => {
                 const has = shifts.some((s) => s.day === d);
                 const isToday = d === todayName && weekOffset === 0;
                 return (
                   <div key={d} style={{ flex: 1, textAlign: "center", padding: "8px 2px", borderRadius: 8, background: isToday ? "rgba(212,168,71,0.15)" : "transparent" }}>
-                    <div style={{ fontSize: 12, color: isToday ? "var(--gold)" : "var(--gray)", fontWeight: isToday ? 700 : 400 }}>{d[0]}</div>
+                    <div style={{ fontSize: 12, color: isToday ? "var(--gold)" : "var(--gray)", fontWeight: isToday ? 700 : 400 }}>{dayLabel(d)[0]}</div>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", margin: "6px auto 0", background: has ? "#27ae60" : "rgba(128,128,128,0.25)" }} />
                   </div>
                 );
               })}
             </div>
             <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8, textAlign: "center" }}>
-              {shifts.length} shift{shifts.length !== 1 ? "s" : ""} assigned
+              {t("shifts.shiftsAssigned", { n: shifts.length })}
             </div>
           </div>
 
@@ -115,17 +119,17 @@ export default function SchedulePage() {
             <CardSkeleton rows={3} />
           ) : shifts.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>🗓</div>No shifts assigned this week.
+              <div style={{ fontSize: 28, marginBottom: 6 }}>🗓</div>{t("shifts.noShifts")}
             </div>
           ) : (
             <div className="card">
-              <div className="card-title">Your Shifts</div>
+              <div className="card-title">{t("shifts.yourShifts")}</div>
               {shifts.map((s, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: i < shifts.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                   <div style={{ width: 10, height: 10, borderRadius: "50%", background: TEAM_COLORS[s.team] || "#888", flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{s.day}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)" }}>{s.team} · {s.shift}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{dayLabel(s.day)}</div>
+                    <div style={{ fontSize: 12, color: "var(--gray)" }}>{teamLabel(s.team)} · {s.shift}</div>
                   </div>
                   <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{s.time || "—"}</div>
                 </div>
@@ -139,27 +143,27 @@ export default function SchedulePage() {
       {tab === "request" && (
         <div className="hub-tab-panel active">
           <div className="card">
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, color: "var(--white)" }}>Request a Shift Swap</div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 16 }}>Both you and your colleague will be notified of the result.</div>
-            <Field label="Your day to give away">
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, color: "var(--white)" }}>{t("shifts.requestSwapTitle")}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 16 }}>{t("shifts.requestSwapSub")}</div>
+            <Field label={t("shifts.yourDayGive")}>
               <select value={myDay} onChange={(e) => setMyDay(e.target.value)} style={select}>
-                <option value="">Select day…</option>
-                {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
+                <option value="">{t("shifts.selectDay")}</option>
+                {DAYS.map((d) => <option key={d} value={d}>{dayLabel(d)}</option>)}
               </select>
             </Field>
-            <Field label="Swap with">
+            <Field label={t("shifts.swapWith")}>
               <select value={otherId} onChange={(e) => setOtherId(e.target.value)} style={select}>
-                <option value="">Select colleague…</option>
+                <option value="">{t("shifts.selectColleague")}</option>
                 {staff.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
               </select>
             </Field>
-            <Field label="Their day you want">
+            <Field label={t("shifts.theirDay")}>
               <select value={otherDay} onChange={(e) => setOtherDay(e.target.value)} style={select}>
-                <option value="">Select day…</option>
-                {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
+                <option value="">{t("shifts.selectDay")}</option>
+                {DAYS.map((d) => <option key={d} value={d}>{dayLabel(d)}</option>)}
               </select>
             </Field>
-            <button onClick={doSubmitSwap} style={primaryBtn}>Submit Swap Request</button>
+            <button onClick={doSubmitSwap} style={primaryBtn}>{t("shifts.submitSwap")}</button>
             {swapMsg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--gold)", textAlign: "center" }}>{swapMsg}</div>}
           </div>
         </div>
@@ -169,14 +173,14 @@ export default function SchedulePage() {
       {tab === "mine" && (
         <div className="hub-tab-panel active">
           {mySwaps.length === 0 ? (
-            <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>No swap requests yet.</div>
+            <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("shifts.noSwaps")}</div>
           ) : (
             mySwaps.map((sw) => (
               <div key={sw.id} className="card" style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 14, color: "var(--white)" }}>Give <b>{sw.my_day}</b> → get <b>{sw.their_day}</b></div>
+                  <div style={{ fontSize: 14, color: "var(--white)" }}>{t("shifts.give")} <b>{dayLabel(sw.my_day)}</b> → {t("shifts.get")} <b>{dayLabel(sw.their_day)}</b></div>
                   <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 12, background: sw.status === "approved" ? "rgba(39,174,96,0.15)" : sw.status === "denied" ? "rgba(231,76,60,0.15)" : "rgba(212,168,71,0.15)", color: sw.status === "approved" ? "#58d68d" : sw.status === "denied" ? "#ec7063" : "var(--gold)" }}>
-                    {sw.status}
+                    {t("shifts.status_" + sw.status)}
                   </span>
                 </div>
               </div>
