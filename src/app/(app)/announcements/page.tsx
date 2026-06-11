@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getAnnouncements, postAnnouncement, togglePin, deleteAnnouncement } from "@/lib/queries/announcements";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { useLang } from "@/components/LanguageProvider";
 
 const CATEGORIES = ["General", "Urgent", "Schedule", "Policy", "Event"];
 const CAT_COLORS: Record<string, string> = {
@@ -11,6 +12,8 @@ const CAT_COLORS: Record<string, string> = {
 };
 
 export default function AnnouncementsPage() {
+  const { t } = useLang();
+  const catLabel = (c: string) => (CATEGORIES.includes(c) ? t("annCat." + c) : c);
   const [list, setList] = useState<any[]>([]);
   const [canPost, setCanPost] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -33,14 +36,14 @@ export default function AnnouncementsPage() {
   useEffect(() => { load(); }, []);
 
   async function post() {
-    if (!message.trim()) { toast("Write a message first.", "error"); return; }
+    if (!message.trim()) { toast(t("announcements.writeFirst"), "error"); return; }
     setPosting(true);
     const res = await postAnnouncement(title, message, category, pinned);
     setPosting(false);
     if (res.ok) {
-      toast("Announcement posted", "success"); setTitle(""); setMessage(""); setCategory("General"); setPinned(false); setShowPost(false);
+      toast(t("announcements.posted"), "success"); setTitle(""); setMessage(""); setCategory("General"); setPinned(false); setShowPost(false);
       load();
-    } else toast(res.error || "Failed to post.", "error");
+    } else toast(res.error || t("announcements.failPost"), "error");
   }
 
   async function pin(a: any) {
@@ -61,38 +64,38 @@ export default function AnnouncementsPage() {
     const d = new Date(iso);
     const now = new Date();
     const diffH = Math.floor((now.getTime() - d.getTime()) / 3600000);
-    if (diffH < 1) return "Just now";
-    if (diffH < 24) return `${diffH}h ago`;
+    if (diffH < 1) return t("announcements.justNow");
+    if (diffH < 24) return t("announcements.hoursAgo", { h: diffH });
     return d.toLocaleDateString([], { day: "2-digit", month: "short" });
   };
 
   return (
     <div style={{ maxWidth: 620, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📣 Announcements</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>News and updates for the team.</p>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📣 {t("announcements.title")}</h1>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("announcements.subtitle")}</p>
 
       {canPost && (
         <>
           <button onClick={() => setShowPost(!showPost)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
-            {showPost ? "Close" : "✏️ Post Announcement"}
+            {showPost ? t("common.close") : t("announcements.postBtn")}
           </button>
           {showPost && (
             <div style={{ ...card, marginBottom: 16 }}>
-              <Field label="Title (optional)"><input value={title} onChange={(e) => setTitle(e.target.value)} style={input} placeholder="e.g. Holiday hours" /></Field>
-              <Field label="Message"><textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} style={{ ...input, resize: "vertical" }} placeholder="What do you want the team to know?" /></Field>
+              <Field label={t("announcements.titleLabel")}><input value={title} onChange={(e) => setTitle(e.target.value)} style={input} placeholder={t("announcements.titlePlaceholder")} /></Field>
+              <Field label={t("announcements.messageLabel")}><textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} style={{ ...input, resize: "vertical" }} placeholder={t("announcements.messagePlaceholder")} /></Field>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
                 <div style={{ flex: 1 }}>
-                  <Field label="Category">
+                  <Field label={t("announcements.categoryLabel")}>
                     <select value={category} onChange={(e) => setCategory(e.target.value)} style={input}>
-                      {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}
                     </select>
                   </Field>
                 </div>
                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9a8f8f", paddingBottom: 18, cursor: "pointer" }}>
-                  <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} /> 📌 Pin
+                  <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} /> {t("announcements.pin")}
                 </label>
               </div>
-              <button onClick={post} disabled={posting} style={primaryBtn}>{posting ? "Posting…" : "Post"}</button>
+              <button onClick={post} disabled={posting} style={primaryBtn}>{posting ? t("announcements.posting") : t("announcements.post")}</button>
             </div>
           )}
         </>
@@ -101,14 +104,14 @@ export default function AnnouncementsPage() {
       {loading ? (
         <CardSkeleton rows={3} />
       ) : list.length === 0 ? (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}>📭<br />No announcements yet.</div>
+        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}>📭<br />{t("announcements.empty")}</div>
       ) : (
         list.map((a) => (
           <div key={a.id} style={{ ...card, marginBottom: 10, borderColor: a.pinned ? "rgba(212,168,71,0.35)" : "rgba(255,255,255,0.08)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 {a.pinned && <span style={{ fontSize: 12 }}>📌</span>}
-                {a.category && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, padding: "2px 8px", borderRadius: 10, background: (CAT_COLORS[a.category] || "#666") + "26", color: CAT_COLORS[a.category] || "#aaa" }}>{a.category.toUpperCase()}</span>}
+                {a.category && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, padding: "2px 8px", borderRadius: 10, background: (CAT_COLORS[a.category] || "#666") + "26", color: CAT_COLORS[a.category] || "#aaa" }}>{catLabel(a.category).toUpperCase()}</span>}
                 {a.title && <span style={{ fontSize: 15, fontWeight: 700 }}>{a.title}</span>}
               </div>
               <span style={{ fontSize: 11, color: "#6f6565", whiteSpace: "nowrap" }}>{fmtWhen(a.created_at)}</span>
@@ -118,8 +121,8 @@ export default function AnnouncementsPage() {
               <span style={{ fontSize: 11, color: "#9a8f8f" }}>— {a.author || "Manager"}</span>
               {canPost && (
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => pin(a)} disabled={busyId === a.id} style={miniBtn}>{a.pinned ? "Unpin" : "📌 Pin"}</button>
-                  <button onClick={() => del(a.id)} disabled={busyId === a.id} style={{ ...miniBtn, color: "#ec7063" }}>Delete</button>
+                  <button onClick={() => pin(a)} disabled={busyId === a.id} style={miniBtn}>{a.pinned ? t("announcements.unpin") : t("announcements.pin")}</button>
+                  <button onClick={() => del(a.id)} disabled={busyId === a.id} style={{ ...miniBtn, color: "#ec7063" }}>{t("common.delete")}</button>
                 </div>
               )}
             </div>
