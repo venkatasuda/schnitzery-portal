@@ -7,8 +7,10 @@ import {
 import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
 import QrScanner from "./QrScanner";
+import { useLang } from "@/components/LanguageProvider";
 
 export default function AttendancePage() {
+  const { t } = useLang();
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [clockedIn, setClockedIn] = useState(false);
@@ -40,7 +42,7 @@ export default function AttendancePage() {
       setClockedIn(res.clockedIn || false);
       setOnBreak(res.onBreak || false);
       setSession(res.session);
-    } else setMessage(res.error || "Could not load status.");
+    } else setMessage(res.error || t("att.couldNotLoad"));
     setLoading(false);
   }
 
@@ -68,7 +70,7 @@ export default function AttendancePage() {
     setWorking(true);
     setMessage(null);
     const res = await fn();
-    setMessage(res.ok ? okMsg : res.error || "Failed.");
+    setMessage(res.ok ? okMsg : res.error || t("att.failed"));
     await refresh();
     setWorking(false);
   }
@@ -100,31 +102,31 @@ export default function AttendancePage() {
   async function submitCode() {
     setCodeErr(null);
     const clean = codeValue.replace(/\D/g, "");
-    if (clean.length !== 6) { setCodeErr("Enter the 6-digit code"); return; }
+    if (clean.length !== 6) { setCodeErr(t("att.enter6")); return; }
     setWorking(true);
     const fn = codeMode === "out" ? clockOutWithCode : clockInWithCode;
     const res = await fn(clean);
     setWorking(false);
     if (res.ok) {
       setShowCode(false);
-      setMessage(codeMode === "out" ? "✅ Clocked out with code!" : "✅ Clocked in with code!");
+      setMessage(codeMode === "out" ? t("att.outCode") : t("att.inCode"));
       await refresh();
     } else {
-      setCodeErr(res.error || "Failed");
+      setCodeErr(res.error || t("att.failedShort"));
     }
   }
 
   async function handleScan(payload: string) {
     setShowScan(false);
     setWorking(true);
-    setMessage("Reading QR…");
+    setMessage(t("att.readingQR"));
     const res = await clockWithQR(payload, codeMode);
     setWorking(false);
     if (res.ok) {
-      setMessage(codeMode === "out" ? "✅ Clocked out by QR!" : "✅ Clocked in by QR!");
+      setMessage(codeMode === "out" ? t("att.outQR") : t("att.inQR"));
       await refresh();
     } else {
-      setMessage(res.error || "QR scan failed.");
+      setMessage(res.error || t("att.qrFailed"));
     }
   }
 
@@ -152,23 +154,23 @@ export default function AttendancePage() {
 
   // Build the day's timeline events
   const timeline: { label: string; time: string; extra?: string; color: string }[] = [];
-  if (session?.clock_in) timeline.push({ label: "Clock In", time: fmtTime(session.clock_in), color: "#58d68d" });
+  if (session?.clock_in) timeline.push({ label: t("att.tlClockIn"), time: fmtTime(session.clock_in), color: "#58d68d" });
   breaks.forEach((b: any, i: number) => {
-    timeline.push({ label: `Break ${i + 1} start`, time: fmtTime(b.start), color: "#e8a35a" });
+    timeline.push({ label: t("att.tlBreakStart", { n: i + 1 }), time: fmtTime(b.start), color: "#e8a35a" });
     if (b.end) {
       const mins = Math.max(0, Math.round((new Date(b.end).getTime() - new Date(b.start).getTime()) / 60000));
-      timeline.push({ label: `Break ${i + 1} end`, time: fmtTime(b.end), extra: `${mins} min`, color: "#e8a35a" });
+      timeline.push({ label: t("att.tlBreakEnd", { n: i + 1 }), time: fmtTime(b.end), extra: `${mins} ${t("att.minutesShort")}`, color: "#e8a35a" });
     }
   });
-  if (session?.clock_out) timeline.push({ label: "Clock Out", time: fmtTime(session.clock_out), color: "#ec7063" });
+  if (session?.clock_out) timeline.push({ label: t("att.tlClockOut"), time: fmtTime(session.clock_out), color: "#ec7063" });
 
-  const statusLabel = onBreak ? "ON BREAK" : clockedIn ? "WORKING" : "NOT CLOCKED IN";
+  const statusLabel = onBreak ? t("att.statusOnBreak") : clockedIn ? t("att.statusWorking") : t("att.statusNotIn");
   const statusColor = onBreak ? "#e8a35a" : clockedIn ? "#58d68d" : "var(--gray)";
   const statusEmoji = onBreak ? "☕" : clockedIn ? "🟢" : "⚪";
 
   return (
     <div className="fade-up">
-      <div className="page-title">🕐 Clock In / Out</div>
+      <div className="page-title">🕐 {t("att.title")}</div>
       <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
       <div className="card" style={{ padding: 24 }}>
@@ -187,7 +189,7 @@ export default function AttendancePage() {
                 {statusEmoji} {statusLabel}
               </span>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5 }}>
-                {clockedIn ? (onBreak ? "On a break — timer still running" : "Currently working") : "Ready to start your shift"}
+                {clockedIn ? (onBreak ? t("att.subOnBreak") : t("att.subWorking")) : t("att.subReady")}
               </div>
             </div>
 
@@ -198,41 +200,41 @@ export default function AttendancePage() {
                 {String(tt.m).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>m </span>
                 {String(tt.s).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>s</span>
               </div>
-              <div style={{ fontSize: 10, letterSpacing: 2.5, color: "var(--gray)", marginTop: 8, textTransform: "uppercase" }}>Total Time Today</div>
+              <div style={{ fontSize: 10, letterSpacing: 2.5, color: "var(--gray)", marginTop: 8, textTransform: "uppercase" }}>{t("att.totalTimeToday")}</div>
             </div>
 
             {/* STATUS ROW: In / Break / Out / Total */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 18 }}>
-              <StatCell label="In" value={fmtTime(session?.clock_in)} color="#58d68d" />
-              <StatCell label="Break" value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="#e8a35a" />
-              <StatCell label="Out" value={fmtTime(session?.clock_out)} color="#ec7063" />
-              <StatCell label="Total" value={session?.clock_out ? fmtDur(session.duration_mins) : (clockedIn ? `${tt.h}h ${String(tt.m).padStart(2, "0")}m` : "—")} color="var(--gold)" />
+              <StatCell label={t("att.in")} value={fmtTime(session?.clock_in)} color="#58d68d" />
+              <StatCell label={t("att.break")} value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="#e8a35a" />
+              <StatCell label={t("att.out")} value={fmtTime(session?.clock_out)} color="#ec7063" />
+              <StatCell label={t("att.total")} value={session?.clock_out ? fmtDur(session.duration_mins) : (clockedIn ? `${tt.h}h ${String(tt.m).padStart(2, "0")}m` : "—")} color="var(--gold)" />
             </div>
 
             {/* ACTION BUTTONS */}
             {!clockedIn ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button onClick={() => doAction(clockIn, "✅ Clocked in!")} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>▶  Clock In Now</button>
+                <button onClick={() => doAction(clockIn, t("att.clockedIn"))} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>📷  Scan QR</button>
-                  <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>📲  Code</button>
+                  <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
+                  <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
                 </div>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {!onBreak ? (
-                  <button onClick={() => doAction(startBreak, "☕ Break started")} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>☕  Start Break</button>
+                  <button onClick={() => doAction(startBreak, t("att.breakStarted"))} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
                 ) : (
-                  <button onClick={() => doAction(endBreak, "✅ Break ended")} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>✅  End Break</button>
+                  <button onClick={() => doAction(endBreak, t("att.breakEnded"))} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
                 )}
-                <button onClick={() => doAction(clockOut, "✅ Clocked out!")} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>⏹  Clock Out</button>
+                <button onClick={() => doAction(clockOut, t("att.clockedOut"))} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
                 {!onBreak && (
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>📷  Scan QR</button>
-                    <button onClick={() => openCode("out")} disabled={working} style={secBtn(working)}>📲  Code</button>
+                    <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
+                    <button onClick={() => openCode("out")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
                   </div>
                 )}
-                {onBreak && <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center" }}>End your break before clocking out.</div>}
+                {onBreak && <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center" }}>{t("att.endBreakFirst")}</div>}
               </div>
             )}
 
@@ -244,7 +246,7 @@ export default function AttendancePage() {
       {/* TODAY'S TIMELINE */}
       {timeline.length > 0 && (
         <div className="card">
-          <div className="card-title">Today&apos;s Timeline</div>
+          <div className="card-title">{t("att.todaysTimeline")}</div>
           {timeline.map((e, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
@@ -254,12 +256,12 @@ export default function AttendancePage() {
             </div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 13 }}>
-            <span style={{ color: "var(--gray)" }}>Total break time</span>
-            <span style={{ color: "#e8a35a", fontWeight: 600 }}>{totalBreakMin} min</span>
+            <span style={{ color: "var(--gray)" }}>{t("att.totalBreakTime")}</span>
+            <span style={{ color: "#e8a35a", fontWeight: 600 }}>{totalBreakMin} {t("att.minutesShort")}</span>
           </div>
           {session?.clock_out && (
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 13 }}>
-              <span style={{ color: "var(--gray)" }}>Total time (clock-in to out)</span>
+              <span style={{ color: "var(--gray)" }}>{t("att.totalTimeInOut")}</span>
               <span style={{ color: "var(--gold)", fontWeight: 700 }}>{fmtDur(session.duration_mins)}</span>
             </div>
           )}
@@ -273,10 +275,10 @@ export default function AttendancePage() {
         <div onClick={() => setShowCode(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20 }}>
           <div onClick={(e) => e.stopPropagation()} className="card" style={{ maxWidth: 360, width: "100%", padding: 24 }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, color: "var(--white)" }}>
-              {codeMode === "out" ? "Clock Out with Code" : "Clock In with Code"}
+              {codeMode === "out" ? t("att.codeOutTitle") : t("att.codeInTitle")}
             </div>
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 16 }}>
-              Enter the 6-digit code shown on the restaurant display.
+              {t("att.codeHint")}
             </div>
             <input
               autoFocus
@@ -289,33 +291,33 @@ export default function AttendancePage() {
             />
             {codeErr && <div style={{ color: "#ec7063", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>Cancel</button>
-              <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : "Confirm"}</button>
+              <button onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>{t("common.cancel")}</button>
+              <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : t("att.confirm")}</button>
             </div>
           </div>
         </div>
       )}
 
-      <button onClick={toggleHistory} style={historyToggle}>📅  {showHistory ? "Hide" : "View"} My Attendance History</button>
+      <button onClick={toggleHistory} style={historyToggle}>📅  {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
 
       {showHistory && (
         <div style={{ marginTop: 14 }}>
           {/* week / month tabs */}
           <div className="hub-tabs">
-            <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}>📅 This Week</button>
-            <button className={`hub-tab${histTab === "month" ? " active" : ""}`} onClick={() => switchHistTab("month")}>🗓 This Month</button>
+            <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}>📅 {t("att.weekLabel")}</button>
+            <button className={`hub-tab${histTab === "month" ? " active" : ""}`} onClick={() => switchHistTab("month")}>🗓 {t("att.monthLabel")}</button>
           </div>
 
           {/* days worked + hours stats */}
           <div className="card" style={{ display: "flex", padding: "16px 0", marginBottom: 12 }}>
             <div style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histDaysWorked}</div>
-              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>Days Worked</div>
+              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{t("att.daysWorked")}</div>
             </div>
             <div style={{ width: 1, background: "rgba(128,128,128,0.15)" }} />
             <div style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histHours}</div>
-              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? "This Week" : "This Month"}</div>
+              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? t("att.weekLabel") : t("att.monthLabel")}</div>
             </div>
           </div>
 
@@ -325,7 +327,7 @@ export default function AttendancePage() {
           ) : history.length === 0 ? (
             <div className="card" style={{ color: "var(--gray)", fontSize: 13, padding: 30, textAlign: "center" }}>
               <div style={{ fontSize: 26, marginBottom: 6 }}>📭</div>
-              No attendance records for this {histTab}.
+              {histTab === "week" ? t("att.noRecordsWeek") : t("att.noRecordsMonth")}
             </div>
           ) : (
             history.map((s) => {
@@ -335,11 +337,11 @@ export default function AttendancePage() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{fmtDate(s.work_date)}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>
-                      {s.status === "active" || s.status === "on-break" ? "in progress" : fmtDur(s.duration_mins)}
+                      {s.status === "active" || s.status === "on-break" ? t("att.inProgress") : fmtDur(s.duration_mins)}
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>
-                    In {fmtTime(s.clock_in)} → Out {fmtTime(s.clock_out)}{bmin > 0 && ` · ☕ ${bmin} min break`}
+                    {t("att.recordIn")} {fmtTime(s.clock_in)} → {t("att.recordOut")} {fmtTime(s.clock_out)}{bmin > 0 && ` · ☕ ${bmin} ${t("att.minBreak")}`}
                   </div>
                 </div>
               );
