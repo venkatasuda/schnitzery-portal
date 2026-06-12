@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import { getNoShows, getMissingAvailability, getNextWeekStart } from "@/lib/queries/availability";
 
 export default function NoShowPage() {
+  const { t } = useLang();
+  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
   const [tab, setTab] = useState<"noshow" | "missing">("noshow");
   const [denied, setDenied] = useState(false);
 
@@ -40,38 +44,38 @@ export default function NoShowPage() {
     setMissLoading(false);
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
+  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>⚠️ Attendance Checks</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>No-shows and missing availability.</p>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>⚠️ {t("ns.title")}</h1>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("ns.subtitle")}</p>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 4 }}>
-        <TabBtn active={tab === "noshow"} onClick={() => setTab("noshow")}>No-Shows</TabBtn>
-        <TabBtn active={tab === "missing"} onClick={() => { setTab("missing"); loadMissing(); }}>Missing Availability</TabBtn>
+        <TabBtn active={tab === "noshow"} onClick={() => setTab("noshow")}>{t("ns.tabNoShows")}</TabBtn>
+        <TabBtn active={tab === "missing"} onClick={() => { setTab("missing"); loadMissing(); }}>{t("ns.tabMissing")}</TabBtn>
       </div>
 
       {tab === "noshow" && (
         <div style={card}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Check no-shows for a date</div>
-          <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 12 }}>Who was rostered but didn&apos;t clock in.</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{t("ns.checkTitle")}</div>
+          <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 12 }}>{t("ns.checkSub")}</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...input, flex: 1 }} />
-            <button onClick={checkNoShows} disabled={nsLoading} style={{ ...primaryBtn, width: "auto", padding: "0 20px" }}>{nsLoading ? "…" : "Check"}</button>
+            <button onClick={checkNoShows} disabled={nsLoading} style={{ ...primaryBtn, width: "auto", padding: "0 20px" }}>{nsLoading ? "…" : t("ns.check")}</button>
           </div>
           {nsChecked && (
             rosteredCount === 0 ? (
-              <div style={{ color: "#9a8f8f", fontSize: 13, textAlign: "center", padding: 16 }}>No one was rostered that day.</div>
+              <div style={{ color: "#9a8f8f", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.noneRostered")}</div>
             ) : noShows.length === 0 ? (
-              <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>🎉 Everyone rostered clocked in!</div>
+              <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allClockedIn")}</div>
             ) : (
               <div>
-                <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{noShows.length} of {rosteredCount} rostered did not clock in:</div>
+                <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
                 {noShows.map((n, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <span style={{ fontSize: 14, fontWeight: 600 }}>{n.name}</span>
-                    <span style={{ fontSize: 12, color: "#9a8f8f" }}>{n.team} · {n.shift}</span>
+                    <span style={{ fontSize: 12, color: "#9a8f8f" }}>{teamLabel(n.team)} · {shiftLabel(n.shift)}</span>
                   </div>
                 ))}
               </div>
@@ -82,17 +86,17 @@ export default function NoShowPage() {
 
       {tab === "missing" && (
         <div style={card}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Missing availability — next week</div>
-          <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 14 }}>Who hasn&apos;t submitted their availability yet.</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("ns.missingTitle")}</div>
+          <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 14 }}>{t("ns.missingSub")}</div>
           {missLoading ? (
-            <div style={{ color: "#9a8f8f", fontSize: 13, textAlign: "center", padding: 16 }}>Loading…</div>
+            <div style={{ color: "#9a8f8f", fontSize: 13, textAlign: "center", padding: 16 }}>{t("common.loading")}</div>
           ) : (
             <>
               {missing.length === 0 ? (
-                <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>🎉 Everyone has submitted!</div>
+                <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allSubmitted")}</div>
               ) : (
                 <>
-                  <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{missing.length} not submitted:</div>
+                  <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{t("ns.notSubmittedN", { n: missing.length })}</div>
                   {missing.map((m) => (
                     <div key={m.id} style={{ padding: "8px 0", fontSize: 14, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{m.full_name}</div>
                   ))}
@@ -100,7 +104,7 @@ export default function NoShowPage() {
               )}
               {submitted.length > 0 && (
                 <div style={{ marginTop: 14, fontSize: 12, color: "#9a8f8f" }}>
-                  ✅ Submitted: {submitted.map((s) => s.full_name).join(", ")}
+                  {t("ns.submittedList", { names: submitted.map((s) => s.full_name).join(", ") })}
                 </div>
               )}
             </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import Link from "next/link";
 import {
   getLiveAttendance, getMonthlyOvertime, getAttendanceApprovals, setAttendanceApproval,
@@ -13,6 +14,8 @@ const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString([
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" }) : "—";
 
 export default function AttendanceHubPage() {
+  const { t } = useLang();
+  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const [tab, setTab] = useState<Tab>("live");
   const [denied, setDenied] = useState(false);
 
@@ -96,54 +99,54 @@ export default function AttendanceHubPage() {
   const isToday = date === new Date().toISOString().slice(0, 10);
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>Managers only.</div>;
+    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("common.managersOnly")}</div>;
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title">🕐 Attendance</div>
-      <div className="page-sub">Live · approvals · overtime · no-shows</div>
+      <div className="page-title">🕐 {t("nav.attendance")}</div>
+      <div className="page-sub">{t("ahub.subtitle")}</div>
 
       <div className="hub-tabs">
-        <button className={`hub-tab${tab === "live" ? " active" : ""}`} onClick={() => openTab("live")}>🔴 Live</button>
-        <button className={`hub-tab${tab === "approval" ? " active" : ""}`} onClick={() => openTab("approval")}>📋 Approval</button>
-        <button className={`hub-tab${tab === "overtime" ? " active" : ""}`} onClick={() => openTab("overtime")}>⏱ Overtime</button>
-        <button className={`hub-tab${tab === "noshow" ? " active" : ""}`} onClick={() => openTab("noshow")}>🚫 No-Shows</button>
-        <button className={`hub-tab${tab === "display" ? " active" : ""}`} onClick={() => openTab("display")}>📲 Display</button>
+        <button className={`hub-tab${tab === "live" ? " active" : ""}`} onClick={() => openTab("live")}>{t("ahub.tabLive")}</button>
+        <button className={`hub-tab${tab === "approval" ? " active" : ""}`} onClick={() => openTab("approval")}>{t("ahub.tabApproval")}</button>
+        <button className={`hub-tab${tab === "overtime" ? " active" : ""}`} onClick={() => openTab("overtime")}>{t("ahub.tabOvertime")}</button>
+        <button className={`hub-tab${tab === "noshow" ? " active" : ""}`} onClick={() => openTab("noshow")}>{t("ahub.tabNoshow")}</button>
+        <button className={`hub-tab${tab === "display" ? " active" : ""}`} onClick={() => openTab("display")}>{t("ahub.tabDisplay")}</button>
       </div>
 
       {/* ───────── LIVE ───────── */}
       {tab === "live" && (
         <div className="hub-tab-panel active">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-            <Stat value={stats.workingNow} label="Working" color="#58d68d" />
-            <Stat value={stats.completed} label="Completed" color="var(--white)" />
-            <Stat value={stats.late} label="Late" color={stats.late > 0 ? "#ec7063" : "var(--white)"} />
-            <Stat value={liveHours} label="Hours" color="var(--gold)" />
+            <Stat value={stats.workingNow} label={t("home.statWorking")} color="#58d68d" />
+            <Stat value={stats.completed} label={t("ahub.completed")} color="var(--white)" />
+            <Stat value={stats.late} label={t("home.statLate")} color={stats.late > 0 ? "#ec7063" : "var(--white)"} />
+            <Stat value={liveHours} label={t("home.hours")} color="var(--gold)" />
           </div>
           <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             <input type="date" value={date} onChange={(e) => changeDate(e.target.value)} style={dateInput} />
-            <button onClick={goToday} style={{ ...todayBtn, opacity: isToday ? 0.6 : 1 }}>📅 Today</button>
+            <button onClick={goToday} style={{ ...todayBtn, opacity: isToday ? 0.6 : 1 }}>{t("ahub.today")}</button>
           </div>
-          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="🔍  Filter by name…" style={filterInput} />
+          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t("ahub.filterName")} style={filterInput} />
           {liveLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>
+            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("common.loading")}</div>
           ) : filtered.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13 }}>
-              {rows.length === 0 ? (isToday ? "No one is clocked in right now." : "No attendance recorded for this day.") : "No one matches that name."}
+              {rows.length === 0 ? (isToday ? t("ahub.noClockedIn") : t("ahub.noAttendance")) : t("ahub.noMatch")}
             </div>
           ) : (
             <div className="card" style={{ padding: 8 }}>
               {filtered.map((r, i) => {
                 const live = r.status === "active" || r.status === "on-break";
                 const dotColor = r.status === "on-break" ? "#e8a35a" : live ? "#58d68d" : "var(--gray)";
-                const statusText = r.status === "on-break" ? "On break" : live ? "Working" : "Done";
+                const statusText = r.status === "on-break" ? t("ahub.onBreak") : live ? t("ahub.statusWorking") : t("ahub.statusDone");
                 return (
                   <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < filtered.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                     <span style={{ width: 9, height: 9, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: live ? `0 0 8px ${dotColor}` : "none" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name}{r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}>⚠ {r.late_mins}m late</span>}</div>
-                      <div style={{ fontSize: 11, color: "var(--gray)" }}>{r.team || "—"} · {statusText}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name}{r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}>⚠ {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
+                      <div style={{ fontSize: 11, color: "var(--gray)" }}>{r.team ? teamLabel(r.team) : "—"} · {statusText}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}</div>
@@ -154,19 +157,19 @@ export default function AttendanceHubPage() {
               })}
             </div>
           )}
-          <Link href="/attendance" style={{ display: "block", textAlign: "center", marginTop: 12, fontSize: 13, color: "var(--gold)", textDecoration: "none" }}>🕐 My own clock in / out →</Link>
+          <Link href="/attendance" style={{ display: "block", textAlign: "center", marginTop: 12, fontSize: 13, color: "var(--gold)", textDecoration: "none" }}>{t("ahub.myClock")}</Link>
         </div>
       )}
 
       {/* ───────── APPROVAL ───────── */}
       {tab === "approval" && (
         <div className="hub-tab-panel active">
-          <div className="page-sub" style={{ marginBottom: 12 }}>Sign off completed shifts before they count toward payroll.</div>
+          <div className="page-sub" style={{ marginBottom: 12 }}>{t("ahub.signOff")}</div>
           {appLoading ? (
             <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>
           ) : appRows.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>
-              <div style={{ fontSize: 26, marginBottom: 6 }}>✅</div>All caught up — nothing pending approval.
+              <div style={{ fontSize: 26, marginBottom: 6 }}>✅</div>{t("ahub.allCaughtUp")}
             </div>
           ) : (
             appRows.map((r) => (
@@ -174,17 +177,17 @@ export default function AttendanceHubPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
                     {r.name}
-                    {r.overtime && <span style={{ fontSize: 10, color: "#e8a35a", marginLeft: 8 }}>⏱ overtime</span>}
-                    {r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}>⚠ {r.late_mins}m late</span>}
+                    {r.overtime && <span style={{ fontSize: 10, color: "#e8a35a", marginLeft: 8 }}>⏱ {t("approvals.overtime")}</span>}
+                    {r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}>⚠ {t("ahub.mLate", { n: r.late_mins })}</span>}
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{fmtH(r.duration_mins || 0)}</div>
                 </div>
                 <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>
-                  {fmtDate(r.work_date)} · {r.team || "—"} · {fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}
+                  {fmtDate(r.work_date)} · {r.team ? teamLabel(r.team) : "—"} · {fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => decide(r.id, "approved")} disabled={busyId === r.id} style={approveBtn}>{busyId === r.id ? "…" : "✅ Approve"}</button>
-                  <button onClick={() => decide(r.id, "rejected")} disabled={busyId === r.id} style={rejectBtn}>✕ Reject</button>
+                  <button onClick={() => decide(r.id, "approved")} disabled={busyId === r.id} style={approveBtn}>{busyId === r.id ? "…" : t("ahub.approve")}</button>
+                  <button onClick={() => decide(r.id, "rejected")} disabled={busyId === r.id} style={rejectBtn}>{t("ahub.reject")}</button>
                 </div>
               </div>
             ))
@@ -205,26 +208,26 @@ export default function AttendanceHubPage() {
             <>
               {/* summary */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                <Stat value={otStats.peopleOver} label="Over Contract" color={otStats.peopleOver > 0 ? "#e8a35a" : "#58d68d"} />
-                <Stat value={fmtH(otStats.totalOvertimeMins)} label="Total Overtime" color={otStats.totalOvertimeMins > 0 ? "#e8a35a" : "var(--white)"} />
+                <Stat value={otStats.peopleOver} label={t("home.overContract")} color={otStats.peopleOver > 0 ? "#e8a35a" : "#58d68d"} />
+                <Stat value={fmtH(otStats.totalOvertimeMins)} label={t("ahub.totalOvertime")} color={otStats.totalOvertimeMins > 0 ? "#e8a35a" : "var(--white)"} />
               </div>
 
               {otRows.length === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>No hours recorded this month.</div>
+                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>{t("ahub.noHoursMonth")}</div>
               ) : (
                 <div className="card">
-                  <div className="card-title">Contract vs. Worked</div>
+                  <div className="card-title">{t("ahub.contractVsWorked")}</div>
                   {otRows.map((r, i) => {
                     const over = r.overtimeMins > 0;
                     const pct = r.contractHours > 0 ? Math.min(100, Math.round((r.workedMins / (r.contractHours * 60)) * 100)) : 0;
                     return (
                       <div key={r.user_id} style={{ padding: "11px 0", borderBottom: i < otRows.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name} <span style={{ fontSize: 11, color: "var(--gray)", fontWeight: 400 }}>· {r.team || "—"}</span></div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: over ? "#e8a35a" : "#58d68d" }}>{over ? `+${fmtH(r.overtimeMins)}` : "within"}</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name} <span style={{ fontSize: 11, color: "var(--gray)", fontWeight: 400 }}>· {r.team ? teamLabel(r.team) : "—"}</span></div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: over ? "#e8a35a" : "#58d68d" }}>{over ? `+${fmtH(r.overtimeMins)}` : t("ahub.within")}</div>
                         </div>
                         <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 3 }}>
-                          Worked {fmtH(r.workedMins)} / Contract {r.contractHours}h · {r.shifts} shift{r.shifts !== 1 ? "s" : ""}{r.contractType ? ` · ${r.contractType}` : ""}
+                          {t("ahub.workedContract", { w: fmtH(r.workedMins), c: r.contractHours, s: r.shifts })}{r.contractType ? ` · ${r.contractType}` : ""}
                         </div>
                         {/* progress bar: normal (gold) + overtime (orange) */}
                         <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, marginTop: 7, overflow: "hidden", display: "flex" }}>
@@ -239,7 +242,7 @@ export default function AttendanceHubPage() {
               {/* long shifts */}
               {otLong.length > 0 && (
                 <div className="card">
-                  <div className="card-title">Long Shifts (over 8h)</div>
+                  <div className="card-title">{t("ahub.longShifts")}</div>
                   {otLong.map((l, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < otLong.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none", fontSize: 13 }}>
                       <span style={{ color: "var(--white)" }}>{l.name} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {fmtDate(l.work_date)}</span></span>
@@ -258,11 +261,11 @@ export default function AttendanceHubPage() {
         <div className="hub-tab-panel active">
           <Link href="/noshow" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}>🚫</div>
-            <div style={{ flex: 1 }}><div className="feature-title">No-Show Tracking</div><div className="feature-sub">Scheduled staff who didn&apos;t clock in</div></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("ahub.noShowTracking")}</div><div className="feature-sub">{t("ahub.noShowTrackingSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
-            Run a check for any day, review recent no-shows, and mark them excused or warned. Repeated no-shows lower a person&apos;s scheduling priority.
+            {t("ahub.noShowHint")}
           </div>
         </div>
       )}
@@ -272,11 +275,11 @@ export default function AttendanceHubPage() {
         <div className="hub-tab-panel active">
           <Link href="/clock-display" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>📲</div>
-            <div style={{ flex: 1 }}><div className="feature-title">Clock-In Display Screen</div><div className="feature-sub">Rotating QR + code for on-site clock-in</div></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("ahub.clockDisplayScreen")}</div><div className="feature-sub">{t("ahub.clockDisplayScreenSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
-            Keep this open on a screen at the restaurant. The code changes every 30 seconds so staff can only clock in when physically present.
+            {t("ahub.displayHint")}
           </div>
         </div>
       )}

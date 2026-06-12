@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { getAnalytics } from "@/lib/queries/analytics";
@@ -11,6 +12,7 @@ const BLUE = "#3498db";
 const TEAM_COLORS = ["#c0392b", "#3498db", "#27ae60", "#d4a847", "#9b59b6", "#e67e22"];
 
 export default function AnalyticsPage() {
+  const { t } = useLang();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
@@ -23,23 +25,23 @@ export default function AnalyticsPage() {
     });
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
+  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const hasData = data && data.totalShifts > 0;
 
   return (
     <div className="fade-up">
-      <div className="page-title">📈 Analytics</div>
-      <div className="page-sub">Last 8 weeks · your branch</div>
+      <div className="page-title">📈 {t("ana.title")}</div>
+      <div className="page-sub">{t("ana.subtitle")}</div>
 
       {/* headline stats */}
       {loading ? (
         <div style={{ marginBottom: 14 }}><StatsSkeleton count={3} /></div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
-          <Stat value={`${data.monthHours}h`} label="Hours / Month" color={GOLD} />
-          <Stat value={data.monthShifts} label="Shifts / Month" />
-          <Stat value={`${data.lateRate}%`} label="Late Rate" color={data.lateRate > 15 ? "#ec7063" : "#58d68d"} />
+          <Stat value={`${data.monthHours}h`} label={t("ana.hoursMonth")} color={GOLD} />
+          <Stat value={data.monthShifts} label={t("ana.shiftsMonth")} />
+          <Stat value={`${data.lateRate}%`} label={t("ana.lateRate")} color={data.lateRate > 15 ? "#ec7063" : "#58d68d"} />
         </div>
       )}
 
@@ -52,11 +54,11 @@ export default function AnalyticsPage() {
         </>
       ) : !hasData ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 36, fontSize: 14, lineHeight: 1.6 }}>
-          📊 No attendance data yet.<br />Charts fill in as your team clocks in over the coming weeks.
+          📊 {t("ana.noData")}<br />{t("ana.noDataSub")}
         </div>
       ) : (
         <>
-          <ChartCard title="Hours per Week">
+          <ChartCard title={t("ana.hoursPerWeek")}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.weekly} margin={{ top: 6, right: 6, bottom: 0, left: -22 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
@@ -68,7 +70,7 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Hours by Day of Week">
+          <ChartCard title={t("ana.hoursByDay")}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.daily} margin={{ top: 6, right: 6, bottom: 0, left: -22 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
@@ -81,7 +83,7 @@ export default function AnalyticsPage() {
           </ChartCard>
 
           {data.teams.length > 0 && (
-            <ChartCard title="Hours by Team (8 weeks)">
+            <ChartCard title={t("ana.hoursByTeam")}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.teams} layout="vertical" margin={{ top: 4, right: 12, bottom: 0, left: 10 }}>
                   <XAxis type="number" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
@@ -97,7 +99,7 @@ export default function AnalyticsPage() {
         </>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>‹ Back to dashboard</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }

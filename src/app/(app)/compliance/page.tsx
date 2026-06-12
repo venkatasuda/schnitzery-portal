@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLang } from "@/components/LanguageProvider";
 import Link from "next/link";
 import { getCompliance } from "@/lib/queries/compliance";
 import { Skeleton } from "@/components/Skeleton";
@@ -8,6 +9,8 @@ import { Skeleton } from "@/components/Skeleton";
 const ICON: Record<string, string> = { Break: "☕", Rest: "🌙", "Long shift": "⏱" };
 
 export default function CompliancePage() {
+  const { t } = useLang();
+  const compType = (k: string) => (["Break", "Rest", "Long shift"].includes(k) ? t("compType." + k) : k);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
@@ -20,14 +23,14 @@ export default function CompliancePage() {
     });
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>Managers only.</div>;
+  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const v = data?.violations || [];
 
   return (
     <div className="fade-up">
-      <div className="page-title">⚖️ Compliance</div>
-      <div className="page-sub">German ArbZG · last 14 days · from actual clock-ins</div>
+      <div className="page-title">⚖️ {t("home.compliance")}</div>
+      <div className="page-sub">{t("comp.subtitle")}</div>
 
       {loading ? (
         <>
@@ -38,22 +41,22 @@ export default function CompliancePage() {
         <>
           {/* summary */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
-            <Stat value={data.counts.breakCount} label="Break Issues" color={data.counts.breakCount > 0 ? "#ec7063" : "#58d68d"} />
-            <Stat value={data.counts.restCount} label="Rest Issues" color={data.counts.restCount > 0 ? "#ec7063" : "#58d68d"} />
-            <Stat value={data.counts.longCount} label="Over 10h" color={data.counts.longCount > 0 ? "#e8a35a" : "#58d68d"} />
+            <Stat value={data.counts.breakCount} label={t("comp.breakIssues")} color={data.counts.breakCount > 0 ? "#ec7063" : "#58d68d"} />
+            <Stat value={data.counts.restCount} label={t("comp.restIssues")} color={data.counts.restCount > 0 ? "#ec7063" : "#58d68d"} />
+            <Stat value={data.counts.longCount} label={t("comp.over10h")} color={data.counts.longCount > 0 ? "#e8a35a" : "#58d68d"} />
           </div>
 
           {v.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: 32 }}>
               <div style={{ fontSize: 30, marginBottom: 8 }}>✅</div>
-              <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>All compliant</div>
+              <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("comp.allCompliant")}</div>
               <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>
-                {data.checked} shift{data.checked === 1 ? "" : "s"} checked over the last 14 days — no break, rest, or overtime issues.
+                {t("comp.checkedNote", { n: data.checked })}
               </div>
             </div>
           ) : (
             <>
-              <div className="section-label">{v.length} Issue{v.length === 1 ? "" : "s"} ({data.checked} shifts checked)</div>
+              <div className="section-label">{t("comp.issuesHeader", { n: v.length, c: data.checked })}</div>
               <div className="card" style={{ padding: 8 }}>
                 {v.map((item: any, i: number) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < v.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
@@ -62,7 +65,7 @@ export default function CompliancePage() {
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
                         {item.name} <span style={{ fontWeight: 400, fontSize: 12, color: "var(--gray)" }}>· {item.date}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: item.severity === "high" ? "#ec7063" : "#e8a35a" }}>{item.type} — {item.detail}</div>
+                      <div style={{ fontSize: 11, color: item.severity === "high" ? "#ec7063" : "#e8a35a" }}>{compType(item.type)} — {item.detail}</div>
                     </div>
                   </div>
                 ))}
@@ -72,16 +75,16 @@ export default function CompliancePage() {
 
           {/* rules reference */}
           <div className="card" style={{ marginTop: 14, fontSize: 12, color: "var(--gray)", lineHeight: 1.7 }}>
-            <div style={{ fontWeight: 700, color: "var(--white)", marginBottom: 6 }}>The rules being checked (ArbZG)</div>
-            ☕ Break: 30 min for shifts over 6h, 45 min over 9h.<br />
-            🌙 Rest: at least 11h between the end of one shift and the start of the next.<br />
-            ⏱ Daily max: 10h of working time per day.<br />
-            <span style={{ fontSize: 11, opacity: 0.8 }}>Restaurants are exempt from Sunday-rest rules (§10), so Sunday work isn&apos;t flagged. This is guidance, not legal advice.</span>
+            <div style={{ fontWeight: 700, color: "var(--white)", marginBottom: 6 }}>{t("comp.rulesTitle")}</div>
+            {t("comp.ruleBreak")}<br />
+            {t("comp.ruleRest")}<br />
+            {t("comp.ruleMax")}<br />
+            <span style={{ fontSize: 11, opacity: 0.8 }}>{t("comp.ruleNote")}</span>
           </div>
         </>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>‹ Back to dashboard</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }

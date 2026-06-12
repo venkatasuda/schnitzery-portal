@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getMyAvailability, saveAvailability, getNextWeekStart } from "@/lib/queries/availability";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { useLang } from "@/components/LanguageProvider";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SHIFTS = [
@@ -13,6 +14,9 @@ const SHIFTS = [
 ];
 
 export default function AvailabilityPage() {
+  const { t } = useLang();
+  const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
+  const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
   const [weekStart, setWeekStart] = useState("");
   const [days, setDays] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
@@ -40,8 +44,8 @@ export default function AvailabilityPage() {
     setSaving(true);
     const res = await saveAvailability(weekStart, days);
     setSaving(false);
-    if (res.ok) toast("Availability saved", "success");
-    else toast(res.error || "Failed to save.", "error");
+    if (res.ok) toast(t("avail.saved"), "success");
+    else toast(res.error || t("avail.failSave"), "error");
   }
 
   const weekLabel = (() => {
@@ -53,9 +57,9 @@ export default function AvailabilityPage() {
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>🗓 My Availability</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>🗓 {t("avail.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
-        Tap the shifts you can work next week. {weekLabel}
+        {t("avail.subtitle", { week: weekLabel })}
       </p>
 
       {loading ? (
@@ -64,7 +68,7 @@ export default function AvailabilityPage() {
         <>
           {DAYS.map((day) => (
             <div key={day} style={{ ...card, marginBottom: 8 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{day}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{dayLabel(day)}</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {SHIFTS.map((sh) => {
                   const on = (days[day] || []).includes(sh.key);
@@ -74,7 +78,7 @@ export default function AvailabilityPage() {
                         background: on ? "#d4a847" : "rgba(255,255,255,0.04)",
                         color: on ? "#1a0e0e" : "#9a8f8f",
                         border: on ? "1px solid #d4a847" : "1px solid rgba(255,255,255,0.12)" }}>
-                      {sh.key}<div style={{ fontSize: 10, fontWeight: 400, marginTop: 2 }}>{sh.time}</div>
+                      {shiftLabel(sh.key)}<div style={{ fontSize: 10, fontWeight: 400, marginTop: 2 }}>{sh.time}</div>
                     </button>
                   );
                 })}
@@ -82,7 +86,7 @@ export default function AvailabilityPage() {
             </div>
           ))}
           <button onClick={save} disabled={saving} style={{ ...primaryBtn, marginTop: 8 }}>
-            {saving ? "Saving…" : "💾 Save Availability"}
+            {saving ? t("common.saving") : t("avail.save")}
           </button>
         </>
       )}
