@@ -270,6 +270,19 @@ export const messages = {
       couldNotLoad: "Could not load code.", orEnterCode: "OR ENTER CODE", newCodeIn: "New code in {n}s",
       codeChanges: "The code changes every {n} seconds to prevent remote clock-ins.",
     },
+    pw: {
+      title: "Set a new password",
+      subtitle: "For security, please choose your own password before continuing.",
+      newPassword: "New password", confirmPassword: "Confirm password",
+      save: "Save & continue", saving: "Saving…",
+      tooShort: "Password must be at least 8 characters.",
+      noMatch: "The passwords don't match.",
+      failed: "Could not update password. Please try again.",
+    },
+    kiosk: {
+      title: "Clock In / Out",
+      hint: "Scan the QR code or enter the 6-digit code in your Schnitzery app.",
+    },
     ana: {
       title: "Analytics", subtitle: "Last 8 weeks · your branch",
       hoursMonth: "Hours / Month", shiftsMonth: "Shifts / Month", lateRate: "Late Rate",
@@ -638,6 +651,19 @@ export const messages = {
       title: "Einstempel-Anzeige", subtitle: "Mitarbeiter: Scanne diesen QR oder gib den Code in deiner App ein.",
       couldNotLoad: "Code konnte nicht geladen werden.", orEnterCode: "ODER CODE EINGEBEN", newCodeIn: "Neuer Code in {n}s",
       codeChanges: "Der Code ändert sich alle {n} Sekunden, um Fern-Einstempeln zu verhindern.",
+    },
+    pw: {
+      title: "Neues Passwort festlegen",
+      subtitle: "Bitte wähle aus Sicherheitsgründen dein eigenes Passwort, bevor du fortfährst.",
+      newPassword: "Neues Passwort", confirmPassword: "Passwort bestätigen",
+      save: "Speichern & fortfahren", saving: "Wird gespeichert…",
+      tooShort: "Das Passwort muss mindestens 8 Zeichen lang sein.",
+      noMatch: "Die Passwörter stimmen nicht überein.",
+      failed: "Passwort konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+    },
+    kiosk: {
+      title: "Ein- / Ausstempeln",
+      hint: "Scanne den QR-Code oder gib den 6-stelligen Code in deiner Schnitzery-App ein.",
     },
     ana: {
       title: "Auswertung", subtitle: "Letzte 8 Wochen · deine Filiale",

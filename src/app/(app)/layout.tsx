@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -13,13 +14,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let profile = null;
-  if (user) {
-    const { data } = await supabase
-      .from("users").select("full_name, role, avatar_url").eq("id", user.id).single();
-    profile = data;
-  }
+  // Not signed in → send to login (this layout is the auth gate; there is no middleware).
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("full_name, role, avatar_url, must_change_password")
+    .eq("id", user.id)
+    .single();
+
+  // First login on a seeded/temporary password → force a password change.
+  // /change-password lives outside the (app) group, so this can't loop.
+  if (profile?.must_change_password) redirect("/change-password");
+
   const role = profile?.role || "staff";
+
+  // A kiosk-tablet account belongs only on the kiosk screen, never in the app.
+  if (role === "kiosk") redirect("/kiosk");
+
   const isManager = ["manager", "franchise_owner", "brand_owner"].includes(role);
   const roleLabel: Record<string, string> = {
     staff: "Staff", manager: "Manager",
