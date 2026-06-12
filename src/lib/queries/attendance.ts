@@ -55,17 +55,19 @@ export async function getMyStatus() {
 }
 
 // Clock in — server-stamped via the clock_in() database function.
-export async function clockIn() {
+// `code` is the in-store rotating code; the DB validates it when the branch
+// requires it (and ignores it otherwise).
+export async function clockIn(code?: string) {
   const supabase = await createClient();
-  const { error } = await supabase.rpc("clock_in");
+  const { error } = await supabase.rpc("clock_in", { p_code: code ?? null });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
 
 // Clock out — server-stamped + duration computed in clock_out().
-export async function clockOut() {
+export async function clockOut(code?: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("clock_out");
+  const { data, error } = await supabase.rpc("clock_out", { p_code: code ?? null });
   if (error) return { ok: false, error: error.message };
   return { ok: true, durationMin: data?.durationMin ?? 0, breakMin: data?.breakMin ?? 0 };
 }
