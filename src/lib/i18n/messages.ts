@@ -745,7 +745,7 @@ export const messages = {
       typeHint: "Typ auswählen — max. 5 MB · PDF / JPG / PNG / HEIC",
       datesHint: "Daten hinzufügen (optional), dann Datei wählen.",
       issued: "Ausgestellt", expires: "Läuft ab", chooseUpload: "Datei wählen & hochladen",
-      uploading: "Wird hochgeladen…",
+      uploading: "Wird hochgeladen…", 
       type_id_card: "Ausweis / Reisepass", type_visa: "Visum / Aufenthaltstitel",
       type_work_permit: "Arbeitserlaubnis", type_contract: "Vertrag",
       type_certificate: "Zertifikat", type_other: "Sonstiges",
