@@ -4,8 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 
 // ============================================================
 // ATTENDANCE QUERIES — the data layer for clock in/out.
-// These run on the server. RLS ensures users only touch their
-// own branch's rows. The logged-in user is detected automatically.
+// Writes (clock in/out, breaks) go through SECURITY DEFINER
+// database functions so timestamps are stamped server-side and
+// staff cannot fabricate hours by writing the table directly.
+// Reads stay as normal RLS-scoped selects.
 // ============================================================
 
 // Helper: get the current user + their branch_id from their profile.
@@ -25,7 +27,7 @@ async function getMe() {
   return { supabase, user, branchId: profile?.branch_id ?? null };
 }
 
-// Today's date as YYYY-MM-DD (server timezone).
+// Today's date as YYYY-MM-DD (UTC — matches the DB functions).
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -49,71 +51,23 @@ export async function getMyStatus() {
   const clockedIn = !!latest && (latest.status === "active" || latest.status === "on-break");
   const onBreak = !!latest && latest.status === "on-break";
 
-  return {
-    ok: true,
-    clockedIn,
-    onBreak,
-    session: latest,
-  };
+  return { ok: true, clockedIn, onBreak, session: latest };
 }
 
-// Clock in — creates a new active session for today.
+// Clock in — server-stamped via the clock_in() database function.
 export async function clockIn() {
-  const { supabase, user, branchId } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-  if (!branchId) return { ok: false, error: "Your account has no branch assigned." };
-
-  // Guard: don't double clock-in if already active today.
-  const status = await getMyStatus();
-  if (status.ok && status.clockedIn) {
-    return { ok: false, error: "You are already clocked in." };
-  }
-
-  const now = new Date();
-  const { error } = await supabase.from("attendance_logs").insert({
-    user_id: user.id,
-    branch_id: branchId,
-    work_date: todayStr(),
-    clock_in: now.toISOString(),
-    status: "active",
-    approval_status: "pending",
-  });
-
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("clock_in");
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
 
-// Clock out — closes the active session, computes duration.
+// Clock out — server-stamped + duration computed in clock_out().
 export async function clockOut() {
-  const { supabase, user } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-
-  const status = await getMyStatus();
-  if (!status.ok || !status.clockedIn || !status.session) {
-    return { ok: false, error: "You are not clocked in." };
-  }
-
-  const session = status.session;
-  if (session.status === "on-break") {
-    return { ok: false, error: "End your break before clocking out." };
-  }
-  const now = new Date();
-  const start = new Date(session.clock_in);
-  // Total elapsed time (break time is NOT subtracted — timer counts everything).
-  const durationMin = Math.max(0, Math.round((now.getTime() - start.getTime()) / 60000));
-  const breakMin = totalBreakMins(parseBreaks(session.breaks));
-
-  const { error } = await supabase
-    .from("attendance_logs")
-    .update({
-      clock_out: now.toISOString(),
-      duration_mins: durationMin,
-      status: "complete",
-    })
-    .eq("id", session.id);
-
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("clock_out");
   if (error) return { ok: false, error: error.message };
-  return { ok: true, durationMin, breakMin };
+  return { ok: true, durationMin: data?.durationMin ?? 0, breakMin: data?.breakMin ?? 0 };
 }
 
 // Get my attendance history, optionally filtered by a date range.
@@ -139,70 +93,21 @@ export async function getMyHistory(from?: string, to?: string) {
 }
 
 // ── BREAKS ──────────────────────────────────────────────────────────────
-// Breaks are stored as JSON in the `breaks` column: an array of
-// { start: ISO, end: ISO|null }. The last entry with end=null is an open break.
-
-function parseBreaks(raw: any): Array<{ start: string; end: string | null }> {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  try { return JSON.parse(raw); } catch { return []; }
-}
-
-function totalBreakMins(breaks: Array<{ start: string; end: string | null }>): number {
-  let total = 0;
-  for (const b of breaks) {
-    if (b.start && b.end) {
-      total += Math.max(0, Math.round((new Date(b.end).getTime() - new Date(b.start).getTime()) / 60000));
-    }
-  }
-  return total;
-}
+// Breaks live in the jsonb `breaks` column as an array of
+// { start: ISO, end: ISO|null }. Both writes are server-stamped in the DB.
 
 // Start a break on the current active session.
 export async function startBreak() {
-  const { supabase, user } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-
-  const status = await getMyStatus();
-  if (!status.ok || !status.session) return { ok: false, error: "You are not clocked in." };
-  const session = status.session;
-  if (session.status !== "active") return { ok: false, error: "You are not clocked in." };
-
-  const breaks = parseBreaks(session.breaks);
-  const openBreak = breaks.find((b) => b.end === null);
-  if (openBreak) return { ok: false, error: "You are already on a break." };
-
-  breaks.push({ start: new Date().toISOString(), end: null });
-
-  const { error } = await supabase
-    .from("attendance_logs")
-    .update({ breaks: JSON.stringify(breaks), status: "on-break" })
-    .eq("id", session.id);
-
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("start_break");
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
 
 // End the current open break.
 export async function endBreak() {
-  const { supabase, user } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-
-  const status = await getMyStatus();
-  if (!status.ok || !status.session) return { ok: false, error: "No active session." };
-  const session = status.session;
-
-  const breaks = parseBreaks(session.breaks);
-  const openBreak = breaks.find((b) => b.end === null);
-  if (!openBreak) return { ok: false, error: "You are not on a break." };
-
-  openBreak.end = new Date().toISOString();
-
-  const { error } = await supabase
-    .from("attendance_logs")
-    .update({ breaks: JSON.stringify(breaks), status: "active" })
-    .eq("id", session.id);
-
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("end_break");
   if (error) return { ok: false, error: error.message };
-  return { ok: true, totalBreakMins: totalBreakMins(breaks) };
+  return { ok: true, totalBreakMins: data?.totalBreakMins ?? 0 };
 }
