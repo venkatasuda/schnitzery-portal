@@ -3,25 +3,14 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getStaffDetail, getStaffHours, getStaffDocuments, getStaffDocumentUrl } from "@/lib/queries/staff-detail";
+import { getStaffDetail, getStaffHours } from "@/lib/queries/staff-detail";
+import EmployeeDocuments from "@/components/EmployeeDocuments";
 import { getStaffLeaveBalance, setLeaveAllowance } from "@/lib/queries/leave-balance";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 
 const fmtH = (m: number) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
-const DOC_ICON: Record<string, string> = {
-  id_card: "🪪", visa: "🛂", work_permit: "💼", contract: "📄", certificate: "🎓", other: "📁",
-};
-type Tf = (k: string, v?: Record<string, string | number>) => string;
-function expiryStatus(expiry: string | null | undefined, t: Tf): { label: string; color: string } | null {
-  if (!expiry) return null;
-  const days = Math.ceil((new Date(expiry).getTime() - Date.now()) / 86400000);
-  if (days < 0) return { label: t("staffd.expired", { n: Math.abs(days) }), color: "#ec7063" };
-  if (days <= 60) return { label: t("staffd.expiresIn", { n: days }), color: "#e8a35a" };
-  return { label: t("staffd.validUntil", { date: new Date(expiry).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) }), color: "#58d68d" };
-}
-
 export default function StaffDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id as string;
@@ -30,11 +19,9 @@ export default function StaffDetailPage() {
   const roleLabel = (k: string) => (["staff", "manager", "franchise_owner", "brand_owner"].includes(k) ? t("roles." + k) : k);
   const contractLabel = (k: string) => (["Working Student", "Part Time", "Full Time", "Mini Job"].includes(k) ? t("contracts." + k) : k);
   const statusLabel = (k: string) => (["active", "inactive"].includes(k) ? t("status." + k) : k);
-  const docLabel = (k: string) => t("documents.type_" + (["id_card", "visa", "work_permit", "contract", "certificate"].includes(k) ? k : "other"));
 
   const [staff, setStaff] = useState<any>(null);
   const [hours, setHours] = useState<any>(null);
-  const [docs, setDocs] = useState<any[]>([]);
   const [bal, setBal] = useState<any>(null);
   const [allowance, setAllowance] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,21 +31,14 @@ export default function StaffDetailPage() {
     if (!id) return;
     (async () => {
       setLoading(true);
-      const [d, h, dc, lb] = await Promise.all([getStaffDetail(id), getStaffHours(id), getStaffDocuments(id), getStaffLeaveBalance(id)]);
+      const [d, h, lb] = await Promise.all([getStaffDetail(id), getStaffHours(id), getStaffLeaveBalance(id)]);
       if (d.ok) setStaff(d.staff);
       else setError(d.error || t("staffd.couldNotLoad"));
       if (h.ok) setHours(h);
-      if (dc.ok) setDocs(dc.documents || []);
       if (lb.ok) { setBal(lb); setAllowance(String(lb.allowance ?? "")); }
       setLoading(false);
     })();
   }, [id]);
-
-  async function view(filePath: string) {
-    const res = await getStaffDocumentUrl(filePath);
-    if (res.ok && res.url) window.open(res.url, "_blank");
-    else toast(res.error || t("documents.couldNotOpen"), "error");
-  }
 
   async function saveAllowance() {
     const days = parseFloat(allowance);
@@ -153,25 +133,8 @@ export default function StaffDetailPage() {
         </>
       )}
 
-      {/* documents */}
-      <div className="section-label">{t("staffd.documents")}</div>
-      {docs.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("staffd.noDocuments")}</div>
-      ) : (
-        <div className="card" style={{ padding: 8 }}>
-          {docs.map((d, i) => (
-            <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < docs.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
-              <span style={{ fontSize: 20 }}>{DOC_ICON[d.doc_type] || "📁"}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{docLabel(d.doc_type)}</div>
-                <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.file_name}</div>
-                {expiryStatus(d.expiry_date, t) && <div style={{ fontSize: 11, fontWeight: 600, color: expiryStatus(d.expiry_date, t)!.color, marginTop: 2 }}>{expiryStatus(d.expiry_date, t)!.label}</div>}
-              </div>
-              <button onClick={() => view(d.file_path)} style={viewBtn}>{t("documents.view")}</button>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* documents — required-doc checklist + approve/reject (manager) */}
+      {staff && <EmployeeDocuments userId={id} />}
     </div>
   );
 }
@@ -195,4 +158,3 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
 }
 
 const backLink: React.CSSProperties = { display: "inline-block", color: "var(--gold)", fontSize: 13, textDecoration: "none", marginBottom: 12 };
-const viewBtn: React.CSSProperties = { padding: "6px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
