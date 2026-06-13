@@ -9,6 +9,7 @@ import { isOnline, captureOffline, codeFromQR, type ClockAction } from "@/lib/of
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
 import QrScanner from "./QrScanner";
 import SyncStatus from "@/components/SyncStatus";
+import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
 
 export default function AttendancePage() {
@@ -216,6 +217,7 @@ export default function AttendancePage() {
     <div className="fade-up">
       <div className="page-title">🕐 {t("att.title")}</div>
       <SyncStatus />
+      <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>✏️ {t("corr.request")}</Link>
       <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
       <div className="card" style={{ padding: 24 }}>
