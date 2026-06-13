@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <div className="header-right">
           <span className="header-name">{profile?.full_name || user?.email}</span>
-          {isManager && <NotificationBell />}
+          <NotificationBell />
           <LanguageToggle />
           <ThemeToggle />
           {profile?.avatar_url ? (

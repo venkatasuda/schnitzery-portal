@@ -301,6 +301,14 @@ export const messages = {
       filterEmployee: "Employee", filterType: "Document type", filterStatus: "Status", filterPeriod: "Expiry period",
       filterAll: "All", noResults: "No documents match these filters.", reviewedBy: "Reviewed",
     },
+    notif: {
+      title: "Notifications", loading: "Loading…", caughtUp: "You're all caught up",
+      markAllRead: "Mark all read",
+      docPending: "Document to review", docApproved: "Document approved", docRejected: "Document rejected",
+      approvalsWaiting: "{n} approvals waiting", openIncidents: "{n} open incidents",
+      lowStock: "{n} low-stock items", notSubmitted: "{n} haven't submitted availability",
+      docsExpiring: "{n} documents expiring soon",
+    },
     ana: {
       title: "Analytics", subtitle: "Last 8 weeks · your branch",
       hoursMonth: "Hours / Month", shiftsMonth: "Shifts / Month", lateRate: "Late Rate",
@@ -701,6 +709,14 @@ export const messages = {
       within90: "Innerhalb von 90 Tagen", expiredCount: "Abgelaufen", missingCount: "Fehlende Pflichtdokumente", pendingCount: "Genehmigung ausstehend",
       filterEmployee: "Mitarbeiter", filterType: "Dokumenttyp", filterStatus: "Status", filterPeriod: "Ablauffrist",
       filterAll: "Alle", noResults: "Keine Dokumente entsprechen diesen Filtern.", reviewedBy: "Geprüft",
+    },
+    notif: {
+      title: "Benachrichtigungen", loading: "Wird geladen…", caughtUp: "Alles erledigt",
+      markAllRead: "Alle als gelesen markieren",
+      docPending: "Dokument prüfen", docApproved: "Dokument genehmigt", docRejected: "Dokument abgelehnt",
+      approvalsWaiting: "{n} Genehmigungen ausstehend", openIncidents: "{n} offene Vorfälle",
+      lowStock: "{n} Artikel mit geringem Bestand", notSubmitted: "{n} ohne Verfügbarkeit",
+      docsExpiring: "{n} bald ablaufende Dokumente",
     },
     ana: {
       title: "Auswertung", subtitle: "Letzte 8 Wochen · deine Filiale",
