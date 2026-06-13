@@ -8,6 +8,7 @@ import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/cl
 import { isOnline, captureOffline, codeFromQR, type ClockAction } from "@/lib/offline/attendanceQueue";
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
 import QrScanner from "./QrScanner";
+import SyncStatus from "@/components/SyncStatus";
 import { useLang } from "@/components/LanguageProvider";
 
 export default function AttendancePage() {
@@ -214,6 +215,7 @@ export default function AttendancePage() {
   return (
     <div className="fade-up">
       <div className="page-title">🕐 {t("att.title")}</div>
+      <SyncStatus />
       <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
       <div className="card" style={{ padding: 24 }}>
@@ -378,7 +380,7 @@ export default function AttendancePage() {
               return (
                 <div key={s.id} className="card" style={{ padding: 14, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{fmtDate(s.work_date)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 9, fontWeight: 700, color: "#e8a35a", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>
                       {s.status === "active" || s.status === "on-break" ? t("att.inProgress") : fmtDur(s.duration_mins)}
                     </div>

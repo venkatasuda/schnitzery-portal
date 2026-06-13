@@ -283,6 +283,9 @@ export const messages = {
     kiosk: {
       title: "Clock In / Out",
       hint: "Scan the QR code or enter the 6-digit code in your Schnitzery app.",
+      emergency: "Emergency Mode",
+      emergencyHint: "connection lost; showing saved codes. They still work and records sync automatically.",
+      exhausted: "Saved codes used up — reconnect to refresh.",
     },
     docw: {
       statusMissing: "Missing", statusPending: "Pending Review", statusApproved: "Approved",
@@ -301,6 +304,12 @@ export const messages = {
       within90: "Within 90 days", expiredCount: "Expired", missingCount: "Missing required", pendingCount: "Pending approval",
       filterEmployee: "Employee", filterType: "Document type", filterStatus: "Status", filterPeriod: "Expiry period",
       filterAll: "All", noResults: "No documents match these filters.", reviewedBy: "Reviewed",
+    },
+    sync: {
+      online: "Online", offline: "Offline", pending: "{n} waiting to sync",
+      syncNow: "Sync now", syncing: "Syncing…", syncedN: "{n} records synced",
+      allSynced: "All synced", offlineToast: "Still offline — will retry automatically.",
+      offlineTag: "Offline",
     },
     notif: {
       title: "Notifications", loading: "Loading…", caughtUp: "You're all caught up",
@@ -693,6 +702,9 @@ export const messages = {
     kiosk: {
       title: "Ein- / Ausstempeln",
       hint: "Scanne den QR-Code oder gib den 6-stelligen Code in deiner Schnitzery-App ein.",
+      emergency: "Notfallmodus",
+      emergencyHint: "Verbindung verloren; gespeicherte Codes werden angezeigt. Sie funktionieren weiterhin und Einträge werden automatisch synchronisiert.",
+      exhausted: "Gespeicherte Codes aufgebraucht – zum Aktualisieren erneut verbinden.",
     },
     docw: {
       statusMissing: "Fehlt", statusPending: "Prüfung ausstehend", statusApproved: "Genehmigt",
@@ -711,6 +723,12 @@ export const messages = {
       within90: "Innerhalb von 90 Tagen", expiredCount: "Abgelaufen", missingCount: "Fehlende Pflichtdokumente", pendingCount: "Genehmigung ausstehend",
       filterEmployee: "Mitarbeiter", filterType: "Dokumenttyp", filterStatus: "Status", filterPeriod: "Ablauffrist",
       filterAll: "Alle", noResults: "Keine Dokumente entsprechen diesen Filtern.", reviewedBy: "Geprüft",
+    },
+    sync: {
+      online: "Online", offline: "Offline", pending: "{n} warten auf Synchronisierung",
+      syncNow: "Jetzt synchronisieren", syncing: "Synchronisiere…", syncedN: "{n} Einträge synchronisiert",
+      allSynced: "Alles synchronisiert", offlineToast: "Noch offline – wird automatisch erneut versucht.",
+      offlineTag: "Offline",
     },
     notif: {
       title: "Benachrichtigungen", loading: "Wird geladen…", caughtUp: "Alles erledigt",
