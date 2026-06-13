@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { getClockCodeBatch } from "@/lib/queries/clockcode";
+import { QRCodeSVG } from "qrcode.react";
 
 const LS_KEY = "sz_kiosk_codebatch";
 const REFILL_BELOW = 60;   // refill when fewer than 60 windows (30 min) remain
@@ -84,9 +85,6 @@ export default function KioskScreen() {
   }, []);
 
   const pct = Math.round((secondsLeft / 30) * 100);
-  const qrImg = qrPayload
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=420x420&margin=12&data=${encodeURIComponent(qrPayload)}`
-    : "";
   const codeUsable = !!qrPayload && !exhausted;
 
   return (
@@ -116,8 +114,7 @@ export default function KioskScreen() {
       ) : (
         <>
           <div style={{ background: "#fff", borderRadius: 24, padding: 16, boxShadow: "0 12px 50px rgba(0,0,0,0.5)", marginBottom: 28 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrImg} alt="Clock QR" style={{ width: 300, height: 300, display: "block" }} />
+            <QRCodeSVG value={qrPayload} size={300} level="M" />
           </div>
 
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#9a8f8f", marginBottom: 8 }}>{t("cd.orEnterCode")}</div>
