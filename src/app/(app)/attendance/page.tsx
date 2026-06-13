@@ -5,6 +5,7 @@ import {
   getMyStatus, clockIn, clockOut, getMyHistory, startBreak, endBreak,
 } from "@/lib/queries/attendance";
 import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
+import { isOnline, captureOffline, codeFromQR, type ClockAction } from "@/lib/offline/attendanceQueue";
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
 import QrScanner from "./QrScanner";
 import { useLang } from "@/components/LanguageProvider";
@@ -66,12 +67,32 @@ export default function AttendancePage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [clockedIn, session]);
 
-  async function doAction(fn: () => Promise<any>, okMsg: string) {
+  // Optimistically reflect an offline-captured action (the real state syncs later).
+  function applyOptimistic(action: ClockAction) {
+    if (action === "clock_in") { setClockedIn(true); setOnBreak(false); setSession({ clock_in: new Date().toISOString() }); }
+    else if (action === "clock_out") { setClockedIn(false); setOnBreak(false); setSession(null); }
+    else if (action === "break_start") setOnBreak(true);
+    else if (action === "break_end") setOnBreak(false);
+  }
+
+  async function doAction(fn: () => Promise<any>, okMsg: string, offlineAction?: ClockAction) {
     setWorking(true);
     setMessage(null);
-    const res = await fn();
-    setMessage(res.ok ? okMsg : res.error || t("att.failed"));
-    await refresh();
+    if (offlineAction && !isOnline()) {
+      captureOffline(offlineAction);
+      applyOptimistic(offlineAction);
+      setMessage(t("att.savedOffline"));
+      setWorking(false);
+      return;
+    }
+    try {
+      const res = await fn();
+      setMessage(res.ok ? okMsg : res.error || t("att.failed"));
+      await refresh();
+    } catch {
+      if (offlineAction) { captureOffline(offlineAction); applyOptimistic(offlineAction); setMessage(t("att.savedOffline")); }
+      else setMessage(t("att.failed"));
+    }
     setWorking(false);
   }
 
@@ -104,29 +125,51 @@ export default function AttendancePage() {
     const clean = codeValue.replace(/\D/g, "");
     if (clean.length !== 6) { setCodeErr(t("att.enter6")); return; }
     setWorking(true);
+    const action: ClockAction = codeMode === "out" ? "clock_out" : "clock_in";
+    if (!isOnline()) {
+      captureOffline(action, clean); applyOptimistic(action);
+      setWorking(false); setShowCode(false); setMessage(t("att.savedOffline"));
+      return;
+    }
     const fn = codeMode === "out" ? clockOutWithCode : clockInWithCode;
-    const res = await fn(clean);
-    setWorking(false);
-    if (res.ok) {
-      setShowCode(false);
-      setMessage(codeMode === "out" ? t("att.outCode") : t("att.inCode"));
-      await refresh();
-    } else {
-      setCodeErr(res.error || t("att.failedShort"));
+    try {
+      const res = await fn(clean);
+      setWorking(false);
+      if (res.ok) {
+        setShowCode(false);
+        setMessage(codeMode === "out" ? t("att.outCode") : t("att.inCode"));
+        await refresh();
+      } else {
+        setCodeErr(res.error || t("att.failedShort"));
+      }
+    } catch {
+      captureOffline(action, clean); applyOptimistic(action);
+      setWorking(false); setShowCode(false); setMessage(t("att.savedOffline"));
     }
   }
 
   async function handleScan(payload: string) {
     setShowScan(false);
     setWorking(true);
+    const action: ClockAction = codeMode === "out" ? "clock_out" : "clock_in";
+    if (!isOnline()) {
+      captureOffline(action, codeFromQR(payload)); applyOptimistic(action);
+      setWorking(false); setMessage(t("att.savedOffline"));
+      return;
+    }
     setMessage(t("att.readingQR"));
-    const res = await clockWithQR(payload, codeMode);
-    setWorking(false);
-    if (res.ok) {
-      setMessage(codeMode === "out" ? t("att.outQR") : t("att.inQR"));
-      await refresh();
-    } else {
-      setMessage(res.error || t("att.qrFailed"));
+    try {
+      const res = await clockWithQR(payload, codeMode);
+      setWorking(false);
+      if (res.ok) {
+        setMessage(codeMode === "out" ? t("att.outQR") : t("att.inQR"));
+        await refresh();
+      } else {
+        setMessage(res.error || t("att.qrFailed"));
+      }
+    } catch {
+      captureOffline(action, codeFromQR(payload)); applyOptimistic(action);
+      setWorking(false); setMessage(t("att.savedOffline"));
     }
   }
 
@@ -214,7 +257,7 @@ export default function AttendancePage() {
             {/* ACTION BUTTONS */}
             {!clockedIn ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button onClick={() => doAction(clockIn, t("att.clockedIn"))} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
+                <button onClick={() => doAction(clockIn, t("att.clockedIn"), "clock_in")} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
                   <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
@@ -223,11 +266,11 @@ export default function AttendancePage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {!onBreak ? (
-                  <button onClick={() => doAction(startBreak, t("att.breakStarted"))} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
+                  <button onClick={() => doAction(startBreak, t("att.breakStarted"), "break_start")} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
                 ) : (
-                  <button onClick={() => doAction(endBreak, t("att.breakEnded"))} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
+                  <button onClick={() => doAction(endBreak, t("att.breakEnded"), "break_end")} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
                 )}
-                <button onClick={() => doAction(clockOut, t("att.clockedOut"))} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
+                <button onClick={() => doAction(clockOut, t("att.clockedOut"), "clock_out")} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
                 {!onBreak && (
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
