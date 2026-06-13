@@ -311,6 +311,18 @@ export const messages = {
       allSynced: "All synced", offlineToast: "Still offline — will retry automatically.",
       offlineTag: "Offline",
     },
+    corr: {
+      title: "Attendance Corrections", request: "Request a correction", myRequests: "My requests",
+      type: "What happened?", typeForgotIn: "Forgot to clock in", typeForgotOut: "Forgot to clock out",
+      typeMissing: "Missing attendance", typeIncorrect: "Incorrect attendance",
+      date: "Date", reqIn: "Correct clock-in time", reqOut: "Correct clock-out time",
+      reason: "Reason", reasonPlaceholder: "Explain what happened…", evidence: "Evidence (optional)",
+      submit: "Submit request", submitted: "Request submitted", submitFailed: "Could not submit.",
+      needReason: "Please add a reason.", none: "No correction requests yet.",
+      statusPending: "Pending", statusApproved: "Approved", statusRejected: "Rejected",
+      cancel: "Cancel request", cancelled: "Request cancelled", managerNote: "Manager note:",
+      requested: "Requested", decided: "Decided", inbox: "Corrections", pickRecord: "Which day to fix?",
+    },
     notif: {
       title: "Notifications", loading: "Loading…", caughtUp: "You're all caught up",
       markAllRead: "Mark all read",
@@ -318,6 +330,7 @@ export const messages = {
       approvalsWaiting: "{n} approvals waiting", openIncidents: "{n} open incidents",
       lowStock: "{n} low-stock items", notSubmitted: "{n} haven't submitted availability",
       docsExpiring: "{n} documents expiring soon",
+      correctionPending: "Correction to review", correctionApproved: "Correction approved", correctionRejected: "Correction rejected",
     },
     ana: {
       title: "Analytics", subtitle: "Last 8 weeks · your branch",
@@ -730,6 +743,18 @@ export const messages = {
       allSynced: "Alles synchronisiert", offlineToast: "Noch offline – wird automatisch erneut versucht.",
       offlineTag: "Offline",
     },
+    corr: {
+      title: "Anwesenheitskorrekturen", request: "Korrektur anfragen", myRequests: "Meine Anfragen",
+      type: "Was ist passiert?", typeForgotIn: "Einstempeln vergessen", typeForgotOut: "Ausstempeln vergessen",
+      typeMissing: "Fehlende Anwesenheit", typeIncorrect: "Falsche Anwesenheit",
+      date: "Datum", reqIn: "Korrekte Einstempelzeit", reqOut: "Korrekte Ausstempelzeit",
+      reason: "Grund", reasonPlaceholder: "Erkläre, was passiert ist…", evidence: "Nachweis (optional)",
+      submit: "Anfrage senden", submitted: "Anfrage gesendet", submitFailed: "Senden fehlgeschlagen.",
+      needReason: "Bitte einen Grund angeben.", none: "Noch keine Korrekturanfragen.",
+      statusPending: "Ausstehend", statusApproved: "Genehmigt", statusRejected: "Abgelehnt",
+      cancel: "Anfrage zurückziehen", cancelled: "Anfrage zurückgezogen", managerNote: "Anmerkung des Managers:",
+      requested: "Angefragt", decided: "Entschieden", inbox: "Korrekturen", pickRecord: "Welcher Tag?",
+    },
     notif: {
       title: "Benachrichtigungen", loading: "Wird geladen…", caughtUp: "Alles erledigt",
       markAllRead: "Alle als gelesen markieren",
@@ -737,6 +762,7 @@ export const messages = {
       approvalsWaiting: "{n} Genehmigungen ausstehend", openIncidents: "{n} offene Vorfälle",
       lowStock: "{n} Artikel mit geringem Bestand", notSubmitted: "{n} ohne Verfügbarkeit",
       docsExpiring: "{n} bald ablaufende Dokumente",
+      correctionPending: "Korrektur prüfen", correctionApproved: "Korrektur genehmigt", correctionRejected: "Korrektur abgelehnt",
     },
     ana: {
       title: "Auswertung", subtitle: "Letzte 8 Wochen · deine Filiale",
