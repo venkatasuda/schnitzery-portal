@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
+import AttendanceSync from "@/components/AttendanceSync";
 import ToastHost from "@/components/Toast";
 import LanguageProvider from "@/components/LanguageProvider";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -63,6 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="screen-wrap fade-up">{children}</div>
 
       <ToastHost />
+      <AttendanceSync />
 
       <BottomNav role={role} />
     </div>
