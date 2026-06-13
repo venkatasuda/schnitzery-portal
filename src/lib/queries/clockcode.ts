@@ -27,6 +27,21 @@ export async function getCurrentClockCode() {
   };
 }
 
+// Display devices fetch a batch of upcoming codes to pre-cache, so the kiosk
+// keeps showing valid codes during an outage (Emergency Attendance Mode).
+export async function getClockCodeBatch(count = 240) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("clock_code_batch", { p_count: count });
+  if (error) return { ok: false, error: error.message };
+  return {
+    ok: true,
+    branchId: data?.branchId as string,
+    rotateSeconds: data?.rotateSeconds ?? 30,
+    startWindow: Number(data?.startWindow),
+    codes: (data?.codes || []) as { w: number; code: string }[],
+  };
+}
+
 // Staff: clock IN with the 6-digit code (validated in the database).
 export async function clockInWithCode(code: string) {
   const clean = (code || "").replace(/\D/g, "");
