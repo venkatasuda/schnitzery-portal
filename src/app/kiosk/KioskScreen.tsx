@@ -2,12 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
-import { getClockCodeBatch } from "@/lib/queries/clockcode";
+import { getClockTokenBatch } from "@/lib/queries/clockcode";
 import { QRCodeSVG } from "qrcode.react";
 
-const LS_KEY = "sz_kiosk_codebatch";
+const LS_KEY = "sz_kiosk_tokenbatch";
 const REFILL_BELOW = 60;   // refill when fewer than 60 windows (30 min) remain
-type Batch = { startWindow: number; codes: { w: number; code: string }[]; branchId: string; rotateSeconds: number };
+type Batch = { startWindow: number; codes: { w: number; token: string; code: string }[]; branchId: string; kioskId: string; rotateSeconds: number };
+
+// Kiosk identity: ?k=<id> (persisted) or a previously saved id; the server falls
+// back to the branch's default kiosk if none is supplied.
+function getKioskId(): string | null {
+  if (typeof window === "undefined") return null;
+  const u = new URLSearchParams(window.location.search).get("k");
+  if (u) { try { localStorage.setItem("sz_kiosk_id", u); } catch {} return u; }
+  try { return localStorage.getItem("sz_kiosk_id"); } catch { return null; }
+}
 
 // In-store kiosk display with EMERGENCY ATTENDANCE MODE:
 // while online it pre-caches a rolling 2-hour window of upcoming codes, so if the
@@ -36,10 +45,10 @@ export default function KioskScreen() {
     if (fetchingRef.current) return;
     if (typeof navigator !== "undefined" && !navigator.onLine) { setEmergency(true); return; }
     fetchingRef.current = true;
-    const res = await getClockCodeBatch(240);
+    const res = await getClockTokenBatch(getKioskId(), 240);
     fetchingRef.current = false;
     if (res.ok && res.codes?.length) {
-      saveBatch({ startWindow: res.startWindow, codes: res.codes, branchId: res.branchId, rotateSeconds: res.rotateSeconds });
+      saveBatch({ startWindow: res.startWindow, codes: res.codes, branchId: res.branchId, kioskId: res.kioskId, rotateSeconds: res.rotateSeconds });
       setEmergency(false);
     } else {
       setEmergency(true); // internet / Supabase / server unavailable — fall back to cache
@@ -54,9 +63,9 @@ export default function KioskScreen() {
     if (!b) { setCode("------"); setQrPayload(""); return; }
     const idx = w - b.startWindow;
     if (idx >= 0 && idx < b.codes.length) {
-      const c = b.codes[idx].code;
-      setCode(c);
-      setQrPayload(`SCHNITZERY-CLOCK:${b.branchId}:${c}`);
+      const entry = b.codes[idx];
+      setCode(entry.code);
+      setQrPayload(entry.token || `SCHNITZERY-CLOCK:${b.branchId}:${entry.code}`);
       setExhausted(false);
       if (b.codes.length - idx < REFILL_BELOW && navigator.onLine) refreshBatch();
     } else {
