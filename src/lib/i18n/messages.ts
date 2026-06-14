@@ -346,6 +346,15 @@ export const messages = {
       openDisplay: "Open display", none: "No kiosks yet.", denied: "Managers only.",
       revokeHint: "Deactivating a kiosk immediately stops its QR codes from working.",
     },
+    ops: {
+      title: "Operations", subtitle: "Live workforce — right now.", asOf: "As of",
+      filterBranch: "Branch", filterDate: "Date", filterShift: "Shift", filterDept: "Department", all: "All", today: "Today",
+      workingNow: "Working now", late: "Late", absent: "Absent", notCheckedIn: "Not checked in", completed: "Completed",
+      staffing: "Staffing level", laborHours: "Labor hours", utilization: "Utilization", scheduledNow: "Scheduled now", scheduled: "Scheduled today",
+      attendanceStatus: "Attendance status", roster: "Who's on", none: "No one scheduled or working for this view.", denied: "Managers only.",
+      stWorking: "Working", stCompleted: "Done", stAbsent: "Absent", stNotIn: "Not in yet", stUnscheduled: "Unscheduled", stLate: "Late",
+      sched: "Scheduled", actual: "Actual",
+    },
     notif: {
       title: "Notifications", loading: "Loading…", caughtUp: "You're all caught up",
       markAllRead: "Mark all read",
@@ -800,6 +809,15 @@ export const messages = {
       active: "Aktiv", inactive: "Inaktiv", activate: "Aktivieren", deactivate: "Deaktivieren",
       openDisplay: "Display öffnen", none: "Noch keine Kioske.", denied: "Nur für Manager.",
       revokeHint: "Beim Deaktivieren funktionieren die QR-Codes des Kiosks sofort nicht mehr.",
+    },
+    ops: {
+      title: "Betrieb", subtitle: "Live-Personal — jetzt gerade.", asOf: "Stand",
+      filterBranch: "Filiale", filterDate: "Datum", filterShift: "Schicht", filterDept: "Abteilung", all: "Alle", today: "Heute",
+      workingNow: "Im Dienst", late: "Verspätet", absent: "Abwesend", notCheckedIn: "Nicht eingestempelt", completed: "Fertig",
+      staffing: "Besetzung", laborHours: "Arbeitsstunden", utilization: "Auslastung", scheduledNow: "Jetzt geplant", scheduled: "Heute geplant",
+      attendanceStatus: "Anwesenheitsstatus", roster: "Wer ist da", none: "Niemand geplant oder im Dienst für diese Ansicht.", denied: "Nur für Manager.",
+      stWorking: "Im Dienst", stCompleted: "Fertig", stAbsent: "Abwesend", stNotIn: "Noch nicht da", stUnscheduled: "Ungeplant", stLate: "Verspätet",
+      sched: "Geplant", actual: "Ist",
     },
     notif: {
       title: "Benachrichtigungen", loading: "Wird geladen…", caughtUp: "Alles erledigt",
