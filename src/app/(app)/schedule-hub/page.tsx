@@ -206,6 +206,24 @@ export default function ScheduleHubPage() {
                 <span className="feature-chev">›</span>
               </Link>
 
+              <Link href="/schedule/compare" className="feature-card">
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#7d3c98,#af7ac5)" }}>📊</div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("cmp.title")}</div><div className="feature-sub">{t("cmp.subtitle")}</div></div>
+                <span className="feature-chev">›</span>
+              </Link>
+
+              <Link href="/schedule/shift-times" className="feature-card">
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1f6f54,#27ae60)" }}>⏱️</div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("shiftcfg.title")}</div><div className="feature-sub">{t("shiftcfg.subtitle")}</div></div>
+                <span className="feature-chev">›</span>
+              </Link>
+
+              <Link href="/kiosks" className="feature-card">
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#34495e,#5d6d7e)" }}>🖥️</div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("kioskadm.title")}</div><div className="feature-sub">{t("kioskadm.subtitle")}</div></div>
+                <span className="feature-chev">›</span>
+              </Link>
+
               <button onClick={copyForward} disabled={copyBusy} className="feature-card" style={{ width: "100%", textAlign: "left", cursor: copyBusy ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>📑</div>
                 <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? t("schedhub.copying") : t("schedhub.copyWeek")}</div><div className="feature-sub">{t("schedhub.copyWeekSub")}</div></div>
