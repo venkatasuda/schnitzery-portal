@@ -46,6 +46,7 @@ export default function DashboardPage() {
           <div style={{ ...card }}>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{t("dash.quickActions")}</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <QuickLink href="/ops">📡 {t("ops.title")}</QuickLink>
               <QuickLink href="/roster">{t("dash.buildRoster")}</QuickLink>
               <QuickLink href="/announcements">{t("home.postAnnouncement")}</QuickLink>
               <QuickLink href="/export">📤 {t("profile.payrollExport")}</QuickLink>
