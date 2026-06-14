@@ -322,6 +322,7 @@ export const messages = {
       statusPending: "Pending", statusApproved: "Approved", statusRejected: "Rejected",
       cancel: "Cancel request", cancelled: "Request cancelled", managerNote: "Manager note:",
       requested: "Requested", decided: "Decided", inbox: "Corrections", pickRecord: "Which day to fix?",
+      rejectTitle: "Reject correction", rejectPlaceholder: "Reason for the employee (optional)", confirmReject: "Reject", dismiss: "Cancel", origWas: "was", evidence_view: "View evidence",
     },
     notif: {
       title: "Notifications", loading: "Loading…", caughtUp: "You're all caught up",
@@ -754,6 +755,7 @@ export const messages = {
       statusPending: "Ausstehend", statusApproved: "Genehmigt", statusRejected: "Abgelehnt",
       cancel: "Anfrage zurückziehen", cancelled: "Anfrage zurückgezogen", managerNote: "Anmerkung des Managers:",
       requested: "Angefragt", decided: "Entschieden", inbox: "Korrekturen", pickRecord: "Welcher Tag?",
+      rejectTitle: "Korrektur ablehnen", rejectPlaceholder: "Grund für den Mitarbeiter (optional)", confirmReject: "Ablehnen", dismiss: "Abbrechen", origWas: "war", evidence_view: "Nachweis ansehen",
     },
     notif: {
       title: "Benachrichtigungen", loading: "Wird geladen…", caughtUp: "Alles erledigt",

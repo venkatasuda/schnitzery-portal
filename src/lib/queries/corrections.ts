@@ -67,7 +67,7 @@ export async function getCorrectionApprovals() {
 
   const { data, error } = await supabase
     .from("attendance_corrections")
-    .select("id, user_id, type, target_date, requested_clock_in, requested_clock_out, reason, evidence_url, created_at")
+    .select("id, user_id, type, target_date, requested_clock_in, requested_clock_out, reason, evidence_url, created_at, original:attendance_logs(clock_in, clock_out)")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
   if (error) return { ok: false, error: error.message, items: [] };
@@ -78,7 +78,19 @@ export async function getCorrectionApprovals() {
     const { data: us } = await supabase.from("users").select("id, full_name").in("id", ids);
     for (const u of us || []) names[u.id] = u.full_name;
   }
-  return { ok: true, items: (data || []).map((d) => ({ ...d, name: names[d.user_id] || "Unknown" })) };
+
+  return {
+    ok: true,
+    items: (data || []).map((d) => {
+      const o: any = Array.isArray((d as any).original) ? (d as any).original[0] : (d as any).original;
+      return {
+        ...d,
+        name: names[d.user_id] || "Unknown",
+        origIn: o?.clock_in ?? null,
+        origOut: o?.clock_out ?? null,
+      };
+    }),
+  };
 }
 
 export async function decideCorrection(id: string, approve: boolean, note?: string) {

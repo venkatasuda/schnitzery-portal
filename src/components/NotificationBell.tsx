@@ -21,7 +21,12 @@ const NOTIF: Record<string, { key: string; icon: string; href: string }> = {
   doc_pending:  { key: "notif.docPending",  icon: "📑", href: "/expiring-docs" },
   doc_approved: { key: "notif.docApproved", icon: "✅", href: "/profile" },
   doc_rejected: { key: "notif.docRejected", icon: "❌", href: "/profile" },
+  correction_pending:  { key: "notif.correctionPending",  icon: "✏️", href: "/approvals" },
+  correction_approved: { key: "notif.correctionApproved", icon: "✅", href: "/attendance/corrections" },
+  correction_rejected: { key: "notif.correctionRejected", icon: "❌", href: "/attendance/corrections" },
 };
+
+const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
 
 export default function NotificationBell() {
   const { t } = useLang();
@@ -60,6 +65,12 @@ export default function NotificationBell() {
 
   // Build the detail line for a persisted notification.
   function detailOf(n: any): string {
+    if (n.type && n.type.startsWith("correction_")) {
+      const ct = t("corr." + (CORR_KEY[n.title] || "typeMissing"));
+      if (n.type === "correction_rejected") return n.message ? `${ct}: ${n.message}` : ct;
+      if (n.type === "correction_pending") return n.message ? `${ct} · ${n.message}` : ct;
+      return ct;
+    }
     const label = docLabel(n.title);
     if (n.type === "doc_rejected") return n.message ? `${label}: ${n.message}` : label;
     if (n.type === "doc_pending") return n.message ? `${label} · ${n.message}` : label;
