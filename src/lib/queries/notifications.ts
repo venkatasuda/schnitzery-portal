@@ -32,3 +32,17 @@ export async function markAllNotificationsRead() {
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+export async function getNotificationHistory(limit = 100) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, items: [] as any[] };
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("id, type, title, message, is_read, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) return { ok: false, error: error.message, items: [] };
+  return { ok: true, items: data || [] };
+}

@@ -24,6 +24,19 @@ const NOTIF: Record<string, { key: string; icon: string; href: string }> = {
   correction_pending:  { key: "notif.correctionPending",  icon: "✏️", href: "/approvals" },
   correction_approved: { key: "notif.correctionApproved", icon: "✅", href: "/attendance/corrections" },
   correction_rejected: { key: "notif.correctionRejected", icon: "❌", href: "/attendance/corrections" },
+  // employee
+  forgot_checkout:     { key: "notif.forgotCheckout",    icon: "🚪", href: "/attendance" },
+  missing_attendance:  { key: "notif.missingAttendance", icon: "❓", href: "/attendance/corrections" },
+  upcoming_shift:      { key: "notif.upcomingShift",     icon: "📅", href: "/schedule" },
+  // manager
+  employee_late:       { key: "notif.employeeLate",      icon: "⏰", href: "/ops" },
+  mgr_missing:         { key: "notif.mgrMissing",        icon: "🚫", href: "/ops" },
+  staffing_shortage:   { key: "notif.staffingShortage",  icon: "📉", href: "/ops" },
+  // admin
+  kiosk_offline:       { key: "notif.kioskOffline",      icon: "🖥️", href: "/kiosks" },
+  sync_failure:        { key: "notif.syncFailure",       icon: "🔄", href: "/ops" },
+  attendance_anomaly:  { key: "notif.attendanceAnomaly", icon: "⚠️", href: "/ops" },
+  system_error:        { key: "notif.systemError",       icon: "🛠️", href: "/dashboard" },
 };
 
 const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
@@ -71,10 +84,13 @@ export default function NotificationBell() {
       if (n.type === "correction_pending") return n.message ? `${ct} · ${n.message}` : ct;
       return ct;
     }
-    const label = docLabel(n.title);
-    if (n.type === "doc_rejected") return n.message ? `${label}: ${n.message}` : label;
-    if (n.type === "doc_pending") return n.message ? `${label} · ${n.message}` : label;
-    return label;
+    if (n.type && n.type.startsWith("doc_")) {
+      const label = docLabel(n.title);
+      if (n.type === "doc_rejected") return n.message ? `${label}: ${n.message}` : label;
+      if (n.type === "doc_pending") return n.message ? `${label} · ${n.message}` : label;
+      return label;
+    }
+    return n.message || "";   // phase-7 types carry human text in message
   }
 
   const hasAny = notes.length > 0 || ops.length > 0;
@@ -132,6 +148,10 @@ export default function NotificationBell() {
               })}
             </div>
           )}
+          <Link href="/notifications" onClick={() => setOpen(false)}
+            style={{ display: "block", textAlign: "center", padding: "11px 14px", borderTop: "1px solid rgba(128,128,128,0.15)", color: "var(--gold)", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}>
+            {t("notif.viewAll")}
+          </Link>
         </div>
       )}
     </div>
