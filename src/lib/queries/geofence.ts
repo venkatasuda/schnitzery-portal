@@ -71,3 +71,33 @@ export async function grantOverride(userId: string, minutes = 15) {
   if (error) return { ok: false as const, error: error.message };
   return { ok: true as const, expiresInMin: (data?.expiresInMin ?? minutes) as number };
 }
+
+// Sessions where the device was seen outside the radius at any checkpoint
+// (clock-in, break, or clock-out). Managers only, default last 14 days.
+export async function getLocationFlags(days = 14) {
+  const { supabase, role, branchId } = await getMe();
+  if (!branchId || !MGR.includes(role ?? "")) return { ok: false as const, error: "Managers only.", flags: [] };
+  const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+  const { data } = await supabase
+    .from("attendance_logs")
+    .select("id, user_id, work_date, clock_in, clock_out, geo_distance_m, geo_max_distance_m, geo_out_distance_m, geo_ok, geo_flagged")
+    .gte("work_date", since)
+    .order("work_date", { ascending: false })
+    .limit(200);
+  const rows = (data ?? []).filter((r: any) => r.geo_flagged === true || r.geo_ok === false);
+  const ids = [...new Set(rows.map((r: any) => r.user_id))];
+  let names: Record<string, string> = {};
+  if (ids.length) {
+    const { data: us } = await supabase.from("users").select("id, full_name").in("id", ids);
+    (us ?? []).forEach((u: any) => { names[u.id] = u.full_name; });
+  }
+  const flags = rows.map((r: any) => ({
+    id: r.id,
+    name: names[r.user_id] ?? "—",
+    date: r.work_date,
+    clockIn: r.clock_in,
+    clockOut: r.clock_out,
+    maxDistanceM: Math.round(Math.max(r.geo_distance_m ?? 0, r.geo_max_distance_m ?? 0, r.geo_out_distance_m ?? 0)),
+  }));
+  return { ok: true as const, flags };
+}

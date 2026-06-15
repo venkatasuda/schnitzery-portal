@@ -72,6 +72,17 @@ export async function clockOut(code?: string, lat?: number | null, lng?: number 
   return { ok: true, durationMin: data?.durationMin ?? 0, breakMin: data?.breakMin ?? 0 };
 }
 
+// Mid-shift checkpoint: report device location for the current session. The DB
+// flags the session + alerts managers if it's outside the branch radius.
+// Best-effort and silent — never blocks the clock action.
+export async function recordGeoCheck(kind: string, lat?: number | null, lng?: number | null) {
+  if (lat == null || lng == null) return { ok: false };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("record_geo_check", { p_kind: kind, p_lat: lat, p_lng: lng });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, geoOk: data?.geoOk, distanceM: data?.distanceM };
+}
+
 // Get my attendance history, optionally filtered by a date range.
 // from/to are "YYYY-MM-DD" strings (inclusive). Both optional.
 export async function getMyHistory(from?: string, to?: string) {
@@ -99,17 +110,17 @@ export async function getMyHistory(from?: string, to?: string) {
 // { start: ISO, end: ISO|null }. Both writes are server-stamped in the DB.
 
 // Start a break on the current active session.
-export async function startBreak() {
+export async function startBreak(lat?: number | null, lng?: number | null) {
   const supabase = await createClient();
-  const { error } = await supabase.rpc("start_break");
+  const { error } = await supabase.rpc("start_break", { p_lat: lat ?? null, p_lng: lng ?? null });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
 
 // End the current open break.
-export async function endBreak() {
+export async function endBreak(lat?: number | null, lng?: number | null) {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("end_break");
+  const { data, error } = await supabase.rpc("end_break", { p_lat: lat ?? null, p_lng: lng ?? null });
   if (error) return { ok: false, error: error.message };
   return { ok: true, totalBreakMins: data?.totalBreakMins ?? 0 };
 }
