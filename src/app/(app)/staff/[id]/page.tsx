@@ -16,7 +16,7 @@ export default function StaffDetailPage() {
   const id = params?.id as string;
   const { t } = useLang();
   const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
-  const roleLabel = (k: string) => (["staff", "manager", "franchise_owner", "brand_owner"].includes(k) ? t("roles." + k) : k);
+  const roleLabel = (k: string) => (["staff", "manager", "branch_owner", "brand_owner", "super_admin"].includes(k) ? t("roles." + k) : k);
   const contractLabel = (k: string) => (["Working Student", "Part Time", "Full Time", "Mini Job"].includes(k) ? t("contracts." + k) : k);
   const statusLabel = (k: string) => (["active", "inactive"].includes(k) ? t("status." + k) : k);
 

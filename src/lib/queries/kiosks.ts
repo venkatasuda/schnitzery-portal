@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-const MGR = ["manager", "franchise_owner", "brand_owner"];
+const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
 async function getMe() {
   const supabase = await createClient();

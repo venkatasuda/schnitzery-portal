@@ -33,10 +33,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // A kiosk-tablet account belongs only on the kiosk screen, never in the app.
   if (role === "kiosk") redirect("/kiosk");
 
-  const isManager = ["manager", "franchise_owner", "brand_owner"].includes(role);
+  const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
   const roleLabel: Record<string, string> = {
     staff: "Staff", manager: "Manager",
-    franchise_owner: "Franchise Owner", brand_owner: "Brand Owner",
+    branch_owner: "Branch Owner", brand_owner: "Brand Owner", super_admin: "Super Admin",
   };
 
   return (

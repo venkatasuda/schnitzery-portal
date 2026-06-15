@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 
-const MGR = ["manager", "franchise_owner", "brand_owner"];
+const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const TZ = "Europe/Berlin";
 
 function zonedToUtcMs(dateStr: string, hhmm: string): number {
