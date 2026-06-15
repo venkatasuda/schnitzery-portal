@@ -76,33 +76,33 @@ export async function getClockTokenBatch(kioskId?: string | null, count = 240) {
 }
 
 // Staff: clock IN with the 6-digit code (validated in the database).
-export async function clockInWithCode(code: string) {
+export async function clockInWithCode(code: string, lat?: number | null, lng?: number | null) {
   const clean = (code || "").replace(/\D/g, "");
   if (clean.length !== 6) return { ok: false, error: "Enter the 6-digit code." };
-  return clockIn(clean);
+  return clockIn(clean, lat, lng);
 }
 
 // Staff: clock OUT with the 6-digit code.
-export async function clockOutWithCode(code: string) {
+export async function clockOutWithCode(code: string, lat?: number | null, lng?: number | null) {
   const clean = (code || "").replace(/\D/g, "");
   if (clean.length !== 6) return { ok: false, error: "Enter the 6-digit code." };
-  return clockOut(clean);
+  return clockOut(clean, lat, lng);
 }
 
 // Staff: scan the QR (SCHNITZERY-CLOCK:<branchId>:<code>) then clock in/out.
 // The database validates the code against the caller's own branch, so a QR
 // from a different branch simply won't match.
-export async function clockWithQR(payload: string, mode: "in" | "out") {
+export async function clockWithQR(payload: string, mode: "in" | "out", lat?: number | null, lng?: number | null) {
   const p = (payload || "").trim();
   // New signed token: pass straight through — the DB verifies branch/expiry/signature.
   if (p.startsWith("SZQR1|")) {
-    return mode === "out" ? clockOut(p) : clockIn(p);
+    return mode === "out" ? clockOut(p, lat, lng) : clockIn(p, lat, lng);
   }
   // Back-compat with the old "SCHNITZERY-CLOCK:<branch>:<code>" QR.
   const parts = p.split(":");
   if (parts.length === 3 && parts[0] === "SCHNITZERY-CLOCK") {
     const code = parts[2];
-    return mode === "out" ? clockOut(code) : clockIn(code);
+    return mode === "out" ? clockOut(code, lat, lng) : clockIn(code, lat, lng);
   }
   return { ok: false, error: "Not a valid Schnitzery clock QR." };
 }

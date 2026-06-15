@@ -77,6 +77,30 @@ export default function AttendancePage() {
     else if (action === "break_end") setOnBreak(false);
   }
 
+  // Best-effort device location. Resolves null if unavailable/denied/slow —
+  // the DB decides whether that's acceptable based on the branch's gps_mode.
+  function getGeo(): Promise<{ lat: number; lng: number } | null> {
+    return new Promise((resolve) => {
+      if (typeof navigator === "undefined" || !navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      );
+    });
+  }
+
+  async function clockInAction() {
+    setMessage(t("att.locating"));
+    const g = isOnline() ? await getGeo() : null;
+    await doAction(() => clockIn(undefined, g?.lat, g?.lng), t("att.clockedIn"), "clock_in");
+  }
+  async function clockOutAction() {
+    setMessage(t("att.locating"));
+    const g = isOnline() ? await getGeo() : null;
+    await doAction(() => clockOut(undefined, g?.lat, g?.lng), t("att.clockedOut"), "clock_out");
+  }
+
   async function doAction(fn: () => Promise<any>, okMsg: string, offlineAction?: ClockAction) {
     setWorking(true);
     setMessage(null);
@@ -134,8 +158,9 @@ export default function AttendancePage() {
       return;
     }
     const fn = codeMode === "out" ? clockOutWithCode : clockInWithCode;
+    const g = await getGeo();
     try {
-      const res = await fn(clean);
+      const res = await fn(clean, g?.lat, g?.lng);
       setWorking(false);
       if (res.ok) {
         setShowCode(false);
@@ -160,8 +185,9 @@ export default function AttendancePage() {
       return;
     }
     setMessage(t("att.readingQR"));
+    const g = await getGeo();
     try {
-      const res = await clockWithQR(payload, codeMode);
+      const res = await clockWithQR(payload, codeMode, g?.lat, g?.lng);
       setWorking(false);
       if (res.ok) {
         setMessage(codeMode === "out" ? t("att.outQR") : t("att.inQR"));
@@ -261,7 +287,7 @@ export default function AttendancePage() {
             {/* ACTION BUTTONS */}
             {!clockedIn ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button onClick={() => doAction(clockIn, t("att.clockedIn"), "clock_in")} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
+                <button onClick={clockInAction} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
                   <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
@@ -274,7 +300,7 @@ export default function AttendancePage() {
                 ) : (
                   <button onClick={() => doAction(endBreak, t("att.breakEnded"), "break_end")} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
                 )}
-                <button onClick={() => doAction(clockOut, t("att.clockedOut"), "clock_out")} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
+                <button onClick={clockOutAction} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
                 {!onBreak && (
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>

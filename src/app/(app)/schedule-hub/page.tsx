@@ -224,6 +224,12 @@ export default function ScheduleHubPage() {
                 <span className="feature-chev">›</span>
               </Link>
 
+              <Link href="/geofence" className="feature-card">
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}>📍</div>
+                <div style={{ flex: 1 }}><div className="feature-title">{t("geo.title")}</div><div className="feature-sub">{t("geo.subtitle")}</div></div>
+                <span className="feature-chev">›</span>
+              </Link>
+
               <button onClick={copyForward} disabled={copyBusy} className="feature-card" style={{ width: "100%", textAlign: "left", cursor: copyBusy ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>📑</div>
                 <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? t("schedhub.copying") : t("schedhub.copyWeek")}</div><div className="feature-sub">{t("schedhub.copyWeekSub")}</div></div>
