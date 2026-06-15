@@ -340,6 +340,15 @@ export const messages = {
       summary: "Week summary", overall: "Overall attendance", shifts: "Shifts", noShows: "No-shows",
       perEmployee: "By employee", noData: "No shifts rostered for this week.", denied: "Managers only.",
     },
+    org: {
+      title: "Command Center", subtitle: "All branches at a glance",
+      ownersOnly: "This overview is for owners and super admins.",
+      branches: "Branches", employees: "Employees", workingNow: "Working now",
+      attendanceToday: "Attendance today", issues: "Attention items", expiringDocs: "Expiring docs",
+      payrollStatus: "Payroll (this month)", approved: "branches approved",
+      systemHealth: "System health", healthOk: "All kiosks online", kiosksOffline: "kiosks offline",
+      ranking: "Branch performance", noRoster: "no roster", attendance: "attendance",
+    },
     bana: {
       title: "Branch Analytics", subtitle: "Performance over the period",
       daily: "Daily", weekly: "Weekly", monthly: "Monthly", allBranches: "All branches",
@@ -862,6 +871,15 @@ export const messages = {
       active: "Im Dienst", ontime: "Pünktlich", leftEarly: "Früher gegangen", lateStatus: "Verspätet",
       summary: "Wochenübersicht", overall: "Gesamtanwesenheit", shifts: "Schichten", noShows: "Nicht erschienen",
       perEmployee: "Nach Mitarbeiter", noData: "Keine Schichten für diese Woche geplant.", denied: "Nur für Manager.",
+    },
+    org: {
+      title: "Leitstand", subtitle: "Alle Filialen auf einen Blick",
+      ownersOnly: "Diese Übersicht ist für Inhaber und Super-Admins.",
+      branches: "Filialen", employees: "Mitarbeiter", workingNow: "Arbeiten jetzt",
+      attendanceToday: "Anwesenheit heute", issues: "Zu beachten", expiringDocs: "Ablaufende Dok.",
+      payrollStatus: "Lohn (dieser Monat)", approved: "Filialen freigegeben",
+      systemHealth: "Systemstatus", healthOk: "Alle Kioske online", kiosksOffline: "Kioske offline",
+      ranking: "Filial-Leistung", noRoster: "kein Plan", attendance: "Anwesenheit",
     },
     bana: {
       title: "Filial-Analyse", subtitle: "Leistung im Zeitraum",
