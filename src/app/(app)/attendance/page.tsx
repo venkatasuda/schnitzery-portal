@@ -100,6 +100,14 @@ export default function AttendancePage() {
     const g = isOnline() ? await getGeo() : null;
     await doAction(() => clockOut(undefined, g?.lat, g?.lng), t("att.clockedOut"), "clock_out");
   }
+  async function breakStartAction() {
+    const g = isOnline() ? await getGeo() : null;
+    await doAction(() => startBreak(g?.lat, g?.lng), t("att.breakStarted"), "break_start");
+  }
+  async function breakEndAction() {
+    const g = isOnline() ? await getGeo() : null;
+    await doAction(() => endBreak(g?.lat, g?.lng), t("att.breakEnded"), "break_end");
+  }
 
   async function doAction(fn: () => Promise<any>, okMsg: string, offlineAction?: ClockAction) {
     setWorking(true);
@@ -296,9 +304,9 @@ export default function AttendancePage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {!onBreak ? (
-                  <button onClick={() => doAction(startBreak, t("att.breakStarted"), "break_start")} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
+                  <button onClick={breakStartAction} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
                 ) : (
-                  <button onClick={() => doAction(endBreak, t("att.breakEnded"), "break_end")} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
+                  <button onClick={breakEndAction} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
                 )}
                 <button onClick={clockOutAction} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
                 {!onBreak && (

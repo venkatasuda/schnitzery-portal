@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
-import { getGeofence, setGeofence, listBranchStaff, grantOverride, type GeofenceMode } from "@/lib/queries/geofence";
+import { getGeofence, setGeofence, listBranchStaff, grantOverride, getLocationFlags, type GeofenceMode } from "@/lib/queries/geofence";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 
@@ -25,6 +25,7 @@ export default function GeofencePage() {
   const [ovUser, setOvUser] = useState("");
   const [ovMin, setOvMin] = useState(15);
   const [ovBusy, setOvBusy] = useState(false);
+  const [flags, setFlags] = useState<{ id: string; name: string; date: string; maxDistanceM: number }[]>([]);
 
   async function load() {
     setLoading(true);
@@ -35,6 +36,8 @@ export default function GeofencePage() {
       if (res.canEdit) {
         const s = await listBranchStaff();
         if (s.ok) setStaff(s.staff);
+        const f = await getLocationFlags();
+        if (f.ok) setFlags(f.flags);
       }
     }
     setLoading(false);
@@ -151,6 +154,27 @@ export default function GeofencePage() {
             {ovBusy ? "…" : t("geo.grant")}
           </button>
         </div>
+      </div>
+
+      {/* RECENT LOCATION FLAGS */}
+      <div className="section-label" style={{ marginTop: 26 }}>{t("geo.flagsLabel")}</div>
+      <div className="card" style={{ padding: 14 }}>
+        <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: flags.length ? 10 : 0 }}>{t("geo.flagsHint")}</div>
+        {flags.length === 0 ? (
+          <div style={{ fontSize: 13, color: "var(--gray)" }}>{t("geo.noFlags")}</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {flags.map((f) => (
+              <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, background: "var(--dark2)" }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{f.name}</div>
+                  <div style={{ fontSize: 11, color: "var(--gray)" }}>{f.date}</div>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#e67e22" }}>📍 {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--gold)", textDecoration: "none" }}>
