@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DAYS } from "@/lib/queries/schedule-constants";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 
-const MGR = ["manager", "franchise_owner", "brand_owner"];
+const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const TZ = "Europe/Berlin"; // Stuttgart wall-clock for shift times
 
 // Convert a wall-clock time on a given date in `tz` to the correct UTC instant

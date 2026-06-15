@@ -16,7 +16,7 @@ export const messages = {
       loading: "Loading…", managersOnly: "Managers only.", yes: "Yes", no: "No",
     },
     roles: {
-      brand_owner: "Brand Owner", franchise_owner: "Franchise Owner", manager: "Manager", staff: "Staff",
+      super_admin: "Super Admin", brand_owner: "Brand Owner", branch_owner: "Branch Owner", manager: "Manager", staff: "Staff",
     },
     greeting: { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" },
     home: {
@@ -366,7 +366,7 @@ export const messages = {
       forgotCheckout: "Forgot to clock out", missingAttendance: "Missing attendance", upcomingShift: "Upcoming shift",
       employeeLate: "Employee late", mgrMissing: "Employee missing", staffingShortage: "Staffing shortage",
       kioskOffline: "Kiosk offline", syncFailure: "Sync failure", attendanceAnomaly: "Attendance anomaly", systemError: "System error",
-      viewAll: "View all", markAllRead: "Mark all read", center: "Notifications",
+      viewAll: "View all", center: "Notifications",
       catAll: "All", catMine: "Mine", catTeam: "Team", catSystem: "System",
       today: "Today", yesterday: "Yesterday", earlier: "Earlier", justNow: "just now",
     },
@@ -486,7 +486,7 @@ export const messages = {
       loading: "Lädt…", managersOnly: "Nur für Manager.", yes: "Ja", no: "Nein",
     },
     roles: {
-      brand_owner: "Markeninhaber", franchise_owner: "Franchise-Inhaber", manager: "Manager", staff: "Mitarbeiter",
+      super_admin: "Super-Admin", brand_owner: "Markeninhaber", branch_owner: "Filialinhaber", manager: "Manager", staff: "Mitarbeiter",
     },
     greeting: { morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend" },
     home: {
@@ -836,7 +836,7 @@ export const messages = {
       forgotCheckout: "Ausstempeln vergessen", missingAttendance: "Fehlende Anwesenheit", upcomingShift: "Bevorstehende Schicht",
       employeeLate: "Mitarbeiter verspätet", mgrMissing: "Mitarbeiter fehlt", staffingShortage: "Personalengpass",
       kioskOffline: "Kiosk offline", syncFailure: "Synchronisierungsfehler", attendanceAnomaly: "Anwesenheitsanomalie", systemError: "Systemfehler",
-      viewAll: "Alle ansehen", markAllRead: "Alle als gelesen", center: "Benachrichtigungen",
+      viewAll: "Alle ansehen", center: "Benachrichtigungen",
       catAll: "Alle", catMine: "Meine", catTeam: "Team", catSystem: "System",
       today: "Heute", yesterday: "Gestern", earlier: "Früher", justNow: "gerade eben",
     },

@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 // Effective (display) status overlays expiry on approved docs: expiring / expired.
 // ============================================================
 
-const MANAGER_ROLES = ["manager", "franchise_owner", "brand_owner"];
+const MANAGER_ROLES = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const EXPIRING_DAYS = 60; // an approved doc within this many days reads "expiring soon"
 
 async function getMe() {

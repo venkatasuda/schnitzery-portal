@@ -54,7 +54,7 @@ export default function ProfilePage() {
   );
   if (!profile) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("profile.couldNotLoad")}</div>;
 
-  const isManager = ["manager", "franchise_owner", "brand_owner"].includes(profile.role);
+  const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(profile.role);
   const skillsArr: string[] = profile.skills || [];
 
   return (

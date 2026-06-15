@@ -27,8 +27,8 @@ export default async function HomePage() {
     profile = data;
   }
   const role = profile?.role || "staff";
-  const isManager = ["manager", "franchise_owner", "brand_owner"].includes(role);
-  const isOwner = ["franchise_owner", "brand_owner"].includes(role);
+  const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
+  const isOwner = ["branch_owner", "brand_owner", "super_admin"].includes(role);
   const firstName = (profile?.full_name || "there").split(" ")[0];
 
   const hour = new Date().getHours();
@@ -47,9 +47,10 @@ export default async function HomePage() {
     const d = await getDashboardStats();
     if (d.ok) ownerStats = d.stats ?? null;
   } else if (isManager) {
-    const [dRes, liveRes, otRes, schedRes] = await Promise.all([
-      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(),
+    const [dRes, liveRes, otRes, schedRes, stRes] = await Promise.all([
+      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(),
     ]);
+    if (stRes.ok) { staffClockedIn = stRes.clockedIn || false; staffOnBreak = stRes.onBreak || false; }
     if (dRes.ok) mOps = dRes.stats ?? null;
     if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0 };
     if (otRes.ok) mOt = { totalWorkedMins: otRes.totalWorkedMins || 0, totalOvertimeMins: otRes.totalOvertimeMins || 0, peopleOver: otRes.peopleOver || 0 };
@@ -103,7 +104,7 @@ export default async function HomePage() {
       {isOwner ? (
         <OwnerDash stats={ownerStats} t={t} />
       ) : isManager ? (
-        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} t={t} />
+        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
       )}
@@ -146,13 +147,15 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ ops, live, ot, sched, t }: {
+function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
   live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  t: Tf;
+  clockedIn: boolean; onBreak: boolean; t: Tf;
 }) {
+  const clockTitle = onBreak ? t("home.clockOnBreak") : clockedIn ? t("home.clockWorking") : t("home.clockInOut");
+  const clockSub = onBreak ? t("home.clockSubBreak") : clockedIn ? t("home.clockSubWorking") : t("home.clockSubIdle");
   const o = ops || { staffCount: 0, pendingApprovals: 0, openIncidents: 0, lowStock: 0, checklistDone: 0, checklistTotal: 0 };
   const lv = live || { workingNow: 0, completed: 0, late: 0, totalMins: 0 };
   const otd = ot || { totalWorkedMins: 0, totalOvertimeMins: 0, peopleOver: 0 };
@@ -170,6 +173,16 @@ function ManagerDash({ ops, live, ot, sched, t }: {
 
   return (
     <>
+      {/* MY CLOCK — a manager is an employee too */}
+      <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))", marginBottom: 14 }}>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>🕐</div>
+        <div style={{ flex: 1 }}>
+          <div className="feature-title">{clockTitle}</div>
+          <div className="feature-sub">{clockSub}</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
+
       {/* NEEDS ATTENTION */}
       <div className="section-label">{t("home.needsAttention")}</div>
       {alerts.length === 0 ? (

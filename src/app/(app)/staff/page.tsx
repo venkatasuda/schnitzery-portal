@@ -8,7 +8,7 @@ import { useLang } from "@/components/LanguageProvider";
 
 const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier"];
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
-const ROLES = ["staff", "manager", "franchise_owner", "brand_owner"];
+const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
 const TEAM_COLORS: Record<string, string> = { Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60", Cashier: "#9b59b6" };
 
 export default function StaffPage() {
