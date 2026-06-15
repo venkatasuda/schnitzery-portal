@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -49,6 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <div className="header-right">
           <span className="header-name">{profile?.full_name || user?.email}</span>
+          {isManager && <Link href="/search" aria-label="Search" style={{ fontSize: 18, textDecoration: "none", lineHeight: 1 }}>🔍</Link>}
           <NotificationBell />
           <LanguageToggle />
           <ThemeToggle />

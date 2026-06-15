@@ -6,6 +6,7 @@ import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attend
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { listMyDocuments } from "@/lib/queries/profile-uploads";
 import Link from "next/link";
+import StatusStrip from "@/components/StatusStrip";
 import { getT } from "@/lib/i18n/server";
 
 type Tf = (k: string, v?: Record<string, string | number>) => string;
@@ -100,6 +101,8 @@ export default async function HomePage() {
           <Link href="/profile" style={{ fontSize: 12, color: "var(--gold)", textDecoration: "none", display: "inline-block", marginTop: 8 }}>{t("home.updateInProfile")} ›</Link>
         </div>
       )}
+
+      {isManager && <StatusStrip />}
 
       {isOwner ? (
         <OwnerDash stats={ownerStats} t={t} />
@@ -201,6 +204,8 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
           ))}
         </div>
       )}
+
+      <Link href="/action" style={{ display: "block", textAlign: "center", margin: "10px 0 4px", color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>🎯 {t("act.open")} ›</Link>
 
       {/* TODAY */}
       <div className="section-label">{t("home.today")}</div>

@@ -340,6 +340,26 @@ export const messages = {
       summary: "Week summary", overall: "Overall attendance", shifts: "Shifts", noShows: "No-shows",
       perEmployee: "By employee", noData: "No shifts rostered for this week.", denied: "Managers only.",
     },
+    livestat: {
+      online: "Online", offline: "Offline", synced: "Synced", pending: "pending sync", kiosks: "kiosks online",
+    },
+    act: {
+      title: "Action Center", subtitle: "Everything that needs your attention",
+      open: "Open Action Center", needAttention: "items need attention",
+      allClear: "All clear", allClearSub: "Nothing needs your attention right now.",
+      approvals: "Pending approvals", corrections: "Attendance corrections", noShows: "Missing attendance (no-shows)",
+      notCheckedIn: "Not checked in yet", expiringDocs: "Expiring documents", payroll: "Payroll to approve",
+      leave: "leave", swaps: "swaps", time: "time",
+      correctionsSub: "Correction requests awaiting review",
+      noShowsSub: "Scheduled today, shift over, never clocked in",
+      notInSub: "Scheduled, shift not over yet", docsSub: "Expiring within 30 days",
+      payrollSub: "Last month not yet approved",
+    },
+    search: {
+      title: "Search", placeholder: "Search employees, branches…",
+      hint: "Type at least 2 characters to search.", none: "No matches found.",
+      employees: "Employees", branches: "Branches",
+    },
     org: {
       title: "Command Center", subtitle: "All branches at a glance",
       ownersOnly: "This overview is for owners and super admins.",
@@ -871,6 +891,26 @@ export const messages = {
       active: "Im Dienst", ontime: "Pünktlich", leftEarly: "Früher gegangen", lateStatus: "Verspätet",
       summary: "Wochenübersicht", overall: "Gesamtanwesenheit", shifts: "Schichten", noShows: "Nicht erschienen",
       perEmployee: "Nach Mitarbeiter", noData: "Keine Schichten für diese Woche geplant.", denied: "Nur für Manager.",
+    },
+    livestat: {
+      online: "Online", offline: "Offline", synced: "Synchron", pending: "zu synchronisieren", kiosks: "Kioske online",
+    },
+    act: {
+      title: "Aktionszentrale", subtitle: "Alles, was deine Aufmerksamkeit braucht",
+      open: "Aktionszentrale öffnen", needAttention: "Punkte zu beachten",
+      allClear: "Alles erledigt", allClearSub: "Aktuell ist nichts zu tun.",
+      approvals: "Offene Freigaben", corrections: "Korrekturen", noShows: "Fehlende Anwesenheit (No-Shows)",
+      notCheckedIn: "Noch nicht eingestempelt", expiringDocs: "Ablaufende Dokumente", payroll: "Lohn freizugeben",
+      leave: "Urlaub", swaps: "Tausch", time: "Zeit",
+      correctionsSub: "Korrekturanfragen warten auf Prüfung",
+      noShowsSub: "Heute geplant, Schicht vorbei, nie eingestempelt",
+      notInSub: "Geplant, Schicht noch nicht vorbei", docsSub: "Läuft in 30 Tagen ab",
+      payrollSub: "Letzter Monat noch nicht freigegeben",
+    },
+    search: {
+      title: "Suche", placeholder: "Mitarbeiter, Filialen suchen…",
+      hint: "Mindestens 2 Zeichen eingeben.", none: "Keine Treffer gefunden.",
+      employees: "Mitarbeiter", branches: "Filialen",
     },
     org: {
       title: "Leitstand", subtitle: "Alle Filialen auf einen Blick",
