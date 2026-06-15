@@ -281,8 +281,17 @@ function OwnerDash({ stats, t }: { stats: { clockedIn: number; staffCount: numbe
 
   return (
     <>
-      <Link href="/branches" className="feature-card" style={{ background: "linear-gradient(135deg,rgba(212,168,71,0.14),rgba(20,20,20,0.4))", borderColor: "rgba(212,168,71,0.3)" }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>🏢</div>
+      <Link href="/overview" className="feature-card" style={{ background: "linear-gradient(135deg,rgba(212,168,71,0.14),rgba(20,20,20,0.4))", borderColor: "rgba(212,168,71,0.3)" }}>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}>🏢</div>
+        <div style={{ flex: 1 }}>
+          <div className="feature-title">{t("org.title")}</div>
+          <div className="feature-sub">{t("org.subtitle")}</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
+
+      <Link href="/branches" className="feature-card">
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>🗂️</div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("home.allBranches")}</div>
           <div className="feature-sub">{t("home.allBranchesSub")}</div>
