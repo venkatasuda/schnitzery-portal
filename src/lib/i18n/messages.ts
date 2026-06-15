@@ -340,6 +340,16 @@ export const messages = {
       summary: "Week summary", overall: "Overall attendance", shifts: "Shifts", noShows: "No-shows",
       perEmployee: "By employee", noData: "No shifts rostered for this week.", denied: "Managers only.",
     },
+    bana: {
+      title: "Branch Analytics", subtitle: "Performance over the period",
+      daily: "Daily", weekly: "Weekly", monthly: "Monthly", allBranches: "All branches",
+      noData: "No scheduled shifts or hours in this period.",
+      kAttendance: "Attendance", kAbsence: "Absence", kLate: "Late arrivals", kCompliance: "Shift compliance",
+      kUtilization: "Staff utilization", kOvertime: "Overtime", kLaborHours: "Labor hours", kLaborCost: "Labor cost",
+      productivity: "Productivity", salesPerHour: "Sales / labor h", laborCostPct: "Labor cost % of sales", totalSales: "Sales",
+      noSales: "No sales entered for this period.", laborLink: "Enter sales",
+      trendTitle: "Labor hours per day", teamTitle: "Hours by team",
+    },
     pay: {
       title: "Payroll", subtitle: "Monthly hours, broken down and ready to export",
       month: "Month", rules: "Rules", rulesHint: "How this branch splits hours.",
@@ -852,6 +862,16 @@ export const messages = {
       active: "Im Dienst", ontime: "Pünktlich", leftEarly: "Früher gegangen", lateStatus: "Verspätet",
       summary: "Wochenübersicht", overall: "Gesamtanwesenheit", shifts: "Schichten", noShows: "Nicht erschienen",
       perEmployee: "Nach Mitarbeiter", noData: "Keine Schichten für diese Woche geplant.", denied: "Nur für Manager.",
+    },
+    bana: {
+      title: "Filial-Analyse", subtitle: "Leistung im Zeitraum",
+      daily: "Täglich", weekly: "Wöchentlich", monthly: "Monatlich", allBranches: "Alle Filialen",
+      noData: "Keine geplanten Schichten oder Stunden in diesem Zeitraum.",
+      kAttendance: "Anwesenheit", kAbsence: "Abwesenheit", kLate: "Verspätungen", kCompliance: "Schicht-Einhaltung",
+      kUtilization: "Personalauslastung", kOvertime: "Überstunden", kLaborHours: "Arbeitsstunden", kLaborCost: "Personalkosten",
+      productivity: "Produktivität", salesPerHour: "Umsatz / Std.", laborCostPct: "Personalkosten % vom Umsatz", totalSales: "Umsatz",
+      noSales: "Kein Umsatz für diesen Zeitraum erfasst.", laborLink: "Umsatz erfassen",
+      trendTitle: "Arbeitsstunden pro Tag", teamTitle: "Stunden nach Team",
     },
     pay: {
       title: "Lohnabrechnung", subtitle: "Monatsstunden, aufgeschlüsselt und exportbereit",
