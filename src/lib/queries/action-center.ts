@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getOpsDashboard } from "@/lib/queries/ops-dashboard";
+import { getShiftConflicts } from "@/lib/queries/shift-conflicts";
 
 // ============================================================================
 // ACTION CENTER — one count of everything that needs a manager's attention,
@@ -25,7 +26,7 @@ export async function getActionCenter() {
 
   const cnt = (p: any) => (p?.count ?? 0) as number;
 
-  const [leaveR, swapR, attR, corrR, docR, brR, payR, ops] = await Promise.all([
+  const [leaveR, swapR, attR, corrR, docR, brR, payR, ops, conf] = await Promise.all([
     supabase.from("leave_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("swap_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("attendance_logs").select("*", { count: "exact", head: true }).eq("status", "complete").or("approval_status.is.null,approval_status.eq.pending"),
@@ -34,6 +35,7 @@ export async function getActionCenter() {
     supabase.from("branches").select("*", { count: "exact", head: true }),
     supabase.from("payroll_runs").select("*", { count: "exact", head: true }).eq("month", prevMonth).eq("status", "approved"),
     getOpsDashboard({}).catch(() => null),
+    getShiftConflicts({ weeks: 2 }).catch(() => null),
   ]);
 
   const approvals = cnt(leaveR) + cnt(swapR) + cnt(attR);
@@ -45,8 +47,9 @@ export async function getActionCenter() {
   const noShows = m?.absent ?? 0;
   const notCheckedIn = m?.notCheckedIn ?? 0;
   const lateToday = m?.late ?? 0;
+  const conflicts = conf && (conf as any).ok ? (conf as any).total : 0;
 
-  const total = approvals + corrections + expiringDocs + payrollPending + noShows + notCheckedIn;
+  const total = approvals + corrections + expiringDocs + payrollPending + noShows + notCheckedIn + conflicts;
 
   return {
     ok: true as const,
@@ -59,6 +62,7 @@ export async function getActionCenter() {
       noShows,
       notCheckedIn,
       lateToday,
+      conflicts,
       prevMonth,
     },
   };

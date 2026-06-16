@@ -343,6 +343,11 @@ export const messages = {
     livestat: {
       online: "Online", offline: "Offline", synced: "Synced", pending: "pending sync", kiosks: "kiosks online",
     },
+    conf: {
+      title: "Shift Conflicts", subtitle: "Employees double-booked into overlapping shifts",
+      none: "No conflicts", noneSub: "No overlapping shifts in the next two weeks.",
+      crossBranch: "across branches",
+    },
     act: {
       title: "Action Center", subtitle: "Everything that needs your attention",
       open: "Open Action Center", needAttention: "items need attention",
@@ -354,11 +359,12 @@ export const messages = {
       noShowsSub: "Scheduled today, shift over, never clocked in",
       notInSub: "Scheduled, shift not over yet", docsSub: "Expiring within 30 days",
       payrollSub: "Last month not yet approved",
+      conflicts: "Shift conflicts", conflictsSub: "Double-booked into overlapping shifts",
     },
     search: {
-      title: "Search", placeholder: "Search employees, branches…",
+      title: "Search", placeholder: "Search employees, branches, documents…",
       hint: "Type at least 2 characters to search.", none: "No matches found.",
-      employees: "Employees", branches: "Branches",
+      employees: "Employees", branches: "Branches", documents: "Documents", expires: "expires",
     },
     org: {
       title: "Command Center", subtitle: "All branches at a glance",
@@ -895,6 +901,11 @@ export const messages = {
     livestat: {
       online: "Online", offline: "Offline", synced: "Synchron", pending: "zu synchronisieren", kiosks: "Kioske online",
     },
+    conf: {
+      title: "Schicht-Konflikte", subtitle: "Mitarbeiter doppelt in überlappende Schichten eingeteilt",
+      none: "Keine Konflikte", noneSub: "Keine überlappenden Schichten in den nächsten zwei Wochen.",
+      crossBranch: "filialübergreifend",
+    },
     act: {
       title: "Aktionszentrale", subtitle: "Alles, was deine Aufmerksamkeit braucht",
       open: "Aktionszentrale öffnen", needAttention: "Punkte zu beachten",
@@ -906,11 +917,12 @@ export const messages = {
       noShowsSub: "Heute geplant, Schicht vorbei, nie eingestempelt",
       notInSub: "Geplant, Schicht noch nicht vorbei", docsSub: "Läuft in 30 Tagen ab",
       payrollSub: "Letzter Monat noch nicht freigegeben",
+      conflicts: "Schicht-Konflikte", conflictsSub: "Doppelt in überlappende Schichten eingeteilt",
     },
     search: {
-      title: "Suche", placeholder: "Mitarbeiter, Filialen suchen…",
+      title: "Suche", placeholder: "Mitarbeiter, Filialen, Dokumente suchen…",
       hint: "Mindestens 2 Zeichen eingeben.", none: "Keine Treffer gefunden.",
-      employees: "Mitarbeiter", branches: "Filialen",
+      employees: "Mitarbeiter", branches: "Filialen", documents: "Dokumente", expires: "läuft ab",
     },
     org: {
       title: "Leitstand", subtitle: "Alle Filialen auf einen Blick",
