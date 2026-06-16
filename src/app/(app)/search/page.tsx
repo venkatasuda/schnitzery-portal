@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { globalSearch } from "@/lib/queries/global-search";
@@ -37,7 +38,7 @@ export default function SearchPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">🔍 {t("search.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔍" size={22} /> {t("search.title")}</div>
 
       <div className="card" style={{ padding: 8, marginBottom: 14 }}>
         <input
@@ -56,7 +57,7 @@ export default function SearchPage() {
         <>
           {res!.employees.length > 0 && (
             <>
-              <div className="section-label">👥 {t("search.employees")}</div>
+              <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon e="👥" size={13} /> {t("search.employees")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
                 {res!.employees.map((e) => (
                   <Link key={e.id} href={`/staff/${e.id}`} className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
@@ -73,11 +74,11 @@ export default function SearchPage() {
           )}
           {res!.branches.length > 0 && (
             <>
-              <div className="section-label">🏢 {t("search.branches")}</div>
+              <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon e="🏢" size={13} /> {t("search.branches")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {res!.branches.map((b) => (
                   <Link key={b.id} href="/branches" className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-                    <span style={{ fontSize: 18 }}>🏢</span>
+                    <Icon e="🏢" size={18} color="var(--gold)" />
                     <div style={{ flex: 1, fontWeight: 600 }}>{b.name}</div>
                     <span style={{ color: "var(--gray)" }}>›</span>
                   </Link>
@@ -87,11 +88,11 @@ export default function SearchPage() {
           )}
           {res!.documents.length > 0 && (
             <>
-              <div className="section-label" style={{ marginTop: res!.branches.length ? 14 : 0 }}>📄 {t("search.documents")}</div>
+              <div className="section-label" style={{ marginTop: res!.branches.length ? 14 : 0, display: "flex", alignItems: "center", gap: 6 }}><Icon e="📄" size={13} /> {t("search.documents")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {res!.documents.map((d) => (
                   <Link key={d.id} href={`/staff/${d.userId}`} className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-                    <span style={{ fontSize: 18 }}>📄</span>
+                    <Icon e="📄" size={18} color="var(--gold)" />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.docType}</div>
                       <div style={{ fontSize: 12, color: "var(--gray)" }}>{d.owner}{d.expiry ? ` · ${t("search.expires")} ${d.expiry}` : ""}</div>

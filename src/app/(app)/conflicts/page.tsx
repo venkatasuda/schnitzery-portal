@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getShiftConflicts } from "@/lib/queries/shift-conflicts";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -24,14 +25,14 @@ export default function ConflictsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">⚠️ {t("conf.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("conf.title")}</div>
       <div className="page-sub">{t("conf.subtitle")}</div>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : !d || d.total === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 36 }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+          <div style={{ marginBottom: 8 }}><Icon e="✅" size={34} color="#58d68d" /></div>
           <div style={{ color: "#58d68d", fontSize: 16, fontWeight: 700 }}>{t("conf.none")}</div>
           <div style={{ color: "var(--gray)", fontSize: 13, marginTop: 6 }}>{t("conf.noneSub")}</div>
         </div>
@@ -40,7 +41,7 @@ export default function ConflictsPage() {
           {d.conflicts.map((c: any, i: number) => (
             <div key={i} className="card" style={{ padding: 14, borderLeft: "3px solid #ec7063" }}>
               <Link href={`/staff/${c.userId}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 10 }}>
-                <span style={{ fontSize: 18 }}>👤</span>
+                <Icon e="👤" size={18} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, color: "var(--white)" }}>{c.name}</div>
                   <div style={{ fontSize: 12, color: "var(--gray)" }}>{c.date}{c.crossBranch ? ` · ${t("conf.crossBranch")}` : ""}</div>

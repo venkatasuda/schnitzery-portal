@@ -23,7 +23,7 @@ async function getMe() {
 }
 
 function isManager(role?: string | null) {
-  return ["manager", "franchise_owner", "brand_owner"].includes(role || "");
+  return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 
 export async function getScheduleOverview(weekStart?: string) {

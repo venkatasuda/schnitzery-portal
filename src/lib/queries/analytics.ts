@@ -15,7 +15,7 @@ async function getMgr() {
   return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
 }
 function isManager(r?: string | null) {
-  return ["manager", "franchise_owner", "brand_owner"].includes(r || "");
+  return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
 }
 function mondayOf(d: Date) {
   const x = new Date(d);

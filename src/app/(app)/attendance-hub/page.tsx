@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import {
   getLiveAttendance, getMonthlyOvertime, getAttendanceApprovals, setAttendanceApproval,
@@ -104,7 +105,7 @@ export default function AttendanceHubPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">🕐 {t("nav.attendance")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🕐" size={22} /> {t("nav.attendance")}</div>
       <div className="page-sub">{t("ahub.subtitle")}</div>
 
       <div className="hub-tabs">
@@ -145,7 +146,7 @@ export default function AttendanceHubPage() {
                   <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < filtered.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                     <span style={{ width: 9, height: 9, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: live ? `0 0 8px ${dotColor}` : "none" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name}{r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}>⚠ {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name}{r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
                       <div style={{ fontSize: 11, color: "var(--gray)" }}>{r.team ? teamLabel(r.team) : "—"} · {statusText}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -169,7 +170,7 @@ export default function AttendanceHubPage() {
             <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>
           ) : appRows.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>
-              <div style={{ fontSize: 26, marginBottom: 6 }}>✅</div>{t("ahub.allCaughtUp")}
+              <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="#58d68d" /></div>{t("ahub.allCaughtUp")}
             </div>
           ) : (
             appRows.map((r) => (
@@ -177,8 +178,8 @@ export default function AttendanceHubPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
                     {r.name}
-                    {r.overtime && <span style={{ fontSize: 10, color: "#e8a35a", marginLeft: 8 }}>⏱ {t("approvals.overtime")}</span>}
-                    {r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}>⚠ {t("ahub.mLate", { n: r.late_mins })}</span>}
+                    {r.overtime && <span style={{ fontSize: 10, color: "#e8a35a", marginLeft: 8 }}><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
+                    {r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{fmtH(r.duration_mins || 0)}</div>
                 </div>
@@ -260,7 +261,7 @@ export default function AttendanceHubPage() {
       {tab === "noshow" && (
         <div className="hub-tab-panel active">
           <Link href="/noshow" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}>🚫</div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e="🚫" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("ahub.noShowTracking")}</div><div className="feature-sub">{t("ahub.noShowTrackingSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
@@ -274,7 +275,7 @@ export default function AttendanceHubPage() {
       {tab === "display" && (
         <div className="hub-tab-panel active">
           <Link href="/clock-display" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>📲</div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📲" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("ahub.clockDisplayScreen")}</div><div className="feature-sub">{t("ahub.clockDisplayScreenSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>

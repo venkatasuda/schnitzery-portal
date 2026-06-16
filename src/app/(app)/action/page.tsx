@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getActionCenter } from "@/lib/queries/action-center";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -37,14 +38,14 @@ export default function ActionCenterPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">🎯 {t("act.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🎯" size={22} /> {t("act.title")}</div>
       <div className="page-sub">{t("act.subtitle")}</div>
 
       {loading ? (
         <CardSkeleton rows={4} />
       ) : d?.total === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 36 }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={34} color="#58d68d" /></div>
           <div style={{ color: "#58d68d", fontSize: 16, fontWeight: 700 }}>{t("act.allClear")}</div>
           <div style={{ color: "var(--gray)", fontSize: 13, marginTop: 6 }}>{t("act.allClearSub")}</div>
         </div>
@@ -58,7 +59,7 @@ export default function ActionCenterPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {active.map((r) => (
               <Link key={r.key} href={r.href} className="card" style={{ padding: 14, display: "flex", alignItems: "center", gap: 13, textDecoration: "none", borderLeft: `3px solid ${r.color}` }}>
-                <span style={{ fontSize: 22 }}>{r.icon}</span>
+                <Icon e={r.icon} size={22} color={r.color} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>{t(`act.${r.key}`)}</div>
                   <div style={{ fontSize: 12, color: "var(--gray)" }}>{r.sub}</div>

@@ -17,7 +17,7 @@ async function getMe() {
   return { supabase, user, branchId: profile?.branch_id ?? null, profile };
 }
 function isManager(role?: string | null) {
-  return ["manager", "franchise_owner", "brand_owner"].includes(role || "");
+  return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 // First & last day of a month (YYYY-MM). Default: current month.
 function monthRange(month?: string) {

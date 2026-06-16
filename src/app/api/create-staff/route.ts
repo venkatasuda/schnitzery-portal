@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const { data: me } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
 
-  if (!me || !["manager", "franchise_owner", "brand_owner"].includes(me.role)) {
+  if (!me || !["manager", "branch_owner", "brand_owner", "super_admin"].includes(me.role)) {
     return NextResponse.json({ ok: false, error: "Managers only." }, { status: 403 });
   }
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   if (password.length < 6) return NextResponse.json({ ok: false, error: "Password must be at least 6 characters." }, { status: 400 });
   // Only owners may create other managers/owners
   const newRole = role || "staff";
-  if (["manager", "franchise_owner", "brand_owner"].includes(newRole) && !["franchise_owner", "brand_owner"].includes(me.role)) {
+  if (["manager", "branch_owner", "brand_owner", "super_admin"].includes(newRole) && !["branch_owner", "brand_owner", "super_admin"].includes(me.role)) {
     return NextResponse.json({ ok: false, error: "Only owners can create managers." }, { status: 403 });
   }
 
@@ -69,14 +69,14 @@ export async function POST(request: Request) {
     role: newRole,
     employee_code: employee_code || null,
     contract_type: contract_type || null,
-    contract_hours: contract_hours ?? null,
+    contract_hours: contract_hours == null || contract_hours === "" || Number.isNaN(Number(contract_hours)) ? null : Number(contract_hours),
     phone: phone || null,
     branch_id: me.branch_id,
     status: "active",
   });
   if (rowErr) {
     // best-effort cleanup so we don't leave an orphan auth user
-    await admin.auth.admin.deleteUser(newId).catch(() => {});
+    await admin.auth.admin.deleteUser(newId).catch((e) => console.error("create-staff: orphan auth-user cleanup failed for", newId, e));
     return NextResponse.json({ ok: false, error: rowErr.message }, { status: 400 });
   }
 

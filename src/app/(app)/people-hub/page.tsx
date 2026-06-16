@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 
 // Manager/Owner "People" hub — groups team management, the directory, and
@@ -13,7 +14,7 @@ export default function PeopleHubPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">👥 {t("ph.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("ph.title")}</div>
       <div className="page-sub">{t("ph.subtitle")}</div>
 
       <div className="hub-tabs">
@@ -65,7 +66,7 @@ export default function PeopleHubPage() {
 function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
-      <div className="feature-icon" style={{ background: grad }}>{icon}</div>
+      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
       <div style={{ flex: 1 }}>
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>

@@ -87,7 +87,7 @@ export async function getRoster(weekStart?: string) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!branchId) return { ok: false, error: "No branch assigned." };
-  if (!["manager", "franchise_owner", "brand_owner"].includes(profile?.role || "")) {
+  if (!["manager", "branch_owner", "brand_owner", "super_admin"].includes(profile?.role || "")) {
     return { ok: false, error: "Only managers can edit the roster." };
   }
 
@@ -120,7 +120,7 @@ export async function saveRoster(weekStart: string, rosterData: any) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!branchId) return { ok: false, error: "No branch assigned." };
-  if (!["manager", "franchise_owner", "brand_owner"].includes(profile?.role || "")) {
+  if (!["manager", "branch_owner", "brand_owner", "super_admin"].includes(profile?.role || "")) {
     return { ok: false, error: "Only managers can edit the roster." };
   }
 

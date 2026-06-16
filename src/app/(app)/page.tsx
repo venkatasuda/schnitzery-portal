@@ -7,6 +7,7 @@ import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { listMyDocuments } from "@/lib/queries/profile-uploads";
 import Link from "next/link";
 import StatusStrip from "@/components/StatusStrip";
+import Icon from "@/components/Icon";
 import { getT } from "@/lib/i18n/server";
 
 type Tf = (k: string, v?: Record<string, string | number>) => string;
@@ -44,6 +45,9 @@ export default async function HomePage() {
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
 
+  // kick off the document check now so it runs in parallel with the role queries
+  const docsP = listMyDocuments();
+
   if (isOwner) {
     const d = await getDashboardStats();
     if (d.ok) ownerStats = d.stats ?? null;
@@ -57,15 +61,14 @@ export default async function HomePage() {
     if (otRes.ok) mOt = { totalWorkedMins: otRes.totalWorkedMins || 0, totalOvertimeMins: otRes.totalOvertimeMins || 0, peopleOver: otRes.peopleOver || 0 };
     if (schedRes.ok) mSched = { submissionCount: schedRes.submissionCount || 0, staffCount: schedRes.staffCount || 0, rosterExists: schedRes.rosterExists || false };
   } else {
-    const h = await getMyHours();
+    const [h, st] = await Promise.all([getMyHours(), getMyStatus()]);
     if (h.ok) staffHours = { totalHours: h.totalHours || 0, shifts: h.shifts || 0, targetHours: h.targetHours ?? null };
-    const st = await getMyStatus();
     if (st.ok) { staffClockedIn = st.clockedIn || false; staffOnBreak = st.onBreak || false; }
   }
 
   // the logged-in user's own documents expiring within 60 days (any role)
   const myExpiring: { label: string; days: number }[] = [];
-  const docsRes = await listMyDocuments();
+  const docsRes = await docsP;
   if (docsRes.ok) {
     for (const d of docsRes.docs || []) {
       if (!d.expiry_date) continue;
@@ -92,7 +95,9 @@ export default async function HomePage() {
 
       {myExpiring.length > 0 && (
         <div className="card" style={{ borderColor: "rgba(231,76,60,0.4)", background: "rgba(231,76,60,0.08)", marginBottom: 14 }}>
-          <div style={{ fontWeight: 700, color: "#ec7063", fontSize: 14, marginBottom: 4 }}>⚠️ {t("home.docsNeedAttention")}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, fontWeight: 700, color: "#ec7063", fontSize: 14, marginBottom: 4 }}>
+            <Icon e="⚠" size={15} color="#ec7063" /> {t("home.docsNeedAttention")}
+          </div>
           {myExpiring.slice(0, 3).map((e, i) => (
             <div key={i} style={{ fontSize: 13, color: "var(--white)", marginTop: 2 }}>
               {e.days < 0 ? t("home.docExpired", { doc: e.label, days: Math.abs(e.days) }) : e.days === 0 ? t("home.docToday", { doc: e.label }) : t("home.docSoon", { doc: e.label, days: e.days })}
@@ -128,7 +133,7 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
   return (
     <>
       <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))" }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>🕐</div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="🕐" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{clockTitle}</div>
           <div className="feature-sub">{clockSub}</div>
@@ -178,7 +183,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
     <>
       {/* MY CLOCK — a manager is an employee too */}
       <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))", marginBottom: 14 }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}>🕐</div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="🕐" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{clockTitle}</div>
           <div className="feature-sub">{clockSub}</div>
@@ -190,14 +195,14 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
       <div className="section-label">{t("home.needsAttention")}</div>
       {alerts.length === 0 ? (
         <div className="card" style={{ display: "flex", alignItems: "center", gap: 12, borderColor: "rgba(39,174,96,0.25)" }}>
-          <span style={{ fontSize: 20 }}>✅</span>
+          <Icon e="✅" size={20} color="#58d68d" />
           <div><div style={{ fontSize: 14, fontWeight: 600, color: "#58d68d" }}>{t("home.allClear")}</div><div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.allClearSub")}</div></div>
         </div>
       ) : (
         <div className="card" style={{ padding: 6 }}>
           {alerts.map((a, i) => (
             <Link key={i} href={a.href} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 10px", borderBottom: i < alerts.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none", textDecoration: "none" }}>
-              <span style={{ fontSize: 17 }}>{a.icon}</span>
+              <Icon e={a.icon} size={18} color={a.color} />
               <span style={{ flex: 1, fontSize: 14, color: "var(--white)" }}>{a.text}</span>
               <span style={{ color: a.color, fontSize: 18 }}>›</span>
             </Link>
@@ -205,7 +210,9 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
         </div>
       )}
 
-      <Link href="/action" style={{ display: "block", textAlign: "center", margin: "10px 0 4px", color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>🎯 {t("act.open")} ›</Link>
+      <Link href="/action" style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center", width: "100%", margin: "10px 0 4px", color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>
+        <Icon e="🎯" size={15} color="var(--gold)" /> {t("act.open")} ›
+      </Link>
 
       {/* TODAY */}
       <div className="section-label">{t("home.today")}</div>
@@ -216,7 +223,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
         <Stat value={fmtH(lv.totalMins)} label={t("home.hours")} color="var(--gold)" />
       </div>
       <Link href="/checklist" className="feature-card">
-        <div className="feature-icon" style={{ background: checklistDone ? "linear-gradient(135deg,#1e8449,#27ae60)" : "linear-gradient(135deg,#b9770e,#e67e22)" }}>{checklistDone ? "✅" : "📋"}</div>
+        <div className="feature-icon" style={{ background: checklistDone ? "linear-gradient(135deg,#1e8449,#27ae60)" : "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e={checklistDone ? "✅" : "📋"} size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("home.dailyChecklist")} {o.checklistTotal > 0 && <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {o.checklistDone}/{o.checklistTotal}</span>}</div>
           <div className="feature-sub">{checklistDone ? t("home.allTasksDone") : t("home.openingClosing")}</div>
@@ -237,7 +244,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
         <Stat value={otd.peopleOver} label={t("home.overContract")} color={otd.peopleOver > 0 ? "#e8a35a" : "#58d68d"} />
       </div>
       <Link href="/schedule-hub" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-        <span style={{ fontSize: 18 }}>📅</span>
+        <Icon e="📅" size={18} color="var(--gold)" />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{sc.rosterExists ? t("home.rosterBuilt") : t("home.rosterOpen")}</div>
           <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.availSubmitted", { a: sc.submissionCount, b: sc.staffCount })}</div>
@@ -246,7 +253,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
       </Link>
 
       <Link href="/analytics" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
-        <span style={{ fontSize: 18 }}>📈</span>
+        <Icon e="📈" size={18} color="var(--gold)" />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.analytics")}</div>
           <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.analyticsSub")}</div>
@@ -255,7 +262,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
       </Link>
 
       <Link href="/labor" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
-        <span style={{ fontSize: 18 }}>💶</span>
+        <Icon e="💶" size={18} color="var(--gold)" />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.laborCost")}</div>
           <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.laborCostSub")}</div>
@@ -264,7 +271,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
       </Link>
 
       <Link href="/compliance" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
-        <span style={{ fontSize: 18 }}>⚖️</span>
+        <Icon e="⚖" size={18} color="var(--gold)" />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.compliance")}</div>
           <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.complianceSub")}</div>
@@ -287,7 +294,7 @@ function OwnerDash({ stats, t }: { stats: { clockedIn: number; staffCount: numbe
   return (
     <>
       <Link href="/overview" className="feature-card" style={{ background: "linear-gradient(135deg,rgba(212,168,71,0.14),rgba(20,20,20,0.4))", borderColor: "rgba(212,168,71,0.3)" }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}>🏢</div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}><Icon e="🏢" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("org.title")}</div>
           <div className="feature-sub">{t("org.subtitle")}</div>
@@ -296,7 +303,7 @@ function OwnerDash({ stats, t }: { stats: { clockedIn: number; staffCount: numbe
       </Link>
 
       <Link href="/branches" className="feature-card">
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}>🗂️</div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}><Icon e="🗂" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("home.allBranches")}</div>
           <div className="feature-sub">{t("home.allBranchesSub")}</div>
@@ -315,7 +322,7 @@ function OwnerDash({ stats, t }: { stats: { clockedIn: number; staffCount: numbe
       <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
       <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.peopleTeam")} sub={t("home.peopleTeamSub")} />
       <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.inventory")} sub={t("home.inventorySub")} />
-      <Shortcut href="/settings-hub" icon="⚙️" grad="linear-gradient(135deg,#555,#777)" title={t("home.settings")} sub={t("home.settingsSub")} />
+      <Shortcut href="/settings-hub" icon="⚙" grad="linear-gradient(135deg,#555,#777)" title={t("home.settings")} sub={t("home.settingsSub")} />
     </>
   );
 }
@@ -333,7 +340,7 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
 function Shortcut({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
-      <div className="feature-icon" style={{ background: grad }}>{icon}</div>
+      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
       <div style={{ flex: 1 }}>
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>

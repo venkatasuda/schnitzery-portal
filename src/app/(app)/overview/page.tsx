@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getOrgOverview } from "@/lib/queries/org-overview";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
@@ -28,7 +29,7 @@ export default function OverviewPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">🏢 {t("org.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🏢" size={22} /> {t("org.title")}</div>
       <div className="page-sub">{t("org.subtitle")}</div>
 
       {loading || !data ? (
@@ -70,7 +71,12 @@ export default function OverviewPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
                   <div style={{ fontSize: 11, color: "var(--gray)" }}>
-                    🟢 {b.workingNow} · 👥 {b.employees}{b.issues > 0 ? ` · ⚠ ${b.issues}` : ""}{b.expiringDocs > 0 ? ` · 📄 ${b.expiringDocs}` : ""}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="#58d68d" />{b.workingNow}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="👥" size={11} />{b.employees}</span>
+                      {b.issues > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "#e8a35a" }}><Icon e="⚠" size={11} />{b.issues}</span>}
+                      {b.expiringDocs > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="📄" size={11} />{b.expiringDocs}</span>}
+                    </span>
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
