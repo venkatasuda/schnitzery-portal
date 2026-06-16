@@ -383,7 +383,7 @@ export const messages = {
       kUtilization: "Staff utilization", kOvertime: "Overtime", kLaborHours: "Labor hours", kLaborCost: "Labor cost",
       productivity: "Productivity", salesPerHour: "Sales / labor h", laborCostPct: "Labor cost % of sales", totalSales: "Sales",
       noSales: "No sales entered for this period.", laborLink: "Enter sales",
-      trendTitle: "Labor hours per day", teamTitle: "Hours by team",
+      trendTitle: "Labor hours per day", teamTitle: "Hours by team", otTrend: "Overtime trend (6 months)",
     },
     pay: {
       title: "Payroll", subtitle: "Monthly hours, broken down and ready to export",
@@ -941,7 +941,7 @@ export const messages = {
       kUtilization: "Personalauslastung", kOvertime: "Überstunden", kLaborHours: "Arbeitsstunden", kLaborCost: "Personalkosten",
       productivity: "Produktivität", salesPerHour: "Umsatz / Std.", laborCostPct: "Personalkosten % vom Umsatz", totalSales: "Umsatz",
       noSales: "Kein Umsatz für diesen Zeitraum erfasst.", laborLink: "Umsatz erfassen",
-      trendTitle: "Arbeitsstunden pro Tag", teamTitle: "Stunden nach Team",
+      trendTitle: "Arbeitsstunden pro Tag", teamTitle: "Stunden nach Team", otTrend: "Überstunden-Trend (6 Monate)",
     },
     pay: {
       title: "Lohnabrechnung", subtitle: "Monatsstunden, aufgeschlüsselt und exportbereit",
