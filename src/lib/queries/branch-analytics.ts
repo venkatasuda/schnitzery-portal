@@ -212,3 +212,52 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
 function emptyMetrics() {
   return { attendancePct: 0, absencePct: 0, latePct: 0, overtimePct: 0, laborHours: 0, laborCost: 0, shiftCompliancePct: 0, utilizationPct: 0, salesPerLaborHour: null as number | null, laborCostPct: null as number | null, scheduled: 0, attended: 0, totalSales: 0 };
 }
+
+// ── Executive overtime trend: overtime % per month over the last N months ────
+export async function getOvertimeTrend(opts: { branchId?: string | null; months?: number } = {}) {
+  const months = Math.max(3, Math.min(opts.months ?? 6, 12));
+  const { supabase, user, role, branchId: myBranch } = await getMe();
+  if (!user) return { ok: false as const, error: "Not logged in.", trend: [] as any[] };
+  if (!MGR.includes(role ?? "")) return { ok: false as const, error: "Managers only.", trend: [] as any[] };
+
+  const isOwner = OWNER.includes(role ?? "");
+  const { data: accBranches } = await supabase.from("branches").select("id, name");
+  const accMap: Record<string, string> = {}; (accBranches || []).forEach((b) => { accMap[b.id] = b.name; });
+  let targets: string[];
+  if (isOwner && (!opts.branchId || opts.branchId === "all")) targets = (accBranches || []).map((b) => b.id);
+  else if (isOwner && opts.branchId && accMap[opts.branchId]) targets = [opts.branchId];
+  else targets = myBranch ? [myBranch] : [];
+  if (!targets.length) return { ok: false as const, error: "No branch.", trend: [] };
+
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+  const from = startMonth.toISOString().slice(0, 10);
+  const to = now.toISOString().slice(0, 10);
+  const monthsList: string[] = [];
+  for (let i = 0; i < months; i++) { const d = new Date(startMonth.getFullYear(), startMonth.getMonth() + i, 1); monthsList.push(d.toISOString().slice(0, 7)); }
+
+  const [{ data: psettings }, { data: logs }] = await Promise.all([
+    supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets),
+    supabase.from("attendance_logs").select("user_id, branch_id, work_date, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to),
+  ]);
+  const otThresh: Record<string, number> = {}; targets.forEach((b) => { otThresh[b] = 8 * 60; });
+  (psettings || []).forEach((p) => { otThresh[p.branch_id] = Number(p.ot_daily_hours ?? 8) * 60; });
+
+  const paidByMonth: Record<string, number> = {};
+  const perDay: Record<string, number> = {};
+  for (const l of logs || []) {
+    const gross = l.duration_mins || 0; if (gross <= 0) continue;
+    const paid = Math.max(0, gross - breakMins(l.breaks));
+    const mon = String(l.work_date).slice(0, 7);
+    paidByMonth[mon] = (paidByMonth[mon] || 0) + paid;
+    perDay[`${l.user_id}|${l.work_date}|${l.branch_id}`] = (perDay[`${l.user_id}|${l.work_date}|${l.branch_id}`] || 0) + paid;
+  }
+  const otByMonth: Record<string, number> = {};
+  for (const k in perDay) { const parts = k.split("|"); const mon = parts[1].slice(0, 7); const br = parts[2]; const ot = Math.max(0, perDay[k] - (otThresh[br] || 480)); if (ot > 0) otByMonth[mon] = (otByMonth[mon] || 0) + ot; }
+
+  const trend = monthsList.map((mon) => {
+    const paid = paidByMonth[mon] || 0; const ot = otByMonth[mon] || 0;
+    return { month: mon.slice(2), overtimePct: paid > 0 ? Math.round((ot / paid) * 1000) / 10 : 0, hours: h1(paid), otHours: h1(ot) };
+  });
+  return { ok: true as const, trend, scope: isOwner && targets.length > 1 ? "All branches" : (accMap[targets[0]] || "") };
+}

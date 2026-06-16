@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Link from "next/link";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
-import { getBranchAnalytics, getAnalyticsScope } from "@/lib/queries/branch-analytics";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
+import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 
 const GOLD = "#d4a847", BLUE = "#3498db", GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063";
@@ -18,10 +18,17 @@ export default function AnalyticsPage() {
   const [scope, setScope] = useState<{ canPickBranch: boolean; branches: any[]; defaultBranch?: string } | null>(null);
   const [branch, setBranch] = useState<string>("all");
   const [data, setData] = useState<any>(null);
+  const [otTrend, setOtTrend] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
 
   useEffect(() => { getAnalyticsScope().then((s) => { if (s.ok) { setScope(s); if (!s.canPickBranch) setBranch(s.defaultBranch || ""); } else setDenied(true); }); }, []);
+
+  // overtime trend (6 months) — depends only on branch, not the period toggle
+  useEffect(() => {
+    if (!scope) return;
+    getOvertimeTrend({ branchId: scope.canPickBranch ? branch : null, months: 6 }).then((r) => { if (r.ok) setOtTrend(r.trend || []); });
+  }, [branch, scope]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -124,6 +131,21 @@ export default function AnalyticsPage() {
                     {data.teams.map((_: any, i: number) => <Cell key={i} fill={TEAM_COLORS[i % TEAM_COLORS.length]} />)}
                   </Bar>
                 </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          )}
+
+          {/* executive overtime trend (6 months) */}
+          {otTrend.length > 1 && (
+            <ChartCard title={t("bana.otTrend")}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={otTrend} margin={{ top: 8, right: 10, bottom: 0, left: -22 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} unit="%" />
+                  <Tooltip {...tooltip} formatter={(v: any) => [`${v}%`, t("bana.kOvertime")]} />
+                  <Line type="monotone" dataKey="overtimePct" stroke={AMBER} strokeWidth={2.5} dot={{ r: 3, fill: AMBER }} />
+                </LineChart>
               </ResponsiveContainer>
             </ChartCard>
           )}

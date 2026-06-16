@@ -12,6 +12,7 @@ import { getShiftConflicts } from "@/lib/queries/shift-conflicts";
 // ============================================================================
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
+const OWNER = ["brand_owner", "super_admin"];
 
 export async function getActionCenter() {
   const supabase = await createClient();
@@ -26,7 +27,9 @@ export async function getActionCenter() {
 
   const cnt = (p: any) => (p?.count ?? 0) as number;
 
-  const [leaveR, swapR, attR, corrR, docR, brR, payR, ops, conf] = await Promise.all([
+  const isOwner = OWNER.includes(me?.role ?? "");
+
+  const [leaveR, swapR, attR, corrR, docR, brR, payR, conf] = await Promise.all([
     supabase.from("leave_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("swap_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("attendance_logs").select("*", { count: "exact", head: true }).eq("status", "complete").or("approval_status.is.null,approval_status.eq.pending"),
@@ -34,19 +37,27 @@ export async function getActionCenter() {
     supabase.from("user_documents").select("*", { count: "exact", head: true }).not("expiry_date", "is", null).lte("expiry_date", in30),
     supabase.from("branches").select("*", { count: "exact", head: true }),
     supabase.from("payroll_runs").select("*", { count: "exact", head: true }).eq("month", prevMonth).eq("status", "approved"),
-    getOpsDashboard({}).catch(() => null),
     getShiftConflicts({ weeks: 2 }).catch(() => null),
   ]);
+
+  // Today's no-shows / not-in / late. Managers (single branch) use the ops
+  // dashboard directly; owners aggregate it across every accessible branch.
+  let noShows = 0, notCheckedIn = 0, lateToday = 0;
+  if (isOwner) {
+    const { data: brs } = await supabase.from("branches").select("id");
+    const results = await Promise.all((brs || []).map((b) => getOpsDashboard({ branchId: b.id }).catch(() => null)));
+    for (const r of results) { const mm: any = r && (r as any).ok ? (r as any).metrics : null; if (mm) { noShows += mm.absent || 0; notCheckedIn += mm.notCheckedIn || 0; lateToday += mm.late || 0; } }
+  } else {
+    const ops = await getOpsDashboard({}).catch(() => null);
+    const m: any = ops && (ops as any).ok ? (ops as any).metrics : null;
+    noShows = m?.absent ?? 0; notCheckedIn = m?.notCheckedIn ?? 0; lateToday = m?.late ?? 0;
+  }
 
   const approvals = cnt(leaveR) + cnt(swapR) + cnt(attR);
   const corrections = cnt(corrR);
   const expiringDocs = cnt(docR);
   const branches = cnt(brR);
   const payrollPending = Math.max(0, branches - cnt(payR));
-  const m: any = ops && (ops as any).ok ? (ops as any).metrics : null;
-  const noShows = m?.absent ?? 0;
-  const notCheckedIn = m?.notCheckedIn ?? 0;
-  const lateToday = m?.late ?? 0;
   const conflicts = conf && (conf as any).ok ? (conf as any).total : 0;
 
   const total = approvals + corrections + expiringDocs + payrollPending + noShows + notCheckedIn + conflicts;
