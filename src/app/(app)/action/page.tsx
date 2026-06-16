@@ -28,6 +28,7 @@ export default function ActionCenterPage() {
       sub: `${it.approvals.leave} ${t("act.leave")} · ${it.approvals.swaps} ${t("act.swaps")} · ${it.approvals.attendance} ${t("act.time")}` },
     { key: "corrections", icon: "✏️", count: it.corrections, href: "/approvals", color: "***REMOVED***e8a35a", sub: t("act.correctionsSub") },
     { key: "noShows", icon: "🚫", count: it.noShows, href: "/noshow", color: "***REMOVED***ec7063", sub: t("act.noShowsSub") },
+    { key: "conflicts", icon: "🔀", count: it.conflicts, href: "/conflicts", color: "***REMOVED***ec7063", sub: t("act.conflictsSub") },
     { key: "notCheckedIn", icon: "⏳", count: it.notCheckedIn, href: "/ops", color: "***REMOVED***e8a35a", sub: t("act.notInSub") },
     { key: "expiringDocs", icon: "📄", count: it.expiringDocs, href: "/expiring-docs", color: "***REMOVED***e8a35a", sub: t("act.docsSub") },
     { key: "payroll", icon: "💶", count: it.payrollPending, href: "/export", color: "***REMOVED***e8a35a", sub: t("act.payrollSub") },
