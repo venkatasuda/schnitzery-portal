@@ -17,7 +17,7 @@ async function getMe() {
   return { supabase, user, branchId: profile?.branch_id ?? null, profile };
 }
 function isManager(role?: string | null) {
-  return ["manager", "franchise_owner", "brand_owner"].includes(role || "");
+  return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 
 // ── MY PROFILE: read ──
@@ -80,19 +80,42 @@ export async function updateStaff(staffId: string, fields: {
   const { supabase, user, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  const callerRole = profile?.role || "";
+  const isOwner = ["brand_owner", "super_admin"].includes(callerRole);
 
-  // Guard: only owners can change roles to/from owner levels
-  if (fields.role && !["manager", "franchise_owner", "brand_owner"].includes(profile?.role || "")) {
-    return { ok: false, error: "Not allowed to change roles." };
+  // Self-protection: you can't change your own role or status (avoids lockout).
+  if (staffId === user.id && (fields.role !== undefined || fields.status !== undefined)) {
+    return { ok: false, error: "You can't change your own role or status." };
   }
 
-  const update: any = {};
+  // Target must exist; non-owners can only manage staff in their own branch.
+  const { data: target } = await supabase
+    .from("users").select("id, branch_id, role").eq("id", staffId).single();
+  if (!target) return { ok: false, error: "Staff member not found." };
+  if (!isOwner && target.branch_id !== profile?.branch_id) {
+    return { ok: false, error: "You can only manage staff in your own branch." };
+  }
+
+  // Role assignment: a caller can only assign roles within their authority.
+  const ASSIGNABLE: Record<string, string[]> = {
+    manager: ["staff", "manager"],
+    branch_owner: ["staff", "manager"],
+    brand_owner: ["staff", "manager", "branch_owner", "brand_owner"],
+    super_admin: ["staff", "manager", "branch_owner", "brand_owner", "super_admin"],
+  };
+  if (fields.role !== undefined && !(ASSIGNABLE[callerRole] || []).includes(fields.role)) {
+    return { ok: false, error: "You're not allowed to assign that role." };
+  }
+
+  const update: Record<string, unknown> = {};
   for (const k of ["full_name", "employee_code", "team", "contract_type", "phone", "role", "status", "skills"] as const) {
     if (fields[k] !== undefined) update[k] = fields[k];
   }
   if (fields.contract_hours !== undefined) update.contract_hours = fields.contract_hours;
+  if (Object.keys(update).length === 0) return { ok: false, error: "No changes supplied." };
 
-  const { error } = await supabase.from("users").update(update).eq("id", staffId);
+  const { data, error } = await supabase.from("users").update(update).eq("id", staffId).select("id");
   if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) return { ok: false, error: "Update didn't apply — check permissions or branch." };
   return { ok: true };
 }

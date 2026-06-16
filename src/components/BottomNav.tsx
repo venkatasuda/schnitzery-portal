@@ -16,8 +16,8 @@ import { useLang } from "@/components/LanguageProvider";
 export default function BottomNav({ role }: { role: string }) {
   const path = usePathname();
   const { t } = useLang();
-  const isOwner = ["franchise_owner", "brand_owner"].includes(role);
-  const isManager = ["manager", "franchise_owner", "brand_owner"].includes(role);
+  const isOwner = ["branch_owner", "brand_owner", "super_admin"].includes(role);
+  const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
 
   const staffItems = [
     { href: "/", label: t("nav.home"), icon: <HomeIcon /> },

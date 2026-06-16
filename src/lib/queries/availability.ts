@@ -19,7 +19,7 @@ async function getMe() {
   return { supabase, user, branchId: profile?.branch_id ?? null, profile };
 }
 function isManager(role?: string | null) {
-  return ["manager", "franchise_owner", "brand_owner"].includes(role || "");
+  return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 function mondayOf(date = new Date()): string {
   const d = new Date(date);

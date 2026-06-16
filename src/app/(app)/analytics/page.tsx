@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend } from "@/lib/queries/branch-analytics";
@@ -48,7 +49,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📊 {t("bana.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("bana.title")}</div>
       <div className="page-sub">{data?.scope ? `${data.scope} · ` : ""}{t("bana.subtitle")}</div>
 
       {/* period toggle */}
@@ -75,7 +76,7 @@ export default function AnalyticsPage() {
       {loading || !m ? (
         <div style={{ marginTop: 14 }}><StatsSkeleton count={4} /><div style={{ height: 12 }} /><Skeleton height={210} radius={14} /></div>
       ) : m.scheduled === 0 && m.laborHours === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 36, fontSize: 14, lineHeight: 1.6 }}>📊 {t("bana.noData")}</div>
+        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 36, fontSize: 14, lineHeight: 1.6 }}><Icon e="📊" size={26} color="var(--gray)" /> {t("bana.noData")}</div>
       ) : (
         <>
           {/* KPI grid */}

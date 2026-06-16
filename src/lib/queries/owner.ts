@@ -3,9 +3,9 @@
 import { createClient } from "@/lib/supabase/server";
 
 // ============================================================
-// OWNER MULTI-BRANCH LAYER (franchise_owner + brand_owner)
+// OWNER MULTI-BRANCH LAYER (branch_owner + brand_owner + super_admin)
 // Relies on RLS: accessible_branch_ids() returns every branch the
-// caller may read (brand_owner = all; franchise_owner = their
+// caller may read (brand_owner/super_admin = all; branch_owner = their
 // franchise's branches). So a plain select on branches returns
 // exactly the owner's scope — no manual branch filtering needed.
 // ============================================================
@@ -19,7 +19,7 @@ async function getMe() {
   return { supabase, user, profile };
 }
 function isOwner(role?: string | null) {
-  return ["franchise_owner", "brand_owner"].includes(role || "");
+  return ["branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
