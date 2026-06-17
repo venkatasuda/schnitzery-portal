@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getOpsDashboard } from "@/lib/queries/ops-dashboard";
 import { getShiftConflicts } from "@/lib/queries/shift-conflicts";
+import { getStaffPerformance } from "@/lib/queries/branch-analytics";
 
 // ============================================================================
 // ACTION CENTER — one count of everything that needs a manager's attention,
@@ -77,4 +78,35 @@ export async function getActionCenter() {
       prevMonth,
     },
   };
+}
+
+// ============================================================================
+// STAFF ALERTS — turns the weekly per-employee numbers into specific, named
+// "needs attention" items (e.g. "Sarah late 4x this week"), using simple
+// thresholds on the same figures shown in the analytics staff table. Same
+// RLS scope as everything else (manager = own branch, owner = all).
+// ============================================================================
+
+const LATE_THRESHOLD = 3;     // late this many times in the week -> flag
+const ABSENT_THRESHOLD = 2;   // missed this many scheduled shifts -> flag
+const LOW_ATT_PCT = 80;       // attendance below this % (with >=3 scheduled) -> flag
+
+export async function getStaffAlerts() {
+  const perf = await getStaffPerformance({ period: "weekly" }).catch(() => null);
+  if (!perf || !(perf as any).ok) return { ok: false as const, alerts: [] as any[] };
+  const rows = ((perf as any).rows || []) as any[];
+
+  type Sev = "high" | "warn";
+  const alerts: { id: string; userId: string; type: "absent" | "lowAtt" | "late"; name: string; n: number; severity: Sev }[] = [];
+  for (const r of rows) {
+    if (r.absent >= ABSENT_THRESHOLD)
+      alerts.push({ id: `${r.id}-absent`, userId: r.id, type: "absent", name: r.name, n: r.absent, severity: "high" });
+    if (r.attendancePct != null && r.attendancePct < LOW_ATT_PCT && r.scheduled >= 3)
+      alerts.push({ id: `${r.id}-lowatt`, userId: r.id, type: "lowAtt", name: r.name, n: r.attendancePct, severity: "high" });
+    if (r.late >= LATE_THRESHOLD)
+      alerts.push({ id: `${r.id}-late`, userId: r.id, type: "late", name: r.name, n: r.late, severity: "warn" });
+  }
+  const rank: Record<Sev, number> = { high: 0, warn: 1 };
+  alerts.sort((a, b) => (rank[a.severity] - rank[b.severity]) || (b.n - a.n));
+  return { ok: true as const, alerts: alerts.slice(0, 8) };
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
-import { getActionCenter } from "@/lib/queries/action-center";
+import { getActionCenter, getStaffAlerts } from "@/lib/queries/action-center";
 import { CardSkeleton } from "@/components/Skeleton";
 
 export default function ActionCenterPage() {
@@ -12,6 +12,7 @@ export default function ActionCenterPage() {
   const [d, setD] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [alerts, setAlerts] = useState<any[]>([]);
 
   useEffect(() => {
     getActionCenter().then((r) => {
@@ -19,6 +20,7 @@ export default function ActionCenterPage() {
       else if (r.error?.includes("Managers")) setDenied(true);
       setLoading(false);
     });
+    getStaffAlerts().then((r) => setAlerts(r.ok ? r.alerts : []));
   }, []);
 
   if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
@@ -41,9 +43,31 @@ export default function ActionCenterPage() {
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🎯" size={22} /> {t("act.title")}</div>
       <div className="page-sub">{t("act.subtitle")}</div>
 
+      {!loading && alerts.length > 0 && (
+        <div className="card" style={{ marginBottom: 14, padding: 14 }}>
+          <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}><Icon e="⚠️" size={14} color="#e8a35a" /> {t("act.alertsTitle")}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {alerts.map((a) => {
+              const color = a.severity === "high" ? "#ec7063" : "#e8a35a";
+              const ic = a.type === "absent" ? "🚫" : a.type === "lowAtt" ? "📉" : "⏰";
+              const msg = a.type === "late" ? t("act.alertLate", { name: a.name, n: a.n })
+                : a.type === "absent" ? t("act.alertAbsent", { name: a.name, n: a.n })
+                : t("act.alertLowAtt", { name: a.name, n: a.n });
+              return (
+                <Link key={a.id} href={`/staff/${a.userId}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)", borderLeft: `3px solid ${color}` }}>
+                  <Icon e={ic} size={16} color={color} />
+                  <span style={{ fontSize: 13, color: "var(--white)", flex: 1, minWidth: 0 }}>{msg}</span>
+                  <span style={{ color: "var(--gray)" }}>›</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <CardSkeleton rows={4} />
-      ) : d?.total === 0 ? (
+      ) : d?.total === 0 && alerts.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 36 }}>
           <div style={{ marginBottom: 8 }}><Icon e="🎉" size={34} color="#58d68d" /></div>
           <div style={{ color: "#58d68d", fontSize: 16, fontWeight: 700 }}>{t("act.allClear")}</div>
