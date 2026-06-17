@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { getStaffForNotes, addNote, getNotes } from "@/lib/queries/operations";
 
 export default function NotesPage() {
@@ -46,7 +47,7 @@ export default function NotesPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📝 {t("schedhub.notes")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📝" size={22} /> {t("schedhub.notes")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("notes.subtitle")}</p>
 
       {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
@@ -77,7 +78,7 @@ export default function NotesPage() {
       : shown.map((n) => (
         <div key={n.id} style={{ ...card, marginBottom: 8, borderColor: n.isRecognition ? "rgba(212,168,71,0.3)" : "rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 14, fontWeight: 600 }}>{n.isRecognition && "🌟 "}{n.subject?.full_name || t("lc.staffFallback")}</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{n.isRecognition && <Icon e="🌟" size={13} color="var(--gold)" style={{ verticalAlign: "-2px", marginRight: 4 }} />}{n.subject?.full_name || t("lc.staffFallback")}</span>
             <span style={{ fontSize: 11, color: "#6f6565" }}>{fmt(n.created_at)}</span>
           </div>
           <div style={{ fontSize: 14, color: "#e8e0e0", lineHeight: 1.5 }}>{n.cleanNote}</div>

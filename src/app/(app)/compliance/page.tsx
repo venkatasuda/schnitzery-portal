@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getCompliance } from "@/lib/queries/compliance";
 import { Skeleton } from "@/components/Skeleton";
@@ -29,7 +30,7 @@ export default function CompliancePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">⚖️ {t("home.compliance")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚖️" size={22} /> {t("home.compliance")}</div>
       <div className="page-sub">{t("comp.subtitle")}</div>
 
       {loading ? (
@@ -48,7 +49,7 @@ export default function CompliancePage() {
 
           {v.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: 32 }}>
-              <div style={{ fontSize: 30, marginBottom: 8 }}>✅</div>
+              <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="#58d68d" /></div>
               <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("comp.allCompliant")}</div>
               <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>
                 {t("comp.checkedNote", { n: data.checked })}
@@ -60,7 +61,7 @@ export default function CompliancePage() {
               <div className="card" style={{ padding: 8 }}>
                 {v.map((item: any, i: number) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < v.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
-                    <span style={{ fontSize: 18 }}>{ICON[item.type] || "⚠️"}</span>
+                    <Icon e={ICON[item.type] || "⚠️"} size={18} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
                         {item.name} <span style={{ fontWeight: 400, fontSize: 12, color: "var(--gray)" }}>· {item.date}</span>

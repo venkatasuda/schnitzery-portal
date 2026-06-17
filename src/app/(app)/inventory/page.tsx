@@ -5,6 +5,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getProducts, getCounts, saveCount, addProduct, removeProduct, getOrderAlert } from "@/lib/queries/inventory";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 export default function InventoryPage() {
   const { t } = useLang();
@@ -69,7 +70,7 @@ export default function InventoryPage() {
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📦 {t("inv.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📦" size={22} /> {t("inv.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("inv.subtitle")}</p>
 
 

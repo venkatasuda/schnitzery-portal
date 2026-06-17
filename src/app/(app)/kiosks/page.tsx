@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { listKiosks, createKiosk, renameKiosk, setKioskActive } from "@/lib/queries/kiosks";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -49,7 +50,7 @@ export default function KiosksPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">🖥️ {t("kioskadm.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🖥️" size={22} /> {t("kioskadm.title")}</div>
       <div className="page-sub">{t("kioskadm.subtitle")}</div>
 
       {/* add */}
@@ -91,7 +92,7 @@ export default function KiosksPage() {
         </div>
       )}
 
-      <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 14, lineHeight: 1.5 }}>💡 {t("kioskadm.revokeHint")}</div>
+      <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 14, lineHeight: 1.5 }}><Icon e="💡" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("kioskadm.revokeHint")}</div>
       <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 14, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
     </div>
   );

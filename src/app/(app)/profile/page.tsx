@@ -8,6 +8,7 @@ import AvatarUpload from "@/components/AvatarUpload";
 import DocumentsSection from "@/components/DocumentsSection";
 import ProfileSettings from "@/components/ProfileSettings";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 
@@ -47,7 +48,7 @@ export default function ProfilePage() {
 
   if (loading) return (
     <div className="fade-up">
-      <div className="page-title">👤 {t("profile.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="👤" size={22} /> {t("profile.title")}</div>
       <div className="page-sub">{t("profile.subtitle")}</div>
       <CardSkeleton rows={5} />
     </div>
@@ -59,7 +60,7 @@ export default function ProfilePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">👤 {t("profile.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="👤" size={22} /> {t("profile.title")}</div>
       <div className="page-sub">{t("profile.subtitle")}</div>
 
       <div className="card" style={{ padding: 24 }}>
@@ -124,17 +125,17 @@ export default function ProfilePage() {
         <>
           <div className="section-label">{t("profile.settingsAdmin")}</div>
           <Link href="/settings" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#555,#777)" }}>⚙️</div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#555,#777)" }}><Icon e="⚙️" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.branchSettings")}</div><div className="feature-sub">{t("profile.branchSettingsSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/export" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}>📤</div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}><Icon e="📤" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.payrollExport")}</div><div className="feature-sub">{t("profile.payrollExportSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/audit" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}>🔒</div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}><Icon e="🔒" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.auditLog")}</div><div className="feature-sub">{t("profile.auditLogSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>

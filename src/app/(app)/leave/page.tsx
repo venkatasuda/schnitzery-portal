@@ -5,6 +5,7 @@ import { submitLeave, getMyLeave } from "@/lib/queries/leave";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 export default function LeavePage() {
   const { t } = useLang();
@@ -46,7 +47,7 @@ export default function LeavePage() {
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>🌴 {t("leave.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🌴" size={22} /> {t("leave.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("leave.subtitle")}</p>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 4 }}>

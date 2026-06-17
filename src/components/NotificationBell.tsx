@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { getManagerAlerts } from "@/lib/queries/alerts";
 import { getMyNotifications, markAllNotificationsRead } from "@/lib/queries/notifications";
 
@@ -98,7 +99,7 @@ export default function NotificationBell() {
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button onClick={openMenu} className="theme-btn" aria-label={t("notif.title")} style={{ position: "relative" }}>
-        🔔
+        <Icon e="🔔" size={20} />
         {total > 0 && (
           <span style={{ position: "absolute", top: -3, right: -3, minWidth: 16, height: 16, borderRadius: 8, background: "#e74c3c", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", boxShadow: "0 0 0 2px var(--dark)" }}>
             {total > 99 ? "99+" : total}
@@ -115,7 +116,7 @@ export default function NotificationBell() {
           {!loaded ? (
             <div style={{ padding: 22, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>{t("notif.loading")}</div>
           ) : !hasAny ? (
-            <div style={{ padding: 26, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>🎉 {t("notif.caughtUp")}</div>
+            <div style={{ padding: 26, textAlign: "center", color: "var(--gray)", fontSize: 13 }}><Icon e="🎉" size={15} color="#58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
           ) : (
             <div style={{ maxHeight: 360, overflowY: "auto" }}>
               {/* personal notifications */}
@@ -124,7 +125,7 @@ export default function NotificationBell() {
                 return (
                   <Link key={n.id} href={meta.href} onClick={() => setOpen(false)}
                     style={{ display: "flex", alignItems: "flex-start", gap: 11, padding: "11px 14px", borderBottom: "1px solid rgba(128,128,128,0.1)", textDecoration: "none" }}>
-                    <span style={{ fontSize: 16 }}>{meta.icon}</span>
+                    <Icon e={meta.icon} size={16} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: n.is_read ? 500 : 700, color: "var(--white)" }}>{t(meta.key)}</div>
                       <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 1 }}>{detailOf(n)}</div>
@@ -140,7 +141,7 @@ export default function NotificationBell() {
                 return (
                   <Link key={`ops-${i}`} href={meta.href} onClick={() => setOpen(false)}
                     style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderBottom: i < ops.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none", textDecoration: "none" }}>
-                    <span style={{ fontSize: 16 }}>{meta.icon}</span>
+                    <Icon e={meta.icon} size={16} />
                     <span style={{ flex: 1, fontSize: 13, color: "var(--white)" }}>{t(meta.key, { n: it.count })}</span>
                     <span style={{ color: "var(--gray)", fontSize: 16 }}>›</span>
                   </Link>

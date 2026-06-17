@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getAuditLog } from "@/lib/queries/admin";
 
@@ -26,7 +27,7 @@ export default function AuditPage() {
 
   return (
     <div style={{ maxWidth: 620, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>🔒 {t("profile.auditLog")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("audit.subtitle")}</p>
 
       {loading ? (

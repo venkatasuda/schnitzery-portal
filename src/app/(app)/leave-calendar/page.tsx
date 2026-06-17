@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import { getTeamLeave } from "@/lib/queries/leave";
 import { CardSkeleton } from "@/components/Skeleton";
 
@@ -28,13 +29,13 @@ export default function LeaveCalendarPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📆 Team Leave Calendar</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📆" size={22} /> Team Leave Calendar</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Approved upcoming time off across the team.</p>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : leave.length === 0 ? (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}>☀️<br />No upcoming leave booked.</div>
+        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}><Icon e="☀️" size={28} color="#9a8f8f" /><br />No upcoming leave booked.</div>
       ) : (
         Object.entries(byMonth).map(([month, items]) => (
           <div key={month} style={{ marginBottom: 18 }}>

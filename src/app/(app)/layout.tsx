@@ -7,6 +7,7 @@ import NotificationBell from "@/components/NotificationBell";
 import AttendanceSync from "@/components/AttendanceSync";
 import ToastHost from "@/components/Toast";
 import LanguageProvider from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import LanguageToggle from "@/components/LanguageToggle";
 import { getLocale } from "@/lib/i18n/server";
 
@@ -50,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <div className="header-right">
           <span className="header-name">{profile?.full_name || user?.email}</span>
-          {isManager && <Link href="/search" aria-label="Search" style={{ fontSize: 18, textDecoration: "none", lineHeight: 1 }}>🔍</Link>}
+          {isManager && <Link href="/search" aria-label="Search" style={{ display: "inline-flex", textDecoration: "none", lineHeight: 1 }}><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
           <LanguageToggle />
           <ThemeToggle />

@@ -11,6 +11,7 @@ import QrScanner from "./QrScanner";
 import SyncStatus from "@/components/SyncStatus";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 export default function AttendancePage() {
   const { t } = useLang();
@@ -249,9 +250,9 @@ export default function AttendancePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">🕐 {t("att.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🕐" size={22} /> {t("att.title")}</div>
       <SyncStatus />
-      <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>✏️ {t("corr.request")}</Link>
+      <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}><Icon e="✏️" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("corr.request")}</Link>
       <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
       <div className="card" style={{ padding: 24 }}>
@@ -267,7 +268,7 @@ export default function AttendancePage() {
             <div style={{ textAlign: "center", marginBottom: 6 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, letterSpacing: 1.5, color: statusColor }}>
                 <span style={{ width: 9, height: 9, borderRadius: "50%", background: statusColor, boxShadow: clockedIn ? `0 0 10px ${statusColor}` : "none" }} />
-                {statusEmoji} {statusLabel}
+                <Icon e={statusEmoji} size={14} color={statusColor} /> {statusLabel}
               </span>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5 }}>
                 {clockedIn ? (onBreak ? t("att.subOnBreak") : t("att.subWorking")) : t("att.subReady")}
@@ -379,14 +380,14 @@ export default function AttendancePage() {
         </div>
       )}
 
-      <button onClick={toggleHistory} style={historyToggle}>📅  {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
+      <button onClick={toggleHistory} style={historyToggle}><Icon e="📅" size={15} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
 
       {showHistory && (
         <div style={{ marginTop: 14 }}>
           {/* week / month tabs */}
           <div className="hub-tabs">
-            <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}>📅 {t("att.weekLabel")}</button>
-            <button className={`hub-tab${histTab === "month" ? " active" : ""}`} onClick={() => switchHistTab("month")}>🗓 {t("att.monthLabel")}</button>
+            <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}><Icon e="📅" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("att.weekLabel")}</button>
+            <button className={`hub-tab${histTab === "month" ? " active" : ""}`} onClick={() => switchHistTab("month")}><Icon e="🗓" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("att.monthLabel")}</button>
           </div>
 
           {/* days worked + hours stats */}
@@ -407,7 +408,7 @@ export default function AttendancePage() {
             <CardSkeleton rows={3} />
           ) : history.length === 0 ? (
             <div className="card" style={{ color: "var(--gray)", fontSize: 13, padding: 30, textAlign: "center" }}>
-              <div style={{ fontSize: 26, marginBottom: 6 }}>📭</div>
+              <div style={{ marginBottom: 6 }}><Icon e="📭" size={28} color="var(--gray)" /></div>
               {histTab === "week" ? t("att.noRecordsWeek") : t("att.noRecordsMonth")}
             </div>
           ) : (
@@ -422,7 +423,7 @@ export default function AttendancePage() {
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>
-                    {t("att.recordIn")} {fmtTime(s.clock_in)} → {t("att.recordOut")} {fmtTime(s.clock_out)}{bmin > 0 && ` · ☕ ${bmin} ${t("att.minBreak")}`}
+                    {t("att.recordIn")} {fmtTime(s.clock_in)} → {t("att.recordOut")} {fmtTime(s.clock_out)}{bmin > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}> · <Icon e="☕" size={11} /> {bmin} {t("att.minBreak")}</span>}
                   </div>
                 </div>
               );

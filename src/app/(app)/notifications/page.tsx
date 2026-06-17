@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { getNotificationHistory, markAllNotificationsRead } from "@/lib/queries/notifications";
 import { CardSkeleton } from "@/components/Skeleton";
 
@@ -79,7 +80,7 @@ export default function NotificationsPage() {
     <div className="fade-up">
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{ flex: 1 }}>
-          <div className="page-title">🔔 {t("notif.center")}</div>
+          <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔔" size={22} /> {t("notif.center")}</div>
         </div>
         {unread > 0 && <button onClick={markRead} style={{ padding: "8px 12px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.22)", borderRadius: 10, color: "var(--gold)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{t("notif.markAllRead")}</button>}
       </div>
@@ -94,7 +95,7 @@ export default function NotificationsPage() {
       {loading ? (
         <CardSkeleton rows={4} />
       ) : filtered.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}>🎉 {t("notif.caughtUp")}</div>
+        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon e="🎉" size={16} color="#58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
       ) : (
         groups.map((g) => (
           <div key={g.label} style={{ marginBottom: 12 }}>
@@ -104,7 +105,7 @@ export default function NotificationsPage() {
                 const meta = NOTIF[n.type] || { key: "notif.title", icon: "🔔", href: "/" };
                 return (
                   <Link key={n.id} href={meta.href} className="card" style={{ display: "flex", alignItems: "flex-start", gap: 11, padding: 12, textDecoration: "none" }}>
-                    <span style={{ fontSize: 17 }}>{meta.icon}</span>
+                    <Icon e={meta.icon} size={18} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: n.is_read ? 500 : 700, color: "var(--white)" }}>{t(meta.key)}</div>
                       {n.message && <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 2 }}>{n.message}</div>}

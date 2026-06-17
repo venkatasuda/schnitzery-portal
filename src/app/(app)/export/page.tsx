@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getPayrollSummary, setPayrollSettings, setPayrollApproval } from "@/lib/queries/payroll";
 import { toast } from "@/components/Toast";
@@ -114,14 +115,14 @@ export default function PayrollExportPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">💶 {t("pay.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="💶" size={22} /> {t("pay.title")}</div>
       <div className="page-sub">{t("pay.subtitle")}</div>
 
       <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <label style={{ fontSize: 12, color: "var(--gray)" }}>{t("pay.month")}</label>
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ ...inp, width: "auto" }} />
         <div style={{ flex: 1 }} />
-        <button onClick={() => setShowRules((v) => !v)} style={{ padding: "8px 12px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 13, cursor: "pointer" }}>⚙ {t("pay.rules")}</button>
+        <button onClick={() => setShowRules((v) => !v)} style={{ padding: "8px 12px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 13, cursor: "pointer" }}><Icon e="⚙" size={14} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("pay.rules")}</button>
       </div>
 
       {showRules && (
@@ -140,13 +141,13 @@ export default function PayrollExportPage() {
       {!loading && rows.length > 0 && (
         run.status === "approved" ? (
           <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid #1e8449" }}>
-            <span style={{ fontSize: 18 }}>✅</span>
+            <Icon e="✅" size={18} color="#58d68d" />
             <div style={{ flex: 1, fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}</div>
             <button onClick={() => toggleApproval(false)} disabled={busy} style={{ padding: "7px 12px", background: "var(--dark3)", color: "var(--gray)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>{t("pay.reopenBtn")}</button>
           </div>
         ) : (
           <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid #b9770e" }}>
-            <span style={{ fontSize: 18 }}>📝</span>
+            <Icon e="📝" size={18} color="var(--gold)" />
             <div style={{ flex: 1, fontSize: 13 }}>{t("pay.notApproved")}</div>
             <button onClick={() => toggleApproval(true)} disabled={busy} style={{ padding: "8px 14px", background: "#1e8449", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("pay.approveBtn")}</button>
           </div>

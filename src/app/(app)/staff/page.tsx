@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getStaffList, updateStaff } from "@/lib/queries/people";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier"];
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
@@ -97,7 +98,7 @@ export default function StaffPage() {
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>👥 {t("staff.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
         {loading ? t("common.loading") : t("staff.memberCount", { n: staff.length })}
       </p>

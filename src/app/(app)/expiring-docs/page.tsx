@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getDocumentsDashboard } from "@/lib/queries/documents";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -79,7 +80,7 @@ export default function ExpiringDocsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📑 {t("exp.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📑" size={22} /> {t("exp.title")}</div>
       <div className="page-sub">{t("exp.subtitle")}</div>
 
       {loading ? (
@@ -122,7 +123,7 @@ export default function ExpiringDocsPage() {
               <div className="card" style={{ padding: 8 }}>
                 {missing.map((m, i) => (
                   <Link key={`${m.userId}-${m.docType}`} href={`/staff/${m.userId}`} style={rowLink(i < missing.length - 1)}>
-                    <span style={{ fontSize: 18 }}>⚠️</span>
+                    <Icon e="⚠️" size={18} color="#e8a35a" />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{m.name}</div>
                       <div style={{ fontSize: 12, color: "var(--gray)" }}>{typeLabel(m.docType)}</div>
@@ -141,7 +142,7 @@ export default function ExpiringDocsPage() {
                 const info = statusInfo(d.eff, t);
                 return (
                   <Link key={d.id} href={`/staff/${d.user_id}`} style={rowLink(i < docs.length - 1)}>
-                    <span style={{ fontSize: 18 }}>📄</span>
+                    <Icon e="📄" size={18} color="var(--gold)" />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{d.name}</div>
                       <div style={{ fontSize: 12, color: "var(--gray)" }}>{typeLabel(d.doc_type)}</div>
@@ -167,7 +168,7 @@ export default function ExpiringDocsPage() {
 function EmptyOk({ t }: { t: Tf }) {
   return (
     <div className="card" style={{ textAlign: "center", padding: 32 }}>
-      <div style={{ fontSize: 30, marginBottom: 8 }}>✅</div>
+      <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="#58d68d" /></div>
       <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("exp.nothing")}</div>
       <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("exp.nothingSub")}</div>
     </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { getGeofence, setGeofence, listBranchStaff, grantOverride, getLocationFlags, type GeofenceMode } from "@/lib/queries/geofence";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -77,11 +78,11 @@ export default function GeofencePage() {
     { key: "required", label: t("geo.modeRequired"), hint: t("geo.modeRequiredHint") },
   ];
 
-  if (loading) return <div className="fade-up"><div className="page-title">📍 {t("geo.title")}</div><CardSkeleton rows={4} /></div>;
+  if (loading) return <div className="fade-up"><div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📍" size={22} /> {t("geo.title")}</div><CardSkeleton rows={4} /></div>;
 
   if (!canEdit) return (
     <div className="fade-up">
-      <div className="page-title">📍 {t("geo.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📍" size={22} /> {t("geo.title")}</div>
       <div className="page-sub">{t("geo.subtitle")}</div>
       <div className="card" style={{ padding: 16 }}>{t("geo.managersOnly")}</div>
     </div>
@@ -91,7 +92,7 @@ export default function GeofencePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📍 {t("geo.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📍" size={22} /> {t("geo.title")}</div>
       <div className="page-sub">{branchName} · {t("geo.subtitle")}</div>
 
       {/* MODE */}
@@ -170,7 +171,7 @@ export default function GeofencePage() {
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{f.name}</div>
                   <div style={{ fontSize: 11, color: "var(--gray)" }}>{f.date}</div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#e67e22" }}>📍 {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#e67e22" }}><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
               </div>
             ))}
           </div>

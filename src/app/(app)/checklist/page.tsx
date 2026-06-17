@@ -5,6 +5,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getTodayChecklist, addChecklistTask, toggleTask, deleteTask } from "@/lib/queries/operations";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 export default function ChecklistPage() {
   const { t } = useLang();
@@ -56,7 +57,7 @@ export default function ChecklistPage() {
         <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
           <button onClick={() => toggle(t)} disabled={busyId === t.id} style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, cursor: "pointer",
             background: t.done ? "#27ae60" : "transparent", border: t.done ? "none" : "2px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 14 }}>
-            {t.done ? "✓" : ""}
+            {t.done ? <Icon e="✓" size={14} /> : ""}
           </button>
           <span style={{ flex: 1, fontSize: 14, color: t.done ? "#6f6565" : "#fff", textDecoration: t.done ? "line-through" : "none" }}>{t.task}</span>
           {canManage && <button onClick={() => del(t.id)} disabled={busyId === t.id} style={{ background: "none", border: "none", color: "#ec7063", cursor: "pointer", fontSize: 16 }}>×</button>}
@@ -67,7 +68,7 @@ export default function ChecklistPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>✅ {t("checklist.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("checklist.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
         {loading ? t("checklist.subLoading") : t("checklist.doneToday", { done: doneCount, total: tasks.length })}
       </p>

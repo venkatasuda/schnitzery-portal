@@ -8,6 +8,7 @@ import { getCorrectionApprovals, decideCorrection } from "@/lib/queries/correcti
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 type Kind = "leave" | "swap" | "attendance" | "correction";
 type Item = { kind: Kind; id: string; icon: string; name: string; detail: string };
@@ -93,22 +94,22 @@ export default function ApprovalsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">✅ {t("approvals.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("approvals.title")}</div>
       <div className="page-sub">{t("approvals.subtitle")}</div>
 
       <div className="hub-tabs">
         <button className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>
-        <button className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}>🌴 {t("approvals.tabLeave")} {count("leave") || ""}</button>
-        <button className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}>🔄 {t("approvals.tabSwaps")} {count("swap") || ""}</button>
-        <button className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}>🕐 {t("approvals.tabTime")} {count("attendance") || ""}</button>
-        <button className={`hub-tab${filter === "correction" ? " active" : ""}`} onClick={() => setFilter("correction")}>✏️ {t("corr.inbox")} {count("correction") || ""}</button>
+        <button className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}><Icon e="🌴" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabLeave")} {count("leave") || ""}</button>
+        <button className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}><Icon e="🔄" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabSwaps")} {count("swap") || ""}</button>
+        <button className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}><Icon e="🕐" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabTime")} {count("attendance") || ""}</button>
+        <button className={`hub-tab${filter === "correction" ? " active" : ""}`} onClick={() => setFilter("correction")}><Icon e="✏️" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("corr.inbox")} {count("correction") || ""}</button>
       </div>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : shown.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 34 }}>
-          <div style={{ fontSize: 30, marginBottom: 8 }}>🎉</div>
+          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={32} color="#58d68d" /></div>
           <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
           <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("approvals.caughtUp")}</div>
         </div>
@@ -118,13 +119,13 @@ export default function ApprovalsPage() {
             const busy = busyId === item.kind + item.id;
             return (
               <div key={item.kind + item.id} className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: 14 }}>
-                <span style={{ fontSize: 20 }}>{item.icon}</span>
+                <Icon e={item.icon} size={20} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{item.name}</div>
                   <div style={{ fontSize: 12, color: "var(--gray)" }}>{item.detail}</div>
                 </div>
-                <button onClick={() => decide(item, true)} disabled={busy} style={{ padding: "8px 12px", background: "#1e6b3f", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}>✓</button>
-                <button onClick={() => decide(item, false)} disabled={busy} style={{ padding: "8px 12px", background: "var(--dark3)", color: "#ec7063", border: "1px solid rgba(231,76,60,0.3)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}>✕</button>
+                <button onClick={() => decide(item, true)} disabled={busy} style={{ padding: "8px 12px", background: "#1e6b3f", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✓" size={16} /></button>
+                <button onClick={() => decide(item, false)} disabled={busy} style={{ padding: "8px 12px", background: "var(--dark3)", color: "#ec7063", border: "1px solid rgba(231,76,60,0.3)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✕" size={16} /></button>
               </div>
             );
           })}

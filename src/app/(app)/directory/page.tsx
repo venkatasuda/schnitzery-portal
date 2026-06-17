@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getDirectory } from "@/lib/queries/people";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 const TEAM_COLORS: Record<string, string> = {
   Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60", Cashier: "#9b59b6",
@@ -31,7 +32,7 @@ export default function DirectoryPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📇 {t("directory.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📇" size={22} /> {t("directory.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("directory.subtitle")}</p>
 
       <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}
@@ -52,9 +53,9 @@ export default function DirectoryPage() {
               <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")}</div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              {p.phone && <a href={`tel:${p.phone}`} style={iconBtn} title={t("directory.call")}>📞</a>}
-              {p.phone && <a href={`https://wa.me/${p.phone.replace(/[^0-9]/g, "")}`} target="_blank" style={iconBtn} title="WhatsApp">💬</a>}
-              {p.email && <a href={`mailto:${p.email}`} style={iconBtn} title={t("directory.email")}>✉️</a>}
+              {p.phone && <a href={`tel:${p.phone}`} style={iconBtn} title={t("directory.call")}><Icon e="📞" size={16} /></a>}
+              {p.phone && <a href={`https://wa.me/${p.phone.replace(/[^0-9]/g, "")}`} target="_blank" style={iconBtn} title="WhatsApp"><Icon e="💬" size={16} /></a>}
+              {p.email && <a href={`mailto:${p.email}`} style={iconBtn} title={t("directory.email")}><Icon e="✉️" size={16} /></a>}
             </div>
           </div>
         ))

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { getDashboardStats } from "@/lib/queries/admin";
@@ -25,7 +26,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ maxWidth: 760, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>📊 {t("dash.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("dash.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 18 }}>{t("dash.subtitle")}</p>
 
       {loading ? (
@@ -46,10 +47,10 @@ export default function DashboardPage() {
           <div style={{ ...card }}>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{t("dash.quickActions")}</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <QuickLink href="/ops">📡 {t("ops.title")}</QuickLink>
+              <QuickLink href="/ops"><Icon e="📡" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("ops.title")}</QuickLink>
               <QuickLink href="/roster">{t("dash.buildRoster")}</QuickLink>
               <QuickLink href="/announcements">{t("home.postAnnouncement")}</QuickLink>
-              <QuickLink href="/export">📤 {t("profile.payrollExport")}</QuickLink>
+              <QuickLink href="/export"><Icon e="📤" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("profile.payrollExport")}</QuickLink>
               <QuickLink href="/settings">{t("dash.settings")}</QuickLink>
             </div>
           </div>
@@ -62,7 +63,7 @@ export default function DashboardPage() {
 function StatCard({ icon, value, label, color, href }: any) {
   return (
     <Link href={href} style={{ ...card, textDecoration: "none", display: "block" }}>
-      <div style={{ fontSize: 18, marginBottom: 6 }}>{icon}</div>
+      <div style={{ marginBottom: 6 }}><Icon e={icon} size={20} color={color} /></div>
       <div style={{ fontSize: 28, fontWeight: 700, color }}>{value}</div>
       <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 2 }}>{label}</div>
     </Link>

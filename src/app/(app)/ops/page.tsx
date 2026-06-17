@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { getOpsDashboard, getOpsFilters } from "@/lib/queries/ops-dashboard";
 import { CardSkeleton } from "@/components/Skeleton";
 
@@ -59,7 +60,7 @@ export default function OpsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📡 {t("ops.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📡" size={22} /> {t("ops.title")}</div>
       <div className="page-sub">{t("ops.subtitle")}{data?.asOf ? ` · ${t("ops.asOf")} ${fmtClock(data.asOf)}` : ""}</div>
 
       {/* FILTERS */}
@@ -145,7 +146,7 @@ export default function OpsPage() {
 function Metric({ icon, value, label, color }: { icon: string; value: any; label: string; color: string }) {
   return (
     <div className="card" style={{ padding: 12, textAlign: "center" }}>
-      <div style={{ fontSize: 15, marginBottom: 3 }}>{icon}</div>
+      <div style={{ marginBottom: 3 }}><Icon e={icon} size={18} color={color} /></div>
       <div style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1.1 }}>{value}</div>
       <div style={{ fontSize: 10.5, color: "var(--gray)", marginTop: 3 }}>{label}</div>
     </div>

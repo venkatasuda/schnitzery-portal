@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getMyHours } from "@/lib/queries/timepay";
 
@@ -29,7 +30,7 @@ export default function HoursPage() {
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2 }}>⏱ My Hours</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⏱" size={22} /> My Hours</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Your worked hours this month.</p>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>

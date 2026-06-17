@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getMyLeaveBalance } from "@/lib/queries/leave-balance";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 // Staff "My Day" hub — groups the three planning features under one nav button
 // using the old app's hub-tab pattern, so the bottom nav stays at 4 tidy items.
@@ -16,21 +17,21 @@ export default function MyDayPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📅 {t("myday.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📅" size={22} /> {t("myday.title")}</div>
       <div className="page-sub">{t("myday.subtitle")}</div>
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "avail" ? " active" : ""}`} onClick={() => setTab("avail")}>
-          📋 {t("myday.tabAvail")}
+          <Icon e="📋" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabAvail")}
         </button>
         <button className={`hub-tab${tab === "timeoff" ? " active" : ""}`} onClick={() => setTab("timeoff")}>
-          🌴 {t("myday.tabTimeOff")}
+          <Icon e="🌴" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabTimeOff")}
         </button>
         <button className={`hub-tab${tab === "hours" ? " active" : ""}`} onClick={() => setTab("hours")}>
-          ⏱ {t("myday.tabHours")}
+          <Icon e="⏱" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabHours")}
         </button>
         <button className={`hub-tab${tab === "work" ? " active" : ""}`} onClick={() => setTab("work")}>
-          🧰 {t("myday.tabWork")}
+          <Icon e="🧰" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabWork")}
         </button>
       </div>
 
@@ -54,7 +55,7 @@ export default function MyDayPage() {
           {bal && (
             <div className="card" style={{ marginBottom: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--white)" }}>🌴 {t("myday.vacationYear", { year: bal.year })}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--white)" }}><Icon e="🌴" size={13} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.vacationYear", { year: bal.year })}</span>
                 <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{t("myday.daysLeft", { n: bal.remaining })}</span>
               </div>
               <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, overflow: "hidden" }}>
@@ -123,7 +124,7 @@ export default function MyDayPage() {
 function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
-      <div className="feature-icon" style={{ background: grad }}>{icon}</div>
+      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
       <div style={{ flex: 1 }}>
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>

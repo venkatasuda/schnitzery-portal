@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { getCurrentClockCode } from "@/lib/queries/clockcode";
 
 // MANAGER DISPLAY — show this on a tablet/screen at the restaurant.
@@ -52,7 +53,7 @@ export default function ClockDisplayPage() {
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", textAlign: "center" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 4 }}>
-        📲 {t("cd.title")}
+        <Icon e="📲" size={24} style={{ verticalAlign: "-3px", marginRight: 8 }} /> {t("cd.title")}
       </h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 24 }}>
         {t("cd.subtitle")}

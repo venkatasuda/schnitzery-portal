@@ -6,6 +6,7 @@ import {
   getMyShifts, getWeekStart, getStaffForSwap, submitSwap, getMySwaps,
 } from "@/lib/queries/schedule";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TEAM_COLORS: Record<string, string> = {
@@ -74,7 +75,7 @@ export default function SchedulePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📅 {t("shifts.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📅" size={22} /> {t("shifts.title")}</div>
       <div className="page-sub">{weekLabel || t("common.loading")}</div>
 
       {/* TABS */}
@@ -119,7 +120,7 @@ export default function SchedulePage() {
             <CardSkeleton rows={3} />
           ) : shifts.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>🗓</div>{t("shifts.noShifts")}
+              <div style={{ marginBottom: 6 }}><Icon e="🗓" size={28} color="var(--gray)" /></div>{t("shifts.noShifts")}
             </div>
           ) : (
             <div className="card">
