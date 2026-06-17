@@ -350,6 +350,7 @@ export const messages = {
     },
     act: {
       title: "Action Center", subtitle: "Everything that needs your attention",
+      alertsTitle: "Needs your attention", alertLate: "{name} — late {n}× this week", alertAbsent: "{name} — missed {n} shifts this week", alertLowAtt: "{name} — attendance at {n}%",
       open: "Open Action Center", needAttention: "items need attention",
       allClear: "All clear", allClearSub: "Nothing needs your attention right now.",
       approvals: "Pending approvals", corrections: "Attendance corrections", noShows: "Missing attendance (no-shows)",
@@ -384,6 +385,8 @@ export const messages = {
       productivity: "Productivity", salesPerHour: "Sales / labor h", laborCostPct: "Labor cost % of sales", totalSales: "Sales",
       noSales: "No sales entered for this period.", laborLink: "Enter sales",
       trendTitle: "Labor hours per day", teamTitle: "Hours by team", otTrend: "Overtime trend (6 months)",
+      staffPerf: "Staff performance", staffPerfHint: "Lowest attendance shown first", noStaffData: "No staff activity in this period.",
+      colEmployee: "Employee", colAtt: "Att %", colLate: "Late", colHours: "Hours", absShort: "abs", avgShort: "ø",
     },
     pay: {
       title: "Payroll", subtitle: "Monthly hours, broken down and ready to export",
@@ -908,6 +911,7 @@ export const messages = {
     },
     act: {
       title: "Aktionszentrale", subtitle: "Alles, was deine Aufmerksamkeit braucht",
+      alertsTitle: "Erfordert Aufmerksamkeit", alertLate: "{name} — {n}× zu spät diese Woche", alertAbsent: "{name} — {n} Schichten verpasst diese Woche", alertLowAtt: "{name} — Anwesenheit bei {n}%",
       open: "Aktionszentrale öffnen", needAttention: "Punkte zu beachten",
       allClear: "Alles erledigt", allClearSub: "Aktuell ist nichts zu tun.",
       approvals: "Offene Freigaben", corrections: "Korrekturen", noShows: "Fehlende Anwesenheit (No-Shows)",
@@ -942,6 +946,8 @@ export const messages = {
       productivity: "Produktivität", salesPerHour: "Umsatz / Std.", laborCostPct: "Personalkosten % vom Umsatz", totalSales: "Umsatz",
       noSales: "Kein Umsatz für diesen Zeitraum erfasst.", laborLink: "Umsatz erfassen",
       trendTitle: "Arbeitsstunden pro Tag", teamTitle: "Stunden nach Team", otTrend: "Überstunden-Trend (6 Monate)",
+      staffPerf: "Mitarbeiterleistung", staffPerfHint: "Niedrigste Anwesenheit zuerst", noStaffData: "Keine Mitarbeiteraktivität in diesem Zeitraum.",
+      colEmployee: "Mitarbeiter", colAtt: "Anw. %", colLate: "Verspätet", colHours: "Stunden", absShort: "Fehlt", avgShort: "ø",
     },
     pay: {
       title: "Lohnabrechnung", subtitle: "Monatsstunden, aufgeschlüsselt und exportbereit",
