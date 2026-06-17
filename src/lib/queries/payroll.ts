@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinMonth } from "@/lib/time/berlinDate";
 
 // ============================================================================
 // PAYROLL ENGINE — per-employee monthly hour breakdown for a branch.
@@ -96,7 +97,7 @@ async function getMgr() {
   const { data: p } = await supabase.from("users").select("role, branch_id, full_name").eq("id", user.id).single();
   return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null, name: p?.full_name ?? null };
 }
-function thisMonth() { return new Date().toISOString().slice(0, 7); }
+function thisMonth() { return berlinMonth(); }
 function monthBounds(ym: string) {
   const [y, m] = ym.split("-").map(Number);
   return { start: `${ym}-01`, next: new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10) };

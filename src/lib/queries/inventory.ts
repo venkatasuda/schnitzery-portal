@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 
 // ============================================================
 // INVENTORY
@@ -22,7 +23,7 @@ async function getMe() {
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+function todayStr() { return berlinToday(); }
 
 // ── Get the product catalog (master list) for my branch ──
 export async function getProducts() {

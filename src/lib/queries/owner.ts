@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 
 // ============================================================
 // OWNER MULTI-BRANCH LAYER (branch_owner + brand_owner + super_admin)
@@ -21,7 +22,7 @@ async function getMe() {
 function isOwner(role?: string | null) {
   return ["branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+function todayStr() { return berlinToday(); }
 
 // ── List the branches this owner can see (with franchise name) ──
 export async function getMyBranches() {

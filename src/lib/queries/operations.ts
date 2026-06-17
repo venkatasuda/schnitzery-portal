@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 
 // ============================================================
 // OPERATIONS — checklists, incidents, performance notes + recognition
@@ -25,7 +26,7 @@ async function getMe() {
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+function todayStr() { return berlinToday(); }
 
 // ─────────────── CHECKLISTS ───────────────
 

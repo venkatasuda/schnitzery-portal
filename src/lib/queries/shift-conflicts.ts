@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 
 // ============================================================================
@@ -34,7 +35,7 @@ function addDays(s: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 function parseModel(s: string) { const p = String(s).split(/[–—-]/).map((x) => x.trim()); return { start: p[0] || "", end: p[1] || "" }; }
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => berlinToday();
 
 export async function getShiftConflicts(opts: { weeks?: number } = {}) {
   const weeks = Math.max(1, Math.min(opts.weeks ?? 2, 6));

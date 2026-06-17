@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
 
 // ============================================================
 // LIVE ATTENDANCE + OVERTIME + APPROVALS — manager/owner views.
@@ -20,8 +21,8 @@ function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 
-function todayStr() { return new Date().toISOString().slice(0, 10); }
-function thisMonth() { return new Date().toISOString().slice(0, 7); } // YYYY-MM
+function todayStr() { return berlinToday(); }
+function thisMonth() { return berlinMonth(); } // YYYY-MM
 
 // Month "YYYY-MM" → { start: "YYYY-MM-01", next: first day of next month }
 function monthBounds(ym: string) {

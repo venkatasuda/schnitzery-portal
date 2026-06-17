@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 
 // ============================================================
 // LEAVE REQUESTS + MANAGER APPROVALS (leave + swaps)
@@ -117,7 +118,7 @@ export async function getTeamLeave() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", leave: [] };
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = berlinToday();
   const { data, error } = await supabase
     .from("leave_requests")
     .select("*, users:user_id (full_name)")

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
@@ -28,7 +29,7 @@ function dayNameOf(dateStr: string): string {
   return DAYS[(js + 6) % 7];
 }
 function parseModel(s: string) { const p = String(s).split(/[–—-]/).map((x) => x.trim()); return { start: p[0] || "", end: p[1] || "" }; }
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => berlinToday();
 
 async function getMe() {
   const supabase = await createClient();

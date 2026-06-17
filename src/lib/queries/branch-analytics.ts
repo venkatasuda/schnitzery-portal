@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 
 // ============================================================================
@@ -40,7 +41,7 @@ function dayNameOf(s: string): string {
 }
 function parseModel(s: string) { const p = String(s).split(/[–—-]/).map((x) => x.trim()); return { start: p[0] || "", end: p[1] || "" }; }
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => berlinToday();
 
 function windowFor(period: string, date: string) {
   const [Y, M] = date.split("-").map(Number);
