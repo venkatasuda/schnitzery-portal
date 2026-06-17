@@ -52,11 +52,11 @@ const MAP: Record<string, LucideIcon> = {
   "→": ArrowRight, "←": ArrowLeft, "↗": ArrowUpRight, "↔": ArrowLeftRight, "›": ChevronRight,
 };
 
-export default function Icon({ e, size = 20, color = "currentColor", className, strokeWidth = 2, fill }: {
-  e: string; size?: number; color?: string; className?: string; strokeWidth?: number; fill?: string;
+export default function Icon({ e, size = 20, color = "currentColor", className, strokeWidth = 2, fill, style }: {
+  e: string; size?: number; color?: string; className?: string; strokeWidth?: number; fill?: string; style?: React.CSSProperties;
 }) {
-  const C = MAP[(e || "").trim()] || Circle;
-  return <C size={size} color={color} strokeWidth={strokeWidth} className={className} {...(fill ? { fill } : {})} />;
+  const C = MAP[(e || "").replace(/[\uFE00-\uFE0F\u200D]/g, "").trim()] || Circle;
+  return <C size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} {...(fill ? { fill } : {})} />;
 }
 
 // status dots keep their semantic color regardless of surrounding text

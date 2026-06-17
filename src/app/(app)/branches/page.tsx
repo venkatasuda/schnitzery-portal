@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { getBranchStats } from "@/lib/queries/owner";
@@ -31,7 +32,7 @@ export default function BranchesPage() {
 
   return (
     <div>
-      <h1 className="page-title">🏢 {roleLabel}</h1>
+      <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🏢" size={22} /> {roleLabel}</h1>
       <p className="page-sub">{t("branches.subtitle", { n: totals?.branches || 0 })}</p>
 
       {loading ? (

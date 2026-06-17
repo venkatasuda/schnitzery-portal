@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { submitCorrection, listMyCorrections, cancelCorrection } from "@/lib/queries/corrections";
 import { getMyHistory } from "@/lib/queries/attendance";
 import { toast } from "@/components/Toast";
@@ -98,7 +99,7 @@ export default function CorrectionsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">✏️ {t("corr.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="✏️" size={22} /> {t("corr.title")}</div>
 
       {/* REQUEST FORM */}
       <div className="section-label">{t("corr.request")}</div>
@@ -110,7 +111,7 @@ export default function CorrectionsPage() {
             border: `1px solid ${type === ty.key ? "var(--gold)" : "rgba(128,128,128,0.18)"}`,
             color: "var(--white)", fontSize: 12.5, fontWeight: 600, textAlign: "left",
           }}>
-            <span style={{ fontSize: 16 }}>{ty.icon}</span>{typeLabel(ty.key)}
+            <Icon e={ty.icon} size={16} />{typeLabel(ty.key)}
           </button>
         ))}
       </div>

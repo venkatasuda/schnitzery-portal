@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/Toast";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 // Shared profile footer for every role: Light Mode (reuses the same theme
 // mechanism as the header toggle) + a working Change Password via Supabase auth.
@@ -70,7 +71,7 @@ export default function ProfileSettings() {
           onClick={() => setOpen((o) => !o)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 10px", background: "none", border: "none", cursor: "pointer", color: "var(--white)", fontSize: 14, fontWeight: 600 }}
         >
-          <span>🔒 {t("settings.changePassword")}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon e="🔒" size={14} /> {t("settings.changePassword")}</span>
           <span style={{ color: "var(--gray)" }}>{open ? "▲" : "▼"}</span>
         </button>
 

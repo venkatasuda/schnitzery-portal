@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getLaborSummary, setDailySales, getRecentSales, getStaffWages, setStaffWage } from "@/lib/queries/labor";
 import { toast } from "@/components/Toast";
@@ -63,7 +64,7 @@ export default function LaborPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">💶 {t("lab.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="💶" size={22} /> {t("lab.title")}</div>
       <div className="page-sub">{t("lab.subtitle")}</div>
 
       {/* KPI */}

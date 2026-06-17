@@ -6,6 +6,7 @@ import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TEAMS = Object.keys(SHIFT_MODEL); // Manager, Preparation, Kitchen
@@ -103,7 +104,7 @@ export default function RosterPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📋 {t("roster.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📋" size={22} /> {t("roster.title")}</div>
       <div className="page-sub">{t("roster.subtitle", { week: weekLabel || "…" })}</div>
 
       {/* week nav + save */}

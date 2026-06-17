@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import Icon from "@/components/Icon";
 import { getScheduleComparison } from "@/lib/queries/schedule-compare";
 import { CardSkeleton } from "@/components/Skeleton";
 
@@ -60,7 +61,7 @@ export default function ComparePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title">📊 {t("cmp.title")}</div>
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("cmp.title")}</div>
       <div className="page-sub">{t("cmp.subtitle")}</div>
 
       {/* week nav */}
