@@ -385,7 +385,7 @@ export const messages = {
       productivity: "Productivity", salesPerHour: "Sales / labor h", laborCostPct: "Labor cost % of sales", totalSales: "Sales",
       noSales: "No sales entered for this period.", laborLink: "Enter sales",
       trendTitle: "Labor hours per day", teamTitle: "Hours by team", otTrend: "Overtime trend (6 months)",
-      staffPerf: "Staff performance", staffPerfHint: "Lowest attendance shown first", noStaffData: "No staff activity in this period.",
+      today: "Today", present: "Present", colCost: "Cost", laborByTeam: "Labor cost by team", colTeam: "Team", shiftStats: "Shift analytics", mostWorked: "Most worked", topOvertime: "Most overtime", swaps: "Shift swaps", missed: "Missed shifts", staffPerf: "Staff performance", staffPerfHint: "Lowest attendance shown first", noStaffData: "No staff activity in this period.",
       colEmployee: "Employee", colAtt: "Att %", colLate: "Late", colHours: "Hours", absShort: "abs", avgShort: "ø",
     },
     pay: {
@@ -946,7 +946,7 @@ export const messages = {
       productivity: "Produktivität", salesPerHour: "Umsatz / Std.", laborCostPct: "Personalkosten % vom Umsatz", totalSales: "Umsatz",
       noSales: "Kein Umsatz für diesen Zeitraum erfasst.", laborLink: "Umsatz erfassen",
       trendTitle: "Arbeitsstunden pro Tag", teamTitle: "Stunden nach Team", otTrend: "Überstunden-Trend (6 Monate)",
-      staffPerf: "Mitarbeiterleistung", staffPerfHint: "Niedrigste Anwesenheit zuerst", noStaffData: "Keine Mitarbeiteraktivität in diesem Zeitraum.",
+      today: "Heute", present: "Anwesend", colCost: "Kosten", laborByTeam: "Personalkosten nach Team", colTeam: "Team", shiftStats: "Schicht-Analyse", mostWorked: "Meiste Stunden", topOvertime: "Meiste Überstunden", swaps: "Schichttausch", missed: "Verpasste Schichten", staffPerf: "Mitarbeiterleistung", staffPerfHint: "Niedrigste Anwesenheit zuerst", noStaffData: "Keine Mitarbeiteraktivität in diesem Zeitraum.",
       colEmployee: "Mitarbeiter", colAtt: "Anw. %", colLate: "Verspätet", colHours: "Stunden", absShort: "Fehlt", avgShort: "ø",
     },
     pay: {

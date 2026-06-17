@@ -21,6 +21,8 @@ export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [otTrend, setOtTrend] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
+  const [today, setToday] = useState<any>(null);
+  const [swaps, setSwaps] = useState(0);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
 
@@ -30,6 +32,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!scope) return;
     getOvertimeTrend({ branchId: scope.canPickBranch ? branch : null, months: 6 }).then((r) => { if (r.ok) setOtTrend(r.trend || []); });
+    getBranchAnalytics({ period: "daily", branchId: scope.canPickBranch ? branch : null }).then((r) => { setToday(r.ok ? r : null); });
   }, [branch, scope]);
 
   const load = useCallback(() => {
@@ -39,7 +42,7 @@ export default function AnalyticsPage() {
       else if (r.error?.includes("Managers")) setDenied(true);
       setLoading(false);
     });
-    getStaffPerformance({ period, date: anchor, branchId: scope?.canPickBranch ? branch : null }).then((r) => { setStaff(r.ok ? r.rows : []); });
+    getStaffPerformance({ period, date: anchor, branchId: scope?.canPickBranch ? branch : null }).then((r) => { setStaff(r.ok ? r.rows : []); setSwaps(r.ok ? (r.swapCount || 0) : 0); });
   }, [period, anchor, branch, scope]);
   useEffect(() => { if (scope) load(); }, [load, scope]);
 
@@ -48,11 +51,29 @@ export default function AnalyticsPage() {
   const m = data?.metrics;
   const clr = (v: number, dir: "up" | "down", good: number, ok: number) => dir === "up" ? (v >= good ? GREEN : v >= ok ? AMBER : RED) : (v <= good ? GREEN : v <= ok ? AMBER : RED);
   const sel: React.CSSProperties = { padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 13 };
+  const teamRows: any[] = Object.values(staff.reduce((acc: any, s: any) => { const k = s.team || "—"; (acc[k] = acc[k] || { team: k, hours: 0, cost: 0 }); acc[k].hours += s.totalHours; acc[k].cost += s.cost; return acc; }, {})).sort((a: any, b: any) => b.cost - a.cost);
+  const mostWorked = staff.reduce((m: any, s: any) => (s.totalHours > (m?.totalHours ?? -1) ? s : m), null as any);
+  const topOT = staff.reduce((m: any, s: any) => (s.otHours > (m?.otHours ?? -1) ? s : m), null as any);
+  const missedTotal = staff.reduce((n: number, s: any) => n + (s.absent || 0), 0);
 
   return (
     <div className="fade-up">
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("bana.title")}</div>
       <div className="page-sub">{data?.scope ? `${data.scope} · ` : ""}{t("bana.subtitle")}</div>
+
+      {today?.ok && (
+        <div className="card" style={{ marginBottom: 12, padding: 14 }}>
+          <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}><Icon e="📅" size={14} color="var(--gold)" /> {t("bana.today")}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            <Kpi value={today.metrics.totalSales ? `€${today.metrics.totalSales.toFixed(0)}` : "—"} label={t("bana.totalSales")} color={GOLD} />
+            <Kpi value={`${today.metrics.attended}/${today.metrics.scheduled}`} label={t("bana.present")} color={GOLD} />
+            <Kpi value={`${today.metrics.attendancePct}%`} label={t("bana.kAttendance")} color={clr(today.metrics.attendancePct, "up", 95, 85)} />
+            <Kpi value={today.metrics.laborCost ? `€${today.metrics.laborCost.toFixed(0)}` : "—"} label={t("bana.kLaborCost")} color={GOLD} />
+            <Kpi value={`${today.metrics.latePct}%`} label={t("bana.kLate")} color={clr(today.metrics.latePct, "down", 10, 20)} />
+            <Kpi value={today.metrics.laborCostPct != null ? `${today.metrics.laborCostPct}%` : "—"} label={t("bana.laborCostPct")} color={GOLD} />
+          </div>
+        </div>
+      )}
 
       {/* period toggle */}
       <div className="hub-tabs">
@@ -169,7 +190,8 @@ export default function AnalyticsPage() {
                     <th style={{ textAlign: "left", padding: "6px 8px 6px 0", fontWeight: 600 }}>{t("bana.colEmployee")}</th>
                     <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colAtt")}</th>
                     <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colLate")}</th>
-                    <th style={{ textAlign: "right", padding: "6px 0 6px 6px", fontWeight: 600 }}>{t("bana.colHours")}</th>
+                    <th style={{ textAlign: "right", padding: "6px 6px", fontWeight: 600 }}>{t("bana.colHours")}</th>
+                    <th style={{ textAlign: "right", padding: "6px 0 6px 6px", fontWeight: 600 }}>{t("bana.colCost")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,9 +209,13 @@ export default function AnalyticsPage() {
                           <span style={{ color: s.late > 0 ? "#e8a35a" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
                           {s.absent > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
                         </td>
-                        <td style={{ textAlign: "right", padding: "8px 0 8px 6px" }}>
+                        <td style={{ textAlign: "right", padding: "8px 6px" }}>
                           <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.totalHours}h</div>
                           {s.avgShiftHours > 0 && <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("bana.avgShort")} {s.avgShiftHours}h</div>}
+                        </td>
+                        <td style={{ textAlign: "right", padding: "8px 0 8px 6px" }}>
+                          <div style={{ color: "var(--gold)", fontWeight: 600 }}>{s.cost ? `€${s.cost.toFixed(0)}` : "—"}</div>
+                          {s.otHours > 0 && <div style={{ fontSize: 10, color: "#e8a35a" }}>+{s.otHours}h OT</div>}
                         </td>
                       </tr>
                     );
@@ -198,6 +224,40 @@ export default function AnalyticsPage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {!loading && staff.length > 0 && (
+        <div className="card" style={{ marginBottom: 14 }}>
+          <div className="card-title" style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}><Icon e="💶" size={16} color="var(--gold)" /> {t("bana.laborByTeam")}</div>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+            <thead><tr style={{ color: "var(--gray)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.4px" }}>
+              <th style={{ textAlign: "left", padding: "6px 8px 6px 0", fontWeight: 600 }}>{t("bana.colTeam")}</th>
+              <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colHours")}</th>
+              <th style={{ textAlign: "right", padding: "6px 0 6px 6px", fontWeight: 600 }}>{t("bana.colCost")}</th>
+            </tr></thead>
+            <tbody>
+              {teamRows.map((tr: any) => (
+                <tr key={tr.team} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <td style={{ padding: "8px 8px 8px 0", color: "var(--white)", fontWeight: 600, textTransform: "capitalize" }}>{tr.team}</td>
+                  <td style={{ textAlign: "center", padding: "8px 6px", color: "var(--white)" }}>{tr.hours.toFixed(1)}h</td>
+                  <td style={{ textAlign: "right", padding: "8px 0 8px 6px", color: "var(--gold)", fontWeight: 600 }}>€{tr.cost.toFixed(0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {!loading && staff.length > 0 && (
+        <div className="card" style={{ marginBottom: 14 }}>
+          <div className="card-title" style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗓️" size={16} color="var(--gold)" /> {t("bana.shiftStats")}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <Kpi value={mostWorked ? `${mostWorked.totalHours}h` : "—"} label={t("bana.mostWorked")} color={GOLD} sub={mostWorked ? mostWorked.name : undefined} />
+            <Kpi value={topOT && topOT.otHours > 0 ? `${topOT.otHours}h` : "—"} label={t("bana.topOvertime")} color={topOT && topOT.otHours > 0 ? "#e8a35a" : "var(--gray)"} sub={topOT && topOT.otHours > 0 ? topOT.name : undefined} />
+            <Kpi value={swaps} label={t("bana.swaps")} color={GOLD} />
+            <Kpi value={missedTotal} label={t("bana.missed")} color={missedTotal > 0 ? "#ec7063" : "#58d68d"} />
+          </div>
         </div>
       )}
 
