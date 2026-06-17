@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS } from "@/lib/queries/schedule-constants";
 
 // ============================================================================
@@ -13,7 +14,7 @@ import { DAYS } from "@/lib/queries/schedule-constants";
 const OWNER = ["brand_owner", "super_admin"];
 const LATE_MIN = 5;
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => berlinToday();
 function mondayOfDate(s: string): string {
   const [Y, M, D] = s.split("-").map(Number);
   const d = new Date(Date.UTC(Y, M - 1, D)); const js = d.getUTCDay();

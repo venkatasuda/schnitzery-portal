@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday } from "@/lib/time/berlinDate";
 
 // ============================================================
 // ATTENDANCE QUERIES — the data layer for clock in/out.
@@ -27,12 +28,9 @@ async function getMe() {
   return { supabase, user, branchId: profile?.branch_id ?? null };
 }
 
-// Today's date as YYYY-MM-DD (UTC — matches the DB functions).
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-// What's my current status today? Returns the latest open/closed session.
+// What's my current status? Finds the OPEN session by status (active/on-break)
+// rather than by today's date, so it stays correct for shifts that span midnight.
+// Falls back to today's (Berlin) latest session for the "hours today" display.
 export async function getMyStatus() {
   const { supabase, user } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
@@ -41,7 +39,6 @@ export async function getMyStatus() {
     .from("attendance_logs")
     .select("*")
     .eq("user_id", user.id)
-    .eq("work_date", todayStr())
     .order("created_at", { ascending: false })
     .limit(1);
 
@@ -50,8 +47,10 @@ export async function getMyStatus() {
   const latest = data && data.length ? data[0] : null;
   const clockedIn = !!latest && (latest.status === "active" || latest.status === "on-break");
   const onBreak = !!latest && latest.status === "on-break";
+  // Show the latest session if it's still open, or if it belongs to today (Berlin).
+  const session = latest && (clockedIn || latest.work_date === berlinToday()) ? latest : null;
 
-  return { ok: true, clockedIn, onBreak, session: latest };
+  return { ok: true, clockedIn, onBreak, session };
 }
 
 // Clock in — server-stamped via the clock_in() database function.
