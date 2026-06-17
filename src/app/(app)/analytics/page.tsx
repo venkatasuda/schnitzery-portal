@@ -5,7 +5,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
-import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend } from "@/lib/queries/branch-analytics";
+import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend, getStaffPerformance } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 
 const GOLD = "#d4a847", BLUE = "#3498db", GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063";
@@ -20,6 +20,7 @@ export default function AnalyticsPage() {
   const [branch, setBranch] = useState<string>("all");
   const [data, setData] = useState<any>(null);
   const [otTrend, setOtTrend] = useState<any[]>([]);
+  const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
 
@@ -38,6 +39,7 @@ export default function AnalyticsPage() {
       else if (r.error?.includes("Managers")) setDenied(true);
       setLoading(false);
     });
+    getStaffPerformance({ period, date: anchor, branchId: scope?.canPickBranch ? branch : null }).then((r) => { setStaff(r.ok ? r.rows : []); });
   }, [period, anchor, branch, scope]);
   useEffect(() => { if (scope) load(); }, [load, scope]);
 
@@ -151,6 +153,52 @@ export default function AnalyticsPage() {
             </ChartCard>
           )}
         </>
+      )}
+
+      {!loading && data?.ok && (
+        <div className="card" style={{ marginBottom: 14 }}>
+          <div className="card-title" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={16} /> {t("bana.staffPerf")}</div>
+          <div style={{ fontSize: 10.5, color: "var(--gray)", marginBottom: 10 }}>{t("bana.staffPerfHint")}</div>
+          {staff.length === 0 ? (
+            <div style={{ color: "var(--gray)", fontSize: 12, textAlign: "center", padding: "14px 0" }}>{t("bana.noStaffData")}</div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ color: "var(--gray)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.4px" }}>
+                    <th style={{ textAlign: "left", padding: "6px 8px 6px 0", fontWeight: 600 }}>{t("bana.colEmployee")}</th>
+                    <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colAtt")}</th>
+                    <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colLate")}</th>
+                    <th style={{ textAlign: "right", padding: "6px 0 6px 6px", fontWeight: 600 }}>{t("bana.colHours")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staff.map((s) => {
+                    const att = s.attendancePct as number | null;
+                    const attColor = att == null ? "var(--gray)" : att >= 90 ? "#58d68d" : att >= 80 ? "#e8a35a" : "#ec7063";
+                    return (
+                      <tr key={s.id} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <td style={{ padding: "8px 8px 8px 0" }}>
+                          <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.name}</div>
+                          <div style={{ fontSize: 10, color: "var(--gray)", textTransform: "capitalize" }}>{s.team}</div>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "8px 6px", color: attColor, fontWeight: 700 }}>{att == null ? "—" : `${att}%`}</td>
+                        <td style={{ textAlign: "center", padding: "8px 6px" }}>
+                          <span style={{ color: s.late > 0 ? "#e8a35a" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
+                          {s.absent > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
+                        </td>
+                        <td style={{ textAlign: "right", padding: "8px 0 8px 6px" }}>
+                          <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.totalHours}h</div>
+                          {s.avgShiftHours > 0 && <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("bana.avgShort")} {s.avgShiftHours}h</div>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
 
       <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>

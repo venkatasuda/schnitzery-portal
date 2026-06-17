@@ -262,3 +262,101 @@ export async function getOvertimeTrend(opts: { branchId?: string | null; months?
   });
   return { ok: true as const, trend, scope: isOwner && targets.length > 1 ? "All branches" : (accMap[targets[0]] || "") };
 }
+// ── Per-employee performance: attendance %, late count, absences, avg/total hours ──
+// Reuses the same roster + log matching as getBranchAnalytics, bucketed per employee.
+export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | "monthly"; date?: string; branchId?: string | null } = {}) {
+  const period = opts.period || "weekly";
+  const date = opts.date || todayStr();
+  const { supabase, user, role, branchId: myBranch } = await getMe();
+  const blank = { ok: false as const, period, ...windowFor(period, date), scope: "", rows: [] as any[] };
+  if (!user) return { ...blank, error: "Not logged in." };
+  if (!MGR.includes(role ?? "")) return { ...blank, error: "Managers only." };
+
+  const isOwner = OWNER.includes(role ?? "");
+  const { data: accBranches } = await supabase.from("branches").select("id, name");
+  const accMap: Record<string, string> = {}; (accBranches || []).forEach((b) => { accMap[b.id] = b.name; });
+
+  let targets: string[]; let scope: string;
+  if (isOwner && (!opts.branchId || opts.branchId === "all")) { targets = (accBranches || []).map((b) => b.id); scope = "All branches"; }
+  else if (isOwner && opts.branchId && accMap[opts.branchId]) { targets = [opts.branchId]; scope = accMap[opts.branchId]; }
+  else { targets = myBranch ? [myBranch] : []; scope = myBranch ? (accMap[myBranch] || "") : ""; }
+  if (!targets.length) return { ...blank, error: "No branch." };
+
+  const { from, to } = windowFor(period, date);
+  const days = daysBetween(from, to);
+  const weeks = [...new Set(days.map(mondayOfDate))];
+
+  // shift-time resolution (model < global < per-branch)
+  const { data: stRows } = await supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true);
+  const tm: Record<string, { start: string; end: string }> = {};
+  for (const t of Object.keys(SHIFT_MODEL)) for (const s of (SHIFT_MODEL as any)[t]) { const d = parseModel(s.time); tm[`g|${t}|${s.shift}`] = { start: d.start, end: d.end }; }
+  for (const r of stRows || []) if (r.branch_id == null) tm[`g|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
+  for (const r of stRows || []) if (r.branch_id) tm[`${r.branch_id}|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
+  const resolveTimes = (br: string, team: string, shift: string) => tm[`${br}|${team}|${shift}`] || tm[`g|${team}|${shift}`] || null;
+
+  const { data: rosters } = await supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks);
+  const { data: logs } = await supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to);
+  const { data: users } = await supabase.from("users").select("id, full_name, team, status").in("branch_id", targets);
+
+  type S = { name: string; team: string; scheduled: number; attended: number; late: number; absent: number; workedMins: number; shifts: number };
+  const stat: Record<string, S> = {};
+  (users || []).forEach((u) => { if (u.status === "inactive") return; stat[u.id] = { name: u.full_name || "—", team: u.team || "—", scheduled: 0, attended: 0, late: 0, absent: 0, workedMins: 0, shifts: 0 }; });
+
+  // roster index: branch|date -> entries[]
+  const sched: Record<string, any[]> = {};
+  for (const r of rosters || []) {
+    const rd = (r.roster_data as any) || {};
+    for (const d of days) {
+      if (mondayOfDate(d) !== r.week_start) continue;
+      const list = rd[dayNameOf(d)] || [];
+      if (list.length) sched[`${r.branch_id}|${d}`] = (sched[`${r.branch_id}|${d}`] || []).concat(list);
+    }
+  }
+  const logIx: Record<string, any> = {};
+  for (const l of logs || []) logIx[`${l.branch_id}|${l.work_date}|${l.user_id}`] = l;
+
+  // scheduled-side: attendance / lateness / absences per employee
+  for (const br of targets) for (const d of days) {
+    for (const e of sched[`${br}|${d}`] || []) {
+      const s = stat[e.user_id]; if (!s) continue;
+      s.scheduled++;
+      const times = resolveTimes(br, e.team, e.shift);
+      const startMs = times ? zonedToUtcMs(d, times.start) : null;
+      const log = logIx[`${br}|${d}|${e.user_id}`];
+      if (log && log.clock_in) {
+        s.attended++;
+        const lateMins = startMs != null ? Math.max(0, Math.round((new Date(log.clock_in).getTime() - startMs) / 60000)) : 0;
+        if (lateMins > GRACE_LATE) s.late++;
+      } else {
+        s.absent++;
+      }
+    }
+  }
+  // worked-time side: total + avg shift hours (all worked time, incl. unscheduled)
+  for (const l of logs || []) {
+    const s = stat[l.user_id]; if (!s) continue;
+    const gross = l.duration_mins || 0; if (gross <= 0) continue;
+    s.workedMins += Math.max(0, gross - breakMins(l.breaks));
+    s.shifts++;
+  }
+
+  const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
+  const rows = Object.entries(stat)
+    .filter(([, s]) => s.scheduled > 0 || s.workedMins > 0)
+    .map(([id, s]) => ({
+      id, name: s.name, team: s.team,
+      attendancePct: s.scheduled > 0 ? pct(s.attended, s.scheduled) : null,
+      late: s.late, absent: s.absent,
+      avgShiftHours: s.shifts > 0 ? Math.round((s.workedMins / s.shifts / 60) * 10) / 10 : 0,
+      totalHours: Math.round((s.workedMins / 60) * 10) / 10,
+      scheduled: s.scheduled,
+    }))
+    // lowest attendance first surfaces who needs attention; null (no scheduled shifts) sinks to the bottom
+    .sort((a, b) => {
+      const av = a.attendancePct == null ? 1000 : a.attendancePct;
+      const bv = b.attendancePct == null ? 1000 : b.attendancePct;
+      return av !== bv ? av - bv : b.totalHours - a.totalHours;
+    });
+
+  return { ok: true as const, period, from, to, scope, rows };
+}
