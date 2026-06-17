@@ -296,11 +296,16 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
 
   const { data: rosters } = await supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks);
   const { data: logs } = await supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to);
-  const { data: users } = await supabase.from("users").select("id, full_name, team, status").in("branch_id", targets);
+  const { data: users } = await supabase.from("users").select("id, full_name, team, status, hourly_wage").in("branch_id", targets);
+  const { data: psettings } = await supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets);
+  const otThresh: Record<string, number> = {}; targets.forEach((b) => { otThresh[b] = 8 * 60; });
+  (psettings || []).forEach((p) => { otThresh[p.branch_id] = Number(p.ot_daily_hours ?? 8) * 60; });
+  const wage: Record<string, number | null> = {}; (users || []).forEach((u) => { wage[u.id] = u.hourly_wage ?? null; });
 
-  type S = { name: string; team: string; scheduled: number; attended: number; late: number; absent: number; workedMins: number; shifts: number };
+  type S = { name: string; team: string; scheduled: number; attended: number; late: number; absent: number; workedMins: number; shifts: number; cost: number };
   const stat: Record<string, S> = {};
-  (users || []).forEach((u) => { if (u.status === "inactive") return; stat[u.id] = { name: u.full_name || "—", team: u.team || "—", scheduled: 0, attended: 0, late: 0, absent: 0, workedMins: 0, shifts: 0 }; });
+  (users || []).forEach((u) => { if (u.status === "inactive") return; stat[u.id] = { name: u.full_name || "—", team: u.team || "—", scheduled: 0, attended: 0, late: 0, absent: 0, workedMins: 0, shifts: 0, cost: 0 }; });
+  const perDayPaid: Record<string, number> = {};  // user|date|branch -> paid mins (for overtime)
 
   // roster index: branch|date -> entries[]
   const sched: Record<string, any[]> = {};
@@ -336,9 +341,19 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
   for (const l of logs || []) {
     const s = stat[l.user_id]; if (!s) continue;
     const gross = l.duration_mins || 0; if (gross <= 0) continue;
-    s.workedMins += Math.max(0, gross - breakMins(l.breaks));
-    s.shifts++;
+    const paid = Math.max(0, gross - breakMins(l.breaks));
+    s.workedMins += paid; s.shifts++;
+    const w = wage[l.user_id]; if (w != null) s.cost += (paid / 60) * w;
+    perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] = (perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] || 0) + paid;
   }
+  // per-employee overtime: sum of each day's paid minutes over the branch's daily OT threshold
+  const otMins: Record<string, number> = {};
+  for (const k in perDayPaid) { const [uid, , br] = k.split("|"); otMins[uid] = (otMins[uid] || 0) + Math.max(0, perDayPaid[k] - (otThresh[br] || 480)); }
+
+  // shift swaps requested in the window (count, scoped to target branches)
+  const toNext = new Date(to + "T00:00:00Z"); toNext.setUTCDate(toNext.getUTCDate() + 1);
+  const { count: swapCount } = await supabase.from("swap_requests").select("*", { count: "exact", head: true })
+    .in("branch_id", targets).gte("created_at", from).lt("created_at", toNext.toISOString().slice(0, 10));
 
   const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
   const rows = Object.entries(stat)
@@ -349,6 +364,8 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
       late: s.late, absent: s.absent,
       avgShiftHours: s.shifts > 0 ? Math.round((s.workedMins / s.shifts / 60) * 10) / 10 : 0,
       totalHours: Math.round((s.workedMins / 60) * 10) / 10,
+      cost: Math.round(s.cost * 100) / 100,
+      otHours: Math.round(((otMins[id] || 0) / 60) * 10) / 10,
       scheduled: s.scheduled,
     }))
     // lowest attendance first surfaces who needs attention; null (no scheduled shifts) sinks to the bottom
@@ -358,5 +375,70 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
       return av !== bv ? av - bv : b.totalHours - a.totalHours;
     });
 
-  return { ok: true as const, period, from, to, scope, rows };
+  return { ok: true as const, period, from, to, scope, rows, swapCount: swapCount || 0 };
+}
+
+// ── Branch comparison (owners): attendance %, labor hours & cost per branch over a period ──
+// Bulk queries across all branches (no per-branch loop of getBranchAnalytics).
+export async function getBranchComparison(opts: { period?: "weekly" | "monthly"; date?: string } = {}) {
+  const period = opts.period || "weekly";
+  const date = opts.date || todayStr();
+  const { supabase, user, role } = await getMe();
+  const blank = { ok: false as const, period, ...windowFor(period, date), rows: [] as any[] };
+  if (!user) return { ...blank, error: "Not logged in." };
+  if (!OWNER.includes(role ?? "")) return { ...blank, error: "Owners only." };
+
+  const { data: branches } = await supabase.from("branches").select("id, name").order("name");
+  const targets = (branches || []).map((b) => b.id);
+  if (!targets.length) return { ...blank, error: "No branches." };
+
+  const { from, to } = windowFor(period, date);
+  const days = daysBetween(from, to);
+  const weeks = [...new Set(days.map(mondayOfDate))];
+
+  const [{ data: rosters }, { data: logs }, { data: users }] = await Promise.all([
+    supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks),
+    supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to),
+    supabase.from("users").select("id, branch_id, hourly_wage").in("branch_id", targets),
+  ]);
+  const wage: Record<string, number | null> = {}; (users || []).forEach((u) => { wage[u.id] = u.hourly_wage ?? null; });
+
+  // roster index: branch|date -> entries[]
+  const sched: Record<string, any[]> = {};
+  for (const r of rosters || []) {
+    const rd = (r.roster_data as any) || {};
+    for (const d of days) { if (mondayOfDate(d) !== r.week_start) continue; const list = rd[dayNameOf(d)] || []; if (list.length) sched[`${r.branch_id}|${d}`] = (sched[`${r.branch_id}|${d}`] || []).concat(list); }
+  }
+  const logIx: Record<string, any> = {};
+  for (const l of logs || []) logIx[`${l.branch_id}|${l.work_date}|${l.user_id}`] = l;
+
+  type B = { id: string; name: string; scheduled: number; attended: number; laborMins: number; laborCost: number };
+  const map: Record<string, B> = {};
+  for (const b of branches || []) map[b.id] = { id: b.id, name: b.name, scheduled: 0, attended: 0, laborMins: 0, laborCost: 0 };
+
+  for (const br of targets) for (const d of days) {
+    for (const e of sched[`${br}|${d}`] || []) {
+      const b = map[br]; if (!b) continue;
+      b.scheduled++;
+      const log = logIx[`${br}|${d}|${e.user_id}`];
+      if (log && log.clock_in) b.attended++;
+    }
+  }
+  for (const l of logs || []) {
+    const b = map[l.branch_id]; if (!b) continue;
+    const gross = l.duration_mins || 0; if (gross <= 0) continue;
+    const paid = Math.max(0, gross - breakMins(l.breaks));
+    b.laborMins += paid;
+    const w = wage[l.user_id]; if (w != null) b.laborCost += (paid / 60) * w;
+  }
+
+  const rows = Object.values(map).map((b) => ({
+    id: b.id, name: b.name,
+    attendancePct: b.scheduled > 0 ? Math.round((b.attended / b.scheduled) * 1000) / 10 : null,
+    laborHours: h1(b.laborMins),
+    laborCost: Math.round(b.laborCost),
+    scheduled: b.scheduled, attended: b.attended,
+  })).sort((a, b) => (b.attendancePct == null ? -1 : b.attendancePct) - (a.attendancePct == null ? -1 : a.attendancePct));
+
+  return { ok: true as const, period, from, to, rows };
 }
