@@ -5,6 +5,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getOrgOverview } from "@/lib/queries/org-overview";
+import { getBranchComparison } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 
 const GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063", GOLD = "#d4a847";
@@ -14,6 +15,8 @@ export default function OverviewPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
+  const [cmp, setCmp] = useState<any>(null);
 
   useEffect(() => {
     getOrgOverview().then((r) => {
@@ -22,6 +25,8 @@ export default function OverviewPage() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => { getBranchComparison({ period }).then((r) => setCmp(r.ok ? r : null)); }, [period]);
 
   if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("org.ownersOnly")}</div>;
 
@@ -86,6 +91,37 @@ export default function OverviewPage() {
               </div>
             ))}
           </div>
+          {/* branch comparison (period) */}
+          <div className="section-label" style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <span>{t("org.compareTitle")}</span>
+            <div className="hub-tabs" style={{ margin: 0 }}>
+              {(["weekly", "monthly"] as const).map((p) => (
+                <button key={p} className={`hub-tab${period === p ? " active" : ""}`} onClick={() => setPeriod(p)}>{t(`bana.${p}`)}</button>
+              ))}
+            </div>
+          </div>
+          {cmp?.ok && (
+            <div className="card" style={{ padding: 0, overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead><tr style={{ color: "var(--gray)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.4px" }}>
+                  <th style={{ textAlign: "left", padding: "10px 12px", fontWeight: 600 }}>{t("org.colBranch")}</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", fontWeight: 600 }}>{t("org.colAttendance")}</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", fontWeight: 600 }}>{t("org.colHours")}</th>
+                  <th style={{ textAlign: "right", padding: "10px 12px", fontWeight: 600 }}>{t("org.colCost")}</th>
+                </tr></thead>
+                <tbody>
+                  {cmp.rows.map((b: any) => (
+                    <tr key={b.id} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      <td style={{ padding: "10px 12px", color: "var(--white)", fontWeight: 600 }}>{b.name}</td>
+                      <td style={{ textAlign: "center", padding: "10px 8px", color: rateColor(b.attendancePct), fontWeight: 700 }}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
+                      <td style={{ textAlign: "center", padding: "10px 8px", color: "var(--white)" }}>{b.laborHours}h</td>
+                      <td style={{ textAlign: "right", padding: "10px 12px", color: "var(--gold)", fontWeight: 600 }}>{b.laborCost ? `€${b.laborCost.toFixed(0)}` : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
