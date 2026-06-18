@@ -368,7 +368,7 @@ export const messages = {
       employees: "Employees", branches: "Branches", documents: "Documents", expires: "expires",
     },
     org: {
-      title: "Command Center", subtitle: "All branches at a glance",
+      title: "Command Center", subtitle: "All branches at a glance", compareTitle: "Branch comparison", colBranch: "Branch", colAttendance: "Att %", colHours: "Hours", colCost: "Cost",
       ownersOnly: "This overview is for owners and super admins.",
       branches: "Branches", employees: "Employees", workingNow: "Working now",
       attendanceToday: "Attendance today", issues: "Attention items", expiringDocs: "Expiring docs",
@@ -929,7 +929,7 @@ export const messages = {
       employees: "Mitarbeiter", branches: "Filialen", documents: "Dokumente", expires: "läuft ab",
     },
     org: {
-      title: "Leitstand", subtitle: "Alle Filialen auf einen Blick",
+      title: "Leitstand", subtitle: "Alle Filialen auf einen Blick", compareTitle: "Filialvergleich", colBranch: "Filiale", colAttendance: "Anw. %", colHours: "Stunden", colCost: "Kosten",
       ownersOnly: "Diese Übersicht ist für Inhaber und Super-Admins.",
       branches: "Filialen", employees: "Mitarbeiter", workingNow: "Arbeiten jetzt",
       attendanceToday: "Anwesenheit heute", issues: "Zu beachten", expiringDocs: "Ablaufende Dok.",
