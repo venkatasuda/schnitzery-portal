@@ -4,11 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 
 // ============================================================
-// OWNER MULTI-BRANCH LAYER (branch_owner + brand_owner + super_admin)
-// Relies on RLS: accessible_branch_ids() returns every branch the
-// caller may read (brand_owner/super_admin = all; branch_owner = their
-// franchise's branches). So a plain select on branches returns
-// exactly the owner's scope — no manual branch filtering needed.
+// OWNER MULTI-BRANCH LAYER (brand_owner + super_admin ONLY)
+// branch_owner is a single-branch role and is treated as a manager
+// elsewhere (people / action-center / branch-analytics / org-overview),
+// so it is intentionally excluded here. Relies on RLS:
+// accessible_branch_ids() returns every branch the caller may read
+// (brand_owner/super_admin = all). A plain select on branches returns
+// exactly the owner's scope — but note this layer does NOT add an
+// app-level branch filter, so correctness depends entirely on RLS.
 // ============================================================
 
 async function getMe() {
@@ -20,7 +23,7 @@ async function getMe() {
   return { supabase, user, profile };
 }
 function isOwner(role?: string | null) {
-  return ["branch_owner", "brand_owner", "super_admin"].includes(role || "");
+  return ["brand_owner", "super_admin"].includes(role || "");
 }
 function todayStr() { return berlinToday(); }
 
