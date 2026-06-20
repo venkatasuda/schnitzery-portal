@@ -103,6 +103,9 @@ export const messages = {
       noTasks: "No tasks.", openingTasks: "🌅 Opening Tasks", closingTasks: "🌙 Closing Tasks",
       addTask: "Add a task for today", opening: "Opening", closing: "Closing",
       taskPlaceholder: "e.g. Check fridge temps", taskAdded: "Task added", failAdd: "Failed to add.",
+      kindCheck: "Yes / No", kindNumber: "Reading", readingPlaceholder: "Reading",
+      statusTitle: "Checklist Status", statusSub: "What's done — for the record",
+      notDone: "Not done", by: "by", pickDate: "Date", noTasksDate: "No tasks recorded for this day.",
     },
     directory: {
       title: "Team Directory", subtitle: "Find and contact colleagues.",
@@ -664,6 +667,9 @@ export const messages = {
       noTasks: "Keine Aufgaben.", openingTasks: "🌅 Öffnungsaufgaben", closingTasks: "🌙 Schließaufgaben",
       addTask: "Aufgabe für heute hinzufügen", opening: "Öffnung", closing: "Schließung",
       taskPlaceholder: "z. B. Kühlschranktemperatur prüfen", taskAdded: "Aufgabe hinzugefügt", failAdd: "Hinzufügen fehlgeschlagen.",
+      kindCheck: "Ja / Nein", kindNumber: "Ablesung", readingPlaceholder: "Wert",
+      statusTitle: "Checklisten-Status", statusSub: "Was erledigt ist – für die Aufzeichnung",
+      notDone: "Offen", by: "von", pickDate: "Datum", noTasksDate: "Für diesen Tag sind keine Aufgaben erfasst.",
     },
     directory: {
       title: "Team-Verzeichnis", subtitle: "Kollegen finden und kontaktieren.",

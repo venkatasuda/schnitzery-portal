@@ -1,66 +1,65 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
-import { getTodayChecklist, addChecklistTask, toggleTask, deleteTask } from "@/lib/queries/operations";
+import { getChecklistOversight } from "@/lib/queries/operations";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
-export default function ChecklistPage() {
+// YYYY-MM-DD in Europe/Berlin (business day)
+function berlinTodayStr() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
+
+export default function ChecklistStatusPage() {
   const { t } = useLang();
+  const [date, setDate] = useState(berlinTodayStr());
   const [tasks, setTasks] = useState<any[]>([]);
-  const [canManage, setCanManage] = useState(false);
+  const [summary, setSummary] = useState({ done: 0, total: 0 });
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  // add task
-  const [newTask, setNewTask] = useState("");
-  const [newType, setNewType] = useState("opening");
-
-  async function load() {
-    setLoading(true);
-    const res = await getTodayChecklist();
-    if (res.ok) { setTasks(res.tasks); setCanManage(res.canManage); }
+  async function load(d: string) {
+    setLoading(true); setErr(null);
+    const res = await getChecklistOversight(d);
+    if (res.ok) { setTasks(res.tasks); setSummary({ done: res.done, total: res.total }); }
+    else { setTasks([]); setSummary({ done: 0, total: 0 }); setErr(res.error || ""); }
     setLoading(false);
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(date); }, [date]);
 
-  async function toggle(t: any) {
-    setBusyId(t.id);
-    await toggleTask(t.id, !t.done);
-    setBusyId(null);
-    load();
-  }
-  async function add() {
-    if (!newTask.trim()) return;
-    const res = await addChecklistTask(newType, newTask);
-    if (res.ok) { setNewTask(""); load(); toast(t("checklist.taskAdded"), "success"); } else toast(res.error || t("checklist.failAdd"), "error");
-  }
-  async function del(id: string) {
-    setBusyId(id);
-    await deleteTask(id);
-    setBusyId(null);
-    load();
-  }
+  const opening = tasks.filter((it) => it.type === "opening");
+  const closing = tasks.filter((it) => it.type === "closing");
 
-  const opening = tasks.filter((t) => t.type === "opening");
-  const closing = tasks.filter((t) => t.type === "closing");
-  const doneCount = tasks.filter((t) => t.done).length;
+  const fmtTime = (ts: string | null) => {
+    if (!ts) return "";
+    try { return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); } catch { return ""; }
+  };
 
   const Section = ({ title, items }: { title: string; items: any[] }) => (
     <div style={{ ...card, marginBottom: 12 }}>
       <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{title}</div>
       {items.length === 0 ? (
         <div style={{ fontSize: 13, color: "#6f6565" }}>{t("checklist.noTasks")}</div>
-      ) : items.map((t) => (
-        <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <button onClick={() => toggle(t)} disabled={busyId === t.id} style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, cursor: "pointer",
-            background: t.done ? "#27ae60" : "transparent", border: t.done ? "none" : "2px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 14 }}>
-            {t.done ? <Icon e="✓" size={14} /> : ""}
-          </button>
-          <span style={{ flex: 1, fontSize: 14, color: t.done ? "#6f6565" : "#fff", textDecoration: t.done ? "line-through" : "none" }}>{t.task}</span>
-          {canManage && <button onClick={() => del(t.id)} disabled={busyId === t.id} style={{ background: "none", border: "none", color: "#ec7063", cursor: "pointer", fontSize: 16 }}>×</button>}
+      ) : items.map((it) => (
+        <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            background: it.done ? "#27ae60" : "transparent", border: it.done ? "none" : "2px solid rgba(236,112,99,0.55)" }}>
+            {it.done && <Icon e="✓" size={13} color="#fff" />}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, color: "#fff" }}>{it.task}</div>
+            <div style={{ fontSize: 11, color: it.done ? "#9a8f8f" : "#ec7063", marginTop: 2 }}>
+              {it.done
+                ? `${it.completed_by_name ? `${t("checklist.by")} ${it.completed_by_name}` : ""}${it.completed_at ? ` · ${fmtTime(it.completed_at)}` : ""}`.trim()
+                : t("checklist.notDone")}
+            </div>
+          </div>
+          {it.input_kind === "number" && (
+            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "Georgia, serif", color: it.value ? "#d4a847" : "#6f6565", flexShrink: 0 }}>
+              {it.value || "—"}
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -68,31 +67,26 @@ export default function ChecklistPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("checklist.title")}</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
-        {loading ? t("checklist.subLoading") : t("checklist.doneToday", { done: doneCount, total: tasks.length })}
-      </p>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 14 }}>{t("checklist.statusSub")}</p>
+
+      <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+        <label style={{ fontSize: 13, color: "#9a8f8f", flexShrink: 0 }}>{t("checklist.pickDate")}</label>
+        <input type="date" value={date} max={berlinTodayStr()} onChange={(e) => setDate(e.target.value || berlinTodayStr())} style={{ ...input, flex: 1 }} />
+        {!loading && summary.total > 0 && (
+          <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0, color: summary.done === summary.total ? "#58d68d" : "#d4a847" }}>
+            {summary.done}/{summary.total}
+          </span>
+        )}
+      </div>
 
       {loading && <CardSkeleton rows={4} />}
-
-      {!loading && (
+      {!loading && err && <div style={{ ...card, color: "#ec7063", fontSize: 13 }}>{err}</div>}
+      {!loading && !err && tasks.length === 0 && <div style={{ ...card, color: "#9a8f8f", fontSize: 13 }}>{t("checklist.noTasksDate")}</div>}
+      {!loading && !err && tasks.length > 0 && (
         <>
           <Section title={t("checklist.openingTasks")} items={opening} />
           <Section title={t("checklist.closingTasks")} items={closing} />
-
-          {canManage && (
-            <div style={{ ...card }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{t("checklist.addTask")}</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <select value={newType} onChange={(e) => setNewType(e.target.value)} style={{ ...input, width: 120 }}>
-                  <option value="opening">{t("checklist.opening")}</option>
-                  <option value="closing">{t("checklist.closing")}</option>
-                </select>
-                <input value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} placeholder={t("checklist.taskPlaceholder")} style={{ ...input, flex: 1 }} />
-                <button onClick={add} style={{ ...primaryBtn, width: "auto", padding: "0 18px" }}>{t("common.add")}</button>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>
@@ -101,4 +95,3 @@ export default function ChecklistPage() {
 
 const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };
 const input: React.CSSProperties = { padding: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { padding: "10px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" };
