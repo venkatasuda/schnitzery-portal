@@ -231,12 +231,6 @@ export default function ScheduleHubPage() {
                 <span className="feature-chev">›</span>
               </button>
 
-              <Link href="/export" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***117a65,***REMOVED***16a085)" }}><Icon e="📤" size={22} color="***REMOVED***fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("profile.payrollExport")}</div><div className="feature-sub">{t("profile.payrollExportSub")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-
               <Link href="/noshow" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" }}><Icon e="📋" size={22} color="***REMOVED***fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.availCheck")}</div><div className="feature-sub">{t("schedhub.availCheckSub")}</div></div>
