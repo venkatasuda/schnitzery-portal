@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
-import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
 import AttendanceSync from "@/components/AttendanceSync";
 import ToastHost from "@/components/Toast";
@@ -54,7 +53,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {isManager && <Link href="/search" aria-label="Search" style={{ display: "inline-flex", textDecoration: "none", lineHeight: 1 }}><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
           <LanguageToggle />
-          <ThemeToggle />
           {profile?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />

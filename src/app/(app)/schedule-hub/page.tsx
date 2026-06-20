@@ -201,12 +201,6 @@ export default function ScheduleHubPage() {
           {/* ───────── TOOLS ───────── */}
           {tab === "tools" && (
             <div className="hub-tab-panel active">
-              <Link href="/roster" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📋" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.openEditor")}</div><div className="feature-sub">{t("schedhub.fullEditing")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-
               <Link href="/schedule/compare" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#7d3c98,#af7ac5)" }}><Icon e="📊" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("cmp.title")}</div><div className="feature-sub">{t("cmp.subtitle")}</div></div>

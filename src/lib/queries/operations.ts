@@ -76,6 +76,39 @@ export async function getChecklistOversight(dateStr?: string) {
   return { ok: true, tasks: rows, date: day, total: rows.length, done: rows.filter((t) => t.done).length };
 }
 
+// Per-day completion history for the branch (last `days` days). Owner/manager.
+// Returns only days that actually have tasks recorded.
+export async function getChecklistHistory(days: number = 30) {
+  const { supabase, user, branchId, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in.", days: [] as { date: string; total: number; done: number }[] };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only.", days: [] as { date: string; total: number; done: number }[] };
+  const n = Math.min(Math.max(days, 1), 120);
+  const today = todayStr();
+  const from = new Date(today + "T00:00:00Z");
+  from.setUTCDate(from.getUTCDate() - (n - 1));
+  const fromStr = from.toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("checklists")
+    .select("work_date, done")
+    .eq("branch_id", branchId)
+    .gte("work_date", fromStr)
+    .lte("work_date", today);
+  if (error) return { ok: false, error: error.message, days: [] as { date: string; total: number; done: number }[] };
+
+  const map: Record<string, { total: number; done: number }> = {};
+  for (const r of data || []) {
+    const d = r.work_date as string;
+    if (!map[d]) map[d] = { total: 0, done: 0 };
+    map[d].total++;
+    if (r.done) map[d].done++;
+  }
+  const daysArr = Object.entries(map)
+    .map(([date, c]) => ({ date, total: c.total, done: c.done }))
+    .sort((a, b) => (a.date < b.date ? 1 : -1)); // most recent first
+  return { ok: true, days: daysArr };
+}
+
 // Add a checklist task for today (manager). inputKind: 'check' (yes/no) or 'number' (reading).
 export async function addChecklistTask(type: string, task: string, inputKind: string = "check") {
   const { supabase, user, branchId, profile } = await getMe();

@@ -106,6 +106,7 @@ export const messages = {
       kindCheck: "Yes / No", kindNumber: "Reading", readingPlaceholder: "Reading",
       statusTitle: "Checklist Status", statusSub: "What's done — for the record",
       notDone: "Not done", by: "by", pickDate: "Date", noTasksDate: "No tasks recorded for this day.",
+      history: "History", historySub: "Recent days — tap to view", allDone: "All done",
     },
     directory: {
       title: "Team Directory", subtitle: "Find and contact colleagues.",
@@ -670,6 +671,7 @@ export const messages = {
       kindCheck: "Ja / Nein", kindNumber: "Ablesung", readingPlaceholder: "Wert",
       statusTitle: "Checklisten-Status", statusSub: "Was erledigt ist – für die Aufzeichnung",
       notDone: "Offen", by: "von", pickDate: "Datum", noTasksDate: "Für diesen Tag sind keine Aufgaben erfasst.",
+      history: "Verlauf", historySub: "Letzte Tage – zum Ansehen tippen", allDone: "Alles erledigt",
     },
     directory: {
       title: "Team-Verzeichnis", subtitle: "Kollegen finden und kontaktieren.",

@@ -282,16 +282,6 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
         <span className="feature-chev">›</span>
       </Link>
 
-      {/* OWNER: branch administration */}
-      {owner && (
-        <>
-          <div className="section-label">{t("home.manage")}</div>
-          <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.peopleTeam")} sub={t("home.peopleTeamSub")} />
-          <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
-          <Shortcut href="/settings-hub" icon="⚙" grad="linear-gradient(135deg,#555,#777)" title={t("home.settings")} sub={t("home.settingsSub")} />
-        </>
-      )}
-
       {/* DAILY OPERATIONS */}
       <div className="section-label">{t("home.dailyOps")}</div>
       <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSubMgr")} />
