@@ -23,7 +23,7 @@ const NOTIF: Record<string, { key: string; icon: string; href: string; cat: stri
   kiosk_offline: { key: "notif.kioskOffline", icon: "🖥️", href: "/kiosks", cat: "system" },
   sync_failure: { key: "notif.syncFailure", icon: "🔄", href: "/ops", cat: "system" },
   attendance_anomaly: { key: "notif.attendanceAnomaly", icon: "⚠️", href: "/ops", cat: "system" },
-  system_error: { key: "notif.systemError", icon: "🛠️", href: "/dashboard", cat: "system" },
+  system_error: { key: "notif.systemError", icon: "🛠️", href: "/", cat: "system" },
 };
 
 export default function NotificationsPage() {

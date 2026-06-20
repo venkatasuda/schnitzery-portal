@@ -138,7 +138,7 @@ export default function OpsPage() {
         </>
       )}
 
-      <Link href="/dashboard" style={{ display: "block", textAlign: "center", marginTop: 16, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>← {t("dash.title")}</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 16, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>← {t("dash.title")}</Link>
     </div>
   );
 }

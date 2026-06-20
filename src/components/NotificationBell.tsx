@@ -37,7 +37,7 @@ const NOTIF: Record<string, { key: string; icon: string; href: string }> = {
   kiosk_offline:       { key: "notif.kioskOffline",      icon: "🖥️", href: "/kiosks" },
   sync_failure:        { key: "notif.syncFailure",       icon: "🔄", href: "/ops" },
   attendance_anomaly:  { key: "notif.attendanceAnomaly", icon: "⚠️", href: "/ops" },
-  system_error:        { key: "notif.systemError",       icon: "🛠️", href: "/dashboard" },
+  system_error:        { key: "notif.systemError",       icon: "🛠️", href: "/" },
 };
 
 const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
