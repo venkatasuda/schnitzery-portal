@@ -46,20 +46,51 @@ export async function getTodayChecklist() {
   return { ok: true, tasks: tasks || [], canManage: isManager(profile?.role), today };
 }
 
-// Add a checklist task for today (manager).
-export async function addChecklistTask(type: string, task: string) {
+// Read-only checklist oversight for owners/managers: every task for a given
+// date with who completed it + when (for inspection history). Defaults to today.
+export async function getChecklistOversight(dateStr?: string) {
+  const { supabase, user, branchId, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in.", tasks: [], date: "", total: 0, done: 0 };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only.", tasks: [], date: "", total: 0, done: 0 };
+  const day = (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) ? dateStr : todayStr();
+
+  const { data: tasks, error } = await supabase
+    .from("checklists")
+    .select("*")
+    .eq("branch_id", branchId)
+    .eq("work_date", day)
+    .order("type").order("id");
+  if (error) return { ok: false, error: error.message, tasks: [], date: day, total: 0, done: 0 };
+
+  // resolve completer names in one extra query (robust; no FK-embed dependency)
+  const ids = [...new Set((tasks || []).map((t) => t.completed_by).filter(Boolean))];
+  const names: Record<string, string> = {};
+  if (ids.length) {
+    const { data: us } = await supabase.from("users").select("id, full_name").in("id", ids);
+    for (const u of us || []) names[u.id] = u.full_name || "—";
+  }
+  const rows = (tasks || []).map((t) => ({
+    ...t,
+    completed_by_name: t.completed_by ? (names[t.completed_by] || "—") : null,
+  }));
+  return { ok: true, tasks: rows, date: day, total: rows.length, done: rows.filter((t) => t.done).length };
+}
+
+// Add a checklist task for today (manager). inputKind: 'check' (yes/no) or 'number' (reading).
+export async function addChecklistTask(type: string, task: string, inputKind: string = "check") {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
   if (!task.trim()) return { ok: false, error: "Task can't be empty." };
+  const kind = inputKind === "number" ? "number" : "check";
   const { error } = await supabase.from("checklists").insert({
-    branch_id: branchId, work_date: todayStr(), type: type || "opening", task, done: false,
+    branch_id: branchId, work_date: todayStr(), type: type || "opening", task, done: false, input_kind: kind,
   });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
 
-// Toggle a task done/undone (any staff).
+// Toggle a yes/no task done/undone (any staff).
 export async function toggleTask(id: string, done: boolean) {
   const { supabase, user } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
@@ -67,6 +98,27 @@ export async function toggleTask(id: string, done: boolean) {
     done,
     completed_by: done ? user.id : null,
     completed_at: done ? new Date().toISOString() : null,
+    ...(done ? {} : { value: null }), // undoing also clears any captured reading
+  }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// Save a reading/value for a number task (any staff). Marks it done with who + when.
+export async function saveTaskValue(id: string, value: string) {
+  const { supabase, user } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  const v = (value ?? "").trim();
+  if (!v) {
+    // empty value = clear it back to not-done
+    const { error } = await supabase.from("checklists").update({
+      value: null, done: false, completed_by: null, completed_at: null,
+    }).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  }
+  const { error } = await supabase.from("checklists").update({
+    value: v, done: true, completed_by: user.id, completed_at: new Date().toISOString(),
   }).eq("id", id);
   if (error) return { ok: false, error: error.message };
   return { ok: true };

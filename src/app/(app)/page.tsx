@@ -225,7 +225,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
         <Stat value={lv.late} label={t("home.statLate")} color={lv.late > 0 ? "***REMOVED***ec7063" : "var(--white)"} />
         <Stat value={fmtH(lv.totalMins)} label={t("home.hours")} color="var(--gold)" />
       </div>
-      <Link href="/checklist" className="feature-card">
+      <Link href={owner ? "/checklist-status" : "/checklist"} className="feature-card">
         <div className="feature-icon" style={{ background: checklistDone ? "linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)" : "linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" }}><Icon e={checklistDone ? "✅" : "📋"} size={22} color="***REMOVED***fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("home.dailyChecklist")} {o.checklistTotal > 0 && <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {o.checklistDone}/{o.checklistTotal}</span>}</div>
