@@ -139,6 +139,11 @@ export default function ProfilePage() {
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.auditLog")}</div><div className="feature-sub">{t("profile.auditLogSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
+          <Link href="/clock-display" className="feature-card">
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📲" size={22} color="#fff" /></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("sh.clockDisplay")}</div><div className="feature-sub">{t("sh.clockDisplaySub")}</div></div>
+            <span className="feature-chev">›</span>
+          </Link>
         </>
       )}
 
