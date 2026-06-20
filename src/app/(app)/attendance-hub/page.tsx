@@ -8,7 +8,7 @@ import {
   getLiveAttendance, getMonthlyOvertime, getAttendanceApprovals, setAttendanceApproval,
 } from "@/lib/queries/live-attendance";
 
-type Tab = "live" | "approval" | "overtime" | "noshow" | "display";
+type Tab = "live" | "approval" | "overtime" | "noshow";
 
 const fmtH = (mins: number) => `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
 const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
@@ -113,7 +113,6 @@ export default function AttendanceHubPage() {
         <button className={`hub-tab${tab === "approval" ? " active" : ""}`} onClick={() => openTab("approval")}>{t("ahub.tabApproval")}</button>
         <button className={`hub-tab${tab === "overtime" ? " active" : ""}`} onClick={() => openTab("overtime")}>{t("ahub.tabOvertime")}</button>
         <button className={`hub-tab${tab === "noshow" ? " active" : ""}`} onClick={() => openTab("noshow")}>{t("ahub.tabNoshow")}</button>
-        <button className={`hub-tab${tab === "display" ? " active" : ""}`} onClick={() => openTab("display")}>{t("ahub.tabDisplay")}</button>
       </div>
 
       {/* ───────── LIVE ───────── */}
@@ -267,20 +266,6 @@ export default function AttendanceHubPage() {
           </Link>
           <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
             {t("ahub.noShowHint")}
-          </div>
-        </div>
-      )}
-
-      {/* ───────── DISPLAY ───────── */}
-      {tab === "display" && (
-        <div className="hub-tab-panel active">
-          <Link href="/clock-display" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📲" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("ahub.clockDisplayScreen")}</div><div className="feature-sub">{t("ahub.clockDisplayScreenSub")}</div></div>
-            <span className="feature-chev">›</span>
-          </Link>
-          <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
-            {t("ahub.displayHint")}
           </div>
         </div>
       )}
