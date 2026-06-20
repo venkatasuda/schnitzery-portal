@@ -16,7 +16,7 @@ import { useLang } from "@/components/LanguageProvider";
 export default function BottomNav({ role }: { role: string }) {
   const path = usePathname();
   const { t } = useLang();
-  const isOwner = ["branch_owner", "brand_owner", "super_admin"].includes(role);
+  const isOwner = ["brand_owner", "super_admin"].includes(role); // HQ only: cross-branch nav with Branches tab
   const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
 
   const staffItems = [

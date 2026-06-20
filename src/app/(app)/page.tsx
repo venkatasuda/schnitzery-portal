@@ -30,7 +30,8 @@ export default async function HomePage() {
   }
   const role = profile?.role || "staff";
   const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
-  const isOwner = ["branch_owner", "brand_owner", "super_admin"].includes(role);
+  const isHQ = ["brand_owner", "super_admin"].includes(role); // cross-branch HQ: Command Center + all branches
+  const isBranchOwner = role === "branch_owner"; // owns one branch: manager toolkit + analytics + branch admin
   const firstName = (profile?.full_name || "there").split(" ")[0];
 
   const hour = new Date().getHours();
@@ -48,7 +49,7 @@ export default async function HomePage() {
   // kick off the document check now so it runs in parallel with the role queries
   const docsP = listMyDocuments();
 
-  if (isOwner) {
+  if (isHQ) {
     const d = await getDashboardStats();
     if (d.ok) ownerStats = d.stats ?? null;
   } else if (isManager) {
@@ -109,10 +110,10 @@ export default async function HomePage() {
 
       {isManager && <StatusStrip />}
 
-      {isOwner ? (
+      {isHQ ? (
         <OwnerDash stats={ownerStats} t={t} />
       ) : isManager ? (
-        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
+        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner} t={t} />
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
       )}
@@ -155,12 +156,12 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
+function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, t }: {
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
   live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; t: Tf;
 }) {
   const clockTitle = onBreak ? t("home.clockOnBreak") : clockedIn ? t("home.clockWorking") : t("home.clockInOut");
   const clockSub = onBreak ? t("home.clockSubBreak") : clockedIn ? t("home.clockSubWorking") : t("home.clockSubIdle");
@@ -181,15 +182,17 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
 
   return (
     <>
-      {/* MY CLOCK — a manager is an employee too */}
-      <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))", marginBottom: 14 }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="🕐" size={22} color="#fff" /></div>
-        <div style={{ flex: 1 }}>
-          <div className="feature-title">{clockTitle}</div>
-          <div className="feature-sub">{clockSub}</div>
-        </div>
-        <span className="feature-chev">›</span>
-      </Link>
+      {/* MY CLOCK — managers are employees too; branch owners are not, so no clock-in for them */}
+      {!owner && (
+        <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))", marginBottom: 14 }}>
+          <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="🕐" size={22} color="#fff" /></div>
+          <div style={{ flex: 1 }}>
+            <div className="feature-title">{clockTitle}</div>
+            <div className="feature-sub">{clockSub}</div>
+          </div>
+          <span className="feature-chev">›</span>
+        </Link>
+      )}
 
       {/* NEEDS ATTENTION */}
       <div className="section-label">{t("home.needsAttention")}</div>
@@ -278,6 +281,16 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, t }: {
         </div>
         <span className="feature-chev">›</span>
       </Link>
+
+      {/* OWNER: branch administration */}
+      {owner && (
+        <>
+          <div className="section-label">{t("home.manage")}</div>
+          <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.peopleTeam")} sub={t("home.peopleTeamSub")} />
+          <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
+          <Shortcut href="/settings-hub" icon="⚙" grad="linear-gradient(135deg,#555,#777)" title={t("home.settings")} sub={t("home.settingsSub")} />
+        </>
+      )}
 
       {/* DAILY OPERATIONS */}
       <div className="section-label">{t("home.dailyOps")}</div>
