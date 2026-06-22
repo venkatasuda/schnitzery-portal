@@ -9,7 +9,7 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
-type Tab = "roster" | "team" | "insights" | "conflicts" | "tools";
+type Tab = "roster" | "insights" | "conflicts" | "tools";
 
 export default function ScheduleHubPage() {
   const { t } = useLang();
@@ -75,7 +75,6 @@ export default function ScheduleHubPage() {
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "roster" ? " active" : ""}`} onClick={() => setTab("roster")}>{t("schedhub.tabRoster")}</button>
-        <button className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>{t("schedhub.tabTeam")}</button>
         <button className={`hub-tab${tab === "insights" ? " active" : ""}`} onClick={() => setTab("insights")}>{t("schedhub.tabInsights")}</button>
         <button className={`hub-tab${tab === "conflicts" ? " active" : ""}`} onClick={() => setTab("conflicts")}>{t("schedhub.tabConflicts")}</button>
         <button className={`hub-tab${tab === "tools" ? " active" : ""}`} onClick={() => setTab("tools")}>{t("schedhub.tabTools")}</button>
@@ -107,27 +106,6 @@ export default function ScheduleHubPage() {
               <Link href="/approvals" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e8449,#27ae60)" }}><Icon e="✅" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.requests")}</div><div className="feature-sub">{t("schedhub.requestsSub")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-            </div>
-          )}
-
-          {/* ───────── TEAM ───────── */}
-          {tab === "team" && (
-            <div className="hub-tab-panel active">
-              <Link href="/staff" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}><Icon e="👥" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("staff.title")}</div><div className="feature-sub">{t("schedhub.staffMgmtSub")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-              <Link href="/directory" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}><Icon e="📇" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("directory.title")}</div><div className="feature-sub">{t("schedhub.directorySub")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-              <Link href="/notes" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#922b21,#c0392b)" }}><Icon e="📝" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.notes")}</div><div className="feature-sub">{t("schedhub.notesSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
             </div>
@@ -210,18 +188,6 @@ export default function ScheduleHubPage() {
               <Link href="/schedule/shift-times" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1f6f54,#27ae60)" }}><Icon e="⏱️" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("shiftcfg.title")}</div><div className="feature-sub">{t("shiftcfg.subtitle")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-
-              <Link href="/kiosks" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#34495e,#5d6d7e)" }}><Icon e="🖥️" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("kioskadm.title")}</div><div className="feature-sub">{t("kioskadm.subtitle")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-
-              <Link href="/geofence" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}><Icon e="📍" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("geo.title")}</div><div className="feature-sub">{t("geo.subtitle")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 

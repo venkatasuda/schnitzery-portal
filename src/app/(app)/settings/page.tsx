@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getBranchSettings, saveBranchSettings } from "@/lib/queries/admin";
@@ -68,6 +69,18 @@ export default function SettingsPage() {
           <div style={{ ...card, marginTop: 16, fontSize: 12, color: "#6f6565" }}>
             {t("set.note")}
           </div>
+
+          <div style={{ marginTop: 20, marginBottom: 8, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: "#9a8f8f", textTransform: "uppercase" }}>{t("set.devicesLocation")}</div>
+          <Link href="/kiosks" className="feature-card">
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#34495e,#5d6d7e)" }}><Icon e="🖥️" size={22} color="#fff" /></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("kioskadm.title")}</div><div className="feature-sub">{t("kioskadm.subtitle")}</div></div>
+            <span className="feature-chev">›</span>
+          </Link>
+          <Link href="/geofence" className="feature-card">
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}><Icon e="📍" size={22} color="#fff" /></div>
+            <div style={{ flex: 1 }}><div className="feature-title">{t("geo.title")}</div><div className="feature-sub">{t("geo.subtitle")}</div></div>
+            <span className="feature-chev">›</span>
+          </Link>
         </>
       )}
     </div>

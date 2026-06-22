@@ -282,6 +282,15 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
         <span className="feature-chev">›</span>
       </Link>
 
+      <Link href="/people-hub" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
+        <Icon e="👥" size={18} color="var(--gold)" />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.peopleTeam")}</div>
+          <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.peopleTeamSub")}</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
+
       {/* DAILY OPERATIONS */}
       <div className="section-label">{t("home.dailyOps")}</div>
       <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSubMgr")} />
