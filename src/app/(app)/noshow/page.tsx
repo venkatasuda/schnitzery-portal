@@ -27,6 +27,10 @@ export default function NoShowPage() {
   useEffect(() => {
     const d = new Date().toISOString().slice(0, 10);
     setDate(d);
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "missing") {
+      setTab("missing");
+      loadMissing();
+    }
   }, []);
 
   async function checkNoShows() {
