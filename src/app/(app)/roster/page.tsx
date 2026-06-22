@@ -24,6 +24,7 @@ export default function RosterPage() {
   const [weekStart, setWeekStart] = useState("");
   const [roster, setRoster] = useState<Roster>({});
   const [staff, setStaff] = useState<any[]>([]);
+  const [avail, setAvail] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [denied, setDenied] = useState(false);
@@ -46,6 +47,7 @@ export default function RosterPage() {
     setWeekStart(res.weekStart || "");
     setRoster(res.roster || {});
     setStaff(res.staff || []);
+    setAvail((res as any).avail || {});
     setLoading(false);
   }
 
@@ -97,6 +99,10 @@ export default function RosterPage() {
   })();
 
   const totalAssigned = DAYS.reduce((sum, d) => sum + (roster[d]?.length || 0), 0);
+
+  // availability helpers for this week
+  const submitted = (uid: string) => !!avail[uid];
+  const availableDay = (uid: string, day: string) => Array.isArray(avail[uid]?.[day]) && avail[uid][day].length > 0;
 
   if (denied) {
     return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("roster.managersOnly")}</div>;
@@ -171,6 +177,9 @@ export default function RosterPage() {
                     <div style={{ flex: 1, fontSize: 13, color: "var(--white)" }}>
                       <b>{e.name}</b> <span style={{ color: "var(--gray)" }}>· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
+                    {submitted(e.user_id) && !availableDay(e.user_id, day) && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
+                    )}
                     <button onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "#ec7063", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
                   </div>
                 ))}
@@ -182,7 +191,10 @@ export default function RosterPage() {
                       <label style={miniLbl}>{t("roster.staff")}</label>
                       <select value={selStaff} onChange={(e) => setSelStaff(e.target.value)} style={miniSelect}>
                         <option value="">{t("roster.select")}</option>
-                        {staff.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+                        {[...staff].sort((a, b) => (availableDay(a.id, day) ? 0 : 1) - (availableDay(b.id, day) ? 0 : 1) || (a.full_name || "").localeCompare(b.full_name || "")).map((p) => {
+                          const tag = availableDay(p.id, day) ? t("roster.avAvailable") : submitted(p.id) ? t("roster.avNot") : t("roster.avNone");
+                          return <option key={p.id} value={p.id}>{p.full_name} — {tag}</option>;
+                        })}
                       </select>
                     </div>
                     <div style={{ flex: "1 1 110px" }}>

@@ -208,6 +208,7 @@ export const messages = {
       weekGlance: "Week at a Glance · {n} shifts", assigned: "{n} assigned", add: "+ Add",
       staff: "Staff", select: "Select…", team: "Team", shift: "Shift", noOne: "No one assigned.",
       pickStaff: "Pick a staff member.", saved: "Roster saved", saveFailed: "Save failed.",
+      notAvail: "not available", avAvailable: "✓ available", avNot: "not available", avNone: "no availability set",
     },
     shiftNames: { Morning: "Morning", Mid: "Mid", Evening: "Evening", Night: "Night" },
     avail: {
@@ -780,6 +781,7 @@ export const messages = {
       weekGlance: "Wochenüberblick · {n} Schichten", assigned: "{n} zugewiesen", add: "+ Hinzufügen",
       staff: "Mitarbeiter", select: "Wählen…", team: "Team", shift: "Schicht", noOne: "Niemand zugewiesen.",
       pickStaff: "Wähle einen Mitarbeiter.", saved: "Dienstplan gespeichert", saveFailed: "Speichern fehlgeschlagen.",
+      notAvail: "nicht verfügbar", avAvailable: "✓ verfügbar", avNot: "nicht verfügbar", avNone: "keine Verfügbarkeit",
     },
     shiftNames: { Morning: "Früh", Mid: "Mitte", Evening: "Spät", Night: "Nacht" },
     avail: {

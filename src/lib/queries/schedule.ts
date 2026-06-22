@@ -107,11 +107,21 @@ export async function getRoster(weekStart?: string) {
     .eq("branch_id", branchId)
     .order("full_name");
 
+  // availability submitted for THIS week → { [user_id]: { Monday: ["Morning",...], ... } }
+  const { data: avRows } = await supabase
+    .from("availability")
+    .select("user_id, days")
+    .eq("branch_id", branchId)
+    .eq("week_start", ws);
+  const avail: Record<string, any> = {};
+  for (const a of avRows || []) avail[a.user_id] = a.days || {};
+
   return {
     ok: true,
     weekStart: ws,
     roster: (data?.roster_data as any) || {},
     staff: staff || [],
+    avail,
   };
 }
 
