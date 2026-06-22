@@ -260,6 +260,7 @@ export const messages = {
       gpsOff: "Off — no location check", gpsWarn: "Warn — flag if far away", gpsRequired: "Required — block if not on-site",
       save: "💾 Save Settings", saved: "✅ Settings saved!", failed: "Failed.",
       note: "Note: GPS enforcement on clock-in is wired into settings here; the location check itself activates with the geo feature in a later phase.",
+      devicesLocation: "Devices & Location",
     },
     sh: {
       title: "Settings", subtitle: "Configuration · reports · tools", tabConfig: "⚙️ Config", tabReports: "📊 Reports", tabTools: "🔧 Tools",
@@ -825,6 +826,7 @@ export const messages = {
       gpsOff: "Aus — keine Standortprüfung", gpsWarn: "Warnen — markieren, wenn weit entfernt", gpsRequired: "Erforderlich — blockieren, wenn nicht vor Ort",
       save: "💾 Einstellungen speichern", saved: "✅ Einstellungen gespeichert!", failed: "Fehlgeschlagen.",
       note: "Hinweis: Die GPS-Durchsetzung beim Einstempeln ist hier in den Einstellungen verankert; die Standortprüfung selbst wird mit der Geo-Funktion in einer späteren Phase aktiviert.",
+      devicesLocation: "Geräte & Standort",
     },
     sh: {
       title: "Einstellungen", subtitle: "Konfiguration · Berichte · Werkzeuge", tabConfig: "⚙️ Konfig", tabReports: "📊 Berichte", tabTools: "🔧 Werkzeuge",
