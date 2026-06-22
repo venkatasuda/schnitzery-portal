@@ -25,6 +25,9 @@ export default function StaffPage() {
   const [form, setForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"active" | "former">("active");
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   // add new staff
   const [showAdd, setShowAdd] = useState(false);
@@ -67,6 +70,22 @@ export default function StaffPage() {
     else setMsg(res.error || t("staff.failed"));
   }
 
+  // Soft delete: mark as inactive. Keeps the row + all history in the database.
+  async function remove(id: string) {
+    setRemoving(true); setMsg(null);
+    const res = await updateStaff(id, { status: "inactive" });
+    setRemoving(false);
+    if (res.ok) { setConfirmRemoveId(null); setMsg(t("staff.removed")); load(); }
+    else setMsg(res.error || t("staff.failed"));
+  }
+
+  async function reactivate(id: string) {
+    setMsg(null);
+    const res = await updateStaff(id, { status: "active" });
+    if (res.ok) { setMsg(t("staff.reactivated")); load(); }
+    else setMsg(res.error || t("staff.failed"));
+  }
+
   async function createStaff() {
     setAdding(true); setAddMsg(null);
     if (!addForm.email || !addForm.password) { setAddMsg(t("staff.emailReqMsg")); setAdding(false); return; }
@@ -94,13 +113,17 @@ export default function StaffPage() {
     setAdding(false);
   }
 
+  const activeStaff = staff.filter((p) => (p.status || "active") === "active");
+  const formerStaff = staff.filter((p) => (p.status || "active") !== "active");
+  const visible = filter === "active" ? activeStaff : formerStaff;
+
   if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
       <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
-        {loading ? t("common.loading") : t("staff.memberCount", { n: staff.length })}
+        {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
 
       {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
@@ -146,19 +169,48 @@ export default function StaffPage() {
 
       {loading && <CardSkeleton rows={5} />}
 
-      {staff.map((p) => (
+      {!loading && (
+        <div style={{ display: "flex", gap: 6, marginBottom: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 4 }}>
+          <FilterBtn active={filter === "active"} onClick={() => { setFilter("active"); setConfirmRemoveId(null); }}>{t("staff.filterActive")} ({activeStaff.length})</FilterBtn>
+          <FilterBtn active={filter === "former"} onClick={() => { setFilter("former"); setConfirmRemoveId(null); }}>{t("staff.filterFormer")} ({formerStaff.length})</FilterBtn>
+        </div>
+      )}
+
+      {visible.map((p) => (
         <div key={p.id} style={{ ...card, marginBottom: 8 }}>
           {editId !== p.id ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 42, height: 42, borderRadius: "50%", background: TEAM_COLORS[p.team] || "#666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>
-                {(p.full_name || "?")[0].toUpperCase()}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 42, height: 42, borderRadius: "50%", background: TEAM_COLORS[p.team] || "#666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", opacity: filter === "former" ? 0.55 : 1 }}>
+                  {(p.full_name || "?")[0].toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "#9a8f8f" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> · {t("staff.former")}</span>}</div>
+                  <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "#9a8f8f" }}>· {p.employee_code}</span>}</div>
-                <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
-              </div>
-              <Link href={`/staff/${p.id}`} style={{ ...editBtn, textDecoration: "none" }}>{t("staff.view")}</Link>
-              <button onClick={() => startEdit(p)} style={editBtn}>{t("common.edit")}</button>
+
+              {confirmRemoveId === p.id ? (
+                <div style={{ marginTop: 12, padding: 12, background: "rgba(192,57,43,0.12)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: 10 }}>
+                  <div style={{ fontSize: 13, marginBottom: 10 }}>{t("staff.confirmRemove", { name: p.full_name || "—" })}</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => setConfirmRemoveId(null)} style={editBtn}>{t("common.cancel")}</button>
+                    <button onClick={() => remove(p.id)} disabled={removing} style={{ ...editBtn, background: "rgba(192,57,43,0.25)", border: "1px solid rgba(192,57,43,0.5)", color: "#fff" }}>{removing ? t("common.saving") : t("staff.remove")}</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <Link href={`/staff/${p.id}`} style={{ ...editBtn, textDecoration: "none" }}>{t("staff.view")}</Link>
+                  {filter === "active" ? (
+                    <>
+                      <button onClick={() => startEdit(p)} style={editBtn}>{t("common.edit")}</button>
+                      <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "#e08283" }}>{t("staff.remove")}</button>
+                    </>
+                  ) : (
+                    <button onClick={() => reactivate(p.id)} style={{ ...editBtn, color: "#58d68d" }}>{t("staff.reactivate")}</button>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div>
@@ -199,6 +251,12 @@ export default function StaffPage() {
         </div>
       ))}
 
+      {!loading && visible.length === 0 && (
+        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", fontSize: 13 }}>
+          {filter === "active" ? t("staff.noActive") : t("staff.noFormer")}
+        </div>
+      )}
+
       <div style={{ ...card, marginTop: 10, textAlign: "center", fontSize: 12, color: "#6f6565" }}>
         {t("staff.footerNote")}
       </div>
@@ -208,6 +266,9 @@ export default function StaffPage() {
 
 function Field({ label, children }: any) {
   return <div style={{ marginBottom: 10 }}><label style={{ display: "block", fontSize: 11, color: "#9a8f8f", marginBottom: 4 }}>{label}</label>{children}</div>;
+}
+function FilterBtn({ active, onClick, children }: any) {
+  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "#9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
 const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 14 };
 const editBtn: React.CSSProperties = { padding: "8px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 13, cursor: "pointer" };
