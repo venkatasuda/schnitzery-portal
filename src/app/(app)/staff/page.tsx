@@ -62,7 +62,7 @@ export default function StaffPage() {
       full_name: form.full_name, employee_code: form.employee_code,
       team: form.team, contract_type: form.contract_type,
       contract_hours: form.contract_hours === "" ? null : Number(form.contract_hours),
-      phone: form.phone, role: form.role, status: form.status,
+      phone: form.phone, role: form.role,
       skills: form.skills.split(",").map((s: string) => s.trim()).filter(Boolean),
     });
     setSaving(false);
@@ -70,10 +70,19 @@ export default function StaffPage() {
     else setMsg(res.error || t("staff.failed"));
   }
 
-  // Soft delete: mark as inactive. Keeps the row + all history in the database.
+  // Remove = deactivate + disable login; Reactivate = restore both. Data is always kept.
+  async function setActive(id: string, active: boolean) {
+    const res = await fetch("/api/set-staff-active", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: id, active }),
+    });
+    return res.json().catch(() => ({ ok: false, error: t("staff.networkErr") }));
+  }
+
   async function remove(id: string) {
     setRemoving(true); setMsg(null);
-    const res = await updateStaff(id, { status: "inactive" });
+    const res = await setActive(id, false);
     setRemoving(false);
     if (res.ok) { setConfirmRemoveId(null); setMsg(t("staff.removed")); load(); }
     else setMsg(res.error || t("staff.failed"));
@@ -81,7 +90,7 @@ export default function StaffPage() {
 
   async function reactivate(id: string) {
     setMsg(null);
-    const res = await updateStaff(id, { status: "active" });
+    const res = await setActive(id, true);
     if (res.ok) { setMsg(t("staff.reactivated")); load(); }
     else setMsg(res.error || t("staff.failed"));
   }
@@ -235,11 +244,6 @@ export default function StaffPage() {
                 </Field>
                 <Field label={t("profile.contractHours")}><input type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} style={input} placeholder="20" /></Field>
                 <Field label={t("profile.phone")}><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={input} /></Field>
-                <Field label={t("profile.status")}>
-                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} style={input}>
-                    <option value="active">{t("status.active")}</option><option value="inactive">{t("status.inactive")}</option>
-                  </select>
-                </Field>
               </div>
               <Field label={t("profile.skillsLabel")}><input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} style={input} placeholder="Grill, Cashier, Opening" /></Field>
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
