@@ -185,12 +185,27 @@ export async function getInventoryAnalytics(days = 30) {
     .eq("branch_id", branchId).gte("count_date", sinceStr)
     .order("count_date", { ascending: true }).order("created_at", { ascending: true });
 
+  // sales (for food cost %) + previous-window spend (for trend vs last period)
+  const { data: salesRows } = await supabase
+    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", sinceStr);
+  let totalSales = 0;
+  for (const s of salesRows || []) totalSales += Number(s.amount) || 0;
+
+  const prevSince = new Date(); prevSince.setDate(prevSince.getDate() - days * 2);
+  const prevSinceStr = prevSince.toISOString().slice(0, 10);
+  const { data: prevPurch } = await supabase
+    .from("inventory_purchases").select("cost").eq("branch_id", branchId)
+    .gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr);
+  let prevSpend = 0;
+  for (const p of prevPurch || []) prevSpend += Number(p.cost) || 0;
+
   const P = purchases || [];
   const C = counts || [];
 
   // spend + unit cost (weighted avg) + purchases per product/date
   const spendByDate: Record<string, number> = {};
   const spendByProduct: Record<string, number> = {};
+  const spendByCategory: Record<string, number> = {};
   const qtyByProduct: Record<string, number> = {};
   const costByProduct: Record<string, number> = {};
   const purchByProdDate: Record<string, Record<string, number>> = {};
@@ -199,6 +214,7 @@ export async function getInventoryAnalytics(days = 30) {
     const d = p.purchase_date, c = Number(p.cost) || 0, q = Number(p.qty) || 0;
     spendByDate[d] = (spendByDate[d] || 0) + c;
     spendByProduct[p.product] = (spendByProduct[p.product] || 0) + c;
+    spendByCategory[p.category || "—"] = (spendByCategory[p.category || "—"] || 0) + c;
     qtyByProduct[p.product] = (qtyByProduct[p.product] || 0) + q;
     costByProduct[p.product] = (costByProduct[p.product] || 0) + c;
     (purchByProdDate[p.product] ||= {})[d] = (purchByProdDate[p.product]?.[d] || 0) + q;
@@ -264,11 +280,23 @@ export async function getInventoryAnalytics(days = 30) {
     .sort((a, b) => b.eur - a.eur).slice(0, 8);
   const totalUsageEur = Object.values(usageEurByDate).reduce((s, v) => s + v, 0);
 
+  const foodCostPct = totalSales > 0 ? Math.round((totalSpend / totalSales) * 1000) / 10 : null;
+  const spendPctChange = prevSpend > 0 ? Math.round(((totalSpend - prevSpend) / prevSpend) * 100) : null;
+  const byCategory = Object.entries(spendByCategory)
+    .map(([category, eur]) => ({ category, eur: Math.round(eur) }))
+    .sort((a, b) => b.eur - a.eur);
+
   return {
     ok: true, days,
     totalSpend: Math.round(totalSpend),
     totalUsageEur: Math.round(totalUsageEur),
     stockValue: Math.round(stockValue),
+    totalSales: Math.round(totalSales),
+    foodCostPct,
+    prevSpend: Math.round(prevSpend),
+    spendPctChange,
+    byCategory,
+    topCategory: byCategory[0] || null,
     trend, topSpend, topUsage,
     hasCounts: C.length > 0, hasPurchases: P.length > 0,
   };

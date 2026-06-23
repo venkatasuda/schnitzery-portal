@@ -246,6 +246,26 @@ export default function InventoryPage() {
                 <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", padding: 30 }}>{t("inv.noAnalytics")}</div>
               ) : (
                 <>
+                  <div style={{ ...card, marginBottom: 14, borderColor: "rgba(212,168,71,0.3)" }}>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: GOLD }}>{eur(analytics.totalSpend)}</div>
+                      {analytics.spendPctChange != null && (
+                        <div style={{ fontSize: 13, fontWeight: 700, color: analytics.spendPctChange > 0 ? "***REMOVED***ec7063" : "***REMOVED***58d68d" }}>
+                          {analytics.spendPctChange > 0 ? "▲" : "▼"} {Math.abs(analytics.spendPctChange)}% {t("inv.vsPrev")}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 13, color: "***REMOVED***cbbfbf", marginTop: 3 }}>{t("inv.spentOnStock")}</div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                      {analytics.foodCostPct != null ? (
+                        <span style={chip}>{t("inv.foodCost")}: <b style={{ color: fcColor(analytics.foodCostPct) }}>{analytics.foodCostPct}%</b></span>
+                      ) : (
+                        <span style={{ ...chip, color: "***REMOVED***9a8f8f" }}>{t("inv.addSalesForFoodCost")}</span>
+                      )}
+                      {analytics.topCategory && <span style={chip}>{t("inv.topCat")}: <b>{analytics.topCategory.category}</b> · {eur(analytics.topCategory.eur)}</span>}
+                    </div>
+                  </div>
+
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
                     <Kpi label={t("inv.kSpend")} value={eur(analytics.totalSpend)} color={GOLD} />
                     <Kpi label={t("inv.kUsed")} value={eur(analytics.totalUsageEur)} color={BLUE} />
@@ -272,6 +292,24 @@ export default function InventoryPage() {
                         </ResponsiveContainer>
                       </div>
                     )}
+                  </div>
+
+                  <div style={{ ...card, marginBottom: 14 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{t("inv.byCategory")}</div>
+                    {analytics.byCategory.length === 0 ? <div style={{ color: "***REMOVED***9a8f8f", fontSize: 12 }}>{t("inv.noData")}</div> :
+                      analytics.byCategory.map((r: any, i: number) => {
+                        const pct = analytics.totalSpend > 0 ? Math.round((r.eur / analytics.totalSpend) * 100) : 0;
+                        return (
+                          <div key={i} style={{ marginBottom: 9 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 3 }}>
+                              <span>{r.category}</span><span style={{ color: GOLD, fontWeight: 600 }}>{eur(r.eur)} · {pct}%</span>
+                            </div>
+                            <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, overflow: "hidden" }}>
+                              <div style={{ width: `${pct}%`, height: "100%", background: GOLD }} />
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
 
                   <div style={{ ...card, marginBottom: 14 }}>
@@ -323,3 +361,5 @@ const tabBar: React.CSSProperties = { display: "flex", gap: 6, marginBottom: 14,
 const card: React.CSSProperties = { background: "***REMOVED***241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };
 const input: React.CSSProperties = { width: "100%", padding: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "***REMOVED***fff", fontSize: 14, boxSizing: "border-box" };
 const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "***REMOVED***d4a847", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const chip: React.CSSProperties = { fontSize: 12, padding: "5px 10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 };
+function fcColor(pct: number) { return pct <= 32 ? "***REMOVED***58d68d" : pct <= 38 ? "***REMOVED***d4a847" : "***REMOVED***ec7063"; }
