@@ -4,6 +4,7 @@ import { getMyHours } from "@/lib/queries/timepay";
 import { getMyStatus } from "@/lib/queries/attendance";
 import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attendance";
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
+import { getLaborSummary } from "@/lib/queries/labor";
 import { listMyDocuments } from "@/lib/queries/profile-uploads";
 import Link from "next/link";
 import StatusStrip from "@/components/StatusStrip";
@@ -45,17 +46,20 @@ export default async function HomePage() {
   let mLive: { workingNow: number; completed: number; late: number; totalMins: number } | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
+  let mCost: { laborPct: number | null; foodCostPct: number | null } | null = null;
 
   // kick off the document check now so it runs in parallel with the role queries
   const docsP = listMyDocuments();
 
   if (isHQ) {
-    const d = await getDashboardStats();
+    const [d, cRes] = await Promise.all([getDashboardStats(), getLaborSummary()]);
     if (d.ok) ownerStats = d.stats ?? null;
+    if ((cRes as any).ok) mCost = cRes as any;
   } else if (isManager) {
-    const [dRes, liveRes, otRes, schedRes, stRes] = await Promise.all([
-      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(),
+    const [dRes, liveRes, otRes, schedRes, stRes, cRes] = await Promise.all([
+      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(),
     ]);
+    if ((cRes as any).ok) mCost = cRes as any;
     if (stRes.ok) { staffClockedIn = stRes.clockedIn || false; staffOnBreak = stRes.onBreak || false; }
     if (dRes.ok) mOps = dRes.stats ?? null;
     if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0 };
@@ -111,9 +115,9 @@ export default async function HomePage() {
       {isManager && <StatusStrip />}
 
       {isHQ ? (
-        <OwnerDash stats={ownerStats} t={t} />
+        <OwnerDash stats={ownerStats} cost={mCost} t={t} />
       ) : isManager ? (
-        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner} t={t} />
+        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner} cost={mCost} t={t} />
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
       )}
@@ -156,12 +160,12 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, t }: {
+function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, t }: {
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
   live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; owner?: boolean; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null } | null; t: Tf;
 }) {
   const clockTitle = onBreak ? t("home.clockOnBreak") : clockedIn ? t("home.clockWorking") : t("home.clockInOut");
   const clockSub = onBreak ? t("home.clockSubBreak") : clockedIn ? t("home.clockSubWorking") : t("home.clockSubIdle");
@@ -267,8 +271,8 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       <Link href="/labor" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
         <Icon e="💶" size={18} color="var(--gold)" />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.laborCost")}</div>
-          <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.laborCostSub")}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.costThisMonth")}</div>
+          <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.costSub", { l: cost?.laborPct != null ? `${cost.laborPct}%` : "—", f: cost?.foodCostPct != null ? `${cost.foodCostPct}%` : "—" })}</div>
         </div>
         <span className="feature-chev">›</span>
       </Link>
@@ -300,7 +304,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
 }
 
 // ─────────── OWNER DASHBOARD ───────────
-function OwnerDash({ stats, t }: { stats: { clockedIn: number; staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null; t: Tf }) {
+function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null; cost?: { laborPct: number | null; foodCostPct: number | null } | null; t: Tf }) {
   const s = stats || { clockedIn: 0, staffCount: 0, pendingApprovals: 0, openIncidents: 0, lowStock: 0, checklistDone: 0, checklistTotal: 0 };
 
   return (
@@ -329,6 +333,15 @@ function OwnerDash({ stats, t }: { stats: { clockedIn: number; staffCount: numbe
         <Stat value={s.staffCount} label={t("home.teamSize")} />
         <Stat value={s.pendingApprovals} label={t("home.approvals")} color={s.pendingApprovals > 0 ? "#e8a35a" : "var(--white)"} />
       </div>
+
+      <Link href="/labor" className="feature-card" style={{ marginBottom: 14 }}>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#8b6914,#d4a847)" }}><Icon e="💶" size={22} color="#fff" /></div>
+        <div style={{ flex: 1 }}>
+          <div className="feature-title">{t("home.costThisMonth")}</div>
+          <div className="feature-sub">{t("home.costSub", { l: cost?.laborPct != null ? `${cost.laborPct}%` : "—", f: cost?.foodCostPct != null ? `${cost.foodCostPct}%` : "—" })}</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
 
       <div className="section-label">{t("home.manage")}</div>
       <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
