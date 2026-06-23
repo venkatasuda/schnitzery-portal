@@ -301,3 +301,33 @@ export async function getInventoryAnalytics(days = 30) {
     hasCounts: C.length > 0, hasPurchases: P.length > 0,
   };
 }
+
+// ── Month-over-month trend: spend + food cost % for the last N months ──
+export async function getInventoryTrend(months = 6) {
+  const { supabase, user, branchId } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in.", trend: [] };
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+  const startStr = start.toISOString().slice(0, 10);
+
+  const [purchRes, salesRes] = await Promise.all([
+    supabase.from("inventory_purchases").select("cost, purchase_date").eq("branch_id", branchId).gte("purchase_date", startStr),
+    supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", startStr),
+  ]);
+
+  const spend: Record<string, number> = {};
+  const sale: Record<string, number> = {};
+  if (!purchRes.error) for (const p of purchRes.data || []) { const ym = (p.purchase_date || "").slice(0, 7); spend[ym] = (spend[ym] || 0) + (Number(p.cost) || 0); }
+  for (const s of salesRes.data || []) { const ym = (s.sale_date || "").slice(0, 7); sale[ym] = (sale[ym] || 0) + (Number(s.amount) || 0); }
+
+  const ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const trend = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = d.toISOString().slice(0, 7);
+    const sp = Math.round(spend[ym] || 0);
+    const sl = sale[ym] || 0;
+    trend.push({ month: ABBR[d.getMonth()], ym, spend: sp, foodCostPct: sl > 0 ? Math.round((sp / sl) * 1000) / 10 : null });
+  }
+  return { ok: true, trend };
+}

@@ -5,11 +5,11 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
   getProducts, getCounts, saveCount, addProduct, getOrderAlert,
-  addDelivery, getDeliveries, getInventoryAnalytics,
+  addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend,
 } from "@/lib/queries/inventory";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
 const GOLD = "#d4a847";
 const BLUE = "#3498db";
@@ -40,6 +40,7 @@ export default function InventoryPage() {
   // ANALYTICS tab
   const [analytics, setAnalytics] = useState<any>(null);
   const [days, setDays] = useState(30);
+  const [monthTrend, setMonthTrend] = useState<any[]>([]);
 
   async function load() {
     setLoading(true);
@@ -69,7 +70,7 @@ export default function InventoryPage() {
   }
   useEffect(() => {
     if (tab === "deliveries") loadDeliveries();
-    if (tab === "analytics") loadAnalytics(days);
+    if (tab === "analytics") { loadAnalytics(days); getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -101,6 +102,14 @@ export default function InventoryPage() {
     setSavingDel(false);
     if (res.ok) { toast(t("inv.deliverySaved"), "success"); setDel({ product: "", qty: "", cost: "", supplier: "", note: "", date: "" }); loadDeliveries(); }
     else toast(res.error || t("inv.failed"), "error");
+  }
+
+  function copyShoppingList() {
+    const lines = lowStock.map((l: any) => `• ${l.product}: ${l.short}${l.unit ? " " + l.unit : ""}`);
+    const text = `${t("inv.shoppingListTitle")}\n${lines.join("\n")}`;
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(() => toast(t("inv.listCopied"), "success")).catch(() => toast(t("inv.failed"), "error"));
+    } else toast(t("inv.failed"), "error");
   }
 
   if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
@@ -135,6 +144,9 @@ export default function InventoryPage() {
                     <span style={{ color: "#ec7063" }}>{l.ist}/{l.soll} {l.unit || ""} · {t("inv.short")} {l.short}</span>
                   </div>
                 ))}
+                {lowStock.length > 0 && (
+                  <button onClick={copyShoppingList} style={{ width: "100%", marginTop: 12, padding: "10px", background: "rgba(255,255,255,0.05)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("inv.copyList")}</button>
+                )}
               </div>
 
               <button onClick={() => setShowAdd(!showAdd)} style={{ ...primaryBtn, width: "100%", marginBottom: 12, background: "rgba(255,255,255,0.05)", color: "#fff", border: "1px solid rgba(255,255,255,0.1)" }}>
@@ -293,6 +305,27 @@ export default function InventoryPage() {
                       </div>
                     )}
                   </div>
+
+                  {monthTrend.length > 0 && (
+                    <div style={{ ...card, marginBottom: 14 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.sixMonth")}</div>
+                      <div style={{ fontSize: 11, color: "#9a8f8f", marginBottom: 12 }}>{t("inv.sixMonthSub")}</div>
+                      <div style={{ width: "100%", height: 220 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ComposedChart data={monthTrend} margin={{ top: 6, right: -12, bottom: 0, left: -18 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                            <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                            <YAxis yAxisId="l" tick={{ fontSize: 10, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                            <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 10, fill: "#9a8f8f" }} tickLine={false} axisLine={false} unit="%" />
+                            <Tooltip contentStyle={{ background: "#241414", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 12 }} />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Bar yAxisId="l" name={t("inv.legendSpend")} dataKey="spend" fill={GOLD} radius={[4, 4, 0, 0]} maxBarSize={26} />
+                            <Line yAxisId="r" name={t("inv.foodCost")} dataKey="foodCostPct" stroke={BLUE} strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{ ...card, marginBottom: 14 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{t("inv.byCategory")}</div>
