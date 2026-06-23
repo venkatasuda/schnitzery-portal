@@ -44,11 +44,21 @@ export async function getLaborSummary() {
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
 
   const laborPct = monthSales > 0 ? Math.round((laborCost / monthSales) * 1000) / 10 : null;
+
+  // inventory spend this month → food cost % (safe if the deliveries table doesn't exist yet)
+  const { data: purch, error: purchErr } = await supabase
+    .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first);
+  let monthInvSpend = 0;
+  for (const p of purch || []) monthInvSpend += Number(p.cost) || 0;
+  const foodCostPct = (!purchErr && monthSales > 0) ? Math.round((monthInvSpend / monthSales) * 1000) / 10 : null;
+
   return {
     ok: true,
     laborCost: Math.round(laborCost),
     monthSales: Math.round(monthSales),
     laborPct,
+    invSpend: Math.round(monthInvSpend),
+    foodCostPct,
     staffCount: (staff || []).length,
     withWage,
   };
