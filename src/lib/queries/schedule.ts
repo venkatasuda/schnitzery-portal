@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
+import { berlinMonday } from "@/lib/time/berlinDate";
 
 // ============================================================
 // SCHEDULE / ROSTER — weekly_roster stores ONE row per branch
@@ -18,13 +19,8 @@ export async function shiftTime(team: string, shift: string): Promise<string> {
 }
 
 // Monday of the week containing `date` (default: today), as YYYY-MM-DD.
-function mondayOf(date = new Date()): string {
-  const d = new Date(date);
-  const day = d.getDay(); // 0=Sun..6=Sat
-  const diff = day === 0 ? -6 : 1 - day; // shift back to Monday
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
-}
+// Uses the Berlin business week (see berlinMonday) so it never lands on the
+// wrong week near midnight.
 
 async function getMe() {
   const supabase = await createClient();
@@ -40,9 +36,7 @@ async function getMe() {
 
 // Helper for the UI: get this week's Monday (and optionally offset by N weeks).
 export async function getWeekStart(offsetWeeks = 0): Promise<string> {
-  const base = new Date();
-  base.setDate(base.getDate() + offsetWeeks * 7);
-  return mondayOf(base);
+  return berlinMonday(offsetWeeks);
 }
 
 // ── STAFF: my shifts for a given week ──
@@ -51,7 +45,7 @@ export async function getMyShifts(weekStart?: string) {
   if (!user) return { ok: false, error: "Not logged in.", shifts: [], weekStart: "" };
   if (!branchId) return { ok: false, error: "No branch assigned.", shifts: [], weekStart: "" };
 
-  const ws = weekStart || mondayOf();
+  const ws = weekStart || berlinMonday();
 
   const { data, error } = await supabase
     .from("weekly_roster")
@@ -91,7 +85,7 @@ export async function getRoster(weekStart?: string) {
     return { ok: false, error: "Only managers can edit the roster." };
   }
 
-  const ws = weekStart || mondayOf();
+  const ws = weekStart || berlinMonday();
 
   const { data } = await supabase
     .from("weekly_roster")
