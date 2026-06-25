@@ -97,9 +97,28 @@ export async function getRoster(weekStart?: string) {
   // staff list for assignment dropdowns (same branch)
   const { data: staff } = await supabase
     .from("users")
-    .select("id, full_name, role")
+    .select("id, full_name, role, contract_hours")
     .eq("branch_id", branchId)
     .order("full_name");
+
+  // current-week worked hours per staff (capacity hint while assigning)
+  const thisWeekStart = berlinMonday();
+  const { data: wkLogs } = await supabase
+    .from("attendance_logs")
+    .select("user_id, duration_mins, status")
+    .eq("branch_id", branchId)
+    .gte("work_date", thisWeekStart)
+    .eq("status", "complete");
+  const workedMins: Record<string, number> = {};
+  for (const l of wkLogs || []) workedMins[l.user_id] = (workedMins[l.user_id] || 0) + (l.duration_mins || 0);
+
+  const staffEnriched = (staff || []).map((s: any) => ({
+    id: s.id,
+    full_name: s.full_name,
+    role: s.role,
+    contractHours: s.contract_hours ?? null,
+    workedH: Math.round(((workedMins[s.id] || 0) / 60) * 10) / 10,
+  }));
 
   // availability submitted for THIS week → { [user_id]: { Monday: ["Morning",...], ... } }
   const { data: avRows } = await supabase
@@ -114,7 +133,7 @@ export async function getRoster(weekStart?: string) {
     ok: true,
     weekStart: ws,
     roster: (data?.roster_data as any) || {},
-    staff: staff || [],
+    staff: staffEnriched,
     avail,
   };
 }
