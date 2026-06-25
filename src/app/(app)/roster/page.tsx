@@ -193,7 +193,8 @@ export default function RosterPage() {
                         <option value="">{t("roster.select")}</option>
                         {[...staff].sort((a, b) => (availableDay(a.id, day) ? 0 : 1) - (availableDay(b.id, day) ? 0 : 1) || (a.full_name || "").localeCompare(b.full_name || "")).map((p) => {
                           const tag = availableDay(p.id, day) ? t("roster.avAvailable") : submitted(p.id) ? t("roster.avNot") : t("roster.avNone");
-                          return <option key={p.id} value={p.id}>{p.full_name} — {tag}</option>;
+                          const hrs = (p as any).contractHours != null ? ` · ${(p as any).workedH ?? 0}/${(p as any).contractHours}h` : ` · ${(p as any).workedH ?? 0}h`;
+                          return <option key={p.id} value={p.id}>{p.full_name} — {tag}{hrs}</option>;
                         })}
                       </select>
                     </div>
