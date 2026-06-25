@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
-  getProducts, getCounts, saveCount, addProduct, getOrderAlert,
+  getProducts, getCounts, saveCount, addProduct, removeProduct, getOrderAlert,
   addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend,
 } from "@/lib/queries/inventory";
 import { useLang } from "@/components/LanguageProvider";
@@ -87,6 +87,12 @@ export default function InventoryPage() {
     if (!np.category || !np.product) { toast(t("inv.catProductRequired"), "error"); return; }
     const res = await addProduct(np.category, np.product, Number(np.soll) || 0, np.unit);
     if (res.ok) { toast(t("inv.productAdded"), "success"); setNp({ category: "", product: "", soll: "", unit: "" }); setShowAdd(false); load(); }
+    else toast(res.error || t("inv.failed"), "error");
+  }
+  async function doRemoveProduct(p: any) {
+    if (!confirm(t("inv.confirmRemoveProduct", { name: p.product }))) return;
+    const res = await removeProduct(p.id);
+    if (res.ok) { toast(t("inv.productRemoved"), "success"); load(); }
     else toast(res.error || t("inv.failed"), "error");
   }
   async function doAddDelivery() {
@@ -192,6 +198,7 @@ export default function InventoryPage() {
                           <button onClick={() => doSaveCount(p)} disabled={savingP === p.product} style={{ ...primaryBtn, width: "auto", padding: "10px 16px", flex: "0 0 auto" }}>
                             {savingP === p.product ? "…" : t("inv.count")}
                           </button>
+                          <button onClick={() => doRemoveProduct(p)} title={t("inv.removeProduct")} style={{ background: "none", border: "none", color: "#9a8f8f", cursor: "pointer", fontSize: 15, flex: "0 0 auto", padding: 4, lineHeight: 1 }}>🗑</button>
                         </div>
                       </div>
                     );

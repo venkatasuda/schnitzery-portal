@@ -31,6 +31,7 @@ export default function RosterPage() {
 
   // add-shift form (per selected day)
   const [activeDay, setActiveDay] = useState<string | null>(null);
+  const [showHours, setShowHours] = useState(false);
   const [selStaff, setSelStaff] = useState("");
   const [selTeam, setSelTeam] = useState(TEAMS[0]);
   const [selShift, setSelShift] = useState(SHIFT_MODEL[TEAMS[0]][0].shift);
@@ -152,7 +153,44 @@ export default function RosterPage() {
             </div>
           </div>
 
-          {/* DAY CARDS */}
+          {/* TEAM HOURS BOARD — month-to-date worked vs monthly contract */}
+          <div className="card" style={{ marginBottom: 12 }}>
+            <button onClick={() => setShowHours(!showHours)} style={{ width: "100%", background: "none", border: "none", color: "var(--white)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: 0 }}>
+              <span className="card-title" style={{ margin: 0 }}>{t("roster.teamHours")}</span>
+              <span style={{ color: "var(--gray)", fontSize: 13 }}>{showHours ? "▾" : "▸"}</span>
+            </button>
+            {showHours && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>{t("roster.teamHoursSub")}</div>
+                {[...staff]
+                  .filter((p) => p.contractHours != null || (p.workedH || 0) > 0)
+                  .map((p) => ({ ...p, pct: p.contractHours ? Math.round(((p.workedH || 0) / p.contractHours) * 100) : null }))
+                  .sort((a, b) => (b.pct ?? -1) - (a.pct ?? -1))
+                  .map((p) => {
+                    const over = p.pct != null && p.pct > 100;
+                    const near = p.pct != null && p.pct >= 85 && p.pct <= 100;
+                    const barColor = over ? "#e74c3c" : near ? "#d4a847" : "#27ae60";
+                    const left = p.contractHours != null ? Math.round((p.contractHours - (p.workedH || 0)) * 10) / 10 : null;
+                    return (
+                      <div key={p.id} style={{ marginBottom: 10 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+                          <span style={{ color: "var(--white)" }}>{p.full_name}</span>
+                          <span style={{ color: over ? "#ec7063" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
+                            {p.contractHours != null ? `${p.workedH || 0}/${p.contractHours}h` : `${p.workedH || 0}h`}
+                            {left != null && (over ? ` · ${t("roster.over")}` : ` · ${left}${t("roster.leftShort")}`)}
+                          </span>
+                        </div>
+                        {p.pct != null && (
+                          <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${Math.min(100, p.pct)}%`, background: barColor, borderRadius: 3 }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
           {DAYS.map((day) => {
             const entries = roster[day] || [];
             const isActive = activeDay === day;
@@ -193,7 +231,10 @@ export default function RosterPage() {
                         <option value="">{t("roster.select")}</option>
                         {[...staff].sort((a, b) => (availableDay(a.id, day) ? 0 : 1) - (availableDay(b.id, day) ? 0 : 1) || (a.full_name || "").localeCompare(b.full_name || "")).map((p) => {
                           const tag = availableDay(p.id, day) ? t("roster.avAvailable") : submitted(p.id) ? t("roster.avNot") : t("roster.avNone");
-                          const hrs = (p as any).contractHours != null ? ` · ${(p as any).workedH ?? 0}/${(p as any).contractHours}h` : ` · ${(p as any).workedH ?? 0}h`;
+                          const wh = (p as any).workedH ?? 0; const ch = (p as any).contractHours;
+                          const hrs = ch != null
+                            ? ` · ${wh}/${ch}h${ch - wh > 0 ? ` (${Math.round((ch - wh) * 10) / 10} ${t("roster.leftWord")})` : ch - wh < 0 ? ` (${t("roster.over")})` : ""}`
+                            : ` · ${wh}h`;
                           return <option key={p.id} value={p.id}>{p.full_name} — {tag}{hrs}</option>;
                         })}
                       </select>
