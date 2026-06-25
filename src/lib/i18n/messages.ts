@@ -158,6 +158,7 @@ export const messages = {
       targetShort: "Target:", counted: "Counted:", count: "Count",
       enterCount: "Enter a count first.", countedToast: "counted", failed: "Failed.",
       catProductRequired: "Category + product required.", productAdded: "Product added",
+      removeProduct: "Remove product", productRemoved: "Product removed", confirmRemoveProduct: "Remove {name} from the catalog? Past counts and deliveries are kept.",
       tabCount: "Stock Count", tabDeliveries: "Deliveries", tabAnalytics: "Analytics",
       pickProduct: "Pick a product.", pickProductOpt: "Select a product…", enterQtyCost: "Enter a quantity or cost.",
       recordDelivery: "Record a delivery", recordDeliverySub: "Log stock you received and what you paid.",
@@ -228,6 +229,7 @@ export const messages = {
       staff: "Staff", select: "Select…", team: "Team", shift: "Shift", noOne: "No one assigned.",
       pickStaff: "Pick a staff member.", saved: "Roster saved", saveFailed: "Save failed.",
       notAvail: "not available", avAvailable: "✓ available", avNot: "not available", avNone: "no availability set",
+      teamHours: "Team hours · this month", teamHoursSub: "Worked this month vs monthly contract. Over-contract shown in red.", over: "over", leftShort: "h left", leftWord: "left",
     },
     shiftNames: { Morning: "Morning", Mid: "Mid", Evening: "Evening", Night: "Night" },
     avail: {
@@ -753,6 +755,7 @@ export const messages = {
       targetShort: "Ziel:", counted: "Gezählt:", count: "Zählen",
       enterCount: "Bitte zuerst einen Bestand eingeben.", countedToast: "gezählt", failed: "Fehlgeschlagen.",
       catProductRequired: "Kategorie + Produkt erforderlich.", productAdded: "Produkt hinzugefügt",
+      removeProduct: "Produkt entfernen", productRemoved: "Produkt entfernt", confirmRemoveProduct: "{name} aus dem Katalog entfernen? Frühere Zählungen und Lieferungen bleiben erhalten.",
       tabCount: "Bestand", tabDeliveries: "Lieferungen", tabAnalytics: "Analyse",
       pickProduct: "Produkt wählen.", pickProductOpt: "Produkt auswählen…", enterQtyCost: "Menge oder Kosten eingeben.",
       recordDelivery: "Lieferung erfassen", recordDeliverySub: "Erhaltene Ware und Kosten erfassen.",
@@ -823,6 +826,7 @@ export const messages = {
       staff: "Mitarbeiter", select: "Wählen…", team: "Team", shift: "Schicht", noOne: "Niemand zugewiesen.",
       pickStaff: "Wähle einen Mitarbeiter.", saved: "Dienstplan gespeichert", saveFailed: "Speichern fehlgeschlagen.",
       notAvail: "nicht verfügbar", avAvailable: "✓ verfügbar", avNot: "nicht verfügbar", avNone: "keine Verfügbarkeit",
+      teamHours: "Teamstunden · diesen Monat", teamHoursSub: "Diesen Monat geleistet vs. Monatsvertrag. Über Vertrag in Rot.", over: "über", leftShort: "h übrig", leftWord: "übrig",
     },
     shiftNames: { Morning: "Früh", Mid: "Mitte", Evening: "Spät", Night: "Nacht" },
     avail: {
