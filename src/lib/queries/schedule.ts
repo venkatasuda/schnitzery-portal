@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
-import { berlinMonday } from "@/lib/time/berlinDate";
+import { berlinMonday, berlinMonth } from "@/lib/time/berlinDate";
 
 // ============================================================
 // SCHEDULE / ROSTER — weekly_roster stores ONE row per branch
@@ -101,16 +101,16 @@ export async function getRoster(weekStart?: string) {
     .eq("branch_id", branchId)
     .order("full_name");
 
-  // current-week worked hours per staff (capacity hint while assigning)
-  const thisWeekStart = berlinMonday();
-  const { data: wkLogs } = await supabase
+  // month-to-date worked hours per staff (capacity hint vs monthly contract)
+  const monthStart = berlinMonth() + "-01";
+  const { data: mLogs } = await supabase
     .from("attendance_logs")
     .select("user_id, duration_mins, status")
     .eq("branch_id", branchId)
-    .gte("work_date", thisWeekStart)
+    .gte("work_date", monthStart)
     .eq("status", "complete");
   const workedMins: Record<string, number> = {};
-  for (const l of wkLogs || []) workedMins[l.user_id] = (workedMins[l.user_id] || 0) + (l.duration_mins || 0);
+  for (const l of mLogs || []) workedMins[l.user_id] = (workedMins[l.user_id] || 0) + (l.duration_mins || 0);
 
   const staffEnriched = (staff || []).map((s: any) => ({
     id: s.id,
