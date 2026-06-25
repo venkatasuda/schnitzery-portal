@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinToday, mondayOfDate } from "@/lib/time/berlinDate";
 
 // Aggregates branch attendance into chart-ready series:
 //  • hours per week (last 8 weeks)   • hours by weekday   • hours by team
@@ -16,14 +17,6 @@ async function getMgr() {
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
-}
-function mondayOf(d: Date) {
-  const x = new Date(d);
-  const day = x.getDay();           // 0 Sun .. 6 Sat
-  const diff = day === 0 ? 6 : day - 1;
-  x.setDate(x.getDate() - diff);
-  x.setHours(0, 0, 0, 0);
-  return x;
 }
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const toH = (m: number) => Math.round((m / 60) * 10) / 10;
@@ -50,8 +43,7 @@ export async function getAnalytics() {
   const weekKeys: string[] = [];
   const weekMap: Record<string, number> = {};
   for (let i = 7; i >= 0; i--) {
-    const m = mondayOf(new Date(now)); m.setDate(m.getDate() - 7 * i);
-    const key = m.toISOString().slice(0, 10);
+    const key = mondayOfDate(berlinToday(), -i);
     weekKeys.push(key); weekMap[key] = 0;
   }
 
@@ -63,7 +55,7 @@ export async function getAnalytics() {
   for (const l of logs || []) {
     const mins = l.duration_mins || 0;
     const d = new Date(l.work_date);
-    const wk = mondayOf(d).toISOString().slice(0, 10);
+    const wk = mondayOfDate(l.work_date);
     if (wk in weekMap) weekMap[wk] += mins;
     byDay[d.getDay()] += mins;
     const team = teamOf[l.user_id] || "—";
