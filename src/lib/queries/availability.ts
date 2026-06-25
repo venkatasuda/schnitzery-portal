@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berlinMonday, mondayOfDate, berlinWeekdayIndex } from "@/lib/time/berlinDate";
 
 // ============================================================
 // AVAILABILITY + manager MISSING/NO-SHOW checks
@@ -21,15 +22,8 @@ async function getMe() {
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
-function mondayOf(date = new Date()): string {
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
-  return d.toISOString().slice(0, 10);
-}
 export async function getNextWeekStart(): Promise<string> {
-  const d = new Date(); d.setDate(d.getDate() + 7);
-  return mondayOf(d);
+  return berlinMonday(1);
 }
 
 // ── STAFF: get my availability for a week ──
@@ -96,9 +90,8 @@ export async function getNoShows(dateStr: string) {
   if (!dateStr) return { ok: false, error: "Pick a date.", noShows: [] };
 
   // which weekday + which week does this date fall in?
-  const date = new Date(dateStr);
-  const dayName = DAYS[date.getDay() === 0 ? 6 : date.getDay() - 1];
-  const ws = mondayOf(date);
+  const dayName = DAYS[berlinWeekdayIndex(dateStr)];
+  const ws = mondayOfDate(dateStr);
 
   // who was rostered that day?
   const { data: roster } = await supabase
