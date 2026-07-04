@@ -106,3 +106,81 @@ export async function setStaffWage(userId: string, wage: number) {
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+// ── Monthly ops summary: one rollup of the month's key numbers + per-staff rows ──
+export async function getMonthlySummary(month?: string) {
+  const { supabase, user, role, branchId } = await getMgr();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (!isManager(role)) return { ok: false, error: "Managers only." };
+
+  const now = new Date();
+  const ym = month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const [Y, M] = ym.split("-").map(Number);
+  const from = `${ym}-01`;
+  const to = new Date(Date.UTC(Y, M, 0)).toISOString().slice(0, 10); // last day of the month
+
+  const { data: staff } = await supabase.from("users")
+    .select("id, full_name, team, hourly_wage, contract_hours")
+    .eq("branch_id", branchId);
+  const info: Record<string, any> = {};
+  for (const s of staff || []) info[s.id] = s;
+
+  const { data: logs } = await supabase.from("attendance_logs")
+    .select("user_id, duration_mins, late_mins, status")
+    .eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).eq("status", "complete");
+
+  const per: Record<string, { mins: number; shifts: number; late: number }> = {};
+  let totalMins = 0, shifts = 0, lateShifts = 0;
+  for (const l of logs || []) {
+    const u = l.user_id;
+    per[u] = per[u] || { mins: 0, shifts: 0, late: 0 };
+    per[u].mins += l.duration_mins || 0;
+    per[u].shifts += 1;
+    if ((l.late_mins || 0) > 0) { per[u].late += 1; lateShifts++; }
+    totalMins += l.duration_mins || 0;
+    shifts += 1;
+  }
+
+  const { data: sales } = await supabase.from("daily_sales")
+    .select("amount").eq("branch_id", branchId).gte("sale_date", from).lte("sale_date", to);
+  let monthSales = 0;
+  for (const s of sales || []) monthSales += Number(s.amount) || 0;
+
+  const { data: purch, error: purchErr } = await supabase.from("inventory_purchases")
+    .select("cost").eq("branch_id", branchId).gte("purchase_date", from).lte("purchase_date", to);
+  let foodSpend = 0;
+  if (!purchErr) for (const p of purch || []) foodSpend += Number(p.cost) || 0;
+
+  let laborCost = 0, overtimeHrs = 0;
+  const rows = Object.keys(per).map((uid) => {
+    const s = info[uid] || {};
+    const hrs = Math.round((per[uid].mins / 60) * 10) / 10;
+    const wage = s.hourly_wage || 0;
+    laborCost += hrs * wage;
+    const contract = s.contract_hours || 0;
+    const ot = contract > 0 ? Math.max(0, Math.round((hrs - contract) * 10) / 10) : 0;
+    overtimeHrs += ot;
+    return {
+      name: s.full_name || "—", team: s.team || "—",
+      hours: hrs, shifts: per[uid].shifts, late: per[uid].late,
+      overtime: ot, laborCost: Math.round(hrs * wage),
+    };
+  }).sort((a, b) => b.hours - a.hours);
+
+  const totalHours = Math.round((totalMins / 60) * 10) / 10;
+  const laborPct = monthSales > 0 ? Math.round((laborCost / monthSales) * 1000) / 10 : null;
+  const foodPct = (!purchErr && monthSales > 0) ? Math.round((foodSpend / monthSales) * 1000) / 10 : null;
+  const primePct = (laborPct != null && foodPct != null) ? Math.round((laborPct + foodPct) * 10) / 10 : null;
+  const lateRate = shifts > 0 ? Math.round((lateShifts / shifts) * 1000) / 10 : null;
+
+  return {
+    ok: true, month: ym,
+    sales: Math.round(monthSales),
+    laborCost: Math.round(laborCost), laborPct,
+    foodSpend: Math.round(foodSpend), foodPct, primePct,
+    totalHours, shifts, lateShifts, lateRate,
+    overtimeHrs: Math.round(overtimeHrs * 10) / 10,
+    rows,
+    hasSales: monthSales > 0, hasFood: !purchErr,
+  };
+}

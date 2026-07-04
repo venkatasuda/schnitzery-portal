@@ -331,3 +331,93 @@ export async function getInventoryTrend(months = 6) {
   }
   return { ok: true, trend };
 }
+
+// ── Usage variance / waste signal ──
+// Compares derived usage € per product in the current window vs the previous one,
+// normalised by sales (usage € per €100 of sales) so a busy period doesn't read as
+// waste. A sustained jump flags possible over-portioning, spoilage or shrinkage.
+// This is a SIGNAL, not proof — it points to products worth investigating.
+export async function getInventoryVariance(days = 30) {
+  const { supabase, user, branchId } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in.", items: [] };
+
+  const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
+  const dayMs = 86400000;
+  const at = (off: number) => new Date(anchor - off * dayMs).toISOString().slice(0, 10);
+  const curStart = at(days);
+  const prevStart = at(2 * days);
+  const fetchFrom = at(3 * days); // lead-in so the first count pair in each window is complete
+
+  const [countsRes, purchRes, salesRes] = await Promise.all([
+    supabase.from("inventory_counts").select("product, count_date, ist").eq("branch_id", branchId).gte("count_date", fetchFrom).order("count_date"),
+    supabase.from("inventory_purchases").select("product, purchase_date, qty, cost").eq("branch_id", branchId).gte("purchase_date", fetchFrom),
+    supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", prevStart),
+  ]);
+  if (purchRes.error || countsRes.error) return { ok: true, items: [], hasData: false, normalised: false, days };
+
+  const C = countsRes.data || [];
+  const P = purchRes.data || [];
+
+  const qtyByProduct: Record<string, number> = {};
+  const costByProduct: Record<string, number> = {};
+  const purchByProdDate: Record<string, Record<string, number>> = {};
+  for (const p of P) {
+    const q = Number(p.qty) || 0, c = Number(p.cost) || 0;
+    qtyByProduct[p.product] = (qtyByProduct[p.product] || 0) + q;
+    costByProduct[p.product] = (costByProduct[p.product] || 0) + c;
+    (purchByProdDate[p.product] ||= {})[p.purchase_date] = (purchByProdDate[p.product]?.[p.purchase_date] || 0) + q;
+  }
+  const unitCost: Record<string, number> = {};
+  for (const prod of Object.keys(qtyByProduct)) unitCost[prod] = qtyByProduct[prod] > 0 ? costByProduct[prod] / qtyByProduct[prod] : 0;
+
+  const byProdDate: Record<string, Record<string, number>> = {};
+  for (const c of C) (byProdDate[c.product] ||= {})[c.count_date] = Number(c.ist) || 0;
+  const series: Record<string, { date: string; ist: number }[]> = {};
+  for (const prod of Object.keys(byProdDate)) series[prod] = Object.keys(byProdDate[prod]).sort().map((d) => ({ date: d, ist: byProdDate[prod][d] }));
+
+  const purchasedBetween = (prod: string, after: string, through: string) => {
+    const m = purchByProdDate[prod] || {}; let s = 0;
+    for (const d of Object.keys(m)) if (d > after && d <= through) s += m[d];
+    return s;
+  };
+
+  const cur: Record<string, number> = {};
+  const prev: Record<string, number> = {};
+  for (const prod of Object.keys(series)) {
+    const s = series[prod];
+    const uc = unitCost[prod] || 0;
+    for (let i = 0; i + 1 < s.length; i++) {
+      const a = s[i], b = s[i + 1];
+      let used = a.ist + purchasedBetween(prod, a.date, b.date) - b.ist;
+      if (used < 0) used = 0;
+      const eur = used * uc;
+      if (b.date > curStart) cur[prod] = (cur[prod] || 0) + eur;
+      else if (b.date > prevStart) prev[prod] = (prev[prod] || 0) + eur;
+    }
+  }
+
+  let curSales = 0, prevSales = 0;
+  for (const sl of salesRes.data || []) {
+    const amt = Number(sl.amount) || 0;
+    if (sl.sale_date > curStart) curSales += amt;
+    else if (sl.sale_date > prevStart) prevSales += amt;
+  }
+  const normalised = curSales > 0 && prevSales > 0;
+
+  const items = Object.keys({ ...cur, ...prev }).map((prod) => {
+    const c = Math.round(cur[prod] || 0);
+    const p = Math.round(prev[prod] || 0);
+    const cr = normalised ? (cur[prod] || 0) / curSales * 100 : (cur[prod] || 0);
+    const pr = normalised ? (prev[prod] || 0) / prevSales * 100 : (prev[prod] || 0);
+    const changePct = pr > 0 ? Math.round(((cr - pr) / pr) * 100) : null;
+    let flag: "up" | "down" | "new" | "ok" = "ok";
+    if (changePct === null) flag = c > 0 ? "new" : "ok";
+    else if (changePct >= 25 && c >= 20) flag = "up";
+    else if (changePct <= -25) flag = "down";
+    return { product: prod, curEur: c, prevEur: p, changePct, flag };
+  })
+    .filter((x) => x.curEur > 0 || x.prevEur > 0)
+    .sort((a, b) => (b.changePct ?? -999) - (a.changePct ?? -999));
+
+  return { ok: true, items, normalised, hasData: items.length > 0, days };
+}

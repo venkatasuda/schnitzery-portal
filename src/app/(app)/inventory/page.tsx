@@ -5,7 +5,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
   getProducts, getCounts, saveCount, addProduct, removeProduct, getOrderAlert,
-  addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend,
+  addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend, getInventoryVariance,
 } from "@/lib/queries/inventory";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -41,6 +41,7 @@ export default function InventoryPage() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [days, setDays] = useState(30);
   const [monthTrend, setMonthTrend] = useState<any[]>([]);
+  const [variance, setVariance] = useState<any>(null);
 
   async function load() {
     setLoading(true);
@@ -70,7 +71,7 @@ export default function InventoryPage() {
   }
   useEffect(() => {
     if (tab === "deliveries") loadDeliveries();
-    if (tab === "analytics") { loadAnalytics(days); getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }); }
+    if (tab === "analytics") { loadAnalytics(days); getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }); getInventoryVariance(30).then((r) => { if (r.ok) setVariance(r); }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -331,6 +332,28 @@ export default function InventoryPage() {
                           </ComposedChart>
                         </ResponsiveContainer>
                       </div>
+                    </div>
+                  )}
+
+                  {variance?.hasData && variance.items.some((v: any) => v.flag === "up" || v.flag === "down") && (
+                    <div style={{ ...card, marginBottom: 14 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.variance")}</div>
+                      <div style={{ fontSize: 11, color: "***REMOVED***9a8f8f", marginBottom: 12 }}>{variance.normalised ? t("inv.varianceSubNorm") : t("inv.varianceSubRaw")}</div>
+                      {variance.items.filter((v: any) => v.flag === "up" || v.flag === "down").slice(0, 8).map((v: any, i: number) => {
+                        const up = v.flag === "up";
+                        return (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                            <div>
+                              <div style={{ fontSize: 13, color: "var(--white)" }}>{v.product}</div>
+                              <div style={{ fontSize: 11, color: "***REMOVED***9a8f8f" }}>€{v.prevEur} → €{v.curEur}</div>
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: up ? "***REMOVED***ec7063" : "***REMOVED***58d68d" }}>
+                              {v.changePct != null ? `${v.changePct > 0 ? "▲" : "▼"} ${Math.abs(v.changePct)}%` : "—"}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div style={{ fontSize: 10, color: "***REMOVED***7a7070", marginTop: 10 }}>{t("inv.varianceNote")}</div>
                     </div>
                   )}
 

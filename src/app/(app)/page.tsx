@@ -277,6 +277,15 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
         <span className="feature-chev">›</span>
       </Link>
 
+      <Link href="/summary" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
+        <Icon e="📊" size={18} color="var(--gold)" />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.monthlySummary")}</div>
+          <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.monthlySummarySub")}</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
+
       <Link href="/compliance" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
         <Icon e="⚖" size={18} color="var(--gold)" />
         <div style={{ flex: 1 }}>
