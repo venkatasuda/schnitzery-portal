@@ -6,7 +6,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
   getProducts, getCounts, saveCount, addProduct, removeProduct, getOrderAlert,
-  addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend, getInventoryVariance,
+  addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend, getInventoryVariance, getDepletionForecast,
 } from "@/lib/queries/inventory";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -18,7 +18,7 @@ const BLUE = "***REMOVED***3498db";
 
 export default function InventoryPage() {
   const { t } = useLang();
-  const [tab, setTab] = useState<"count" | "deliveries" | "analytics">("count");
+  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast">("count");
 
   // shared catalog
   const [products, setProducts] = useState<any[]>([]);
@@ -45,6 +45,8 @@ export default function InventoryPage() {
   const [days, setDays] = useState(30);
   const [monthTrend, setMonthTrend] = useState<any[]>([]);
   const [variance, setVariance] = useState<any>(null);
+  const [forecast, setForecast] = useState<any>(null);
+  const [coverDays, setCoverDays] = useState(7);
 
   async function load() {
     setLoading(true);
@@ -75,6 +77,7 @@ export default function InventoryPage() {
   useEffect(() => {
     if (tab === "deliveries") loadDeliveries();
     if (tab === "analytics") { loadAnalytics(days); getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }); getInventoryVariance(30).then((r) => { if (r.ok) setVariance(r); }); }
+    if (tab === "forecast") { getDepletionForecast(30, coverDays).then((r) => { if (r.ok) setForecast(r); }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -121,6 +124,14 @@ export default function InventoryPage() {
       navigator.clipboard.writeText(text).then(() => toast(t("inv.listCopied"), "success")).catch(() => toast(t("inv.failed"), "error"));
     } else toast(t("inv.failed"), "error");
   }
+  function copyOrderList() {
+    if (!forecast) return;
+    const lines = forecast.items.filter((x: any) => x.suggested > 0).map((x: any) => `• ${x.product}: ${x.suggested}${x.unit ? " " + x.unit : ""}`);
+    if (lines.length === 0) { toast(t("inv.nothingToOrder"), "success"); return; }
+    const text = `${t("inv.orderListTitle")}\n${lines.join("\n")}`;
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(() => toast(t("inv.listCopied"), "success")).catch(() => toast(t("inv.failed"), "error"));
+    else toast(t("inv.failed"), "error");
+  }
 
   if (denied) return <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
@@ -137,6 +148,7 @@ export default function InventoryPage() {
         <TabBtn active={tab === "count"} onClick={() => setTab("count")}>{t("inv.tabCount")}</TabBtn>
         <TabBtn active={tab === "deliveries"} onClick={() => setTab("deliveries")}>{t("inv.tabDeliveries")}</TabBtn>
         <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")}>{t("inv.tabAnalytics")}</TabBtn>
+        <TabBtn active={tab === "forecast"} onClick={() => setTab("forecast")}>{t("inv.tabForecast")}</TabBtn>
       </div>
 
       {loading ? <CardSkeleton rows={4} /> : (
@@ -406,6 +418,42 @@ export default function InventoryPage() {
                   </div>
                 </>
               )}
+            </>
+          )}
+
+          {tab === "forecast" && (
+            <>
+              <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 12 }}>{t("inv.forecastIntro")}</div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
+                <span style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}>{t("inv.coverFor")}</span>
+                {[7, 14, 30].map((cd) => (
+                  <button key={cd} onClick={() => { setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); }); }}
+                    style={{ ...chip, background: coverDays === cd ? "rgba(212,168,71,0.15)" : "rgba(255,255,255,0.05)", color: coverDays === cd ? "***REMOVED***d4a847" : "***REMOVED***9a8f8f", borderColor: coverDays === cd ? "rgba(212,168,71,0.3)" : "rgba(255,255,255,0.1)", cursor: "pointer" }}>
+                    {cd}{t("inv.daysShort")}
+                  </button>
+                ))}
+                <button onClick={copyOrderList} style={{ ...chip, marginLeft: "auto", cursor: "pointer" }}>{t("inv.copyOrder")}</button>
+              </div>
+              {!forecast ? <CardSkeleton rows={4} /> : forecast.items.length === 0 ? (
+                <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", fontSize: 13 }}>{forecast.hasData ? t("inv.forecastNoUse") : t("inv.forecastNoData")}</div>
+              ) : forecast.items.map((it: any, i: number) => {
+                const dl = it.daysLeft;
+                const c = dl == null ? "***REMOVED***7a7070" : dl < 2 ? "***REMOVED***ec7063" : dl < 4 ? "***REMOVED***d4a847" : "***REMOVED***58d68d";
+                return (
+                  <div key={i} style={{ ...card, padding: 14, marginBottom: 8 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "***REMOVED***fff" }}>{it.product}</div>
+                        <div style={{ fontSize: 11, color: "***REMOVED***9a8f8f" }}>{it.category} · {t("inv.onHand")} {it.current}{it.unit ? " " + it.unit : ""}{it.usageRate > 0 ? ` · ${it.usageRate}/${t("inv.dayShort")}` : ""}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: c }}>{dl == null ? "—" : t("inv.daysLeftVal", { n: dl })}</div>
+                        {it.suggested > 0 && <div style={{ fontSize: 11, color: "***REMOVED***d4a847" }}>{t("inv.order")} {it.suggested}{it.unit ? " " + it.unit : ""}</div>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </>
           )}
         </>

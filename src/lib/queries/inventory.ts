@@ -421,3 +421,82 @@ export async function getInventoryVariance(days = 30) {
 
   return { ok: true, items, normalised, hasData: items.length > 0, days };
 }
+
+
+// ── Depletion forecast: runway (days of stock left) + suggested order per product ──
+// Usage rate is derived (opening count + purchases − closing count) over a window,
+// divided by the window length. Days left = current stock ÷ daily usage.
+// Suggested order covers `coverDays` of usage above what's on hand (falls back to
+// reaching the target/par when there's no recent usage to learn from).
+export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
+  const { supabase, user, branchId } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in.", items: [], hasData: false };
+
+  const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
+  const dayMs = 86400000;
+  const at = (off: number) => new Date(anchor - off * dayMs).toISOString().slice(0, 10);
+  const from = at(windowDays);
+  const fetchFrom = at(windowDays * 2); // lead-in so the first pair in the window is complete
+
+  const [countsRes, purchRes, prodRes] = await Promise.all([
+    supabase.from("inventory_counts").select("product, category, count_date, ist, soll, unit")
+      .eq("branch_id", branchId).gte("count_date", fetchFrom).order("count_date"),
+    supabase.from("inventory_purchases").select("product, purchase_date, qty")
+      .eq("branch_id", branchId).gte("purchase_date", fetchFrom),
+    supabase.from("inventory_master").select("product, category, soll, unit, is_active")
+      .eq("branch_id", branchId).eq("is_active", true),
+  ]);
+
+  const C = countsRes.data || [];
+  const purchByProdDate: Record<string, Record<string, number>> = {};
+  if (!purchRes.error) for (const p of purchRes.data || []) {
+    (purchByProdDate[p.product] ||= {})[p.purchase_date] = (purchByProdDate[p.product]?.[p.purchase_date] || 0) + (Number(p.qty) || 0);
+  }
+
+  const byProdDate: Record<string, Record<string, number>> = {};
+  const meta: Record<string, any> = {};
+  for (const c of C) {
+    (byProdDate[c.product] ||= {})[c.count_date] = Number(c.ist) || 0;
+    meta[c.product] = { category: c.category, soll: Number(c.soll) || 0, unit: c.unit };
+  }
+  for (const m of prodRes.data || []) {
+    if (!meta[m.product]) meta[m.product] = { category: m.category, soll: Number(m.soll) || 0, unit: m.unit };
+    else if (!meta[m.product].soll) meta[m.product].soll = Number(m.soll) || 0;
+  }
+
+  const purchasedBetween = (prod: string, after: string, through: string) => {
+    const mm = purchByProdDate[prod] || {}; let s = 0;
+    for (const d of Object.keys(mm)) if (d > after && d <= through) s += mm[d];
+    return s;
+  };
+
+  const items: any[] = [];
+  for (const prod of Object.keys(byProdDate)) {
+    const series = Object.keys(byProdDate[prod]).sort().map((d) => ({ date: d, ist: byProdDate[prod][d] }));
+    if (series.length === 0) continue;
+    const current = series[series.length - 1].ist;
+
+    let usage = 0;
+    for (let i = 0; i + 1 < series.length; i++) {
+      const a = series[i], b = series[i + 1];
+      if (b.date <= from) continue; // pair closes outside the window
+      let used = a.ist + purchasedBetween(prod, a.date, b.date) - b.ist;
+      if (used < 0) used = 0;
+      usage += used;
+    }
+    const usageRate = usage / windowDays; // per day
+    const soll = meta[prod]?.soll || 0;
+    const daysLeft = usageRate > 0 ? Math.round((current / usageRate) * 10) / 10 : null;
+    const suggested = usageRate > 0
+      ? Math.max(0, Math.ceil(usageRate * coverDays - current))
+      : Math.max(0, Math.round((soll - current) * 10) / 10);
+
+    items.push({
+      product: prod, category: meta[prod]?.category || "", unit: meta[prod]?.unit || "",
+      current: Math.round(current * 10) / 10, soll,
+      usageRate: Math.round(usageRate * 100) / 100, daysLeft, suggested,
+    });
+  }
+  items.sort((a, b) => (a.daysLeft ?? 1e9) - (b.daysLeft ?? 1e9));
+  return { ok: true, items, coverDays, hasData: C.length > 0 };
+}
