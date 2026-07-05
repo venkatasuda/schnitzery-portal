@@ -70,6 +70,7 @@ export default function ScheduleHubPage() {
       {/* quick actions */}
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <Link href="/announcements" style={quickBtn}>{t("schedhub.broadcast")}</Link>
+        <Link href="/cover" style={quickBtn}>{t("schedhub.covers")}</Link>
         <Link href="/noshow" style={quickBtn}>{t("schedhub.reminders")}</Link>
       </div>
 

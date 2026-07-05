@@ -155,6 +155,7 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
       <div className="section-label">{t("home.workplace")}</div>
       <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)" title={t("home.announcements")} sub={t("home.announcementsSub")} />
       <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSub")} />
+      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" title={t("home.tempLog")} sub={t("home.tempLogSub")} />
     </>
   );
 }
@@ -356,6 +357,7 @@ function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount:
       <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
       <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)" title={t("home.peopleTeam")} sub={t("home.peopleTeamSub")} />
       <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,***REMOVED***8b6914,***REMOVED***d4a847)" title={t("home.inventory")} sub={t("home.inventorySub")} />
+      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
       <Shortcut href="/profile" icon="⚙" grad="linear-gradient(135deg,***REMOVED***555,***REMOVED***777)" title={t("home.settings")} sub={t("home.settingsSub")} />
     </>
   );

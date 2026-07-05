@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
   getMyShifts, getWeekStart, getStaffForSwap, submitSwap, getMySwaps,
@@ -77,6 +78,15 @@ export default function SchedulePage() {
     <div className="fade-up">
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📅" size={22} /> {t("shifts.title")}</div>
       <div className="page-sub">{weekLabel || t("common.loading")}</div>
+
+      <Link href="/cover" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", margin: "12px 0" }}>
+        <Icon e="🔁" size={20} color="var(--gold)" />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("cover.title")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("cover.navSub")}</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
 
       {/* TABS */}
       <div className="hub-tabs">
