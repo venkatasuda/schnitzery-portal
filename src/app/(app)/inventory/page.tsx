@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
@@ -10,6 +11,7 @@ import {
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import ScanToCount from "./ScanToCount";
 
 const GOLD = "***REMOVED***d4a847";
 const BLUE = "***REMOVED***3498db";
@@ -22,6 +24,7 @@ export default function InventoryPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [showScan, setShowScan] = useState(false);
 
   // COUNT tab
   const [counts, setCounts] = useState<Record<string, any>>({});
@@ -141,6 +144,11 @@ export default function InventoryPage() {
           {/* ============ COUNT ============ */}
           {tab === "count" && (
             <>
+              {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load()} />}
+              <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                <button onClick={() => setShowScan(true)} style={{ flex: 1, padding: 12, borderRadius: 10, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>📷 {t("scan.scanToCount")}</button>
+                <Link href="/inventory/labels" style={{ padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.05)", color: "var(--gray)", border: "1px solid rgba(255,255,255,0.1)", fontSize: 13, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center" }}>🏷️ {t("scan.labels")}</Link>
+              </div>
               <div style={{ ...card, marginBottom: 14, borderColor: lowStock.length ? "rgba(231,76,60,0.3)" : "rgba(255,255,255,0.08)" }}>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: lowStock.length ? 10 : 0 }}>
                   {lowStock.length ? t("inv.belowTarget", { n: lowStock.length }) : t("inv.allAtTarget")}

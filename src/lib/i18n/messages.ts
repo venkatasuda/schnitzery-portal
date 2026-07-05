@@ -264,6 +264,17 @@ export const messages = {
       unitFields: "Name, min and max are required.", unitAdded: "Unit added", removeUnit: "Remove unit",
       confirmRemove: "Remove {name}? Past readings are kept.", unitRemoved: "Unit removed",
     },
+    scan: {
+      scanToCount: "Scan to count", labels: "Labels", title: "Scan a shelf label",
+      aim: "Point the camera at a product's QR label.", cameraErr: "Couldn't open the camera. Check permissions and try again.",
+      unknown: "That label isn't in this branch's catalog.", tryAgain: "Scan again",
+      target: "Target", countPh: "Count", saveNext: "Save & scan next", skip: "Skip",
+      enterCount: "Enter a count.", saved: "{p} counted", failed: "Couldn't save the count.",
+    },
+    labels: {
+      back: "Inventory", title: "Shelf Labels", subtitle: "Print a QR label for each product, then scan it while counting.",
+      print: "Print labels", none: "No products yet — add some in the catalog first.", qrPending: "QR…",
+    },
     roster: {
       title: "Weekly Roster", subtitle: "Assign staff to shifts · {week}", managersOnly: "Only managers can edit the roster.",
       thisWeek: "This week", weeksPlus: "+{n}w", weeksMinus: "{n}w", saveRoster: "💾 Save Roster",
@@ -902,6 +913,17 @@ export const messages = {
       addUnit: "Gerät hinzufügen", unitName: "Gerätename (z. B. Kühlraum)", minC: "Min °C", maxC: "Max °C",
       unitFields: "Name, Min und Max sind erforderlich.", unitAdded: "Gerät hinzugefügt", removeUnit: "Gerät entfernen",
       confirmRemove: "{name} entfernen? Frühere Messungen bleiben erhalten.", unitRemoved: "Gerät entfernt",
+    },
+    scan: {
+      scanToCount: "Scannen & zählen", labels: "Etiketten", title: "Regaletikett scannen",
+      aim: "Richte die Kamera auf den QR-Code eines Produkts.", cameraErr: "Kamera konnte nicht geöffnet werden. Berechtigungen prüfen und erneut versuchen.",
+      unknown: "Dieses Etikett ist nicht im Katalog dieser Filiale.", tryAgain: "Erneut scannen",
+      target: "Ziel", countPh: "Anzahl", saveNext: "Speichern & weiter", skip: "Überspringen",
+      enterCount: "Anzahl eingeben.", saved: "{p} gezählt", failed: "Zählung konnte nicht gespeichert werden.",
+    },
+    labels: {
+      back: "Inventar", title: "Regaletiketten", subtitle: "Drucke pro Produkt ein QR-Etikett und scanne es beim Zählen.",
+      print: "Etiketten drucken", none: "Noch keine Produkte — lege zuerst welche im Katalog an.", qrPending: "QR…",
     },
     roster: {
       title: "Wochendienstplan", subtitle: "Mitarbeiter Schichten zuweisen · {week}", managersOnly: "Nur Manager können den Dienstplan bearbeiten.",
