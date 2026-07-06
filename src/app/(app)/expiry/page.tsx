@@ -64,6 +64,17 @@ export default function ExpiryPage() {
     return { c: "***REMOVED***58d68d", label: t("expiry.inDays", { n: b.daysToExpiry }) };
   };
 
+  // group batches by product (batches arrive soonest-expiry first, so items[0] is the most urgent)
+  const groups = (() => {
+    const map: Record<string, any> = {};
+    for (const b of batches) {
+      if (!map[b.product]) map[b.product] = { product: b.product, unit: b.unit, items: [], total: 0 };
+      map[b.product].items.push(b);
+      map[b.product].total += Number(b.qty) || 0;
+    }
+    return Object.values(map).sort((a: any, z: any) => a.items[0].expiry_date.localeCompare(z.items[0].expiry_date));
+  })();
+
   return (
     <div className="fade-up">
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📅" size={22} /> {t("expiry.title")}</div>
@@ -120,21 +131,37 @@ export default function ExpiryPage() {
       <div className="card-title" style={{ marginBottom: 8 }}>{t("expiry.batches")}</div>
       {loading ? <CardSkeleton rows={3} /> : batches.length === 0 ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("expiry.none")}</div>
-      ) : batches.map((b) => {
-        const bg = badge(b);
+      ) : groups.map((g: any) => {
+        const soonest = g.items[0];
+        const head = badge(soonest);
+        const multi = g.items.length > 1;
         return (
-          <div key={b.id} className="card" style={{ marginBottom: 8, padding: 14, borderColor: b.flag === "expired" ? "rgba(231,76,60,0.35)" : b.flag === "soon" ? "rgba(212,168,71,0.25)" : "rgba(255,255,255,0.08)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div key={g.product} className="card" style={{ marginBottom: 10, padding: 14, borderColor: soonest.flag === "expired" ? "rgba(231,76,60,0.35)" : soonest.flag === "soon" ? "rgba(212,168,71,0.25)" : "rgba(255,255,255,0.08)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: multi ? 10 : 6, marginBottom: multi ? 4 : 0, borderBottom: multi ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{b.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {b.qty}{b.unit ? " " + b.unit : ""}</span></div>
-                <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("expiry.expires")} {fmtDate(b.expiry_date)}{b.note ? ` · ${b.note}` : ""}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>{g.product}</div>
+                <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("expiry.totalOnHand", { qty: Math.round(g.total * 10) / 10, unit: g.unit || "" })}{multi ? ` · ${g.items.length} ${t("expiry.batchesShort")}` : ""}</div>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: bg.c, whiteSpace: "nowrap" }}>{bg.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: head.c, whiteSpace: "nowrap" }}>{head.label}</span>
             </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <button onClick={() => used(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(39,174,96,0.12)", color: "***REMOVED***58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("expiry.used")}</button>
-              <button onClick={() => discard(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(231,76,60,0.1)", color: "***REMOVED***ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("expiry.discard")}</button>
-            </div>
+            {g.items.map((b: any) => {
+              const bg = badge(b);
+              return (
+                <div key={b.id} style={{ padding: "9px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 13, color: "var(--white)" }}>{b.qty}{b.unit ? " " + b.unit : ""} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {t("expiry.expires")} {fmtDate(b.expiry_date)}</span></div>
+                      {b.note && <div style={{ fontSize: 11, color: "***REMOVED***9a8f8f", fontStyle: "italic" }}>{b.note}</div>}
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: bg.c, whiteSpace: "nowrap" }}>{bg.label}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button onClick={() => used(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "rgba(39,174,96,0.12)", color: "***REMOVED***58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("expiry.used")}</button>
+                    <button onClick={() => discard(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "rgba(231,76,60,0.1)", color: "***REMOVED***ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("expiry.discard")}</button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       })}

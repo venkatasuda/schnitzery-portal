@@ -139,6 +139,36 @@ export default function InventoryPage() {
     if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setGridSel(null); setGridVal(""); load(); }
     else { toast(res.error || t("inv.failed"), "error"); if (res.error?.includes("Managers")) setDenied(true); }
   }
+  function downloadShoppingCsv() {
+    if (!lowStock.length) return;
+    const csv = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const head = ["Product", "Category", "Current", "Target", "To buy", "Unit"];
+    const rows = lowStock.map((l: any) => [csv(l.product), csv(l.category), l.ist, l.soll, l.short, csv(l.unit)].join(","));
+    const day = new Date().toISOString().slice(0, 10);
+    const blob = new Blob(["\uFEFF" + [head.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `schnitzery-shopping-${day}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast(t("inv.listDownloaded"), "success");
+  }
+  function printShoppingList() {
+    if (!lowStock.length) return;
+    const esc = (v: any) => String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
+    const day = new Date().toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    const rows = lowStock.map((l: any) => `<tr><td>${esc(l.product)}</td><td>${esc(l.category)}</td><td class="r">${l.ist}</td><td class="r">${l.soll}</td><td class="r b">${l.short} ${esc(l.unit || "")}</td></tr>`).join("");
+    const w = window.open("", "_blank"); if (!w) return;
+    w.document.write(`<!doctype html><html><head><title>Schnitzery Shopping List</title><style>
+      *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}body{margin:0;padding:16mm;color:***REMOVED***111}
+      h1{margin:0 0 2mm}.meta{color:***REMOVED***666;margin-bottom:8mm;font-size:11pt}
+      table{width:100%;border-collapse:collapse;font-size:11pt}th,td{padding:2.5mm 3mm;border-bottom:1px solid ***REMOVED***ddd;text-align:left}
+      th{border-bottom:2px solid ***REMOVED***333}.r{text-align:right}.b{font-weight:700}tr:nth-child(even){background:***REMOVED***f7f7f7}
+    </style></head><body>
+      <h1>Schnitzery — ${esc(t("inv.shoppingHdr"))}</h1><div class="meta">${day} · ${lowStock.length} ${esc(t("inv.itemsShort"))}</div>
+      <table><thead><tr><th>${esc(t("inv.product"))}</th><th>${esc(t("inv.category"))}</th><th class="r">${esc(t("inv.currentCol"))}</th><th class="r">${esc(t("inv.targetCol"))}</th><th class="r">${esc(t("inv.buyCol"))}</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      <script>window.onload=function(){window.print()}</script></body></html>`);
+    w.document.close();
+  }
   function copyShoppingList() {
     const lines = lowStock.map((l: any) => `• ${l.product}: ${l.short}${l.unit ? " " + l.unit : ""}`);
     const text = `${t("inv.shoppingListTitle")}\n${lines.join("\n")}`;
@@ -209,7 +239,11 @@ export default function InventoryPage() {
                   </div>
                 ))}
                 {lowStock.length > 0 && (
-                  <button onClick={copyShoppingList} style={{ width: "100%", marginTop: 12, padding: "10px", background: "rgba(255,255,255,0.05)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("inv.copyList")}</button>
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <button onClick={copyShoppingList} style={{ flex: 1, padding: "9px", background: "rgba(255,255,255,0.05)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📋 {t("inv.copyShort")}</button>
+                    <button onClick={downloadShoppingCsv} style={{ flex: 1, padding: "9px", background: "rgba(255,255,255,0.05)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⬇ CSV</button>
+                    <button onClick={printShoppingList} style={{ flex: 1, padding: "9px", background: "rgba(255,255,255,0.05)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>🖨 PDF</button>
+                  </div>
                 )}
               </div>
 
