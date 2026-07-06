@@ -500,3 +500,49 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
   items.sort((a, b) => (a.daysLeft ?? 1e9) - (b.daysLeft ?? 1e9));
   return { ok: true, items, coverDays, hasData: C.length > 0 };
 }
+
+
+// ── Purchase-order draft: forecast suggestions enriched with last price + supplier ──
+// Takes the depletion forecast's suggested quantities and, for each product, pulls
+// the most recent delivery to estimate a unit price and the usual supplier, then
+// groups everything by supplier so you can send one order per supplier.
+export async function getPurchaseOrderDraft(coverDays = 7) {
+  const fc = await getDepletionForecast(30, coverDays);
+  if (!fc.ok) return { ok: false, error: (fc as any).error || "No forecast.", groups: [], total: 0, hasPrices: false };
+  const suggested = fc.items.filter((x: any) => x.suggested > 0);
+
+  const { supabase, user, branchId } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in.", groups: [], total: 0, hasPrices: false };
+
+  const { data: purch } = await supabase
+    .from("inventory_purchases").select("product, qty, cost, supplier, purchase_date")
+    .eq("branch_id", branchId).order("purchase_date", { ascending: false });
+
+  const priceInfo: Record<string, { unitPrice: number; supplier: string }> = {};
+  for (const p of purch || []) {
+    if (!priceInfo[p.product] && Number(p.qty) > 0) {
+      priceInfo[p.product] = { unitPrice: Number(p.cost) / Number(p.qty), supplier: p.supplier || "" };
+    }
+  }
+
+  const items = suggested.map((x: any) => {
+    const pi = priceInfo[x.product];
+    const unitPrice = pi ? Math.round(pi.unitPrice * 100) / 100 : null;
+    return {
+      product: x.product, category: x.category, qty: x.suggested, unit: x.unit || "",
+      unitPrice, lineCost: unitPrice != null ? Math.round(unitPrice * x.suggested * 100) / 100 : null,
+      supplier: pi?.supplier || "",
+    };
+  });
+
+  const bySupplier: Record<string, any[]> = {};
+  for (const it of items) { const key = it.supplier || "__none"; (bySupplier[key] ||= []).push(it); }
+  const groups = Object.keys(bySupplier).map((sup) => {
+    const list = bySupplier[sup];
+    const subtotal = Math.round(list.reduce((s, it) => s + (it.lineCost || 0), 0) * 100) / 100;
+    return { supplier: sup === "__none" ? "" : sup, items: list, subtotal };
+  }).sort((a, b) => b.subtotal - a.subtotal);
+
+  const total = Math.round(groups.reduce((s, g) => s + g.subtotal, 0) * 100) / 100;
+  return { ok: true, groups, total, hasPrices: items.some((i: any) => i.unitPrice != null) };
+}

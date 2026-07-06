@@ -424,6 +424,7 @@ export default function InventoryPage() {
           {tab === "forecast" && (
             <>
               <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 12 }}>{t("inv.forecastIntro")}</div>
+              <Link href="/inventory/order" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 12, marginBottom: 12, borderRadius: 10, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>🧾 {t("inv.buildOrder")}</Link>
               <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
                 <span style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}>{t("inv.coverFor")}</span>
                 {[7, 14, 30].map((cd) => (
