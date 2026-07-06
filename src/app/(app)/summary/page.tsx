@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getMonthlySummary } from "@/lib/queries/labor";
@@ -80,6 +81,15 @@ export default function SummaryPage() {
     <div className="fade-up">
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("summary.title")}</div>
       <div className="page-sub">{t("summary.subtitle")}</div>
+
+      <Link href="/simulator" className="card" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", margin: "12px 0 0" }}>
+        <Icon e="🎛️" size={18} color="var(--gold)" />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{t("summary.simulator")}</div>
+          <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("summary.simulatorSub")}</div>
+        </div>
+        <span style={{ color: "var(--gray)" }}>›</span>
+      </Link>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, margin: "12px 0 14px", flexWrap: "wrap" }}>
         <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14 }}>

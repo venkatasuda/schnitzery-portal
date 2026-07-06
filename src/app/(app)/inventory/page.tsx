@@ -25,6 +25,9 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [showScan, setShowScan] = useState(false);
+  const [countView, setCountView] = useState<"list" | "grid">("list");
+  const [gridSel, setGridSel] = useState<any>(null);
+  const [gridVal, setGridVal] = useState("");
 
   // COUNT tab
   const [counts, setCounts] = useState<Record<string, any>>({});
@@ -117,6 +120,25 @@ export default function InventoryPage() {
     else toast(res.error || t("inv.failed"), "error");
   }
 
+  function stockStatus(p: any): "green" | "amber" | "red" | "none" {
+    const c = counts[p.product];
+    const ist = c ? Number(c.ist) : null;
+    const soll = Number(p.soll) || 0;
+    if (ist === null) return "none";
+    if (soll <= 0) return ist > 0 ? "green" : "red";
+    if (ist >= soll) return "green";
+    if (ist >= soll * 0.5) return "amber";
+    return "red";
+  }
+  const viewBtn = (active: boolean) => ({ flex: 1, padding: "8px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", background: active ? "***REMOVED***d4a847" : "rgba(255,255,255,0.04)", color: active ? "***REMOVED***1a0e0e" : "***REMOVED***9a8f8f", border: "1px solid rgba(255,255,255,0.1)" });
+  async function quickSave(p: any, val: string) {
+    if (val === "" || val === undefined) { toast(t("inv.enterCount"), "error"); return; }
+    setSavingP(p.product);
+    const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit);
+    setSavingP(null);
+    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setGridSel(null); setGridVal(""); load(); }
+    else { toast(res.error || t("inv.failed"), "error"); if (res.error?.includes("Managers")) setDenied(true); }
+  }
   function copyShoppingList() {
     const lines = lowStock.map((l: any) => `• ${l.product}: ${l.short}${l.unit ? " " + l.unit : ""}`);
     const text = `${t("inv.shoppingListTitle")}\n${lines.join("\n")}`;
@@ -157,6 +179,21 @@ export default function InventoryPage() {
           {tab === "count" && (
             <>
               {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load()} />}
+              {gridSel && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setGridSel(null)}>
+                  <div onClick={(e) => e.stopPropagation()} style={{ background: "***REMOVED***1c1010", borderRadius: 14, padding: 20, width: "100%", maxWidth: 320, border: "1px solid rgba(255,255,255,0.1)" }}>
+                    <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}>{gridSel.category}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "***REMOVED***fff", marginBottom: 4 }}>{gridSel.product}</div>
+                    <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll} {gridSel.unit || ""}{counts[gridSel.product] ? ` · ${t("inv.counted")} ${counts[gridSel.product].ist}` : ""}</div>
+                    <input type="number" inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
+                      style={{ width: "100%", padding: 14, fontSize: 20, textAlign: "center", borderRadius: 10, background: "***REMOVED***241414", color: "***REMOVED***fff", border: "1px solid rgba(255,255,255,0.15)", fontWeight: 700 }} />
+                    <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+                      <button onClick={() => quickSave(gridSel, gridVal)} disabled={savingP === gridSel.product} style={{ flex: 1, padding: 13, borderRadius: 10, background: "***REMOVED***d4a847", color: "***REMOVED***1a1a1a", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{savingP === gridSel.product ? "…" : t("inv.count")}</button>
+                      <button onClick={() => setGridSel(null)} style={{ padding: "13px 16px", borderRadius: 10, background: "transparent", color: "***REMOVED***9a8f8f", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer" }}>✕</button>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
                 <button onClick={() => setShowScan(true)} style={{ flex: 1, padding: 12, borderRadius: 10, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>📷 {t("scan.scanToCount")}</button>
                 <Link href="/inventory/labels" style={{ padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.05)", color: "var(--gray)", border: "1px solid rgba(255,255,255,0.1)", fontSize: 13, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center" }}>🏷️ {t("scan.labels")}</Link>
@@ -195,6 +232,28 @@ export default function InventoryPage() {
                 <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", padding: 30 }}>{t("inv.noProducts")}</div>
               ) : (
                 <>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                    <button onClick={() => setCountView("list")} style={viewBtn(countView === "list")}>☰ {t("inv.viewList")}</button>
+                    <button onClick={() => setCountView("grid")} style={viewBtn(countView === "grid")}>▦ {t("inv.viewGrid")}</button>
+                  </div>
+                  {countView === "grid" ? (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                      {products.map((p) => {
+                        const st = stockStatus(p);
+                        const bg = st === "green" ? "rgba(39,174,96,0.18)" : st === "amber" ? "rgba(212,168,71,0.18)" : st === "red" ? "rgba(231,76,60,0.18)" : "rgba(255,255,255,0.04)";
+                        const bd = st === "green" ? "rgba(39,174,96,0.4)" : st === "amber" ? "rgba(212,168,71,0.4)" : st === "red" ? "rgba(231,76,60,0.4)" : "rgba(255,255,255,0.1)";
+                        const c = counts[p.product];
+                        return (
+                          <button key={p.id} onClick={() => { setGridSel(p); setGridVal(""); }}
+                            style={{ background: bg, border: `1px solid ${bd}`, borderRadius: 10, padding: 10, textAlign: "left", cursor: "pointer", minHeight: 68 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: "***REMOVED***fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.product}</div>
+                            <div style={{ fontSize: 11, color: "***REMOVED***9a8f8f", marginTop: 4 }}>{c ? `${c.ist}` : "—"}/{p.soll}{p.unit ? " " + p.unit : ""}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                  <>
                   <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
                     {categories.map((c) => (
                       <button key={c} onClick={() => setActiveCat(c)} style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -224,6 +283,8 @@ export default function InventoryPage() {
                       </div>
                     );
                   })}
+                  </>
+                  )}
                 </>
               )}
             </>
