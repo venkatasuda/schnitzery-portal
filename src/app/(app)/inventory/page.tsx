@@ -184,7 +184,7 @@ export default function InventoryPage() {
                   <div onClick={(e) => e.stopPropagation()} style={{ background: "***REMOVED***1c1010", borderRadius: 14, padding: 20, width: "100%", maxWidth: 320, border: "1px solid rgba(255,255,255,0.1)" }}>
                     <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}>{gridSel.category}</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: "***REMOVED***fff", marginBottom: 4 }}>{gridSel.product}</div>
-                    <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll} {gridSel.unit || ""}{counts[gridSel.product] ? ` · ${t("inv.counted")} ${counts[gridSel.product].ist}` : ""}</div>
+                    <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[gridSel.product] ? ` · ${t("inv.current")} ${counts[gridSel.product].ist}` : ""}</div>
                     <input type="number" inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
                       style={{ width: "100%", padding: 14, fontSize: 20, textAlign: "center", borderRadius: 10, background: "***REMOVED***241414", color: "***REMOVED***fff", border: "1px solid rgba(255,255,255,0.15)", fontWeight: 700 }} />
                     <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -268,9 +268,13 @@ export default function InventoryPage() {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 14, fontWeight: 600 }}>{p.product}</div>
-                            <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}>
-                              {t("inv.targetShort")} {p.soll} {p.unit || ""}
-                              {counted && <span style={{ color: isLow ? "***REMOVED***ec7063" : "***REMOVED***58d68d" }}> · {t("inv.counted")} {counted.ist}</span>}
+                            <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginTop: 3 }}>
+                              {t("inv.targetShort")} {p.soll}{p.unit ? ` ${p.unit}` : ""}
+                              {counted && (
+                                <span style={{ marginLeft: 8, padding: "1px 8px", borderRadius: 6, fontWeight: 700, background: isLow ? "rgba(231,76,60,0.15)" : "rgba(39,174,96,0.15)", color: isLow ? "***REMOVED***ec7063" : "***REMOVED***58d68d" }}>
+                                  {t("inv.current")} {counted.ist}{p.unit ? ` ${p.unit}` : ""}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <input type="number" value={entry[p.product] ?? ""} onChange={(e) => setEntry({ ...entry, [p.product]: e.target.value })}
