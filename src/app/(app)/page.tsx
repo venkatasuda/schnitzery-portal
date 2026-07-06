@@ -362,6 +362,7 @@ function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount:
       <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
       <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,***REMOVED***7b241c,***REMOVED***e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSubMgr")} />
       <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,***REMOVED***6c3483,***REMOVED***a569bd)" title={t("home.expiry")} sub={t("home.expirySubMgr")} />
+      <Shortcut href="/transfers" icon="🔄" grad="linear-gradient(135deg,***REMOVED***0e6655,***REMOVED***16a085)" title={t("home.transfers")} sub={t("home.transfersSub")} />
       <Shortcut href="/profile" icon="⚙" grad="linear-gradient(135deg,***REMOVED***555,***REMOVED***777)" title={t("home.settings")} sub={t("home.settingsSub")} />
     </>
   );
