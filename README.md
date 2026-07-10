@@ -1,6 +1,6 @@
 ***REMOVED*** Schnitzery — Staff & Operations Portal
 
-A production multi-branch workforce and operations management platform for the **Schnitzery** restaurant franchise, covering attendance, scheduling, payroll, inventory, food safety, and day-to-day operations across all branches from a single mobile-first app.
+A production multi-branch workforce- and operations-management platform for the **Schnitzery** restaurant franchise, covering attendance, scheduling, payroll, inventory, food safety, and day-to-day operations across all branches from a single mobile-first app.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
@@ -23,6 +23,20 @@ The system is built around three principles:
 - **Database-enforced security.** Permissions live in the database (Postgres Row-Level Security + role helpers), not just in the UI, so a leaked endpoint can't leak another branch's data.
 - **Tamper-proof attendance.** Clock events are stamped server-side through privileged database functions, so worked hours can't be fabricated from the client.
 - **Mobile-first, offline-tolerant.** The whole interface is designed for a phone in a busy kitchen, and attendance keeps working when the connection drops.
+
+---
+
+***REMOVED******REMOVED*** Recent updates
+
+The latest development cycle added a full **inventory and operations layer** on top of the existing workforce platform:
+
+- **Inventory suite** — scan-to-count (QR labels + phone camera), a stock heat-map, deliveries with cost, analytics & shrinkage variance, a depletion forecast, supplier purchase orders, and shopping-list export (copy / CSV / PDF).
+- **Waste & expiry** — a quick-tap, auto-costed waste log by reason, plus expiry / FIFO batch tracking grouped per product, with discards flowing into the waste log automatically.
+- **Cross-branch stock transfers** — request stock from another branch, with either-side visibility and status tracking.
+- **Food safety** — temperature / HACCP logging with forced corrective actions and an immutable audit trail.
+- **Cost tooling** — a monthly operations summary (with CSV export) and a food-cost what-if simulator.
+- **Scheduling** — a cover-request flow with automatic roster reassignment, and a team hours-vs-contract board.
+- **Correctness** — Europe/Berlin business-date handling extended across roster and analytics week-start math.
 
 ---
 
