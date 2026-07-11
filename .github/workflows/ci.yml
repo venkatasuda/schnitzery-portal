@@ -1,0 +1,53 @@
+***REMOVED*** ============================================================================
+***REMOVED***  Schnitzery Portal — Continuous Checks
+***REMOVED***  Runs automatically on every push and every pull request.
+***REMOVED***  It type-checks and builds the app, so a broken build is caught HERE
+***REMOVED***  (in GitHub) before it ever reaches Vercel or your users.
+***REMOVED***  No action needed from you — it just runs itself.
+***REMOVED*** ============================================================================
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+***REMOVED*** Cancel an older run if you push again quickly (saves time)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Type-check & build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Type-check (tsc)
+        run: npx tsc --noEmit
+
+      - name: Production build (next build)
+        run: npm run build
+        env:
+          ***REMOVED*** Build-time placeholders so the build doesn't fail on missing env.
+          ***REMOVED*** These are NOT secrets — they're throwaway values only used to let
+          ***REMOVED*** the build compile. Real values live in Vercel, not here.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+          ***REMOVED***NEXT_PUBLIC_SUPABASE_URL=https://vxwtmtlkwvwcdegtcjuz.supabase.co
+          ***REMOVED***NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4d3RtdGxrd3Z3Y2RlZ3RjanV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MjE0MDksImV4cCI6MjA5NTA5NzQwOX0.QhOxF6bttQR1Y_9qd2mczEck6LADHfzooOR54Busm-o
+          ***REMOVED***SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4d3RtdGxrd3Z3Y2RlZ3RjanV6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTUyMTQwOSwiZXhwIjoyMDk1MDk3NDA5fQ.aBrFEsEOFBaiOb3855wxcXnrQnXIkapBjRIkro_JkVk
