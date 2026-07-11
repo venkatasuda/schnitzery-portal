@@ -24,6 +24,7 @@ export default function ProfileSettings() {
   const [open, setOpen] = useState(false);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function changePassword() {
@@ -77,8 +78,17 @@ export default function ProfileSettings() {
 
         {open && (
           <div style={{ padding: "6px 10px 10px" }}>
-            <input type="password" placeholder={t("settings.newPwPlaceholder")} value={pw} onChange={(e) => setPw(e.target.value)} style={inputStyle} />
-            <input type="password" placeholder={t("settings.confirmPwPlaceholder")} value={pw2} onChange={(e) => setPw2(e.target.value)} style={inputStyle} />
+            <div style={{ position: "relative" }}>
+              <input type={showPw ? "text" : "password"} placeholder={t("settings.newPwPlaceholder")} value={pw} onChange={(e) => setPw(e.target.value)} style={{ ...inputStyle, paddingRight: 44 }} />
+              <button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? t("login.hidePassword") : t("login.showPassword")} title={showPw ? t("login.hidePassword") : t("login.showPassword")} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 6, color: "var(--gray)", display: "flex", alignItems: "center" }}>
+                {showPw ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                )}
+              </button>
+            </div>
+            <input type={showPw ? "text" : "password"} placeholder={t("settings.confirmPwPlaceholder")} value={pw2} onChange={(e) => setPw2(e.target.value)} style={inputStyle} />
             <button onClick={changePassword} disabled={busy} style={{ width: "100%", padding: 12, background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: busy ? "default" : "pointer" }}>
               {busy ? t("common.saving") : t("settings.updatePassword")}
             </button>
