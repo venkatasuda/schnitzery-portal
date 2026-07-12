@@ -37,6 +37,7 @@ The latest development cycle added a full **inventory and operations layer** on 
 - **Cost tooling** — a monthly operations summary (with CSV export) and a food-cost what-if simulator.
 - **Scheduling** — a cover-request flow with automatic roster reassignment, and a team hours-vs-contract board.
 - **Correctness** — Europe/Berlin business-date handling extended across roster and analytics week-start math.
+- **Production hardening** — CI on every push (type-check + build), Sentry error monitoring, a forced first-login password change, and a show/hide toggle across all password fields.
 
 ---
 
@@ -111,6 +112,8 @@ The latest development cycle added a full **inventory and operations layer** on 
 | Charts | Recharts |
 | Icons | lucide-react |
 | Scanning | qrcode (label generation) + html5-qrcode (camera decode) |
+| Monitoring | Sentry (error + performance) |
+| CI | GitHub Actions (type-check + build on every push) |
 | Hosting | Vercel |
 | i18n | Custom lightweight EN / DE layer (1,500+ keys per locale) |
 
@@ -224,6 +227,16 @@ src/
 - Attendance writes are restricted to `SECURITY DEFINER` functions; the client cannot write attendance rows directly.
 - Cross-branch access is scoped per role; non-owners are limited to their assigned branch. Cross-branch transfers are visible only to the two branches involved.
 - The Supabase service-role key is confined to server-side code (staff creation and branch-name lookups for transfers).
+- Accounts issued with a temporary password are flagged `must_change_password`; the app forces a private password before granting access, and the flag clears on change.
+- Errors are captured in Sentry (production only) with a branded fallback screen, so failures are visible rather than silent.
+
+---
+
+***REMOVED******REMOVED*** Reliability & Monitoring
+
+- **Continuous integration** — a GitHub Actions workflow type-checks (`tsc`) and runs a full production build on every push and pull request, so a broken build is caught before it reaches Vercel.
+- **Error monitoring** — Sentry reports client, server, and edge errors from production with stack traces and request context; a `global-error` boundary gives users a graceful fallback instead of a crash.
+- **Forced password rotation** — first-login accounts on a shared onboarding password are required to set their own before using the app.
 
 ---
 
