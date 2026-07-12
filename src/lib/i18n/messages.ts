@@ -144,7 +144,7 @@ export const messages = {
       inProgress: "in progress", recordIn: "In", recordOut: "Out", minBreak: "min break",
     },
     login: {
-      subtitle: "Sign in to your account", email: "Email", password: "Password", showPassword: "Show password", hidePassword: "Hide password",
+      subtitle: "Sign in to your account", email: "Email", password: "Password", showPassword: "Show password", hidePassword: "Hide password", tooManyAttempts: "Too many attempts. Please wait {min} min and try again.",
       signIn: "Sign In", signingIn: "Signing in…",
     },
     approvals: {
@@ -859,7 +859,7 @@ export const messages = {
       inProgress: "läuft", recordIn: "Ein", recordOut: "Aus", minBreak: "Min. Pause",
     },
     login: {
-      subtitle: "Melde dich bei deinem Konto an", email: "E-Mail", password: "Passwort", showPassword: "Passwort anzeigen", hidePassword: "Passwort verbergen",
+      subtitle: "Melde dich bei deinem Konto an", email: "E-Mail", password: "Passwort", showPassword: "Passwort anzeigen", hidePassword: "Passwort verbergen", tooManyAttempts: "Zu viele Versuche. Bitte {min} Min. warten und erneut versuchen.",
       signIn: "Anmelden", signingIn: "Anmeldung…",
     },
     approvals: {

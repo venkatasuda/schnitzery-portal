@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useLang } from "@/components/LanguageProvider";
+import { checkLogin, recordFail, clearAttempts } from "@/lib/queries/loginThrottle";
 
 export default function LoginForm() {
   const { t } = useLang();
@@ -19,12 +20,22 @@ export default function LoginForm() {
   async function handleLogin() {
     setError(null);
     setLoading(true);
+    // server-side lockout check (can't be bypassed by refreshing)
+    const gate = await checkLogin(email);
+    if (gate.blocked) {
+      setLoading(false);
+      setError(t("login.tooManyAttempts", { min: Math.ceil((gate.retryAfter || 60) / 60) }));
+      return;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) {
+      await recordFail(email);
+      setLoading(false);
       setError(error.message);
       return;
     }
+    await clearAttempts(email);
+    setLoading(false);
     // Session is set; middleware will allow the app routes now.
     router.push("/");
     router.refresh();
