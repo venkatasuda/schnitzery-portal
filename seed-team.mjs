@@ -8,9 +8,9 @@
 // TWO THINGS CHANGED, both deliberate:
 //   1. The roster lives in team.roster.csv, which is gitignored. Personal data
 //      never enters version control again.
-//   2. Every person gets their OWN random password instead of one shared
-//      "[REDACTED-PASSWORD]". A shared password means any employee can sign in as
-//      any colleague who hasn't logged in yet — including a manager.
+//   2. Every person gets their OWN random password instead of one shared value
+//      hard-coded in the script. A shared password means any employee can sign
+//      in as any colleague who hasn't logged in yet — including a manager.
 //
 // SETUP
 //   1. Create team.roster.csv next to this file (see format below).
@@ -20,8 +20,8 @@
 //
 // CSV FORMAT — header row required:
 //   first_name,team,role,contract_type,contract_hours,phone
-//   Abhi,Kitchen,staff,Working Student,80,+49...
-//   Nishan,Preparation,staff,Working Student,80,
+//   Example,Kitchen,staff,Working Student,80,PHONE_NUMBER_HERE
+//   NoPhone,Preparation,staff,Working Student,80,
 //
 //   role must be one of: staff manager branch_owner brand_owner super_admin kiosk
 //   phone may be blank.
