@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { setAvatarUrl } from "@/lib/queries/profile-uploads";
+import { setAvatarUrl } from "@/lib/queries/documents";
 import { toast } from "@/components/Toast";
 
 // Shows the user's avatar (uploaded photo or initials) with a small camera

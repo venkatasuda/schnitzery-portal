@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import PWARegister from "@/components/PWARegister";
 
 export const metadata: Metadata = {
@@ -24,9 +25,12 @@ export const viewport: Viewport = {
 // of the wrong colour scheme on load. Sets the `light` class on <html>.
 const themeScript = `try{if(localStorage.getItem('sch_theme')==='light'){document.documentElement.classList.add('light')}}catch(e){}`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // reflect the chosen language on <html lang> so screen readers and browser
+  // translation treat German content as German (the locale is stored in a cookie).
+  const lang = (await cookies()).get("lang")?.value === "de" ? "de" : "en";
   return (
-    <html lang="en" translate="no" suppressHydrationWarning>
+    <html lang={lang} translate="no" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

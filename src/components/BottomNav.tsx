@@ -47,7 +47,7 @@ export default function BottomNav({ role }: { role: string }) {
       {items.map((it) => {
         const active = it.href === "/" ? path === "/" : path.startsWith(it.href);
         return (
-          <Link key={it.href} href={it.href} className={`nav-btn${active ? " active" : ""}`}>
+          <Link key={it.href} href={it.href} aria-current={active ? "page" : undefined} className={`nav-btn${active ? " active" : ""}`}>
             {it.icon}
             <span>{it.label}</span>
           </Link>

@@ -5,7 +5,7 @@ import { getMyStatus } from "@/lib/queries/attendance";
 import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attendance";
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { getLaborSummary } from "@/lib/queries/labor";
-import { listMyDocuments } from "@/lib/queries/profile-uploads";
+import { listMyDocuments } from "@/lib/queries/documents";
 import Link from "next/link";
 import StatusStrip from "@/components/StatusStrip";
 import Icon from "@/components/Icon";
@@ -77,6 +77,9 @@ export default async function HomePage() {
   if (docsRes.ok) {
     for (const d of docsRes.docs || []) {
       if (!d.expiry_date) continue;
+      // Only the CURRENT approved version of each doc type can expire. Superseded,
+      // rejected and archived versions kept for history must not raise an alarm.
+      if (!d.is_active || d.status !== "approved") continue;
       const days = Math.ceil((new Date(d.expiry_date).getTime() - Date.now()) / 86400000);
       if (days <= 60) myExpiring.push({ label: docLabel(d.doc_type), days });
     }

@@ -1,21 +1,61 @@
 // Schnitzery Portal — service worker (hand-rolled, conservative).
-// Goal: let the app (especially the kiosk) load even if the server is down and
-// the device reloads mid-outage. It caches the app shell + immutable static
-// assets on visit, and serves them from cache when the network fails.
+// Goal: let the KIOSK screen load even if the server is down and the device
+// reloads mid-outage. It caches a small public/kiosk app shell plus immutable
+// static assets, and serves those from cache when the network fails.
 //
 // Safety rules:
 //   • GET only — writes/POSTs are never cached.
 //   • Same-origin only — Supabase, the QR/font CDNs, etc. always go to network.
 //   • API/auth paths are never cached.
+//   • ONLY the routes in CACHEABLE_PAGES are ever stored. Every other page —
+//     anything behind the (app) layout — is network-only and is never written
+//     to the cache. See the note below.
+//   • Only 200/basic responses are stored, and never ones marked no-store/private.
 //   • Bump CACHE_VERSION to invalidate old caches on the next activate.
+//
+// ── WHY PAGES ARE NO LONGER CACHED BY DEFAULT ───────────────────────────────
+// v1 cached EVERY navigation response unconditionally. On a shared device (a
+// kiosk tablet, the back-office iPad) that meant one employee's rendered
+// /timesheet, /payroll or /staff/[id] HTML — with their personal data in it —
+// sat in the Cache API and could be served to the NEXT person to use that
+// device during any network blip. The cache also survived logout entirely.
+// If you need a new route to work offline, add it to CACHEABLE_PAGES *only*
+// after confirming it renders nothing user-specific.
+// ────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = "schnitzery-v1";
-const APP_SHELL = ["/", "/kiosk", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
+const CACHE_VERSION = "schnitzery-v2";
+
+// Routes safe to serve to any user of a shared device.
+// "/" is deliberately ABSENT — it is the authenticated home page.
+const CACHEABLE_PAGES = ["/kiosk", "/login"];
+
+const APP_SHELL = [
+  "/kiosk",
+  "/login",
+  "/manifest.webmanifest",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+];
+
+function isCacheablePage(pathname) {
+  return CACHEABLE_PAGES.includes(pathname);
+}
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL).catch(() => {}))
+    caches.open(CACHE_VERSION).then((cache) =>
+      // Individually, NOT cache.addAll — addAll is atomic, so a single missing
+      // asset (the icons, historically) rejected the whole call and left the
+      // cache completely empty while the .catch() hid the failure.
+      Promise.all(
+        APP_SHELL.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn("[sw] precache skipped:", url, err && err.message);
+          })
+        )
+      )
+    )
   );
 });
 
@@ -27,9 +67,20 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Store a response only if it is genuinely safe and useful to replay later.
 function putInCache(request, response) {
-  const copy = response.clone();
-  caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+  try {
+    if (!response || !response.ok || response.status !== 200) return response;
+    if (response.type !== "basic") return response;   // opaque/cors/redirect → skip
+
+    const cc = (response.headers.get("Cache-Control") || "").toLowerCase();
+    if (cc.includes("no-store") || cc.includes("private")) return response;
+
+    const copy = response.clone();
+    caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy)).catch(() => {});
+  } catch {
+    /* caching must never break the response */
+  }
   return response;
 }
 
@@ -49,21 +100,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Page navigations → network-first, fall back to cache (the offline cold load).
+  // Page navigations.
   if (req.mode === "navigate") {
+    // Not on the allowlist → straight to the network, and never cached.
+    // No cross-route cache fallback either: serving a cached /kiosk in place of
+    // a failed /payroll is how the wrong person's page ends up on screen.
+    if (!isCacheablePage(url.pathname)) return;
+
     event.respondWith(
       fetch(req)
         .then((res) => putInCache(req, res))
-        .catch(() => caches.match(req).then((hit) => hit || caches.match("/kiosk")).then((hit) => hit || caches.match("/")))
+        .catch(() => caches.match(req).then((hit) => hit || caches.match("/kiosk")))
     );
     return;
   }
 
-  // Other same-origin GETs → stale-while-revalidate.
-  event.respondWith(
-    caches.match(req).then((hit) => {
-      const fetched = fetch(req).then((res) => putInCache(req, res)).catch(() => hit);
-      return hit || fetched;
-    })
-  );
+  // Other same-origin GETs (RSC payloads, data requests) → network-only.
+  // These carry user-specific rendered output just like pages do.
 });

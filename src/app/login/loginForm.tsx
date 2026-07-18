@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useLang } from "@/components/LanguageProvider";
-import { checkLogin, recordFail, clearAttempts } from "@/lib/queries/loginThrottle";
+import { checkLogin, recordFail, finishLogin } from "@/lib/queries/loginThrottle";
 
 export default function LoginForm() {
   const { t } = useLang();
@@ -34,7 +34,9 @@ export default function LoginForm() {
       setError(error.message);
       return;
     }
-    await clearAttempts(email);
+    // Clears the throttle counters. Takes no email: the server reads the address
+    // from the session we just established, so this can't reset anyone else's.
+    await finishLogin();
     setLoading(false);
     // Session is set; middleware will allow the app routes now.
     router.push("/");
@@ -88,6 +90,8 @@ export default function LoginForm() {
           onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           style={inputStyle}
           placeholder="you@example.com"
+          aria-label={t("login.email")}
+          autoComplete="email"
         />
 
         <label style={{ color: "***REMOVED***cfc4c4", fontSize: 12, display: "block", margin: "16px 0 6px" }}>
@@ -101,6 +105,8 @@ export default function LoginForm() {
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             style={{ ...inputStyle, paddingRight: 44 }}
             placeholder="••••••••"
+            aria-label={t("login.password")}
+            autoComplete="current-password"
           />
           <button
             type="button"

@@ -462,6 +462,8 @@ export const messages = {
       syncNow: "Sync now", syncing: "Syncing…", syncedN: "{n} records synced",
       allSynced: "All synced", offlineToast: "Still offline — will retry automatically.",
       offlineTag: "Offline",
+      stranded: "{n} clock record(s) from another user on this device",
+      strandedHelp: "They will sync when that person next signs in here. Tell a manager if this doesn't clear.",
     },
     corr: {
       title: "Attendance Corrections", request: "Request a correction", myRequests: "My requests",
@@ -1177,6 +1179,8 @@ export const messages = {
       syncNow: "Jetzt synchronisieren", syncing: "Synchronisiere…", syncedN: "{n} Einträge synchronisiert",
       allSynced: "Alles synchronisiert", offlineToast: "Noch offline – wird automatisch erneut versucht.",
       offlineTag: "Offline",
+      stranded: "{n} Zeiterfassung(en) eines anderen Nutzers auf diesem Gerät",
+      strandedHelp: "Sie werden synchronisiert, sobald sich diese Person hier erneut anmeldet. Sag einem Manager Bescheid, falls das bestehen bleibt.",
     },
     corr: {
       title: "Anwesenheitskorrekturen", request: "Korrektur anfragen", myRequests: "Meine Anfragen",

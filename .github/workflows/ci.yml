@@ -37,8 +37,15 @@ jobs:
       - name: Unit tests (vitest)
         run: npm test
 
+      - name: Lint (eslint)
+        run: npm run lint
+
       - name: Type-check (tsc)
         run: npx tsc --noEmit
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+        continue-on-error: true   ***REMOVED*** report, don't block — flip to false once clean
 
       - name: Production build (next build)
         run: npm run build

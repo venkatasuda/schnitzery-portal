@@ -22,6 +22,46 @@ async function getMe() {
 }
 const isManager = (r?: string | null) => MANAGER_ROLES.includes(r || "");
 
+// ── AVATAR ──────────────────────────────────────────────────────────────────
+// Moved here from the retired profile-uploads.ts. Only ever writes the caller's
+// own row. `url` must be a public URL in our own avatars bucket — we refuse
+// anything else so a caller can't point their avatar at an arbitrary host
+// (which would leak every viewer's IP to a third party).
+export async function setAvatarUrl(url: string) {
+  const { supabase, user } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+
+  const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/`;
+  if (typeof url !== "string" || !url.startsWith(base)) {
+    return { ok: false, error: "Invalid avatar URL." };
+  }
+
+  const { error } = await supabase.from("users").update({ avatar_url: url }).eq("id", user.id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// Shared gate for acting on one document row. Owners reach every branch;
+// managers only their own; everyone else only their own documents.
+// RLS is expected to enforce this too — these checks exist so a policy gap
+// cannot silently become a data leak.
+async function assertCanTouchDoc(
+  supabase: any, docId: string, me: { id: string; role: string | null; branchId: string | null },
+): Promise<{ ok: true; doc: any } | { ok: false; error: string }> {
+  const { data: doc } = await supabase
+    .from("user_documents").select("id, user_id, branch_id, doc_type").eq("id", docId).maybeSingle();
+  if (!doc) return { ok: false, error: "Document not found." };
+
+  if (doc.user_id === me.id) return { ok: true, doc };
+  if (!MANAGER_ROLES.includes(me.role || "")) return { ok: false, error: "Not allowed." };
+
+  const isOwner = ["brand_owner", "super_admin"].includes(me.role || "");
+  if (!isOwner && doc.branch_id !== me.branchId) {
+    return { ok: false, error: "You can only manage documents in your own branch." };
+  }
+  return { ok: true, doc };
+}
+
 function daysUntil(date?: string | null): number | null {
   if (!date) return null;
   return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
@@ -113,13 +153,15 @@ export async function listEmployeeDocuments(userId: string) {
 
 // ── APPROVE (manager) ───────────────────────────────────────────────────────
 export async function approveDocument(docId: string) {
-  const { supabase, user, role } = await getMe();
+  const { supabase, user, role, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
 
-  const { data: doc, error: e0 } = await supabase
-    .from("user_documents").select("id, user_id, doc_type").eq("id", docId).single();
-  if (e0 || !doc) return { ok: false, error: "Document not found." };
+  const gate = await assertCanTouchDoc(supabase, docId, { id: user.id, role, branchId });
+  if (!gate.ok) return { ok: false, error: gate.error };
+  const doc = gate.doc;
+  // A manager must not approve their own document.
+  if (doc.user_id === user.id) return { ok: false, error: "You can't approve your own document." };
 
   // Demote any other versions of the same type for this employee.
   await supabase.from("user_documents")
@@ -135,10 +177,13 @@ export async function approveDocument(docId: string) {
 
 // ── REJECT (manager) ────────────────────────────────────────────────────────
 export async function rejectDocument(docId: string, reason: string) {
-  const { supabase, user, role } = await getMe();
+  const { supabase, user, role, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
   if (!reason || !reason.trim()) return { ok: false, error: "A rejection reason is required." };
+
+  const gate = await assertCanTouchDoc(supabase, docId, { id: user.id, role, branchId });
+  if (!gate.ok) return { ok: false, error: gate.error };
 
   const { error } = await supabase.from("user_documents")
     .update({ status: "rejected", is_active: false, reviewed_by: user.id, reviewed_at: new Date().toISOString(), rejection_reason: reason.trim() })
@@ -149,9 +194,12 @@ export async function rejectDocument(docId: string, reason: string) {
 
 // ── ARCHIVE instead of hard-delete ──────────────────────────────────────────
 export async function archiveDocument(docId: string) {
-  const { supabase, user } = await getMe();
+  const { supabase, user, role, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  // RLS lets staff update their own rows and managers their branch's rows.
+
+  const gate = await assertCanTouchDoc(supabase, docId, { id: user.id, role, branchId });
+  if (!gate.ok) return { ok: false, error: gate.error };
+
   const { error } = await supabase.from("user_documents")
     .update({ status: "archived", is_active: false }).eq("id", docId);
   if (error) return { ok: false, error: error.message };
@@ -176,11 +224,23 @@ export async function getDocumentUrl(filePath: string) {
 
 // ── REQUIRED-DOC CHECKLIST (for one employee) ───────────────────────────────
 export async function getRequiredChecklist(userId: string) {
-  const { supabase, user } = await getMe();
+  const { supabase, user, role, branchId: myBranch } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", items: [] };
+
+  // Your own checklist, or one of your branch's if you manage it. Without this
+  // any staff member could enumerate which colleagues are missing a work permit
+  // and when everyone's visa expires. RLS should also cover this — belt and braces.
+  if (userId !== user.id && !isManager(role)) {
+    return { ok: false, error: "Not allowed.", items: [] };
+  }
 
   const { data: target } = await supabase.from("users").select("branch_id").eq("id", userId).single();
   const branchId = target?.branch_id ?? null;
+
+  const isOwner = ["brand_owner", "super_admin"].includes(role || "");
+  if (userId !== user.id && !isOwner && branchId !== myBranch) {
+    return { ok: false, error: "Not allowed.", items: [] };
+  }
 
   // Branch-specific rule overrides the global rule for the same doc_type.
   const { data: rules } = await supabase

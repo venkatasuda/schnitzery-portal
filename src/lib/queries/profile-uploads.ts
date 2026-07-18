@@ -1,72 +1,25 @@
-"use server";
+// ============================================================================
+// RETIRED — do not add anything to this file. DELETE IT:  git rm src/lib/queries/profile-uploads.ts
+//
+// This module used to export Server Actions for document upload/listing/signing
+// and the avatar URL setter. It was superseded by src/lib/queries/documents.ts,
+// but was left in place — and because it was a "use server" module, EVERY export
+// remained a live, publicly-callable POST endpoint whether or not any component
+// imported it.
+//
+// Two of them were exploitable:
+//   • getDocumentUrl(filePath) signed a URL for ANY path in the private
+//     'documents' bucket with no ownership check — passports, visas, contracts.
+//   • deleteDocument(id, filePath) scoped the database delete to the caller but
+//     NOT the storage delete, letting any user delete any colleague's file.
+//
+// The replacements in documents.ts check access before signing (getDocumentUrl)
+// and archive rather than hard-delete (archiveDocument). setAvatarUrl now lives
+// in documents.ts too, with URL validation.
+//
+// Left as an empty module only because the file could not be deleted in the
+// session that made this change. It has no exports and no "use server"
+// directive, so it registers no endpoints.
+// ============================================================================
 
-import { createClient } from "@/lib/supabase/server";
-
-// ── AVATAR ──
-export async function setAvatarUrl(url: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not logged in." };
-  const { error } = await supabase.from("users").update({ avatar_url: url }).eq("id", user.id);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
-
-// ── DOCUMENTS ──
-// Record a freshly-uploaded document (file already in the 'documents' bucket).
-// issueDate / expiryDate are optional ("" → stored as null).
-export async function addDocument(docType: string, filePath: string, fileName: string, issueDate?: string, expiryDate?: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not logged in." };
-
-  const { data: prof } = await supabase.from("users").select("branch_id").eq("id", user.id).single();
-  const { error } = await supabase.from("user_documents").insert({
-    user_id: user.id,
-    branch_id: prof?.branch_id ?? null,
-    doc_type: docType,
-    file_path: filePath,
-    file_name: fileName,
-    issue_date: issueDate || null,
-    expiry_date: expiryDate || null,
-  });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
-
-export async function listMyDocuments() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not logged in." };
-
-  const { data, error } = await supabase
-    .from("user_documents")
-    .select("id, doc_type, file_path, file_name, issue_date, expiry_date, created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, docs: data || [] };
-}
-
-// Private bucket → generate a short-lived signed URL to view/download.
-export async function getDocumentUrl(filePath: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not logged in." };
-
-  const { data, error } = await supabase.storage.from("documents").createSignedUrl(filePath, 300);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, url: data.signedUrl };
-}
-
-export async function deleteDocument(id: string, filePath: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not logged in." };
-
-  await supabase.storage.from("documents").remove([filePath]);
-  const { error } = await supabase
-    .from("user_documents").delete().eq("id", id).eq("user_id", user.id);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
+export {};

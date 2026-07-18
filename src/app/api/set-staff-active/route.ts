@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { canActOnUser, isManagerRole } from "@/lib/auth/rank";
 
 // ============================================================
 // SECURE SERVER ROUTE — deactivate ("remove") or reactivate a
@@ -12,9 +13,6 @@ import { NextResponse } from "next/server";
 // Uses the SERVICE-ROLE key (server only) for the auth change.
 // ============================================================
 
-const RANK: Record<string, number> = {
-  super_admin: 5, brand_owner: 4, branch_owner: 3, manager: 2, staff: 1, kiosk: 0,
-};
 const BAN_FOREVER = "876000h"; // ~100 years
 
 export async function POST(request: Request) {
@@ -25,7 +23,7 @@ export async function POST(request: Request) {
 
   const { data: me } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
-  if (!me || !["manager", "branch_owner", "brand_owner", "super_admin"].includes(me.role)) {
+  if (!me || !isManagerRole(me.role)) {
     return NextResponse.json({ ok: false, error: "Managers only." }, { status: 403 });
   }
 
@@ -53,28 +51,57 @@ export async function POST(request: Request) {
     .from("users").select("role, branch_id").eq("id", userId).single();
   if (!target) return NextResponse.json({ ok: false, error: "Staff member not found." }, { status: 404 });
 
-  const isOwner = ["brand_owner", "super_admin"].includes(me.role);
-  if (!isOwner && target.branch_id !== me.branch_id) {
-    return NextResponse.json({ ok: false, error: "You can only manage staff in your own branch." }, { status: 403 });
-  }
-  if ((RANK[target.role] ?? 0) > (RANK[me.role] ?? 0)) {
-    return NextResponse.json({ ok: false, error: "You can't remove someone above your role." }, { status: 403 });
+  // Branch confinement + rank rule live in src/lib/auth/rank.ts so they can be
+  // unit-tested. Equal rank is refused on purpose — see rank.test.ts.
+  const gate = canActOnUser({
+    meRole: me.role,
+    meBranchId: me.branch_id,
+    targetRole: target.role,
+    targetBranchId: target.branch_id,
+  });
+  if (!gate.ok) {
+    return NextResponse.json({ ok: false, error: gate.error }, { status: gate.status });
   }
 
-  // 5. Update status (admin client → no JWT, so it bypasses RLS and the sensitive-column trigger cleanly).
-  const { error: statusErr } = await admin
+  // 5 & 6. Two writes that must agree: the users.status row and the auth ban.
+  // They cannot be made atomic across the two systems, so order them by which
+  // failure is safer to be left in:
+  //   DEACTIVATING → ban first. If the status write then fails, they are locked
+  //     out but still shown as active. Annoying, safe.
+  //   REACTIVATING → status first. If the unban then fails, they are shown as
+  //     active but can't log in yet. Annoying, safe.
+  // The dangerous ordering is the reverse: "shown as inactive but can still log
+  // in and clock in", which is what the previous version could leave behind.
+  const setStatus = () => admin
     .from("users").update({ status: active ? "active" : "inactive" }).eq("id", userId);
-  if (statusErr) return NextResponse.json({ ok: false, error: statusErr.message }, { status: 400 });
-
-  // 6. Ban / un-ban the auth login.
-  const { error: banErr } = await admin.auth.admin.updateUserById(userId, {
+  const setBan = () => admin.auth.admin.updateUserById(userId, {
     ban_duration: active ? "none" : BAN_FOREVER,
   });
-  if (banErr) {
-    return NextResponse.json({
-      ok: false,
-      error: "Status was updated, but the login change failed: " + banErr.message,
-    }, { status: 400 });
+
+  if (active) {
+    const { error: statusErr } = await setStatus();
+    if (statusErr) return NextResponse.json({ ok: false, error: statusErr.message }, { status: 400 });
+
+    const { error: banErr } = await setBan();
+    if (banErr) {
+      return NextResponse.json({
+        ok: false,
+        error: "Marked active, but re-enabling the login failed — they can't sign in yet: " + banErr.message,
+      }, { status: 400 });
+    }
+  } else {
+    const { error: banErr } = await setBan();
+    if (banErr) {
+      return NextResponse.json({ ok: false, error: "Could not disable the login: " + banErr.message }, { status: 400 });
+    }
+
+    const { error: statusErr } = await setStatus();
+    if (statusErr) {
+      return NextResponse.json({
+        ok: false,
+        error: "Login disabled, but the status update failed — they still show as active: " + statusErr.message,
+      }, { status: 400 });
+    }
   }
 
   return NextResponse.json({ ok: true });
