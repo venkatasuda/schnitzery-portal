@@ -25,12 +25,12 @@ type Tf = (k: string, v?: Record<string, string | number>) => string;
 // Map an effective status to a coloured badge.
 function statusBadge(eff: string, t: Tf): { label: string; color: string } {
   switch (eff) {
-    case "approved":  return { label: t("docw.statusApproved"),  color: "***REMOVED***58d68d" };
-    case "pending":   return { label: t("docw.statusPending"),   color: "***REMOVED***e8a35a" };
-    case "rejected":  return { label: t("docw.statusRejected"),  color: "***REMOVED***ec7063" };
-    case "expiring":  return { label: t("docw.statusExpiring"),  color: "***REMOVED***e8a35a" };
-    case "expired":   return { label: t("docw.statusExpired"),   color: "***REMOVED***ec7063" };
-    default:          return { label: t("docw.statusArchived"),  color: "***REMOVED***9a8f8f" };
+    case "approved":  return { label: t("docw.statusApproved"),  color: "#58d68d" };
+    case "pending":   return { label: t("docw.statusPending"),   color: "#e8a35a" };
+    case "rejected":  return { label: t("docw.statusRejected"),  color: "#ec7063" };
+    case "expiring":  return { label: t("docw.statusExpiring"),  color: "#e8a35a" };
+    case "expired":   return { label: t("docw.statusExpired"),   color: "#ec7063" };
+    default:          return { label: t("docw.statusArchived"),  color: "#9a8f8f" };
   }
 }
 const fmtDate = (d?: string | null) =>
@@ -145,7 +145,7 @@ export default function DocumentsSection() {
                   </div>
                 )}
                 {cur.eff === "rejected" && cur.rejection_reason && (
-                  <div style={{ fontSize: 12, color: "***REMOVED***ec7063", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div style={{ fontSize: 12, color: "#ec7063", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
                     {t("docw.rejReasonLabel")} {cur.rejection_reason}
                   </div>
                 )}
@@ -214,7 +214,7 @@ export default function DocumentsSection() {
                     <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={input} />
                   </div>
                 </div>
-                <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 13, background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 13, background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                   {t("documents.chooseUpload")}
                 </button>
                 <button onClick={() => setStage("type")} style={cancelBtn}>‹ {t("common.back")}</button>

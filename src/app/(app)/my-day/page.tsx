@@ -40,7 +40,7 @@ export default function MyDayPage() {
           <HubLink
             href="/availability"
             icon="🗓"
-            grad="linear-gradient(135deg,***REMOVED***8b6914,***REMOVED***d4a847)"
+            grad="linear-gradient(135deg,#8b6914,#d4a847)"
             title={t("myday.availTitle")}
             sub={t("myday.availSub")}
           />
@@ -67,14 +67,14 @@ export default function MyDayPage() {
           <HubLink
             href="/leave"
             icon="🌴"
-            grad="linear-gradient(135deg,***REMOVED***117a65,***REMOVED***16a085)"
+            grad="linear-gradient(135deg,#117a65,#16a085)"
             title={t("myday.requestTimeOff")}
             sub={t("myday.requestTimeOffSub")}
           />
           <HubLink
             href="/leave-calendar"
             icon="📆"
-            grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)"
+            grad="linear-gradient(135deg,#1a6b8a,#3498db)"
             title={t("myday.teamLeaveCal")}
             sub={t("myday.teamLeaveCalSub")}
           />
@@ -86,14 +86,14 @@ export default function MyDayPage() {
           <HubLink
             href="/hours"
             icon="⏱"
-            grad="linear-gradient(135deg,***REMOVED***6b2fa0,***REMOVED***9b59b6)"
+            grad="linear-gradient(135deg,#6b2fa0,#9b59b6)"
             title={t("myday.hoursSummary")}
             sub={t("myday.hoursSummarySub")}
           />
           <HubLink
             href="/timesheet"
             icon="✍️"
-            grad="linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)"
+            grad="linear-gradient(135deg,#922b21,#c0392b)"
             title={t("myday.signTimesheet")}
             sub={t("myday.signTimesheetSub")}
           />
@@ -104,14 +104,14 @@ export default function MyDayPage() {
           <HubLink
             href="/checklist"
             icon="✅"
-            grad="linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)"
+            grad="linear-gradient(135deg,#1e8449,#27ae60)"
             title={t("myday.dailyChecklist")}
             sub={t("myday.dailyChecklistSub")}
           />
           <HubLink
             href="/directory"
             icon="📇"
-            grad="linear-gradient(135deg,***REMOVED***2c3e50,***REMOVED***34495e)"
+            grad="linear-gradient(135deg,#2c3e50,#34495e)"
             title={t("myday.teamDirectory")}
             sub={t("myday.teamDirectorySub")}
           />
@@ -124,7 +124,7 @@ export default function MyDayPage() {
 function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
-      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="***REMOVED***fff" /></div>
+      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
       <div style={{ flex: 1 }}>
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>

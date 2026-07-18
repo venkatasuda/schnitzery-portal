@@ -35,7 +35,7 @@ export default function StatusStrip() {
     };
   }, []);
 
-  const GREEN = "***REMOVED***58d68d", AMBER = "***REMOVED***e8a35a", RED = "***REMOVED***ec7063";
+  const GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063";
   const chips: { dot: string; label: string }[] = [
     { dot: online ? GREEN : RED, label: online ? t("livestat.online") : t("livestat.offline") },
     { dot: pending > 0 ? AMBER : GREEN, label: pending > 0 ? `${pending} ${t("livestat.pending")}` : t("livestat.synced") },

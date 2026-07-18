@@ -1,6 +1,6 @@
-***REMOVED*** See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-***REMOVED*** dependencies
+# dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,33 +10,33 @@
 !.yarn/releases
 !.yarn/versions
 
-***REMOVED*** testing
+# testing
 /coverage
 
-***REMOVED*** next.js
+# next.js
 /.next/
 /out/
 
-***REMOVED*** production
+# production
 /build
 
-***REMOVED*** misc
+# misc
 .DS_Store
 *.pem
 
-***REMOVED*** debug
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-***REMOVED*** env files (can opt-in for committing if needed)
+# env files (can opt-in for committing if needed)
 .env*
 
-***REMOVED*** vercel
+# vercel
 .vercel
 
-***REMOVED*** typescript
+# typescript
 *.tsbuildinfo
 next-env.d.ts
 
@@ -48,10 +48,10 @@ schnitzery.zip
 Work sheets/
 **/node_modules/
 
-***REMOVED*** ── PERSONAL DATA — NEVER COMMIT ────────────────────────────────────────────
-***REMOVED*** Staff rosters and generated credentials. seed-stuttgart-team.mjs used to hold
-***REMOVED*** ~30 employees' names, contract details and mobile numbers in source, in a
-***REMOVED*** public repo. See PRODUCTION-AUDIT.md item 5. Do not remove these lines.
+# ── PERSONAL DATA — NEVER COMMIT ────────────────────────────────────────────
+# Staff rosters and generated credentials. seed-stuttgart-team.mjs used to hold
+# ~30 employees' names, contract details and mobile numbers in source, in a
+# public repo. See PRODUCTION-AUDIT.md item 5. Do not remove these lines.
 *.roster.csv
 team.passwords.txt
 rotated.passwords.txt

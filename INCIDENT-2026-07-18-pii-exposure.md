@@ -1,4 +1,4 @@
-***REMOVED*** Incident record — employee personal data in public repository
+# Incident record — employee personal data in public repository
 
 **Keep a copy of this file OUTSIDE the repository.** Step 3 of the purge
 rewrites history; this record must survive that.
@@ -8,7 +8,7 @@ handles compliance for the business has the facts in one place.
 
 ---
 
-***REMOVED******REMOVED*** Summary
+## Summary
 
 Employee personal data was committed to a public GitHub repository and remained
 publicly readable for approximately **43 days**.
@@ -24,7 +24,7 @@ publicly readable for approximately **43 days**.
 | **Forks at time of discovery** | 0 (per GitHub) |
 | **Clones** | Not tracked by GitHub — cannot be ruled out |
 
-***REMOVED******REMOVED*** Data exposed
+## Data exposed
 
 Approximately **30 identifiable employees** of Schnitzery Stuttgart:
 
@@ -42,7 +42,7 @@ Approximately **30 identifiable employees** of Schnitzery Stuttgart:
 
 No special-category data (health, religion, union membership) was included.
 
-***REMOVED******REMOVED*** Why the password matters
+## Why the password matters
 
 The shared password was published alongside the derivable email pattern. Any
 account whose holder had not yet signed in and changed it was directly
@@ -54,7 +54,7 @@ Note also that until 2026-07-18, `users.hourly_wage` was readable by any
 authenticated user (audit item 18), so an account takeover during this window
 would also have exposed the branch's wage data.
 
-***REMOVED******REMOVED*** Evidence of access
+## Evidence of access
 
 **Unknown.** GitHub does not provide access logs for public repository reads.
 There is no evidence that the data was accessed, and no evidence that it was
@@ -72,7 +72,7 @@ where must_change_password = true
 order by role, full_name;
 ```
 
-***REMOVED******REMOVED*** Remediation
+## Remediation
 
 | Action | Status |
 |---|---|
@@ -85,14 +85,14 @@ order by role, full_name;
 | GitHub Support asked to purge cached views of affected commits | **Pending** |
 | Wage exposure closed (audit item 18) | Done 2026-07-18 |
 
-***REMOVED******REMOVED*** Residual risk after remediation
+## Residual risk after remediation
 
 - Anyone who cloned the repository while it was public retains a full copy.
   History rewriting cannot reach them.
 - GitHub may serve cached views of old commit SHAs until Support purges them.
 - Search engines or code-scraping services may have indexed the content.
 
-***REMOVED******REMOVED*** Notes for the compliance conversation
+## Notes for the compliance conversation
 
 Under GDPR the 72-hour notification window runs from **awareness**, which was
 **2026-07-18**, not from the original commit date.

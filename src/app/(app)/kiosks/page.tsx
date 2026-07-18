@@ -57,7 +57,7 @@ export default function KiosksPage() {
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder={t("kioskadm.addPlaceholder")}
           style={{ flex: 1, padding: "11px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" }} />
-        <button onClick={add} disabled={busy || !newLabel.trim()} style={{ padding: "11px 16px", background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy || !newLabel.trim() ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("kioskadm.add")}</button>
+        <button onClick={add} disabled={busy || !newLabel.trim()} style={{ padding: "11px 16px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy || !newLabel.trim() ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("kioskadm.add")}</button>
       </div>
 
       {loading ? (
@@ -77,13 +77,13 @@ export default function KiosksPage() {
                     <div onClick={() => { setEditId(k.id); setEditLabel(k.label); }} style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", cursor: "pointer" }}>{k.label}</div>
                   )}
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: k.is_active ? "***REMOVED***58d68d" : "var(--gray)", background: k.is_active ? "rgba(88,214,141,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 9px", borderRadius: 20 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: k.is_active ? "#58d68d" : "var(--gray)", background: k.is_active ? "rgba(88,214,141,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 9px", borderRadius: 20 }}>
                   {k.is_active ? t("kioskadm.active") : t("kioskadm.inactive")}
                 </span>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <a href={`/kiosk?k=${k.id}`} target="_blank" rel="noreferrer" style={btn}>{t("kioskadm.openDisplay")}</a>
-                <button onClick={() => toggle(k)} style={{ ...btn, color: k.is_active ? "***REMOVED***ec7063" : "***REMOVED***58d68d", borderColor: k.is_active ? "rgba(236,112,99,0.3)" : "rgba(88,214,141,0.3)" }}>
+                <button onClick={() => toggle(k)} style={{ ...btn, color: k.is_active ? "#ec7063" : "#58d68d", borderColor: k.is_active ? "rgba(236,112,99,0.3)" : "rgba(88,214,141,0.3)" }}>
                   {k.is_active ? t("kioskadm.deactivate") : t("kioskadm.activate")}
                 </button>
               </div>

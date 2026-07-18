@@ -31,6 +31,10 @@ export async function getLaborSummary() {
   let withWage = 0;
   for (const [id, w] of Object.entries(wages)) { wageOf[id] = w || 0; if (w) withWage++; }
 
+  // Headcount still comes from users — only the wage column moved.
+  const { count: staffCount } = await supabase
+    .from("users").select("id", { count: "exact", head: true }).eq("branch_id", branchId);
+
   // labor cost from completed attendance this month
   const { data: logs } = await supabase
     .from("attendance_logs").select("user_id, duration_mins, status")
@@ -60,7 +64,7 @@ export async function getLaborSummary() {
     laborPct,
     invSpend: Math.round(monthInvSpend),
     foodCostPct,
-    staffCount: (staff || []).length,
+    staffCount: staffCount || 0,
     withWage,
   };
 }

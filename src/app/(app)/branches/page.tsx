@@ -25,7 +25,7 @@ export default function BranchesPage() {
     })();
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "***REMOVED***9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("branches.ownersOnly")}</div>;
+  if (denied) return <div className="card" style={{ textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("branches.ownersOnly")}</div>;
 
   const roleLabel = role === "brand_owner" ? t("branches.allBranches") : t("branches.myFranchise");
   const filtered = branches.filter((b) => b.name.toLowerCase().includes(search.toLowerCase()) || (b.address || "").toLowerCase().includes(search.toLowerCase()));
@@ -42,14 +42,14 @@ export default function BranchesPage() {
           {/* ORG TOTALS */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 18 }}>
             <Total label={t("branches.branches")} value={totals.branches} />
-            <Total label={t("branches.totalStaff")} value={totals.staff} color="***REMOVED***3498db" />
-            <Total label={t("branches.workingNow")} value={totals.workingNow} color="***REMOVED***58d68d" />
-            <Total label={t("branches.pendingLeave")} value={totals.pendingLeave} color={totals.pendingLeave ? "***REMOVED***d4a847" : "***REMOVED***58d68d"} />
-            <Total label={t("branches.openIncidents")} value={totals.openIncidents} color={totals.openIncidents ? "***REMOVED***ec7063" : "***REMOVED***58d68d"} />
+            <Total label={t("branches.totalStaff")} value={totals.staff} color="#3498db" />
+            <Total label={t("branches.workingNow")} value={totals.workingNow} color="#58d68d" />
+            <Total label={t("branches.pendingLeave")} value={totals.pendingLeave} color={totals.pendingLeave ? "#d4a847" : "#58d68d"} />
+            <Total label={t("branches.openIncidents")} value={totals.openIncidents} color={totals.openIncidents ? "#ec7063" : "#58d68d"} />
           </div>
 
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("branches.search")}
-            style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "***REMOVED***fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
+            style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
           <div className="section-label">{t("branches.sectionBranches")}</div>
           {filtered.map((b) => (
@@ -59,9 +59,9 @@ export default function BranchesPage() {
                 <div className="feature-sub">{b.address || "—"}</div>
                 <div style={{ display: "flex", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
                   <Mini label={t("branches.miniStaff")} value={b.staff} />
-                  <Mini label={t("branches.miniWorking")} value={b.workingNow} color="***REMOVED***58d68d" />
-                  {b.pendingLeave > 0 && <Mini label={t("branches.miniLeave")} value={b.pendingLeave} color="***REMOVED***d4a847" />}
-                  {b.openIncidents > 0 && <Mini label={t("branches.miniIncidents")} value={b.openIncidents} color="***REMOVED***ec7063" />}
+                  <Mini label={t("branches.miniWorking")} value={b.workingNow} color="#58d68d" />
+                  {b.pendingLeave > 0 && <Mini label={t("branches.miniLeave")} value={b.pendingLeave} color="#d4a847" />}
+                  {b.openIncidents > 0 && <Mini label={t("branches.miniIncidents")} value={b.openIncidents} color="#ec7063" />}
                 </div>
               </div>
               <span className="feature-chev" style={{ alignSelf: "center" }}>›</span>
@@ -76,11 +76,11 @@ export default function BranchesPage() {
 function Total({ label, value, color }: any) {
   return (
     <div className="card" style={{ textAlign: "center", marginBottom: 0, padding: 16 }}>
-      <div style={{ fontSize: 26, fontWeight: 700, color: color || "***REMOVED***fff" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "***REMOVED***9a8f8f", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: color || "#fff" }}>{value}</div>
+      <div style={{ fontSize: 11, color: "#9a8f8f", marginTop: 2 }}>{label}</div>
     </div>
   );
 }
 function Mini({ label, value, color }: any) {
-  return <span style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}><b style={{ color: color || "***REMOVED***fff" }}>{value}</b> {label}</span>;
+  return <span style={{ fontSize: 12, color: "#9a8f8f" }}><b style={{ color: color || "#fff" }}>{value}</b> {label}</span>;
 }

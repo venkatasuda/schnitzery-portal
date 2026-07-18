@@ -8,7 +8,7 @@ import { getOrgOverview } from "@/lib/queries/org-overview";
 import { getBranchComparison } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 
-const GREEN = "***REMOVED***58d68d", AMBER = "***REMOVED***e8a35a", RED = "***REMOVED***ec7063", GOLD = "***REMOVED***d4a847";
+const GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063", GOLD = "#d4a847";
 
 export default function OverviewPage() {
   const { t } = useLang();
@@ -77,9 +77,9 @@ export default function OverviewPage() {
                   <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
                   <div style={{ fontSize: 11, color: "var(--gray)" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="***REMOVED***58d68d" />{b.workingNow}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="#58d68d" />{b.workingNow}</span>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="👥" size={11} />{b.employees}</span>
-                      {b.issues > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "***REMOVED***e8a35a" }}><Icon e="⚠" size={11} />{b.issues}</span>}
+                      {b.issues > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "#e8a35a" }}><Icon e="⚠" size={11} />{b.issues}</span>}
                       {b.expiringDocs > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="📄" size={11} />{b.expiringDocs}</span>}
                     </span>
                   </div>

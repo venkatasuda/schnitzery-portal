@@ -119,9 +119,9 @@ export default function AttendanceHubPage() {
       {tab === "live" && (
         <div className="hub-tab-panel active">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-            <Stat value={stats.workingNow} label={t("home.statWorking")} color="***REMOVED***58d68d" />
+            <Stat value={stats.workingNow} label={t("home.statWorking")} color="#58d68d" />
             <Stat value={stats.completed} label={t("ahub.completed")} color="var(--white)" />
-            <Stat value={stats.late} label={t("home.statLate")} color={stats.late > 0 ? "***REMOVED***ec7063" : "var(--white)"} />
+            <Stat value={stats.late} label={t("home.statLate")} color={stats.late > 0 ? "#ec7063" : "var(--white)"} />
             <Stat value={liveHours} label={t("home.hours")} color="var(--gold)" />
           </div>
           <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -139,13 +139,13 @@ export default function AttendanceHubPage() {
             <div className="card" style={{ padding: 8 }}>
               {filtered.map((r, i) => {
                 const live = r.status === "active" || r.status === "on-break";
-                const dotColor = r.status === "on-break" ? "***REMOVED***e8a35a" : live ? "***REMOVED***58d68d" : "var(--gray)";
+                const dotColor = r.status === "on-break" ? "#e8a35a" : live ? "#58d68d" : "var(--gray)";
                 const statusText = r.status === "on-break" ? t("ahub.onBreak") : live ? t("ahub.statusWorking") : t("ahub.statusDone");
                 return (
                   <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < filtered.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                     <span style={{ width: 9, height: 9, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: live ? `0 0 8px ${dotColor}` : "none" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name}{r.late_mins > 0 && <span style={{ fontSize: 10, color: "***REMOVED***ec7063", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name}{r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
                       <div style={{ fontSize: 11, color: "var(--gray)" }}>{r.team ? teamLabel(r.team) : "—"} · {statusText}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -169,7 +169,7 @@ export default function AttendanceHubPage() {
             <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>
           ) : appRows.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>
-              <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="***REMOVED***58d68d" /></div>{t("ahub.allCaughtUp")}
+              <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="#58d68d" /></div>{t("ahub.allCaughtUp")}
             </div>
           ) : (
             appRows.map((r) => (
@@ -177,8 +177,8 @@ export default function AttendanceHubPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
                     {r.name}
-                    {r.overtime && <span style={{ fontSize: 10, color: "***REMOVED***e8a35a", marginLeft: 8 }}><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
-                    {r.late_mins > 0 && <span style={{ fontSize: 10, color: "***REMOVED***ec7063", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
+                    {r.overtime && <span style={{ fontSize: 10, color: "#e8a35a", marginLeft: 8 }}><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
+                    {r.late_mins > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{fmtH(r.duration_mins || 0)}</div>
                 </div>
@@ -208,8 +208,8 @@ export default function AttendanceHubPage() {
             <>
               {/* summary */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                <Stat value={otStats.peopleOver} label={t("home.overContract")} color={otStats.peopleOver > 0 ? "***REMOVED***e8a35a" : "***REMOVED***58d68d"} />
-                <Stat value={fmtH(otStats.totalOvertimeMins)} label={t("ahub.totalOvertime")} color={otStats.totalOvertimeMins > 0 ? "***REMOVED***e8a35a" : "var(--white)"} />
+                <Stat value={otStats.peopleOver} label={t("home.overContract")} color={otStats.peopleOver > 0 ? "#e8a35a" : "#58d68d"} />
+                <Stat value={fmtH(otStats.totalOvertimeMins)} label={t("ahub.totalOvertime")} color={otStats.totalOvertimeMins > 0 ? "#e8a35a" : "var(--white)"} />
               </div>
 
               {otRows.length === 0 ? (
@@ -224,14 +224,14 @@ export default function AttendanceHubPage() {
                       <div key={r.user_id} style={{ padding: "11px 0", borderBottom: i < otRows.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name} <span style={{ fontSize: 11, color: "var(--gray)", fontWeight: 400 }}>· {r.team ? teamLabel(r.team) : "—"}</span></div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: over ? "***REMOVED***e8a35a" : "***REMOVED***58d68d" }}>{over ? `+${fmtH(r.overtimeMins)}` : t("ahub.within")}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: over ? "#e8a35a" : "#58d68d" }}>{over ? `+${fmtH(r.overtimeMins)}` : t("ahub.within")}</div>
                         </div>
                         <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 3 }}>
                           {t("ahub.workedContract", { w: fmtH(r.workedMins), c: r.contractHours, s: r.shifts })}{r.contractType ? ` · ${r.contractType}` : ""}
                         </div>
                         {/* progress bar: normal (gold) + overtime (orange) */}
                         <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, marginTop: 7, overflow: "hidden", display: "flex" }}>
-                          <div style={{ width: `${Math.min(100, pct)}%`, background: over ? "***REMOVED***e8a35a" : "var(--gold)" }} />
+                          <div style={{ width: `${Math.min(100, pct)}%`, background: over ? "#e8a35a" : "var(--gold)" }} />
                         </div>
                       </div>
                     );
@@ -246,7 +246,7 @@ export default function AttendanceHubPage() {
                   {otLong.map((l, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < otLong.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none", fontSize: 13 }}>
                       <span style={{ color: "var(--white)" }}>{l.name} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {fmtDate(l.work_date)}</span></span>
-                      <span style={{ color: "***REMOVED***e8a35a", fontWeight: 600 }}>{fmtH(l.mins)}</span>
+                      <span style={{ color: "#e8a35a", fontWeight: 600 }}>{fmtH(l.mins)}</span>
                     </div>
                   ))}
                 </div>
@@ -260,7 +260,7 @@ export default function AttendanceHubPage() {
       {tab === "noshow" && (
         <div className="hub-tab-panel active">
           <Link href="/noshow" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" }}><Icon e="🚫" size={22} color="***REMOVED***fff" /></div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e="🚫" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("ahub.noShowTracking")}</div><div className="feature-sub">{t("ahub.noShowTrackingSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
@@ -285,5 +285,5 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
 const dateInput: React.CSSProperties = { flex: 1, padding: "10px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
 const todayBtn: React.CSSProperties = { padding: "10px 16px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" };
 const filterInput: React.CSSProperties = { width: "100%", padding: "11px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box", marginBottom: 12 };
-const approveBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)", color: "***REMOVED***fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };
-const rejectBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "transparent", color: "***REMOVED***ec7063", border: "1px solid rgba(231,76,60,0.4)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };
+const approveBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "linear-gradient(135deg,#1e8449,#27ae60)", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };
+const rejectBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "transparent", color: "#ec7063", border: "1px solid rgba(231,76,60,0.4)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };

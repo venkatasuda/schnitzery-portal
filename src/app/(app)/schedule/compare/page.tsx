@@ -16,7 +16,7 @@ function mondayOf(offset: number): string {
 const fmtMins = (m: number) => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), mm = m % 60; return h ? `${h}h ${mm}m` : `${mm}m`; };
 const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
 const fmtDay = (d: string) => new Date(d + "T12:00:00").toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" });
-const pctColor = (p: number) => (p >= 95 ? "***REMOVED***58d68d" : p >= 80 ? "***REMOVED***e8a35a" : "***REMOVED***ec7063");
+const pctColor = (p: number) => (p >= 95 ? "#58d68d" : p >= 80 ? "#e8a35a" : "#ec7063");
 
 export default function ComparePage() {
   const { t } = useLang();
@@ -35,12 +35,12 @@ export default function ComparePage() {
   useEffect(() => { load(offset); }, [offset]);
 
   const statusMeta: Record<string, { key: string; color: string }> = {
-    ontime: { key: "cmp.ontime", color: "***REMOVED***58d68d" },
-    late: { key: "cmp.lateStatus", color: "***REMOVED***e8a35a" },
-    left_early: { key: "cmp.leftEarly", color: "***REMOVED***e67e22" },
-    no_show: { key: "cmp.noShow", color: "***REMOVED***ec7063" },
-    unscheduled: { key: "cmp.unscheduled", color: "***REMOVED***5dade2" },
-    active: { key: "cmp.active", color: "***REMOVED***48c9b0" },
+    ontime: { key: "cmp.ontime", color: "#58d68d" },
+    late: { key: "cmp.lateStatus", color: "#e8a35a" },
+    left_early: { key: "cmp.leftEarly", color: "#e67e22" },
+    no_show: { key: "cmp.noShow", color: "#ec7063" },
+    unscheduled: { key: "cmp.unscheduled", color: "#5dade2" },
+    active: { key: "cmp.active", color: "#48c9b0" },
   };
   const weekLabel = (() => {
     const s = new Date(mondayOf(offset) + "T12:00:00"); const e = new Date(s); e.setDate(e.getDate() + 6);
@@ -89,10 +89,10 @@ export default function ComparePage() {
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", fontSize: 12 }}>
                 <Stat label={t("cmp.shifts")} value={String(sum.shifts)} />
-                <Stat label={t("cmp.noShows")} value={String(sum.noShows)} color={sum.noShows ? "***REMOVED***ec7063" : undefined} />
+                <Stat label={t("cmp.noShows")} value={String(sum.noShows)} color={sum.noShows ? "#ec7063" : undefined} />
                 <Stat label={t("cmp.late")} value={fmtMins(sum.lateMins)} />
                 <Stat label={t("cmp.overtime")} value={fmtMins(sum.otMins)} />
-                <Stat label={t("cmp.missing")} value={fmtMins(sum.missingMins)} color={sum.missingMins ? "***REMOVED***e8a35a" : undefined} />
+                <Stat label={t("cmp.missing")} value={fmtMins(sum.missingMins)} color={sum.missingMins ? "#e8a35a" : undefined} />
                 <Stat label={t("cmp.unscheduled")} value={String(sum.unscheduled)} />
               </div>
             </div>
@@ -114,10 +114,10 @@ export default function ComparePage() {
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 11 }}>
                       <Chip label={`${e.shifts} ${t("cmp.shifts")}`} />
-                      {e.noShows > 0 && <Chip label={`${e.noShows} ${t("cmp.noShow")}`} color="***REMOVED***ec7063" />}
-                      {e.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(e.lateMins)}`} color="***REMOVED***e8a35a" />}
-                      {e.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(e.otMins)}`} color="***REMOVED***5dade2" />}
-                      {e.missingMins > 0 && <Chip label={`${t("cmp.missing")} ${fmtMins(e.missingMins)}`} color="***REMOVED***e67e22" />}
+                      {e.noShows > 0 && <Chip label={`${e.noShows} ${t("cmp.noShow")}`} color="#ec7063" />}
+                      {e.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(e.lateMins)}`} color="#e8a35a" />}
+                      {e.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(e.otMins)}`} color="#5dade2" />}
+                      {e.missingMins > 0 && <Chip label={`${t("cmp.missing")} ${fmtMins(e.missingMins)}`} color="#e67e22" />}
                     </div>
                   </div>
                 ))}
@@ -149,10 +149,10 @@ export default function ComparePage() {
                       </div>
                       {(r.lateMins > 0 || r.earlyMins > 0 || r.otMins > 0 || r.missingMins > 0) && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, fontSize: 11 }}>
-                          {r.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(r.lateMins)}`} color="***REMOVED***e8a35a" />}
-                          {r.earlyMins > 0 && <Chip label={`${t("cmp.early")} ${fmtMins(r.earlyMins)}`} color="***REMOVED***e67e22" />}
-                          {r.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(r.otMins)}`} color="***REMOVED***5dade2" />}
-                          {r.missingMins > 0 && <Chip label={`${t("cmp.missing")} ${fmtMins(r.missingMins)}`} color="***REMOVED***ec7063" />}
+                          {r.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(r.lateMins)}`} color="#e8a35a" />}
+                          {r.earlyMins > 0 && <Chip label={`${t("cmp.early")} ${fmtMins(r.earlyMins)}`} color="#e67e22" />}
+                          {r.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(r.otMins)}`} color="#5dade2" />}
+                          {r.missingMins > 0 && <Chip label={`${t("cmp.missing")} ${fmtMins(r.missingMins)}`} color="#ec7063" />}
                         </div>
                       )}
                     </div>

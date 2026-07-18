@@ -125,22 +125,22 @@ export default function ProfilePage() {
         <>
           <div className="section-label">{t("profile.settingsAdmin")}</div>
           <Link href="/settings" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***555,***REMOVED***777)" }}><Icon e="⚙️" size={22} color="***REMOVED***fff" /></div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#555,#777)" }}><Icon e="⚙️" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.branchSettings")}</div><div className="feature-sub">{t("profile.branchSettingsSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/export" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***117a65,***REMOVED***16a085)" }}><Icon e="📤" size={22} color="***REMOVED***fff" /></div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}><Icon e="📤" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.payrollExport")}</div><div className="feature-sub">{t("profile.payrollExportSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/audit" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***2c3e50,***REMOVED***34495e)" }}><Icon e="🔒" size={22} color="***REMOVED***fff" /></div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}><Icon e="🔒" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.auditLog")}</div><div className="feature-sub">{t("profile.auditLogSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/clock-display" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" }}><Icon e="📲" size={22} color="***REMOVED***fff" /></div>
+            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📲" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("sh.clockDisplay")}</div><div className="feature-sub">{t("sh.clockDisplaySub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
@@ -167,4 +167,4 @@ function Field({ label, children }: any) {
   return <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</label>{children}</div>;
 }
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { flex: 1, width: "100%", padding: "13px", background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { flex: 1, width: "100%", padding: "13px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

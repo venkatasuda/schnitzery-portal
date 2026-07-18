@@ -1,10 +1,10 @@
 :root {
-  --red:***REMOVED***c0392b; --red-dark:***REMOVED***96281b; --red-light:***REMOVED***e74c3c;
-  --gold:***REMOVED***d4a847; --gold-light:***REMOVED***f0c860;
-  --black:***REMOVED***0a0a0a; --dark:***REMOVED***141414; --dark2:***REMOVED***1e1e1e; --dark3:***REMOVED***2a2a2a;
-  --white:***REMOVED***ffffff; --off-white:***REMOVED***f5f0eb;
-  --gray:***REMOVED***888; --gray-light:***REMOVED***aaa;
-  --success:***REMOVED***27ae60; --warn:***REMOVED***e67e22;
+  --red:#c0392b; --red-dark:#96281b; --red-light:#e74c3c;
+  --gold:#d4a847; --gold-light:#f0c860;
+  --black:#0a0a0a; --dark:#141414; --dark2:#1e1e1e; --dark3:#2a2a2a;
+  --white:#ffffff; --off-white:#f5f0eb;
+  --gray:#888; --gray-light:#aaa;
+  --success:#27ae60; --warn:#e67e22;
   --radius:16px; --radius-sm:10px;
   --shadow:0 8px 32px rgba(0,0,0,0.4);
   --shadow-red:0 8px 32px rgba(192,57,43,0.3);
@@ -14,9 +14,9 @@
 
 /* ── LIGHT MODE (toggled via .light on <html>) ── */
 html.light {
-  --black:***REMOVED***f0ece8; --dark:***REMOVED***ffffff; --dark2:***REMOVED***f5f1ed; --dark3:***REMOVED***ede8e3;
-  --white:***REMOVED***1a1a1a; --off-white:***REMOVED***2a2a2a;
-  --gray:***REMOVED***666; --gray-light:***REMOVED***555;
+  --black:#f0ece8; --dark:#ffffff; --dark2:#f5f1ed; --dark3:#ede8e3;
+  --white:#1a1a1a; --off-white:#2a2a2a;
+  --gray:#666; --gray-light:#555;
 }
 html.light body { background: var(--black); color: var(--white); }
 html.light .app-header { background: rgba(245,241,237,0.95); border-bottom-color: rgba(0,0,0,0.08); }
@@ -24,8 +24,8 @@ html.light .bottom-nav { background: rgba(255,255,255,0.97); border-top-color: r
 html.light .card,
 html.light .feature-card { box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.07); }
 html.light .nav-btn { color: rgba(0,0,0,0.35); }
-html.light .form-select, html.light .form-input { color: ***REMOVED***1a1a1a; background: rgba(0,0,0,0.04); }
-html.light .form-select option { background: ***REMOVED***fff; color: ***REMOVED***1a1a1a; }
+html.light .form-select, html.light .form-input { color: #1a1a1a; background: rgba(0,0,0,0.04); }
+html.light .form-select option { background: #fff; color: #1a1a1a; }
 html.light .hub-tabs { background: rgba(0,0,0,0.05); }
 
 * { box-sizing: border-box; }
@@ -134,12 +134,12 @@ html.light .theme-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0
   color: var(--white); font-weight: 700; font-size: 15px; font-family: var(--font-display);
   box-shadow: 0 4px 12px rgba(192,57,43,0.4);
 }
-.avatar.mgr { background: linear-gradient(135deg, var(--gold), ***REMOVED***b8860b); }
+.avatar.mgr { background: linear-gradient(135deg, var(--gold), #b8860b); }
 .profile-name { font-size: 15px; font-weight: 600; color: var(--white); }
 .profile-sub { font-size: 11px; color: var(--gold); margin-top: 2px; letter-spacing: 0.5px; }
 .mgr-badge {
   display: inline-block; font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
-  background: linear-gradient(135deg, var(--gold), ***REMOVED***b8860b); color: var(--black);
+  background: linear-gradient(135deg, var(--gold), #b8860b); color: var(--black);
   letter-spacing: 1px; text-transform: uppercase; margin-left: 8px;
 }
 
@@ -162,7 +162,7 @@ html.light .theme-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0
 }
 .hub-tab.active { background: var(--gold); color: var(--dark); }
 .hub-tab:not(.active):hover { color: var(--white); }
-html.light .hub-tab:not(.active):hover { color: ***REMOVED***1a1a1a; }
+html.light .hub-tab:not(.active):hover { color: #1a1a1a; }
 .hub-tab-panel { display: none; }
 .hub-tab-panel.active { display: block; animation: fadeUp 0.25s ease; }
 

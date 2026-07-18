@@ -31,14 +31,14 @@ export default function PeopleHubPage() {
           <HubLink
             href="/staff"
             icon="👥"
-            grad="linear-gradient(135deg,***REMOVED***6b2fa0,***REMOVED***9b59b6)"
+            grad="linear-gradient(135deg,#6b2fa0,#9b59b6)"
             title={t("staff.title")}
             sub={t("ph.staffSub")}
           />
           <HubLink
             href="/directory"
             icon="📇"
-            grad="linear-gradient(135deg,***REMOVED***2c3e50,***REMOVED***34495e)"
+            grad="linear-gradient(135deg,#2c3e50,#34495e)"
             title={t("directory.title")}
             sub={t("ph.dirSub")}
           />
@@ -50,7 +50,7 @@ export default function PeopleHubPage() {
           <HubLink
             href="/notes"
             icon="📝"
-            grad="linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)"
+            grad="linear-gradient(135deg,#922b21,#c0392b)"
             title={t("schedhub.notes")}
             sub={t("ph.notesSub")}
           />
@@ -66,7 +66,7 @@ export default function PeopleHubPage() {
 function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
-      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="***REMOVED***fff" /></div>
+      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
       <div style={{ flex: 1 }}>
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>

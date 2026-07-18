@@ -42,13 +42,13 @@ export default function LeavePage() {
   const statusStyle = (s: string) => ({
     fontSize: 11, padding: "3px 10px", borderRadius: 12,
     background: s === "approved" ? "rgba(39,174,96,0.15)" : s === "denied" ? "rgba(231,76,60,0.15)" : "rgba(212,168,71,0.15)",
-    color: s === "approved" ? "***REMOVED***58d68d" : s === "denied" ? "***REMOVED***ec7063" : "***REMOVED***d4a847",
+    color: s === "approved" ? "#58d68d" : s === "denied" ? "#ec7063" : "#d4a847",
   });
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🌴" size={22} /> {t("leave.title")}</h1>
-      <p style={{ color: "***REMOVED***9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("leave.subtitle")}</p>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("leave.subtitle")}</p>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 4 }}>
         <TabBtn active={tab === "request"} onClick={() => setTab("request")}>{t("leave.tabRequest")}</TabBtn>
@@ -74,16 +74,16 @@ export default function LeavePage() {
       {tab === "mine" && (
         <div>
           {loading ? <CardSkeleton rows={3} />
-          : requests.length === 0 ? <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", padding: 30 }}>{t("leave.empty")}</div>
+          : requests.length === 0 ? <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>{t("leave.empty")}</div>
           : requests.map((r) => (
             <div key={r.id} style={{ ...card, marginBottom: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{fmtDate(r.from_date)} → {fmtDate(r.to_date)}</div>
                 <span style={statusStyle(r.status)}>{stLabel(r.status)}</span>
               </div>
-              {r.reason && <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginTop: 6 }}>{r.reason}</div>}
+              {r.reason && <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 6 }}>{r.reason}</div>}
               {r.decided_by && r.status !== "pending" && (
-                <div style={{ fontSize: 11, color: "***REMOVED***6f6565", marginTop: 6 }}>{t("leave.decidedBy", { name: r.decided_by })}</div>
+                <div style={{ fontSize: 11, color: "#6f6565", marginTop: 6 }}>{t("leave.decidedBy", { name: r.decided_by })}</div>
               )}
             </div>
           ))}
@@ -94,11 +94,11 @@ export default function LeavePage() {
 }
 
 function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "***REMOVED***d4a847" : "transparent", color: active ? "***REMOVED***1a0e0e" : "***REMOVED***9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "#9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
 function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 6 }}>{label}</label>{children}</div>;
+  return <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12, color: "#9a8f8f", marginBottom: 6 }}>{label}</label>{children}</div>;
 }
-const card: React.CSSProperties = { background: "***REMOVED***241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20 };
-const input: React.CSSProperties = { width: "100%", padding: "11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "***REMOVED***fff", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "***REMOVED***d4a847", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20 };
+const input: React.CSSProperties = { width: "100%", padding: "11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
+const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

@@ -70,26 +70,26 @@ export default function QrScanner({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: "***REMOVED***241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 20, maxWidth: 340, width: "100%", textAlign: "center" }}
+        style={{ background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 20, maxWidth: 340, width: "100%", textAlign: "center" }}
       >
-        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: "***REMOVED***fff" }}>Scan Clock QR</div>
-        <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 14 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: "#fff" }}>Scan Clock QR</div>
+        <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 14 }}>
           Point your camera at the display screen.
         </div>
 
         <div
           id={elementId}
-          style={{ width: "100%", minHeight: 240, borderRadius: 12, overflow: "hidden", background: "***REMOVED***000" }}
+          style={{ width: "100%", minHeight: 240, borderRadius: 12, overflow: "hidden", background: "#000" }}
         />
 
         {starting && !error && (
-          <div style={{ color: "***REMOVED***9a8f8f", fontSize: 13, marginTop: 12 }}>Starting camera…</div>
+          <div style={{ color: "#9a8f8f", fontSize: 13, marginTop: 12 }}>Starting camera…</div>
         )}
-        {error && <div style={{ color: "***REMOVED***ec7063", fontSize: 13, marginTop: 12 }}>{error}</div>}
+        {error && <div style={{ color: "#ec7063", fontSize: 13, marginTop: 12 }}>{error}</div>}
 
         <button
           onClick={onClose}
-          style={{ width: "100%", marginTop: 16, padding: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "***REMOVED***fff", fontSize: 14, cursor: "pointer" }}
+          style={{ width: "100%", marginTop: 16, padding: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "#fff", fontSize: 14, cursor: "pointer" }}
         >
           Cancel
         </button>

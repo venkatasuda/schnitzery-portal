@@ -80,7 +80,7 @@ export default function SummaryPage() {
     return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("summary.managersOnly")}</div>;
   }
 
-  const primeColor = data?.primePct == null ? "var(--gray)" : data.primePct <= 60 ? "***REMOVED***27ae60" : data.primePct <= 68 ? "***REMOVED***d4a847" : "***REMOVED***e74c3c";
+  const primeColor = data?.primePct == null ? "var(--gray)" : data.primePct <= 60 ? "#27ae60" : data.primePct <= 68 ? "#d4a847" : "#e74c3c";
 
   return (
     <div className="fade-up">
@@ -110,7 +110,7 @@ export default function SummaryPage() {
       ) : (
         <>
           {!data.hasSales && (
-            <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "***REMOVED***d4a847", borderColor: "rgba(212,168,71,0.3)" }}>{t("summary.needSales")}</div>
+            <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "#d4a847", borderColor: "rgba(212,168,71,0.3)" }}>{t("summary.needSales")}</div>
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
@@ -144,8 +144,8 @@ export default function SummaryPage() {
                       <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                         <td style={{ padding: "7px 4px", color: "var(--white)" }}>{r.name}<span style={{ color: "var(--gray)", fontSize: 11 }}> · {r.team}</span></td>
                         <td style={{ padding: "7px 4px", textAlign: "right" }}>{r.hours}h</td>
-                        <td style={{ padding: "7px 4px", textAlign: "right", color: r.overtime > 0 ? "***REMOVED***ec7063" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
-                        <td style={{ padding: "7px 4px", textAlign: "right", color: r.late > 0 ? "***REMOVED***d4a847" : "var(--gray)" }}>{r.late || "—"}</td>
+                        <td style={{ padding: "7px 4px", textAlign: "right", color: r.overtime > 0 ? "#ec7063" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
+                        <td style={{ padding: "7px 4px", textAlign: "right", color: r.late > 0 ? "#d4a847" : "var(--gray)" }}>{r.late || "—"}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -111,7 +111,7 @@ export default function GeofencePage() {
       {/* LOCATION */}
       <div className="section-label">{t("geo.locationLabel")}</div>
       <div className="card" style={{ padding: 14, marginBottom: 18 }}>
-        <button onClick={useMyLocation} disabled={locating} style={{ ...input, cursor: "pointer", background: "linear-gradient(135deg,***REMOVED***1e6091,***REMOVED***2980b9)", border: "none", fontWeight: 600, marginBottom: 12 }}>
+        <button onClick={useMyLocation} disabled={locating} style={{ ...input, cursor: "pointer", background: "linear-gradient(135deg,#1e6091,#2980b9)", border: "none", fontWeight: 600, marginBottom: 12 }}>
           {locating ? t("geo.locating") : t("geo.useMyLocation")}
         </button>
         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -134,7 +134,7 @@ export default function GeofencePage() {
         )}
       </div>
 
-      <button onClick={save} disabled={saving} style={{ ...input, cursor: "pointer", background: "linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)", border: "none", fontWeight: 700, fontSize: 15, marginBottom: 26 }}>
+      <button onClick={save} disabled={saving} style={{ ...input, cursor: "pointer", background: "linear-gradient(135deg,#1e8449,#27ae60)", border: "none", fontWeight: 700, fontSize: 15, marginBottom: 26 }}>
         {saving ? "…" : t("geo.save")}
       </button>
 
@@ -151,7 +151,7 @@ export default function GeofencePage() {
             <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 4 }}>{t("geo.minutes")}</div>
             <input style={input} type="number" value={ovMin} onChange={(e) => setOvMin(Math.max(1, Math.min(240, Number(e.target.value) || 15)))} />
           </div>
-          <button onClick={doGrant} disabled={ovBusy} style={{ ...input, flex: 1, cursor: "pointer", background: "linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)", border: "none", fontWeight: 600 }}>
+          <button onClick={doGrant} disabled={ovBusy} style={{ ...input, flex: 1, cursor: "pointer", background: "linear-gradient(135deg,#b9770e,#e67e22)", border: "none", fontWeight: 600 }}>
             {ovBusy ? "…" : t("geo.grant")}
           </button>
         </div>
@@ -171,7 +171,7 @@ export default function GeofencePage() {
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{f.name}</div>
                   <div style={{ fontSize: 11, color: "var(--gray)" }}>{f.date}</div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "***REMOVED***e67e22" }}><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#e67e22" }}><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
               </div>
             ))}
           </div>

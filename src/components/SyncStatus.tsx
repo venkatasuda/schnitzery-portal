@@ -65,7 +65,7 @@ export default function SyncStatus() {
         background: online ? "rgba(232,163,90,0.12)" : "rgba(236,112,99,0.12)",
         border: `1px solid ${online ? "rgba(232,163,90,0.4)" : "rgba(236,112,99,0.4)"}`,
       }}>
-      <span style={{ width: 9, height: 9, borderRadius: 5, background: online ? "***REMOVED***e8a35a" : "***REMOVED***ec7063", flexShrink: 0 }} />
+      <span style={{ width: 9, height: 9, borderRadius: 5, background: online ? "#e8a35a" : "#ec7063", flexShrink: 0 }} />
       <div style={{ flex: 1, fontSize: 12.5, color: "var(--white)" }}>
         {!online && <span style={{ fontWeight: 700 }}>{t("sync.offline")}</span>}
         {!online && pending > 0 && " · "}
@@ -73,7 +73,7 @@ export default function SyncStatus() {
       </div>
       {pending > 0 && online && (
         <button onClick={syncNow} disabled={syncing} style={{
-          padding: "6px 12px", background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none",
+          padding: "6px 12px", background: "var(--gold)", color: "#1a0e0e", border: "none",
           borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: syncing ? 0.6 : 1, flexShrink: 0,
         }}>
           {syncing ? t("sync.syncing") : t("sync.syncNow")}

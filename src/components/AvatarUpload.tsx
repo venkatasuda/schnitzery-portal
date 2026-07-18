@@ -51,7 +51,7 @@ export default function AvatarUpload({ currentUrl, name, isManager }: { currentU
         onClick={() => inputRef.current?.click()}
         disabled={busy}
         aria-label="Change photo"
-        style={{ position: "absolute", bottom: -2, right: -2, width: 24, height: 24, borderRadius: "50%", background: "var(--gold)", border: "2px solid var(--dark)", color: "***REMOVED***1a0e0e", fontSize: 11, cursor: busy ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+        style={{ position: "absolute", bottom: -2, right: -2, width: 24, height: 24, borderRadius: "50%", background: "var(--gold)", border: "2px solid var(--dark)", color: "#1a0e0e", fontSize: 11, cursor: busy ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
       >
         {busy ? "…" : "📷"}
       </button>

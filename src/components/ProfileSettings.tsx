@@ -60,7 +60,7 @@ export default function ProfileSettings() {
             aria-label="Toggle light mode"
             style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: "pointer", padding: 3, background: light ? "var(--gold)" : "rgba(128,128,128,0.35)", transition: "background .2s", display: "flex", justifyContent: light ? "flex-end" : "flex-start" }}
           >
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "***REMOVED***fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
           </button>
         </div>
       </div>
@@ -89,7 +89,7 @@ export default function ProfileSettings() {
               </button>
             </div>
             <input type={showPw ? "text" : "password"} placeholder={t("settings.confirmPwPlaceholder")} value={pw2} onChange={(e) => setPw2(e.target.value)} style={inputStyle} />
-            <button onClick={changePassword} disabled={busy} style={{ width: "100%", padding: 12, background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: busy ? "default" : "pointer" }}>
+            <button onClick={changePassword} disabled={busy} style={{ width: "100%", padding: 12, background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: busy ? "default" : "pointer" }}>
               {busy ? t("common.saving") : t("settings.updatePassword")}
             </button>
           </div>

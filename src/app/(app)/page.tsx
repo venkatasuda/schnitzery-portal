@@ -103,8 +103,8 @@ export default async function HomePage() {
 
       {myExpiring.length > 0 && (
         <div className="card" style={{ borderColor: "rgba(231,76,60,0.4)", background: "rgba(231,76,60,0.08)", marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, fontWeight: 700, color: "***REMOVED***ec7063", fontSize: 14, marginBottom: 4 }}>
-            <Icon e="⚠" size={15} color="***REMOVED***ec7063" /> {t("home.docsNeedAttention")}
+          <div style={{ display: "flex", alignItems: "center", gap: 7, fontWeight: 700, color: "#ec7063", fontSize: 14, marginBottom: 4 }}>
+            <Icon e="⚠" size={15} color="#ec7063" /> {t("home.docsNeedAttention")}
           </div>
           {myExpiring.slice(0, 3).map((e, i) => (
             <div key={i} style={{ fontSize: 13, color: "var(--white)", marginTop: 2 }}>
@@ -141,7 +141,7 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
   return (
     <>
       <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))" }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" }}><Icon e="🕐" size={22} color="***REMOVED***fff" /></div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="🕐" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{clockTitle}</div>
           <div className="feature-sub">{clockSub}</div>
@@ -152,15 +152,15 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, margin: "4px 0 14px" }}>
         <Stat value={`${hours?.totalHours ?? 0}h`} label={t("home.thisMonthStat")} color="var(--gold-light)" />
         <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
-        <Stat value={target != null ? `${pct}%` : "—"} label={t("home.ofTarget")} color={pct >= 80 ? "***REMOVED***58d68d" : "var(--white)"} />
+        <Stat value={target != null ? `${pct}%` : "—"} label={t("home.ofTarget")} color={pct >= 80 ? "#58d68d" : "var(--white)"} />
       </div>
 
       <div className="section-label">{t("home.workplace")}</div>
-      <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)" title={t("home.announcements")} sub={t("home.announcementsSub")} />
-      <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSub")} />
-      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" title={t("home.tempLog")} sub={t("home.tempLogSub")} />
-      <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,***REMOVED***7b241c,***REMOVED***e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSub")} />
-      <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,***REMOVED***6c3483,***REMOVED***a569bd)" title={t("home.expiry")} sub={t("home.expirySub")} />
+      <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.announcements")} sub={t("home.announcementsSub")} />
+      <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSub")} />
+      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.tempLog")} sub={t("home.tempLogSub")} />
+      <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,#7b241c,#e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSub")} />
+      <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,#6c3483,#a569bd)" title={t("home.expiry")} sub={t("home.expirySub")} />
     </>
   );
 }
@@ -182,10 +182,10 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
 
   const missing = Math.max(0, sc.staffCount - sc.submissionCount);
   const alerts: { icon: string; href: string; text: string; color: string }[] = [];
-  if (o.pendingApprovals > 0) alerts.push({ icon: "✅", href: "/approvals", text: t("home.approvalsWaiting", { n: o.pendingApprovals }), color: "***REMOVED***e8a35a" });
-  if (o.openIncidents > 0) alerts.push({ icon: "🚨", href: "/incidents", text: t("home.openIncidents", { n: o.openIncidents }), color: "***REMOVED***ec7063" });
-  if (o.lowStock > 0) alerts.push({ icon: "📦", href: "/inventory", text: t("home.lowStock", { n: o.lowStock }), color: "***REMOVED***e8a35a" });
-  if (missing > 0) alerts.push({ icon: "📋", href: "/noshow", text: t("home.notSubmitted", { n: missing }), color: "***REMOVED***e8a35a" });
+  if (o.pendingApprovals > 0) alerts.push({ icon: "✅", href: "/approvals", text: t("home.approvalsWaiting", { n: o.pendingApprovals }), color: "#e8a35a" });
+  if (o.openIncidents > 0) alerts.push({ icon: "🚨", href: "/incidents", text: t("home.openIncidents", { n: o.openIncidents }), color: "#ec7063" });
+  if (o.lowStock > 0) alerts.push({ icon: "📦", href: "/inventory", text: t("home.lowStock", { n: o.lowStock }), color: "#e8a35a" });
+  if (missing > 0) alerts.push({ icon: "📋", href: "/noshow", text: t("home.notSubmitted", { n: missing }), color: "#e8a35a" });
 
   const checklistPct = o.checklistTotal > 0 ? Math.round((o.checklistDone / o.checklistTotal) * 100) : 0;
   const checklistDone = o.checklistTotal > 0 && o.checklistDone === o.checklistTotal;
@@ -195,7 +195,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       {/* MY CLOCK — managers are employees too; branch owners are not, so no clock-in for them */}
       {!owner && (
         <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "linear-gradient(135deg,rgba(39,174,96,0.18),rgba(20,20,20,0.4))" : "linear-gradient(145deg,var(--dark2),var(--dark))", marginBottom: 14 }}>
-          <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" }}><Icon e="🕐" size={22} color="***REMOVED***fff" /></div>
+          <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="🕐" size={22} color="#fff" /></div>
           <div style={{ flex: 1 }}>
             <div className="feature-title">{clockTitle}</div>
             <div className="feature-sub">{clockSub}</div>
@@ -208,8 +208,8 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       <div className="section-label">{t("home.needsAttention")}</div>
       {alerts.length === 0 ? (
         <div className="card" style={{ display: "flex", alignItems: "center", gap: 12, borderColor: "rgba(39,174,96,0.25)" }}>
-          <Icon e="✅" size={20} color="***REMOVED***58d68d" />
-          <div><div style={{ fontSize: 14, fontWeight: 600, color: "***REMOVED***58d68d" }}>{t("home.allClear")}</div><div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.allClearSub")}</div></div>
+          <Icon e="✅" size={20} color="#58d68d" />
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: "#58d68d" }}>{t("home.allClear")}</div><div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.allClearSub")}</div></div>
         </div>
       ) : (
         <div className="card" style={{ padding: 6 }}>
@@ -230,19 +230,19 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       {/* TODAY */}
       <div className="section-label">{t("home.today")}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
-        <Stat value={lv.workingNow} label={t("home.statWorking")} color="***REMOVED***58d68d" />
+        <Stat value={lv.workingNow} label={t("home.statWorking")} color="#58d68d" />
         <Stat value={lv.completed} label={t("home.statDone")} />
-        <Stat value={lv.late} label={t("home.statLate")} color={lv.late > 0 ? "***REMOVED***ec7063" : "var(--white)"} />
+        <Stat value={lv.late} label={t("home.statLate")} color={lv.late > 0 ? "#ec7063" : "var(--white)"} />
         <Stat value={fmtH(lv.totalMins)} label={t("home.hours")} color="var(--gold)" />
       </div>
       <Link href={owner ? "/checklist-status" : "/checklist"} className="feature-card">
-        <div className="feature-icon" style={{ background: checklistDone ? "linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)" : "linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" }}><Icon e={checklistDone ? "✅" : "📋"} size={22} color="***REMOVED***fff" /></div>
+        <div className="feature-icon" style={{ background: checklistDone ? "linear-gradient(135deg,#1e8449,#27ae60)" : "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e={checklistDone ? "✅" : "📋"} size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("home.dailyChecklist")} {o.checklistTotal > 0 && <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {o.checklistDone}/{o.checklistTotal}</span>}</div>
           <div className="feature-sub">{checklistDone ? t("home.allTasksDone") : t("home.openingClosing")}</div>
           {o.checklistTotal > 0 && (
             <div style={{ height: 5, background: "rgba(128,128,128,0.15)", borderRadius: 4, marginTop: 7, overflow: "hidden" }}>
-              <div style={{ width: `${checklistPct}%`, height: "100%", background: checklistDone ? "***REMOVED***58d68d" : "var(--gold)" }} />
+              <div style={{ width: `${checklistPct}%`, height: "100%", background: checklistDone ? "#58d68d" : "var(--gold)" }} />
             </div>
           )}
         </div>
@@ -253,8 +253,8 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       <div className="section-label">{t("home.thisMonth")}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
         <Stat value={fmtH(otd.totalWorkedMins)} label={t("home.hoursWorked")} color="var(--gold-light)" />
-        <Stat value={fmtH(otd.totalOvertimeMins)} label={t("home.overtime")} color={otd.totalOvertimeMins > 0 ? "***REMOVED***e8a35a" : "var(--white)"} />
-        <Stat value={otd.peopleOver} label={t("home.overContract")} color={otd.peopleOver > 0 ? "***REMOVED***e8a35a" : "***REMOVED***58d68d"} />
+        <Stat value={fmtH(otd.totalOvertimeMins)} label={t("home.overtime")} color={otd.totalOvertimeMins > 0 ? "#e8a35a" : "var(--white)"} />
+        <Stat value={otd.peopleOver} label={t("home.overContract")} color={otd.peopleOver > 0 ? "#e8a35a" : "#58d68d"} />
       </div>
       <Link href="/schedule-hub" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
         <Icon e="📅" size={18} color="var(--gold)" />
@@ -312,8 +312,8 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
 
       {/* DAILY OPERATIONS */}
       <div className="section-label">{t("home.dailyOps")}</div>
-      <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSubMgr")} />
-      <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)" title={t("home.postAnnouncement")} sub={t("home.postAnnouncementSub")} />
+      <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSubMgr")} />
+      <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.postAnnouncement")} sub={t("home.postAnnouncementSub")} />
     </>
   );
 }
@@ -325,7 +325,7 @@ function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount:
   return (
     <>
       <Link href="/overview" className="feature-card" style={{ background: "linear-gradient(135deg,rgba(212,168,71,0.14),rgba(20,20,20,0.4))", borderColor: "rgba(212,168,71,0.3)" }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***1e6091,***REMOVED***2980b9)" }}><Icon e="🏢" size={22} color="***REMOVED***fff" /></div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}><Icon e="🏢" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("org.title")}</div>
           <div className="feature-sub">{t("org.subtitle")}</div>
@@ -334,7 +334,7 @@ function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount:
       </Link>
 
       <Link href="/branches" className="feature-card">
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***6b2fa0,***REMOVED***9b59b6)" }}><Icon e="🗂" size={22} color="***REMOVED***fff" /></div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}><Icon e="🗂" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("home.allBranches")}</div>
           <div className="feature-sub">{t("home.allBranchesSub")}</div>
@@ -344,13 +344,13 @@ function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount:
 
       <div className="section-label">{t("home.homeBranchToday")}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-        <Stat value={s.clockedIn} label={t("home.workingNow")} color="***REMOVED***58d68d" />
+        <Stat value={s.clockedIn} label={t("home.workingNow")} color="#58d68d" />
         <Stat value={s.staffCount} label={t("home.teamSize")} />
-        <Stat value={s.pendingApprovals} label={t("home.approvals")} color={s.pendingApprovals > 0 ? "***REMOVED***e8a35a" : "var(--white)"} />
+        <Stat value={s.pendingApprovals} label={t("home.approvals")} color={s.pendingApprovals > 0 ? "#e8a35a" : "var(--white)"} />
       </div>
 
       <Link href="/labor" className="feature-card" style={{ marginBottom: 14 }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***8b6914,***REMOVED***d4a847)" }}><Icon e="💶" size={22} color="***REMOVED***fff" /></div>
+        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#8b6914,#d4a847)" }}><Icon e="💶" size={22} color="#fff" /></div>
         <div style={{ flex: 1 }}>
           <div className="feature-title">{t("home.costThisMonth")}</div>
           <div className="feature-sub">{t("home.costSub", { l: cost?.laborPct != null ? `${cost.laborPct}%` : "—", f: cost?.foodCostPct != null ? `${cost.foodCostPct}%` : "—" })}</div>
@@ -359,14 +359,14 @@ function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount:
       </Link>
 
       <div className="section-label">{t("home.manage")}</div>
-      <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
-      <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)" title={t("home.peopleTeam")} sub={t("home.peopleTeamSub")} />
-      <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,***REMOVED***8b6914,***REMOVED***d4a847)" title={t("home.inventory")} sub={t("home.inventorySub")} />
-      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
-      <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,***REMOVED***7b241c,***REMOVED***e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSubMgr")} />
-      <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,***REMOVED***6c3483,***REMOVED***a569bd)" title={t("home.expiry")} sub={t("home.expirySubMgr")} />
-      <Shortcut href="/transfers" icon="🔄" grad="linear-gradient(135deg,***REMOVED***0e6655,***REMOVED***16a085)" title={t("home.transfers")} sub={t("home.transfersSub")} />
-      <Shortcut href="/profile" icon="⚙" grad="linear-gradient(135deg,***REMOVED***555,***REMOVED***777)" title={t("home.settings")} sub={t("home.settingsSub")} />
+      <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
+      <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.peopleTeam")} sub={t("home.peopleTeamSub")} />
+      <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.inventory")} sub={t("home.inventorySub")} />
+      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
+      <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,#7b241c,#e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSubMgr")} />
+      <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,#6c3483,#a569bd)" title={t("home.expiry")} sub={t("home.expirySubMgr")} />
+      <Shortcut href="/transfers" icon="🔄" grad="linear-gradient(135deg,#0e6655,#16a085)" title={t("home.transfers")} sub={t("home.transfersSub")} />
+      <Shortcut href="/profile" icon="⚙" grad="linear-gradient(135deg,#555,#777)" title={t("home.settings")} sub={t("home.settingsSub")} />
     </>
   );
 }
@@ -384,7 +384,7 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
 function Shortcut({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
-      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="***REMOVED***fff" /></div>
+      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
       <div style={{ flex: 1 }}>
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>

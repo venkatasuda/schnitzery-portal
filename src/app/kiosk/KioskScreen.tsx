@@ -98,15 +98,15 @@ export default function KioskScreen() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "radial-gradient(circle at 50% 0%, ***REMOVED***2a1414, ***REMOVED***160c0c 70%)",
-      color: "***REMOVED***fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      minHeight: "100vh", background: "radial-gradient(circle at 50% 0%, #2a1414, #160c0c 70%)",
+      color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       textAlign: "center", padding: "24px", fontFamily: "system-ui, sans-serif", userSelect: "none",
     }}>
       {/* Emergency / exhausted banner */}
       {(emergency || exhausted) && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, padding: "10px 16px",
-          background: exhausted ? "***REMOVED***922b21" : "***REMOVED***b9770e", color: "***REMOVED***fff", fontSize: 14, fontWeight: 700,
+          background: exhausted ? "#922b21" : "#b9770e", color: "#fff", fontSize: 14, fontWeight: 700,
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8, zIndex: 10,
         }}>
           <span style={{ fontSize: 16 }}>{exhausted ? "⛔" : "⚠️"}</span>
@@ -114,26 +114,26 @@ export default function KioskScreen() {
         </div>
       )}
 
-      <div style={{ color: "***REMOVED***d4a847", fontSize: 22, fontWeight: 700, fontFamily: "Georgia, serif", letterSpacing: 0.5 }}>Schnitzery</div>
+      <div style={{ color: "#d4a847", fontSize: 22, fontWeight: 700, fontFamily: "Georgia, serif", letterSpacing: 0.5 }}>Schnitzery</div>
       <h1 style={{ fontSize: 34, fontWeight: 800, margin: "6px 0 2px", fontFamily: "Georgia, serif" }}>{t("kiosk.title")}</h1>
-      <p style={{ color: "***REMOVED***b8a9a9", fontSize: 15, margin: "0 0 28px", maxWidth: 460, lineHeight: 1.4 }}>{t("kiosk.hint")}</p>
+      <p style={{ color: "#b8a9a9", fontSize: 15, margin: "0 0 28px", maxWidth: 460, lineHeight: 1.4 }}>{t("kiosk.hint")}</p>
 
       {!codeUsable ? (
-        <div style={{ color: "***REMOVED***ec7063", fontSize: 18, padding: 40, maxWidth: 420 }}>{t("kiosk.exhausted")}</div>
+        <div style={{ color: "#ec7063", fontSize: 18, padding: 40, maxWidth: 420 }}>{t("kiosk.exhausted")}</div>
       ) : (
         <>
-          <div style={{ background: "***REMOVED***fff", borderRadius: 24, padding: 16, boxShadow: "0 12px 50px rgba(0,0,0,0.5)", marginBottom: 28 }}>
+          <div style={{ background: "#fff", borderRadius: 24, padding: 16, boxShadow: "0 12px 50px rgba(0,0,0,0.5)", marginBottom: 28 }}>
             <QRCodeSVG value={qrPayload} size={300} level="M" />
           </div>
 
-          <div style={{ fontSize: 14, letterSpacing: 3, color: "***REMOVED***9a8f8f", marginBottom: 8 }}>{t("cd.orEnterCode")}</div>
-          <div style={{ fontSize: 84, fontWeight: 800, letterSpacing: 14, color: "***REMOVED***d4a847", fontFamily: "Georgia, serif", lineHeight: 1 }}>{code}</div>
+          <div style={{ fontSize: 14, letterSpacing: 3, color: "#9a8f8f", marginBottom: 8 }}>{t("cd.orEnterCode")}</div>
+          <div style={{ fontSize: 84, fontWeight: 800, letterSpacing: 14, color: "#d4a847", fontFamily: "Georgia, serif", lineHeight: 1 }}>{code}</div>
 
           <div style={{ width: 320, maxWidth: "80vw", marginTop: 28 }}>
             <div style={{ height: 8, background: "rgba(255,255,255,0.1)", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${pct}%`, background: emergency ? "***REMOVED***e8a35a" : "***REMOVED***d4a847", transition: "width 1s linear" }} />
+              <div style={{ height: "100%", width: `${pct}%`, background: emergency ? "#e8a35a" : "#d4a847", transition: "width 1s linear" }} />
             </div>
-            <div style={{ fontSize: 13, color: "***REMOVED***9a8f8f", marginTop: 10 }}>{t("cd.newCodeIn", { n: secondsLeft })}</div>
+            <div style={{ fontSize: 13, color: "#9a8f8f", marginTop: 10 }}>{t("cd.newCodeIn", { n: secondsLeft })}</div>
           </div>
         </>
       )}

@@ -51,7 +51,7 @@ export default function LogoutButton() {
         background: "transparent",
         border: "1px solid rgba(192,57,43,0.5)",
         borderRadius: 12,
-        color: "***REMOVED***e74c3c",
+        color: "#e74c3c",
         fontSize: 15,
         fontWeight: 700,
         cursor: busy ? "default" : "pointer",

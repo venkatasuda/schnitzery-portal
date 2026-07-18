@@ -10,7 +10,7 @@ import Icon from "@/components/Icon";
 const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier"];
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
 const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
-const TEAM_COLORS: Record<string, string> = { Manager: "***REMOVED***3498db", Preparation: "***REMOVED***d4a847", Kitchen: "***REMOVED***27ae60", Cashier: "***REMOVED***9b59b6" };
+const TEAM_COLORS: Record<string, string> = { Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60", Cashier: "#9b59b6" };
 
 export default function StaffPage() {
   const { t } = useLang();
@@ -126,16 +126,16 @@ export default function StaffPage() {
   const formerStaff = staff.filter((p) => (p.status || "active") !== "active");
   const visible = filter === "active" ? activeStaff : formerStaff;
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
-      <p style={{ color: "***REMOVED***9a8f8f", fontSize: 13, marginBottom: 16 }}>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
         {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "***REMOVED***d4a847", textAlign: "center" }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
 
       <button onClick={() => { setShowAdd(true); setAddMsg(null); }} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>{t("staff.addNew")}</button>
 
@@ -143,7 +143,7 @@ export default function StaffPage() {
         <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 100, padding: 20, overflowY: "auto" }}>
           <div onClick={(e) => e.stopPropagation()} style={{ ...card, maxWidth: 460, width: "100%", marginTop: 30 }}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</div>
-            <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
+            <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <Field label={t("staff.emailReq")}><input value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} style={input} placeholder="name@email.com" /></Field>
               <Field label={t("staff.tempPw")}><input value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} style={input} placeholder={t("staff.minChars")} /></Field>
@@ -167,9 +167,9 @@ export default function StaffPage() {
               <Field label={t("profile.contractHours")}><input type="number" value={addForm.contract_hours} onChange={(e) => setAddForm({ ...addForm, contract_hours: e.target.value })} style={input} /></Field>
             </div>
             <Field label={t("profile.phone")}><input value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} style={input} /></Field>
-            {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "***REMOVED***58d68d" : "***REMOVED***ec7063", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
+            {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "#58d68d" : "#ec7063", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "***REMOVED***fff" }}>{t("common.cancel")}</button>
+              <button onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}>{t("common.cancel")}</button>
               <button onClick={createStaff} disabled={adding} style={primaryBtn}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
             </div>
           </div>
@@ -190,12 +190,12 @@ export default function StaffPage() {
           {editId !== p.id ? (
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 42, height: 42, borderRadius: "50%", background: TEAM_COLORS[p.team] || "***REMOVED***666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "***REMOVED***fff", opacity: filter === "former" ? 0.55 : 1 }}>
+                <div style={{ width: 42, height: 42, borderRadius: "50%", background: TEAM_COLORS[p.team] || "#666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", opacity: filter === "former" ? 0.55 : 1 }}>
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "***REMOVED***9a8f8f" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "***REMOVED***9a8f8f" }}> · {t("staff.former")}</span>}</div>
-                  <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "#9a8f8f" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> · {t("staff.former")}</span>}</div>
+                  <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
 
@@ -204,7 +204,7 @@ export default function StaffPage() {
                   <div style={{ fontSize: 13, marginBottom: 10 }}>{t("staff.confirmRemove", { name: p.full_name || "—" })}</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => setConfirmRemoveId(null)} style={editBtn}>{t("common.cancel")}</button>
-                    <button onClick={() => remove(p.id)} disabled={removing} style={{ ...editBtn, background: "rgba(192,57,43,0.25)", border: "1px solid rgba(192,57,43,0.5)", color: "***REMOVED***fff" }}>{removing ? t("common.saving") : t("staff.remove")}</button>
+                    <button onClick={() => remove(p.id)} disabled={removing} style={{ ...editBtn, background: "rgba(192,57,43,0.25)", border: "1px solid rgba(192,57,43,0.5)", color: "#fff" }}>{removing ? t("common.saving") : t("staff.remove")}</button>
                   </div>
                 </div>
               ) : (
@@ -213,10 +213,10 @@ export default function StaffPage() {
                   {filter === "active" ? (
                     <>
                       <button onClick={() => startEdit(p)} style={editBtn}>{t("common.edit")}</button>
-                      <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "***REMOVED***e08283" }}>{t("staff.remove")}</button>
+                      <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "#e08283" }}>{t("staff.remove")}</button>
                     </>
                   ) : (
-                    <button onClick={() => reactivate(p.id)} style={{ ...editBtn, color: "***REMOVED***58d68d" }}>{t("staff.reactivate")}</button>
+                    <button onClick={() => reactivate(p.id)} style={{ ...editBtn, color: "#58d68d" }}>{t("staff.reactivate")}</button>
                   )}
                 </div>
               )}
@@ -247,7 +247,7 @@ export default function StaffPage() {
               </div>
               <Field label={t("profile.skillsLabel")}><input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} style={input} placeholder="Grill, Cashier, Opening" /></Field>
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                <button onClick={() => setEditId(null)} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "***REMOVED***fff" }}>{t("common.cancel")}</button>
+                <button onClick={() => setEditId(null)} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}>{t("common.cancel")}</button>
                 <button onClick={save} disabled={saving} style={primaryBtn}>{saving ? t("common.saving") : t("common.save")}</button>
               </div>
             </div>
@@ -256,12 +256,12 @@ export default function StaffPage() {
       ))}
 
       {!loading && visible.length === 0 && (
-        <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", fontSize: 13 }}>
+        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", fontSize: 13 }}>
           {filter === "active" ? t("staff.noActive") : t("staff.noFormer")}
         </div>
       )}
 
-      <div style={{ ...card, marginTop: 10, textAlign: "center", fontSize: 12, color: "***REMOVED***6f6565" }}>
+      <div style={{ ...card, marginTop: 10, textAlign: "center", fontSize: 12, color: "#6f6565" }}>
         {t("staff.footerNote")}
       </div>
     </div>
@@ -269,12 +269,12 @@ export default function StaffPage() {
 }
 
 function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 10 }}><label style={{ display: "block", fontSize: 11, color: "***REMOVED***9a8f8f", marginBottom: 4 }}>{label}</label>{children}</div>;
+  return <div style={{ marginBottom: 10 }}><label style={{ display: "block", fontSize: 11, color: "#9a8f8f", marginBottom: 4 }}>{label}</label>{children}</div>;
 }
 function FilterBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "***REMOVED***d4a847" : "transparent", color: active ? "***REMOVED***1a0e0e" : "***REMOVED***9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "#9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
-const card: React.CSSProperties = { background: "***REMOVED***241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 14 };
-const editBtn: React.CSSProperties = { padding: "8px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "***REMOVED***fff", fontSize: 13, cursor: "pointer" };
-const input: React.CSSProperties = { width: "100%", padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "***REMOVED***fff", fontSize: 13, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { flex: 1, padding: "12px", background: "***REMOVED***d4a847", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 14 };
+const editBtn: React.CSSProperties = { padding: "8px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 13, cursor: "pointer" };
+const input: React.CSSProperties = { width: "100%", padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 13, boxSizing: "border-box" };
+const primaryBtn: React.CSSProperties = { flex: 1, padding: "12px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };

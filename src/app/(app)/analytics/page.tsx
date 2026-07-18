@@ -8,8 +8,8 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend, getStaffPerformance } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 
-const GOLD = "***REMOVED***d4a847", BLUE = "***REMOVED***3498db", GREEN = "***REMOVED***58d68d", AMBER = "***REMOVED***e8a35a", RED = "***REMOVED***ec7063";
-const TEAM_COLORS = ["***REMOVED***c0392b", "***REMOVED***3498db", "***REMOVED***27ae60", "***REMOVED***d4a847", "***REMOVED***9b59b6", "***REMOVED***e67e22"];
+const GOLD = "#d4a847", BLUE = "#3498db", GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063";
+const TEAM_COLORS = ["#c0392b", "#3498db", "#27ae60", "#d4a847", "#9b59b6", "#e67e22"];
 type Period = "daily" | "weekly" | "monthly";
 
 export default function AnalyticsPage() {
@@ -134,8 +134,8 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.trend} margin={{ top: 6, right: 6, bottom: 0, left: -22 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "***REMOVED***9a8f8f" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "***REMOVED***9a8f8f" }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
                   <Tooltip {...tooltip} />
                   <Bar dataKey="labor" fill={GOLD} radius={[5, 5, 0, 0]} maxBarSize={30} />
                 </BarChart>
@@ -148,8 +148,8 @@ export default function AnalyticsPage() {
             <ChartCard title={t("bana.teamTitle")}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.teams} layout="vertical" margin={{ top: 4, right: 12, bottom: 0, left: 10 }}>
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "***REMOVED***9a8f8f" }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="team" tick={{ fontSize: 12, fill: "***REMOVED***cfc7c7" }} tickLine={false} axisLine={false} width={80} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="team" tick={{ fontSize: 12, fill: "#cfc7c7" }} tickLine={false} axisLine={false} width={80} />
                   <Tooltip {...tooltip} cursor={{ fill: "rgba(128,128,128,0.08)" }} />
                   <Bar dataKey="hours" radius={[0, 5, 5, 0]} maxBarSize={26}>
                     {data.teams.map((_: any, i: number) => <Cell key={i} fill={TEAM_COLORS[i % TEAM_COLORS.length]} />)}
@@ -165,8 +165,8 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={otTrend} margin={{ top: 8, right: 10, bottom: 0, left: -22 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "***REMOVED***9a8f8f" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "***REMOVED***9a8f8f" }} tickLine={false} axisLine={false} unit="%" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} unit="%" />
                   <Tooltip {...tooltip} formatter={(v: any) => [`${v}%`, t("bana.kOvertime")]} />
                   <Line type="monotone" dataKey="overtimePct" stroke={AMBER} strokeWidth={2.5} dot={{ r: 3, fill: AMBER }} />
                 </LineChart>
@@ -197,7 +197,7 @@ export default function AnalyticsPage() {
                 <tbody>
                   {staff.map((s) => {
                     const att = s.attendancePct as number | null;
-                    const attColor = att == null ? "var(--gray)" : att >= 90 ? "***REMOVED***58d68d" : att >= 80 ? "***REMOVED***e8a35a" : "***REMOVED***ec7063";
+                    const attColor = att == null ? "var(--gray)" : att >= 90 ? "#58d68d" : att >= 80 ? "#e8a35a" : "#ec7063";
                     return (
                       <tr key={s.id} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                         <td style={{ padding: "8px 8px 8px 0" }}>
@@ -206,8 +206,8 @@ export default function AnalyticsPage() {
                         </td>
                         <td style={{ textAlign: "center", padding: "8px 6px", color: attColor, fontWeight: 700 }}>{att == null ? "—" : `${att}%`}</td>
                         <td style={{ textAlign: "center", padding: "8px 6px" }}>
-                          <span style={{ color: s.late > 0 ? "***REMOVED***e8a35a" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
-                          {s.absent > 0 && <span style={{ fontSize: 10, color: "***REMOVED***ec7063", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
+                          <span style={{ color: s.late > 0 ? "#e8a35a" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
+                          {s.absent > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
                         </td>
                         <td style={{ textAlign: "right", padding: "8px 6px" }}>
                           <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.totalHours}h</div>
@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
                         </td>
                         <td style={{ textAlign: "right", padding: "8px 0 8px 6px" }}>
                           <div style={{ color: "var(--gold)", fontWeight: 600 }}>{s.cost ? `€${s.cost.toFixed(0)}` : "—"}</div>
-                          {s.otHours > 0 && <div style={{ fontSize: 10, color: "***REMOVED***e8a35a" }}>+{s.otHours}h OT</div>}
+                          {s.otHours > 0 && <div style={{ fontSize: 10, color: "#e8a35a" }}>+{s.otHours}h OT</div>}
                         </td>
                       </tr>
                     );
@@ -254,9 +254,9 @@ export default function AnalyticsPage() {
           <div className="card-title" style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗓️" size={16} color="var(--gold)" /> {t("bana.shiftStats")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <Kpi value={mostWorked ? `${mostWorked.totalHours}h` : "—"} label={t("bana.mostWorked")} color={GOLD} sub={mostWorked ? mostWorked.name : undefined} />
-            <Kpi value={topOT && topOT.otHours > 0 ? `${topOT.otHours}h` : "—"} label={t("bana.topOvertime")} color={topOT && topOT.otHours > 0 ? "***REMOVED***e8a35a" : "var(--gray)"} sub={topOT && topOT.otHours > 0 ? topOT.name : undefined} />
+            <Kpi value={topOT && topOT.otHours > 0 ? `${topOT.otHours}h` : "—"} label={t("bana.topOvertime")} color={topOT && topOT.otHours > 0 ? "#e8a35a" : "var(--gray)"} sub={topOT && topOT.otHours > 0 ? topOT.name : undefined} />
             <Kpi value={swaps} label={t("bana.swaps")} color={GOLD} />
-            <Kpi value={missedTotal} label={t("bana.missed")} color={missedTotal > 0 ? "***REMOVED***ec7063" : "***REMOVED***58d68d"} />
+            <Kpi value={missedTotal} label={t("bana.missed")} color={missedTotal > 0 ? "#ec7063" : "#58d68d"} />
           </div>
         </div>
       )}
@@ -267,8 +267,8 @@ export default function AnalyticsPage() {
 }
 
 const tooltip = {
-  contentStyle: { background: "***REMOVED***1c1414", border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12 },
-  labelStyle: { color: "***REMOVED***fff" }, itemStyle: { color: "***REMOVED***d4a847" }, cursor: { fill: "rgba(212,168,71,0.08)" },
+  contentStyle: { background: "#1c1414", border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12 },
+  labelStyle: { color: "#fff" }, itemStyle: { color: "#d4a847" }, cursor: { fill: "rgba(212,168,71,0.08)" },
 } as const;
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {

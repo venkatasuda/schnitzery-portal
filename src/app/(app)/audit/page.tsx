@@ -21,32 +21,32 @@ export default function AuditPage() {
     })();
   }, []);
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const fmt = (iso: string) => new Date(iso).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
   return (
     <div style={{ maxWidth: 620, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
-      <p style={{ color: "***REMOVED***9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("audit.subtitle")}</p>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("audit.subtitle")}</p>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : logs.length === 0 ? (
-        <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", padding: 30 }}>{t("audit.empty")}</div>
+        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>{t("audit.empty")}</div>
       ) : (
         logs.map((l) => (
           <div key={l.id} style={{ ...card, marginBottom: 8, padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{(l.action || "").replace(/_/g, " ")}</div>
-              {l.details && <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginTop: 2 }}>{l.details}</div>}
-              <div style={{ fontSize: 11, color: "***REMOVED***6f6565", marginTop: 2 }}>{t("audit.by", { actor: l.actor || "—" })}</div>
+              {l.details && <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 2 }}>{l.details}</div>}
+              <div style={{ fontSize: 11, color: "#6f6565", marginTop: 2 }}>{t("audit.by", { actor: l.actor || "—" })}</div>
             </div>
-            <div style={{ fontSize: 11, color: "***REMOVED***6f6565", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
+            <div style={{ fontSize: 11, color: "#6f6565", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
           </div>
         ))
       )}
     </div>
   );
 }
-const card: React.CSSProperties = { background: "***REMOVED***241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };
+const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };

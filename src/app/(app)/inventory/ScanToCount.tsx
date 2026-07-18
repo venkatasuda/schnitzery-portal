@@ -62,8 +62,8 @@ export default function ScanToCount({ products, onClose, onSaved }: { products: 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.94)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
       <div style={{ padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "***REMOVED***fff", fontWeight: 700, fontSize: 15 }}>{t("scan.title")}</span>
-        <button onClick={close} style={{ color: "***REMOVED***fff", background: "none", border: "none", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>✕</button>
+        <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{t("scan.title")}</span>
+        <button onClick={close} style={{ color: "#fff", background: "none", border: "none", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>✕</button>
       </div>
 
       {!scanned ? (
@@ -71,24 +71,24 @@ export default function ScanToCount({ products, onClose, onSaved }: { products: 
           <div id="scan-reader" style={{ width: "100%", maxWidth: 340, borderRadius: 12, overflow: "hidden" }} />
           {err ? (
             <>
-              <div style={{ color: "***REMOVED***ec7063", marginTop: 18, textAlign: "center", fontSize: 14 }}>{err}</div>
-              <button onClick={scanNext} style={{ marginTop: 14, padding: "10px 18px", borderRadius: 8, background: "rgba(255,255,255,0.1)", color: "***REMOVED***fff", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>{t("scan.tryAgain")}</button>
+              <div style={{ color: "#ec7063", marginTop: 18, textAlign: "center", fontSize: 14 }}>{err}</div>
+              <button onClick={scanNext} style={{ marginTop: 14, padding: "10px 18px", borderRadius: 8, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>{t("scan.tryAgain")}</button>
             </>
           ) : (
-            <div style={{ color: "***REMOVED***9a8f8f", marginTop: 18, textAlign: "center", fontSize: 13 }}>{t("scan.aim")}</div>
+            <div style={{ color: "#9a8f8f", marginTop: 18, textAlign: "center", fontSize: 13 }}>{t("scan.aim")}</div>
           )}
         </div>
       ) : (
         <div style={{ flex: 1, padding: 20 }}>
-          <div style={{ background: "***REMOVED***1c1010", borderRadius: 14, padding: 20, border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f" }}>{scanned.category}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "***REMOVED***fff", marginBottom: 4 }}>{scanned.product}</div>
-            <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 16 }}>{t("scan.target")}: {scanned.soll} {scanned.unit || ""}</div>
+          <div style={{ background: "#1c1010", borderRadius: 14, padding: 20, border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ fontSize: 12, color: "#9a8f8f" }}>{scanned.category}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{scanned.product}</div>
+            <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 16 }}>{t("scan.target")}: {scanned.soll} {scanned.unit || ""}</div>
             <input type="number" inputMode="decimal" autoFocus value={count} onChange={(e) => setCount(e.target.value)} placeholder={t("scan.countPh")}
-              style={{ width: "100%", padding: 16, fontSize: 22, textAlign: "center", borderRadius: 12, background: "***REMOVED***241414", color: "***REMOVED***fff", border: "1px solid rgba(255,255,255,0.15)", fontWeight: 700 }} />
+              style={{ width: "100%", padding: 16, fontSize: 22, textAlign: "center", borderRadius: 12, background: "#241414", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", fontWeight: 700 }} />
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button onClick={save} disabled={saving} style={{ flex: 1, padding: 15, borderRadius: 12, background: "***REMOVED***d4a847", color: "***REMOVED***1a1a1a", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{saving ? "…" : t("scan.saveNext")}</button>
-              <button onClick={scanNext} style={{ padding: "15px 18px", borderRadius: 12, background: "transparent", color: "***REMOVED***9a8f8f", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer" }}>{t("scan.skip")}</button>
+              <button onClick={save} disabled={saving} style={{ flex: 1, padding: 15, borderRadius: 12, background: "#d4a847", color: "#1a1a1a", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{saving ? "…" : t("scan.saveNext")}</button>
+              <button onClick={scanNext} style={{ padding: "15px 18px", borderRadius: 12, background: "transparent", color: "#9a8f8f", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer" }}>{t("scan.skip")}</button>
             </div>
           </div>
         </div>

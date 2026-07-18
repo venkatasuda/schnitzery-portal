@@ -42,15 +42,15 @@ export default function CompliancePage() {
         <>
           {/* summary */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
-            <Stat value={data.counts.breakCount} label={t("comp.breakIssues")} color={data.counts.breakCount > 0 ? "***REMOVED***ec7063" : "***REMOVED***58d68d"} />
-            <Stat value={data.counts.restCount} label={t("comp.restIssues")} color={data.counts.restCount > 0 ? "***REMOVED***ec7063" : "***REMOVED***58d68d"} />
-            <Stat value={data.counts.longCount} label={t("comp.over10h")} color={data.counts.longCount > 0 ? "***REMOVED***e8a35a" : "***REMOVED***58d68d"} />
+            <Stat value={data.counts.breakCount} label={t("comp.breakIssues")} color={data.counts.breakCount > 0 ? "#ec7063" : "#58d68d"} />
+            <Stat value={data.counts.restCount} label={t("comp.restIssues")} color={data.counts.restCount > 0 ? "#ec7063" : "#58d68d"} />
+            <Stat value={data.counts.longCount} label={t("comp.over10h")} color={data.counts.longCount > 0 ? "#e8a35a" : "#58d68d"} />
           </div>
 
           {v.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: 32 }}>
-              <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="***REMOVED***58d68d" /></div>
-              <div style={{ color: "***REMOVED***58d68d", fontSize: 15, fontWeight: 700 }}>{t("comp.allCompliant")}</div>
+              <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="#58d68d" /></div>
+              <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("comp.allCompliant")}</div>
               <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>
                 {t("comp.checkedNote", { n: data.checked })}
               </div>
@@ -66,7 +66,7 @@ export default function CompliancePage() {
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
                         {item.name} <span style={{ fontWeight: 400, fontSize: 12, color: "var(--gray)" }}>· {item.date}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: item.severity === "high" ? "***REMOVED***ec7063" : "***REMOVED***e8a35a" }}>{compType(item.type)} — {item.detail}</div>
+                      <div style={{ fontSize: 11, color: item.severity === "high" ? "#ec7063" : "#e8a35a" }}>{compType(item.type)} — {item.detail}</div>
                     </div>
                   </div>
                 ))}

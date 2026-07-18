@@ -101,7 +101,7 @@ export default function NotificationBell() {
       <button onClick={openMenu} className="theme-btn" aria-label={t("notif.title")} style={{ position: "relative" }}>
         <Icon e="🔔" size={20} />
         {total > 0 && (
-          <span style={{ position: "absolute", top: -3, right: -3, minWidth: 16, height: 16, borderRadius: 8, background: "***REMOVED***e74c3c", color: "***REMOVED***fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", boxShadow: "0 0 0 2px var(--dark)" }}>
+          <span style={{ position: "absolute", top: -3, right: -3, minWidth: 16, height: 16, borderRadius: 8, background: "#e74c3c", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", boxShadow: "0 0 0 2px var(--dark)" }}>
             {total > 99 ? "99+" : total}
           </span>
         )}
@@ -116,7 +116,7 @@ export default function NotificationBell() {
           {!loaded ? (
             <div style={{ padding: 22, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>{t("notif.loading")}</div>
           ) : !hasAny ? (
-            <div style={{ padding: 26, textAlign: "center", color: "var(--gray)", fontSize: 13 }}><Icon e="🎉" size={15} color="***REMOVED***58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
+            <div style={{ padding: 26, textAlign: "center", color: "var(--gray)", fontSize: 13 }}><Icon e="🎉" size={15} color="#58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
           ) : (
             <div style={{ maxHeight: 360, overflowY: "auto" }}>
               {/* personal notifications */}

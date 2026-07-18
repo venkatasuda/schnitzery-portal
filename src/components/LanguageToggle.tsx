@@ -19,7 +19,7 @@ export default function LanguageToggle() {
         borderRadius: 6,
         cursor: l === locale ? "default" : "pointer",
         background: locale === l ? "var(--gold)" : "transparent",
-        color: locale === l ? "***REMOVED***1a0e0e" : "var(--gray)",
+        color: locale === l ? "#1a0e0e" : "var(--gray)",
       }}
     >
       {label}

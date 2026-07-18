@@ -90,9 +90,9 @@ export default function CorrectionsPage() {
 
   function statusBadge(s: string) {
     const map: Record<string, { label: string; color: string }> = {
-      pending: { label: t("corr.statusPending"), color: "***REMOVED***e8a35a" },
-      approved: { label: t("corr.statusApproved"), color: "***REMOVED***58d68d" },
-      rejected: { label: t("corr.statusRejected"), color: "***REMOVED***ec7063" },
+      pending: { label: t("corr.statusPending"), color: "#e8a35a" },
+      approved: { label: t("corr.statusApproved"), color: "#58d68d" },
+      rejected: { label: t("corr.statusRejected"), color: "#ec7063" },
     };
     return map[s] || map.pending;
   }
@@ -158,7 +158,7 @@ export default function CorrectionsPage() {
           </label>
 
           <button onClick={submit} disabled={busy} style={{
-            width: "100%", padding: 13, background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none",
+            width: "100%", padding: 13, background: "var(--gold)", color: "#1a0e0e", border: "none",
             borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: busy ? 0.6 : 1,
           }}>{t("corr.submit")}</button>
         </div>
@@ -189,7 +189,7 @@ export default function CorrectionsPage() {
                 </div>
                 <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{r.reason}</div>
                 {r.status === "rejected" && r.manager_note && (
-                  <div style={{ fontSize: 12, color: "***REMOVED***ec7063", marginTop: 6, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "7px 10px" }}>
+                  <div style={{ fontSize: 12, color: "#ec7063", marginTop: 6, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "7px 10px" }}>
                     {t("corr.managerNote")} {r.manager_note}
                   </div>
                 )}

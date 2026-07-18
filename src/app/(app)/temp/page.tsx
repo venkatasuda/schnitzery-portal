@@ -81,7 +81,7 @@ export default function TempPage() {
         <div className="card" style={{ margin: "12px 0", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: summary.breachesToday > 0 ? "rgba(231,76,60,0.4)" : summary.pending > 0 ? "rgba(212,168,71,0.3)" : "rgba(39,174,96,0.3)" }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--white)" }}>{t("temp.todayCoverage", { done: summary.loggedUnits, total: summary.totalUnits })}</div>
-            <div style={{ fontSize: 12, color: summary.breachesToday > 0 ? "***REMOVED***ec7063" : "var(--gray)" }}>
+            <div style={{ fontSize: 12, color: summary.breachesToday > 0 ? "#ec7063" : "var(--gray)" }}>
               {summary.breachesToday > 0 ? t("temp.breachesToday", { n: summary.breachesToday }) : summary.pending > 0 ? t("temp.pendingToday", { n: summary.pending }) : t("temp.allGood")}
             </div>
           </div>
@@ -114,19 +114,19 @@ export default function TempPage() {
                       </div>
                       {lt ? (
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: lt.in_range ? "***REMOVED***58d68d" : "***REMOVED***ec7063" }}>{lt.temp}°C</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: lt.in_range ? "#58d68d" : "#ec7063" }}>{lt.temp}°C</div>
                           <div style={{ fontSize: 10, color: "var(--gray)" }}>{u.todayCount}× {t("temp.today")}</div>
                         </div>
-                      ) : <span style={{ fontSize: 11, color: "***REMOVED***d4a847" }}>{t("temp.pending")}</span>}
+                      ) : <span style={{ fontSize: 11, color: "#d4a847" }}>{t("temp.pending")}</span>}
                     </div>
                     <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
                       <input type="number" inputMode="decimal" value={val[u.id] ?? ""} onChange={(e) => setVal((s) => ({ ...s, [u.id]: e.target.value }))}
-                        placeholder="°C" style={{ width: 90, padding: "9px 10px", borderRadius: 8, background: "var(--dark2)", color: oor ? "***REMOVED***ec7063" : "var(--white)", border: `1px solid ${oor ? "rgba(231,76,60,0.5)" : "rgba(255,255,255,0.12)"}`, fontSize: 14, textAlign: "center", fontWeight: 600 }} />
-                      <button onClick={() => doLog(u)} disabled={busy === u.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === u.id ? "…" : t("temp.log")}</button>
+                        placeholder="°C" style={{ width: 90, padding: "9px 10px", borderRadius: 8, background: "var(--dark2)", color: oor ? "#ec7063" : "var(--white)", border: `1px solid ${oor ? "rgba(231,76,60,0.5)" : "rgba(255,255,255,0.12)"}`, fontSize: 14, textAlign: "center", fontWeight: 600 }} />
+                      <button onClick={() => doLog(u)} disabled={busy === u.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === u.id ? "…" : t("temp.log")}</button>
                     </div>
                     {oor && (
                       <div style={{ marginTop: 10 }}>
-                        <div style={{ fontSize: 12, color: "***REMOVED***ec7063", marginBottom: 6 }}>⚠️ {t("temp.outOfRange")}</div>
+                        <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 6 }}>⚠️ {t("temp.outOfRange")}</div>
                         <input value={action[u.id] ?? ""} onChange={(e) => setAction((s) => ({ ...s, [u.id]: e.target.value }))}
                           placeholder={t("temp.correctivePh")} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(231,76,60,0.4)", fontSize: 13 }} />
                       </div>
@@ -146,12 +146,12 @@ export default function TempPage() {
                 <div key={l.id} className="card" style={{ marginBottom: 8, padding: 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <div style={{ fontSize: 13, color: "var(--white)" }}>{l.unit?.name || "—"} <span style={{ fontWeight: 700, color: l.in_range ? "***REMOVED***58d68d" : "***REMOVED***ec7063" }}>{l.temp}°C</span></div>
+                      <div style={{ fontSize: 13, color: "var(--white)" }}>{l.unit?.name || "—"} <span style={{ fontWeight: 700, color: l.in_range ? "#58d68d" : "#ec7063" }}>{l.temp}°C</span></div>
                       <div style={{ fontSize: 11, color: "var(--gray)" }}>{fmtWhen(l.recorded_at)}{l.recorded_by_name ? ` · ${l.recorded_by_name}` : ""}</div>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: l.in_range ? "***REMOVED***58d68d" : "***REMOVED***ec7063" }}>{l.in_range ? t("temp.ok") : t("temp.breach")}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: l.in_range ? "#58d68d" : "#ec7063" }}>{l.in_range ? t("temp.ok") : t("temp.breach")}</span>
                   </div>
-                  {l.corrective_action && <div style={{ fontSize: 12, color: "***REMOVED***d4a847", marginTop: 6 }}>↳ {l.corrective_action}</div>}
+                  {l.corrective_action && <div style={{ fontSize: 12, color: "#d4a847", marginTop: 6 }}>↳ {l.corrective_action}</div>}
                 </div>
               ))}
             </div>
@@ -170,7 +170,7 @@ export default function TempPage() {
                   <input type="number" value={nu.min} onChange={(e) => setNu({ ...nu, min: e.target.value })} placeholder={t("temp.minC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13 }} />
                   <input type="number" value={nu.max} onChange={(e) => setNu({ ...nu, max: e.target.value })} placeholder={t("temp.maxC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13 }} />
                 </div>
-                <button onClick={doAddUnit} disabled={busy === "add"} style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === "add" ? "…" : t("temp.addUnit")}</button>
+                <button onClick={doAddUnit} disabled={busy === "add"} style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === "add" ? "…" : t("temp.addUnit")}</button>
               </div>
               {units.map((u) => (
                 <div key={u.id} className="card" style={{ marginBottom: 8, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -178,7 +178,7 @@ export default function TempPage() {
                     <div style={{ fontSize: 13, color: "var(--white)" }}>{u.name}</div>
                     <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
                   </div>
-                  <button onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")} style={{ background: "none", border: "none", color: "***REMOVED***9a8f8f", cursor: "pointer", fontSize: 16 }}>🗑</button>
+                  <button onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")} style={{ background: "none", border: "none", color: "#9a8f8f", cursor: "pointer", fontSize: 16 }}>🗑</button>
                 </div>
               ))}
             </div>

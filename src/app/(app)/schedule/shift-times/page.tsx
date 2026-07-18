@@ -77,9 +77,9 @@ export default function ShiftTimesPage() {
                         <div style={lbl}>{t("shiftcfg.breakLabel")}</div>
                         <input type="number" min={0} value={r.breakMins} onChange={(e) => edit(r.team, r.shift, "breakMins", e.target.value)} style={input} />
                       </label>
-                      <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
+                      <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
                     </div>
-                    {crosses && <div style={{ fontSize: 11, color: "***REMOVED***e8a35a", marginTop: 8 }}><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
+                    {crosses && <div style={{ fontSize: 11, color: "#e8a35a", marginTop: 8 }}><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
                   </div>
                 );
               })}

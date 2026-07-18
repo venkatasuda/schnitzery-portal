@@ -75,7 +75,7 @@ export default function StaffDetailPage() {
           <div style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{staff.full_name || "—"}</div>
           <div style={{ fontSize: 12, color: "var(--gray)" }}>{staff.employee_code || "—"} · {staff.team ? teamLabel(staff.team) : t("directory.noTeam")}</div>
         </div>
-        <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20, background: staff.status === "active" ? "rgba(39,174,96,0.2)" : "rgba(128,128,128,0.2)", color: staff.status === "active" ? "***REMOVED***58d68d" : "var(--gray)", fontWeight: 600 }}>
+        <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20, background: staff.status === "active" ? "rgba(39,174,96,0.2)" : "rgba(128,128,128,0.2)", color: staff.status === "active" ? "#58d68d" : "var(--gray)", fontWeight: 600 }}>
           {staff.status ? statusLabel(staff.status) : "—"}
         </span>
       </div>
@@ -108,7 +108,7 @@ export default function StaffDetailPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 4 }}>
         <Stat value={fmtH(hours?.workedMins || 0)} label={t("staffd.worked")} color="var(--gold)" />
         <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
-        <Stat value={overPct != null ? `${overPct}%` : "—"} label={t("staffd.ofContract")} color={overPct != null && overPct > 100 ? "***REMOVED***e8a35a" : "var(--white)"} />
+        <Stat value={overPct != null ? `${overPct}%` : "—"} label={t("staffd.ofContract")} color={overPct != null && overPct > 100 ? "#e8a35a" : "var(--white)"} />
       </div>
 
       {/* vacation */}
@@ -118,7 +118,7 @@ export default function StaffDetailPage() {
           <div className="card" style={{ marginBottom: 4 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
               <Stat value={bal.allowance} label={t("staffd.allowance")} />
-              <Stat value={bal.used} label={t("staffd.taken")} color="***REMOVED***e8a35a" />
+              <Stat value={bal.used} label={t("staffd.taken")} color="#e8a35a" />
               <Stat value={bal.remaining} label={t("staffd.remaining")} color="var(--gold)" />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -127,7 +127,7 @@ export default function StaffDetailPage() {
                 type="number" min="0" step="0.5" value={allowance} onChange={(e) => setAllowance(e.target.value)}
                 style={{ width: 80, padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 14 }}
               />
-              <button onClick={saveAllowance} style={{ padding: "8px 14px", background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("common.save")}</button>
+              <button onClick={saveAllowance} style={{ padding: "8px 14px", background: "var(--gold)", color: "#1a1a1a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("common.save")}</button>
             </div>
           </div>
         </>

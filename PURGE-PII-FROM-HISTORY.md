@@ -1,4 +1,4 @@
-***REMOVED*** Removing staff phone numbers from Git history — item 5
+# Removing staff phone numbers from Git history — item 5
 
 `seed-stuttgart-team.mjs` contains **32 phone numbers plus a shared password**
 for ~30 identifiable employees, and it was pushed to a **public** repository. Deleting the file in a new commit is not enough — every
@@ -9,7 +9,7 @@ This rewrites history so the file never existed.
 
 ---
 
-***REMOVED******REMOVED*** Before you start
+## Before you start
 
 - [x] **Repo set to private** — done. This stopped the ongoing exposure.
 - [ ] The wage code (item 18 step B) is committed, pushed and **deployed**.
@@ -19,7 +19,7 @@ This rewrites history so the file never existed.
 
 ---
 
-***REMOVED******REMOVED*** Step 1 — replace the script (already done)
+## Step 1 — replace the script (already done)
 
 `seed-team.mjs` reads an untracked `team.roster.csv` and generates a unique
 random password per person. `.gitignore` now excludes `*.roster.csv` and
@@ -35,7 +35,7 @@ Abhi,Kitchen,staff,Working Student,80,+49...
 
 ---
 
-***REMOVED******REMOVED*** Step 2 — install the tool
+## Step 2 — install the tool
 
 ```
 pip install git-filter-repo
@@ -46,7 +46,7 @@ pip install git-filter-repo
 
 ---
 
-***REMOVED******REMOVED*** Step 3 — rewrite history
+## Step 3 — rewrite history
 
 ```
 cd E:\Schnitzery
@@ -75,7 +75,7 @@ Must print **nothing**.
 
 ---
 
-***REMOVED******REMOVED*** Step 4 — push the rewritten history
+## Step 4 — push the rewritten history
 
 `filter-repo` deletes the remote as a safety measure, so add it back:
 
@@ -87,7 +87,7 @@ git push origin --force --tags
 
 ---
 
-***REMOVED******REMOVED*** Step 5 — rotate the password
+## Step 5 — rotate the password
 
 The shared seed password was publicly readable. Treat it as compromised.
 
@@ -116,7 +116,7 @@ password over, is worth investigating.
 
 ---
 
-***REMOVED******REMOVED*** Step 6 — clean up
+## Step 6 — clean up
 
 ```
 git rm --cached team.roster.csv 2>nul
@@ -128,7 +128,7 @@ plaintext credentials sitting on your disk.
 
 ---
 
-***REMOVED******REMOVED*** What this does NOT fix
+## What this does NOT fix
 
 Be realistic about the limits:
 
@@ -143,7 +143,7 @@ Be realistic about the limits:
 
 ---
 
-***REMOVED******REMOVED*** GDPR
+## GDPR
 
 This was personal data of identifiable employees exposed publicly. Under GDPR
 this is a personal-data breach, and the 72-hour notification clock started when

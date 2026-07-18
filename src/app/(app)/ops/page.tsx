@@ -51,11 +51,11 @@ export default function OpsPage() {
   const m = data?.metrics;
   const rows: any[] = data?.rows || [];
   const statusMeta: Record<string, { key: string; color: string }> = {
-    working: { key: "ops.stWorking", color: "***REMOVED***58d68d" },
-    completed: { key: "ops.stCompleted", color: "***REMOVED***7f8c8d" },
-    absent: { key: "ops.stAbsent", color: "***REMOVED***ec7063" },
-    not_checked_in: { key: "ops.stNotIn", color: "***REMOVED***e8a35a" },
-    unscheduled: { key: "ops.stUnscheduled", color: "***REMOVED***5dade2" },
+    working: { key: "ops.stWorking", color: "#58d68d" },
+    completed: { key: "ops.stCompleted", color: "#7f8c8d" },
+    absent: { key: "ops.stAbsent", color: "#ec7063" },
+    not_checked_in: { key: "ops.stNotIn", color: "#e8a35a" },
+    unscheduled: { key: "ops.stUnscheduled", color: "#5dade2" },
   };
 
   return (
@@ -90,22 +90,22 @@ export default function OpsPage() {
         <>
           {/* METRIC CARDS */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(108px, 1fr))", gap: 8, marginBottom: 14 }}>
-            <Metric icon="🟢" value={m.workingNow} label={t("ops.workingNow")} color="***REMOVED***58d68d" />
-            <Metric icon="⏰" value={m.late} label={t("ops.late")} color={m.late ? "***REMOVED***e8a35a" : "var(--white)"} />
-            <Metric icon="🚫" value={m.absent} label={t("ops.absent")} color={m.absent ? "***REMOVED***ec7063" : "var(--white)"} />
-            <Metric icon="⏳" value={m.notCheckedIn} label={t("ops.notCheckedIn")} color={m.notCheckedIn ? "***REMOVED***e8a35a" : "var(--white)"} />
-            <Metric icon="👥" value={`${m.workingNow}/${m.scheduledNow}`} label={t("ops.staffing")} color="***REMOVED***3498db" />
-            <Metric icon="⏱️" value={fmtLabor(m.laborMins)} label={t("ops.laborHours")} color="***REMOVED***d4a847" />
+            <Metric icon="🟢" value={m.workingNow} label={t("ops.workingNow")} color="#58d68d" />
+            <Metric icon="⏰" value={m.late} label={t("ops.late")} color={m.late ? "#e8a35a" : "var(--white)"} />
+            <Metric icon="🚫" value={m.absent} label={t("ops.absent")} color={m.absent ? "#ec7063" : "var(--white)"} />
+            <Metric icon="⏳" value={m.notCheckedIn} label={t("ops.notCheckedIn")} color={m.notCheckedIn ? "#e8a35a" : "var(--white)"} />
+            <Metric icon="👥" value={`${m.workingNow}/${m.scheduledNow}`} label={t("ops.staffing")} color="#3498db" />
+            <Metric icon="⏱️" value={fmtLabor(m.laborMins)} label={t("ops.laborHours")} color="#d4a847" />
           </div>
 
           {/* UTILIZATION */}
           <div className="card" style={{ padding: 14, marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 13, color: "var(--gray)" }}>{t("ops.utilization")}</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization >= 90 ? "***REMOVED***58d68d" : m.utilization >= 70 ? "***REMOVED***e8a35a" : "***REMOVED***ec7063" }}>{m.utilization}%</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization >= 90 ? "#58d68d" : m.utilization >= 70 ? "#e8a35a" : "#ec7063" }}>{m.utilization}%</span>
             </div>
             <div style={{ height: 8, background: "rgba(128,128,128,0.18)", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ width: `${m.utilization}%`, height: "100%", background: m.utilization >= 90 ? "***REMOVED***58d68d" : m.utilization >= 70 ? "***REMOVED***e8a35a" : "***REMOVED***ec7063" }} />
+              <div style={{ width: `${m.utilization}%`, height: "100%", background: m.utilization >= 90 ? "#58d68d" : m.utilization >= 70 ? "#e8a35a" : "#ec7063" }} />
             </div>
             <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("ops.scheduled")}: {m.scheduledTotal} · {t("ops.completed")}: {m.completed}</div>
           </div>
@@ -128,7 +128,7 @@ export default function OpsPage() {
                         {r.clockIn && ` · ${t("ops.actual")} ${fmtClock(r.clockIn)}–${fmtClock(r.clockOut)}`}
                       </div>
                     </div>
-                    {r.lateMins > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: "***REMOVED***e8a35a", background: "rgba(232,163,90,0.15)", padding: "2px 7px", borderRadius: 12 }}>+{r.lateMins}m</span>}
+                    {r.lateMins > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: "#e8a35a", background: "rgba(232,163,90,0.15)", padding: "2px 7px", borderRadius: 12 }}>+{r.lateMins}m</span>}
                     <span style={{ fontSize: 10, fontWeight: 700, color: meta.color, background: `${meta.color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{t(meta.key)}</span>
                   </div>
                 );

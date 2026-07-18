@@ -234,18 +234,18 @@ export default function AttendancePage() {
 
   // Build the day's timeline events
   const timeline: { label: string; time: string; extra?: string; color: string }[] = [];
-  if (session?.clock_in) timeline.push({ label: t("att.tlClockIn"), time: fmtTime(session.clock_in), color: "***REMOVED***58d68d" });
+  if (session?.clock_in) timeline.push({ label: t("att.tlClockIn"), time: fmtTime(session.clock_in), color: "#58d68d" });
   breaks.forEach((b: any, i: number) => {
-    timeline.push({ label: t("att.tlBreakStart", { n: i + 1 }), time: fmtTime(b.start), color: "***REMOVED***e8a35a" });
+    timeline.push({ label: t("att.tlBreakStart", { n: i + 1 }), time: fmtTime(b.start), color: "#e8a35a" });
     if (b.end) {
       const mins = Math.max(0, Math.round((new Date(b.end).getTime() - new Date(b.start).getTime()) / 60000));
-      timeline.push({ label: t("att.tlBreakEnd", { n: i + 1 }), time: fmtTime(b.end), extra: `${mins} ${t("att.minutesShort")}`, color: "***REMOVED***e8a35a" });
+      timeline.push({ label: t("att.tlBreakEnd", { n: i + 1 }), time: fmtTime(b.end), extra: `${mins} ${t("att.minutesShort")}`, color: "#e8a35a" });
     }
   });
-  if (session?.clock_out) timeline.push({ label: t("att.tlClockOut"), time: fmtTime(session.clock_out), color: "***REMOVED***ec7063" });
+  if (session?.clock_out) timeline.push({ label: t("att.tlClockOut"), time: fmtTime(session.clock_out), color: "#ec7063" });
 
   const statusLabel = onBreak ? t("att.statusOnBreak") : clockedIn ? t("att.statusWorking") : t("att.statusNotIn");
-  const statusColor = onBreak ? "***REMOVED***e8a35a" : clockedIn ? "***REMOVED***58d68d" : "var(--gray)";
+  const statusColor = onBreak ? "#e8a35a" : clockedIn ? "#58d68d" : "var(--gray)";
   const statusEmoji = onBreak ? "☕" : clockedIn ? "🟢" : "⚪";
 
   return (
@@ -287,16 +287,16 @@ export default function AttendancePage() {
 
             {/* STATUS ROW: In / Break / Out / Total */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 18 }}>
-              <StatCell label={t("att.in")} value={fmtTime(session?.clock_in)} color="***REMOVED***58d68d" />
-              <StatCell label={t("att.break")} value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="***REMOVED***e8a35a" />
-              <StatCell label={t("att.out")} value={fmtTime(session?.clock_out)} color="***REMOVED***ec7063" />
+              <StatCell label={t("att.in")} value={fmtTime(session?.clock_in)} color="#58d68d" />
+              <StatCell label={t("att.break")} value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="#e8a35a" />
+              <StatCell label={t("att.out")} value={fmtTime(session?.clock_out)} color="#ec7063" />
               <StatCell label={t("att.total")} value={session?.clock_out ? fmtDur(session.duration_mins) : (clockedIn ? `${tt.h}h ${String(tt.m).padStart(2, "0")}m` : "—")} color="var(--gold)" />
             </div>
 
             {/* ACTION BUTTONS */}
             {!clockedIn ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button onClick={clockInAction} disabled={working} style={bigBtn("linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)", working)}>{t("att.clockInNow")}</button>
+                <button onClick={clockInAction} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
                   <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
@@ -305,11 +305,11 @@ export default function AttendancePage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {!onBreak ? (
-                  <button onClick={breakStartAction} disabled={working} style={bigBtn("linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)", working)}>{t("att.startBreak")}</button>
+                  <button onClick={breakStartAction} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
                 ) : (
-                  <button onClick={breakEndAction} disabled={working} style={bigBtn("linear-gradient(135deg,***REMOVED***117a65,***REMOVED***16a085)", working)}>{t("att.endBreak")}</button>
+                  <button onClick={breakEndAction} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
                 )}
-                <button onClick={clockOutAction} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,***REMOVED***922b21,***REMOVED***c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
+                <button onClick={clockOutAction} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
                 {!onBreak && (
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
@@ -333,13 +333,13 @@ export default function AttendancePage() {
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
               <span style={{ flex: 1, fontSize: 14, color: "var(--white)" }}>{e.label}</span>
-              {e.extra && <span style={{ fontSize: 12, color: "***REMOVED***e8a35a" }}>{e.extra}</span>}
+              {e.extra && <span style={{ fontSize: 12, color: "#e8a35a" }}>{e.extra}</span>}
               <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gold)" }}>{e.time}</span>
             </div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 13 }}>
             <span style={{ color: "var(--gray)" }}>{t("att.totalBreakTime")}</span>
-            <span style={{ color: "***REMOVED***e8a35a", fontWeight: 600 }}>{totalBreakMin} {t("att.minutesShort")}</span>
+            <span style={{ color: "#e8a35a", fontWeight: 600 }}>{totalBreakMin} {t("att.minutesShort")}</span>
           </div>
           {session?.clock_out && (
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 13 }}>
@@ -371,10 +371,10 @@ export default function AttendancePage() {
               inputMode="numeric"
               style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", boxSizing: "border-box" }}
             />
-            {codeErr && <div style={{ color: "***REMOVED***ec7063", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
+            {codeErr && <div style={{ color: "#ec7063", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>{t("common.cancel")}</button>
-              <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)", working), flex: 1 }}>{working ? "…" : t("att.confirm")}</button>
+              <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : t("att.confirm")}</button>
             </div>
           </div>
         </div>
@@ -417,7 +417,7 @@ export default function AttendancePage() {
               return (
                 <div key={s.id} className="card" style={{ padding: 14, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 9, fontWeight: 700, color: "***REMOVED***e8a35a", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 9, fontWeight: 700, color: "#e8a35a", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>
                       {s.status === "active" || s.status === "on-break" ? t("att.inProgress") : fmtDur(s.duration_mins)}
                     </div>
@@ -477,7 +477,7 @@ function rangeFor(tab: "week" | "month"): { from: string; to: string } {
 const historyToggle: React.CSSProperties = { width: "100%", marginTop: 14, padding: "13px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 12, color: "var(--white)", fontSize: 14, cursor: "pointer" };
 
 function bigBtn(bg: string, disabled: boolean): React.CSSProperties {
-  return { width: "100%", padding: "16px", background: disabled ? "var(--dark3)" : bg, color: disabled ? "var(--gray)" : "***REMOVED***fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: disabled ? "default" : "pointer", transition: "transform 0.1s" };
+  return { width: "100%", padding: "16px", background: disabled ? "var(--dark3)" : bg, color: disabled ? "var(--gray)" : "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: disabled ? "default" : "pointer", transition: "transform 0.1s" };
 }
 function secBtn(disabled: boolean): React.CSSProperties {
   return { flex: 1, padding: "13px", background: "var(--dark3)", color: disabled ? "var(--gray)" : "var(--white)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: disabled ? "default" : "pointer" };

@@ -109,8 +109,8 @@ export default function ApprovalsPage() {
         <CardSkeleton rows={3} />
       ) : shown.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 34 }}>
-          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={32} color="***REMOVED***58d68d" /></div>
-          <div style={{ color: "***REMOVED***58d68d", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
+          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={32} color="#58d68d" /></div>
+          <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
           <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("approvals.caughtUp")}</div>
         </div>
       ) : (
@@ -124,8 +124,8 @@ export default function ApprovalsPage() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{item.name}</div>
                   <div style={{ fontSize: 12, color: "var(--gray)" }}>{item.detail}</div>
                 </div>
-                <button onClick={() => decide(item, true)} disabled={busy} style={{ padding: "8px 12px", background: "***REMOVED***1e6b3f", color: "***REMOVED***fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✓" size={16} /></button>
-                <button onClick={() => decide(item, false)} disabled={busy} style={{ padding: "8px 12px", background: "var(--dark3)", color: "***REMOVED***ec7063", border: "1px solid rgba(231,76,60,0.3)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✕" size={16} /></button>
+                <button onClick={() => decide(item, true)} disabled={busy} style={{ padding: "8px 12px", background: "#1e6b3f", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✓" size={16} /></button>
+                <button onClick={() => decide(item, false)} disabled={busy} style={{ padding: "8px 12px", background: "var(--dark3)", color: "#ec7063", border: "1px solid rgba(231,76,60,0.3)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✕" size={16} /></button>
               </div>
             );
           })}
@@ -144,7 +144,7 @@ export default function ApprovalsPage() {
               style={{ width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box", resize: "vertical", marginBottom: 12 }} />
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => setRejectItem(null)} style={{ flex: 1, padding: 11, background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--gray)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("corr.dismiss")}</button>
-              <button onClick={confirmReject} style={{ flex: 1, padding: 11, background: "***REMOVED***a93226", border: "none", borderRadius: 10, color: "***REMOVED***fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("corr.confirmReject")}</button>
+              <button onClick={confirmReject} style={{ flex: 1, padding: 11, background: "#a93226", border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("corr.confirmReject")}</button>
             </div>
           </div>
         </div>

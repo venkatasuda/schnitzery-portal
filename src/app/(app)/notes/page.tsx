@@ -40,7 +40,7 @@ export default function NotesPage() {
     else setMsg(res.error || t("notes.failed"));
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const shown = tab === "recognition" ? notes.filter((n) => n.isRecognition) : notes;
   const fmt = (iso: string) => new Date(iso).toLocaleDateString([], { day: "2-digit", month: "short" });
@@ -48,9 +48,9 @@ export default function NotesPage() {
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📝" size={22} /> {t("schedhub.notes")}</h1>
-      <p style={{ color: "***REMOVED***9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("notes.subtitle")}</p>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("notes.subtitle")}</p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "***REMOVED***d4a847", textAlign: "center" }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
 
       {/* add note */}
       <div style={{ ...card, marginBottom: 16 }}>
@@ -61,7 +61,7 @@ export default function NotesPage() {
           </select>
         </Field>
         <Field label={t("notes.note")}><textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} style={{ ...input, resize: "vertical" }} placeholder={t("notes.whatHappened")} /></Field>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "***REMOVED***9a8f8f", marginBottom: 12, cursor: "pointer" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#9a8f8f", marginBottom: 12, cursor: "pointer" }}>
           <input type="checkbox" checked={isRec} onChange={(e) => setIsRec(e.target.checked)} /> {t("notes.markRec")}
         </label>
         <button onClick={submit} disabled={posting} style={primaryBtn}>{posting ? t("common.saving") : t("notes.addNote")}</button>
@@ -73,15 +73,15 @@ export default function NotesPage() {
         <TabBtn active={tab === "recognition"} onClick={() => setTab("recognition")}>{t("notes.tabRec")}</TabBtn>
       </div>
 
-      {loading ? <div style={{ color: "***REMOVED***9a8f8f", padding: 20, textAlign: "center" }}>{t("common.loading")}</div>
-      : shown.length === 0 ? <div style={{ ...card, textAlign: "center", color: "***REMOVED***9a8f8f", padding: 30 }}>{t("notes.empty")}</div>
+      {loading ? <div style={{ color: "#9a8f8f", padding: 20, textAlign: "center" }}>{t("common.loading")}</div>
+      : shown.length === 0 ? <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>{t("notes.empty")}</div>
       : shown.map((n) => (
         <div key={n.id} style={{ ...card, marginBottom: 8, borderColor: n.isRecognition ? "rgba(212,168,71,0.3)" : "rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
             <span style={{ fontSize: 14, fontWeight: 600 }}>{n.isRecognition && <Icon e="🌟" size={13} color="var(--gold)" style={{ verticalAlign: "-2px", marginRight: 4 }} />}{n.subject?.full_name || t("lc.staffFallback")}</span>
-            <span style={{ fontSize: 11, color: "***REMOVED***6f6565" }}>{fmt(n.created_at)}</span>
+            <span style={{ fontSize: 11, color: "#6f6565" }}>{fmt(n.created_at)}</span>
           </div>
-          <div style={{ fontSize: 14, color: "***REMOVED***e8e0e0", lineHeight: 1.5 }}>{n.cleanNote}</div>
+          <div style={{ fontSize: 14, color: "#e8e0e0", lineHeight: 1.5 }}>{n.cleanNote}</div>
         </div>
       ))}
     </div>
@@ -89,11 +89,11 @@ export default function NotesPage() {
 }
 
 function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "***REMOVED***d4a847" : "transparent", color: active ? "***REMOVED***1a0e0e" : "***REMOVED***9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "#9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
 function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "***REMOVED***9a8f8f", marginBottom: 6 }}>{label}</label>{children}</div>;
+  return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "#9a8f8f", marginBottom: 6 }}>{label}</label>{children}</div>;
 }
-const card: React.CSSProperties = { background: "***REMOVED***241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };
-const input: React.CSSProperties = { width: "100%", padding: "11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "***REMOVED***fff", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "***REMOVED***d4a847", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };
+const input: React.CSSProperties = { width: "100%", padding: "11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
+const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };

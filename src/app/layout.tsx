@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "***REMOVED***c0392b",
+  themeColor: "#c0392b",
 };
 
 // Inline script runs before paint to apply the saved theme — prevents a flash

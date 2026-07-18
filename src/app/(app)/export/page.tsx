@@ -73,7 +73,7 @@ export default function PayrollExportPage() {
   function downloadExcel() {
     if (!rows.length) { toast(t("pay.nothingExport"), "error"); return; }
     const { header, body, totalRow } = matrix();
-    const td = (v: any, b = false) => `<td style="${b ? "font-weight:bold;" : ""}border:1px solid ***REMOVED***ccc;padding:4px 8px;">${String(v ?? "")}</td>`;
+    const td = (v: any, b = false) => `<td style="${b ? "font-weight:bold;" : ""}border:1px solid #ccc;padding:4px 8px;">${String(v ?? "")}</td>`;
     const tr = (cells: any[], b = false) => `<tr>${cells.map((c) => td(c, b)).join("")}</tr>`;
     const html = `<html><head><meta charset="utf-8"></head><body><table>${tr(header, true)}${body.map((r) => tr(r)).join("")}${tr(totalRow, true)}</table></body></html>`;
     dl(new Blob(["\uFEFF" + html], { type: "application/vnd.ms-excel;charset=utf-8;" }), `payroll-${month}.xls`);
@@ -84,20 +84,20 @@ export default function PayrollExportPage() {
     if (!rows.length) { toast(t("pay.nothingExport"), "error"); return; }
     const { header, body, totalRow } = matrix();
     const status = run.status === "approved"
-      ? `<span style="color:***REMOVED***1e8449">✓ ${t("pay.reportApproved")} ${run.approvedBy || ""} · ${fmtDate(run.approvedAt)}</span>`
-      : `<span style="color:***REMOVED***b9770e">${t("pay.reportDraft")}</span>`;
-    const td = (v: any, b = false, r = false) => `<td style="${b ? "font-weight:bold;" : ""}${r ? "text-align:right;" : ""}border:1px solid ***REMOVED***ddd;padding:6px 10px;font-size:12px;">${String(v ?? "")}</td>`;
+      ? `<span style="color:#1e8449">✓ ${t("pay.reportApproved")} ${run.approvedBy || ""} · ${fmtDate(run.approvedAt)}</span>`
+      : `<span style="color:#b9770e">${t("pay.reportDraft")}</span>`;
+    const td = (v: any, b = false, r = false) => `<td style="${b ? "font-weight:bold;" : ""}${r ? "text-align:right;" : ""}border:1px solid #ddd;padding:6px 10px;font-size:12px;">${String(v ?? "")}</td>`;
     const rowHtml = (cells: any[], b = false) => `<tr>${cells.map((c, i) => td(c, b, i >= 3)).join("")}</tr>`;
     const w = window.open("", "_blank");
     if (!w) return;
     w.document.write(`<html><head><meta charset="utf-8"><title>Payroll ${month}</title></head>
-      <body style="font-family:Arial,sans-serif;padding:28px;color:***REMOVED***222;">
+      <body style="font-family:Arial,sans-serif;padding:28px;color:#222;">
         <h2 style="margin:0;">Schnitzery — ${t("pay.reportTitle")}</h2>
-        <div style="color:***REMOVED***666;margin:4px 0 2px;">${month}</div>
+        <div style="color:#666;margin:4px 0 2px;">${month}</div>
         <div style="margin-bottom:16px;">${status}</div>
         <table style="border-collapse:collapse;width:100%;">${rowHtml(header, true)}${body.map((r) => rowHtml(r)).join("")}${rowHtml(totalRow, true)}</table>
-        <p style="margin-top:34px;font-size:12px;color:***REMOVED***666;">${t("pay.signature")}</p>
-        <div style="margin-top:30px;border-top:1px solid ***REMOVED***888;width:240px;"></div>
+        <p style="margin-top:34px;font-size:12px;color:#666;">${t("pay.signature")}</p>
+        <div style="margin-top:30px;border-top:1px solid #888;width:240px;"></div>
       </body></html>`);
     w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
   }
@@ -133,23 +133,23 @@ export default function PayrollExportPage() {
             <div><div style={lbl}>{t("pay.nightStart")}</div><input style={inp} type="time" value={draft.nightStart} onChange={(e) => setDraft({ ...draft, nightStart: e.target.value })} /></div>
             <div><div style={lbl}>{t("pay.nightEnd")}</div><input style={inp} type="time" value={draft.nightEnd} onChange={(e) => setDraft({ ...draft, nightEnd: e.target.value })} /></div>
           </div>
-          <button onClick={saveRules} disabled={busy} style={{ alignSelf: "flex-start", padding: "9px 18px", background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.saveRules")}</button>
+          <button onClick={saveRules} disabled={busy} style={{ alignSelf: "flex-start", padding: "9px 18px", background: "var(--gold)", color: "#1a1a1a", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.saveRules")}</button>
         </div>
       )}
 
       {/* APPROVAL BANNER */}
       {!loading && rows.length > 0 && (
         run.status === "approved" ? (
-          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid ***REMOVED***1e8449" }}>
-            <Icon e="✅" size={18} color="***REMOVED***58d68d" />
+          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid #1e8449" }}>
+            <Icon e="✅" size={18} color="#58d68d" />
             <div style={{ flex: 1, fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}</div>
             <button onClick={() => toggleApproval(false)} disabled={busy} style={{ padding: "7px 12px", background: "var(--dark3)", color: "var(--gray)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>{t("pay.reopenBtn")}</button>
           </div>
         ) : (
-          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid ***REMOVED***b9770e" }}>
+          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid #b9770e" }}>
             <Icon e="📝" size={18} color="var(--gold)" />
             <div style={{ flex: 1, fontSize: 13 }}>{t("pay.notApproved")}</div>
-            <button onClick={() => toggleApproval(true)} disabled={busy} style={{ padding: "8px 14px", background: "***REMOVED***1e8449", color: "***REMOVED***fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("pay.approveBtn")}</button>
+            <button onClick={() => toggleApproval(true)} disabled={busy} style={{ padding: "8px 14px", background: "#1e8449", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("pay.approveBtn")}</button>
           </div>
         )
       )}
@@ -185,7 +185,7 @@ export default function PayrollExportPage() {
                   <div style={cell}><div style={lbl}>{t("pay.colWeekend")}</div><div>{r.weekendH}h</div></div>
                   <div style={cell}><div style={lbl}>{t("pay.colHoliday")}</div><div>{r.holidayH}h</div></div>
                   <div style={cell}><div style={lbl}>{t("pay.colNight")}</div><div>{r.nightH}h</div></div>
-                  <div style={cell}><div style={lbl}>{t("pay.cWage")}</div><div style={{ color: r.wage == null ? "***REMOVED***e8a35a" : "var(--white)" }}>{r.wage == null ? t("pay.setWage") : eur(r.wage)}</div></div>
+                  <div style={cell}><div style={lbl}>{t("pay.cWage")}</div><div style={{ color: r.wage == null ? "#e8a35a" : "var(--white)" }}>{r.wage == null ? t("pay.setWage") : eur(r.wage)}</div></div>
                 </div>
               </div>
             ))}
@@ -193,8 +193,8 @@ export default function PayrollExportPage() {
 
           {/* exports */}
           <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-            <button onClick={downloadCsv} style={{ flex: 1, minWidth: 100, padding: "11px", background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.exportCsv")}</button>
-            <button onClick={downloadExcel} style={{ flex: 1, minWidth: 100, padding: "11px", background: "linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)", color: "***REMOVED***fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.exportExcel")}</button>
+            <button onClick={downloadCsv} style={{ flex: 1, minWidth: 100, padding: "11px", background: "var(--gold)", color: "#1a1a1a", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.exportCsv")}</button>
+            <button onClick={downloadExcel} style={{ flex: 1, minWidth: 100, padding: "11px", background: "linear-gradient(135deg,#1e8449,#27ae60)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.exportExcel")}</button>
             <button onClick={payrollReport} style={{ flex: 1, minWidth: 100, padding: "11px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.exportReport")}</button>
           </div>
           <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("pay.overlapNote")}</div>

@@ -1,4 +1,4 @@
-***REMOVED*** Schnitzery Portal — Production Readiness Audit
+# Schnitzery Portal — Production Readiness Audit
 
 **Date:** 2026-07-18
 **Stack:** Next.js 16.2.7 (App Router, `src/proxy.ts` middleware), React 19.2.4, Supabase (SSR + service role), Sentry, hand-rolled PWA service worker.
@@ -10,13 +10,13 @@
 
 ---
 
-***REMOVED******REMOVED*** Summary
+## Summary
 
 The app is further along than most pre-launch codebases: auth is checked with `getUser()` (not `getSession()`), writes that must not be forged go through `SECURITY DEFINER` RPCs, the service-role key never reaches the client, there is a CI pipeline, and login throttling exists. Good instincts throughout.
 
 There are, however, **three issues I would not ship without fixing** — a dead-but-live insecure module, a bypassable login throttle, and an authenticated-page cache on shared kiosk tablets. All three have small, non-breaking fixes.
 
-| ***REMOVED*** | Severity | Issue | Fix risk |
+| # | Severity | Issue | Fix risk |
 |---|----------|-------|----------|
 | 1 | **Critical** | ~~Legacy `profile-uploads.ts` still exports unguarded document actions~~ — **FIXED 2026-07-18, unverified** | Very low |
 | 2 | **High** | ~~Login throttle is bypassable — `clearAttempts` is a public Server Action~~ — **FIXED 2026-07-18, unverified** | Low |
@@ -50,7 +50,7 @@ There are, however, **three issues I would not ship without fixing** — a dead-
 
 ---
 
-***REMOVED******REMOVED*** 1. Critical — legacy `profile-uploads.ts` is still a live attack surface
+## 1. Critical — legacy `profile-uploads.ts` is still a live attack surface
 
 `src/lib/queries/documents.ts` was clearly written to replace `src/lib/queries/profile-uploads.ts`. Its comment even says so:
 
@@ -94,7 +94,7 @@ The DB row delete is correctly scoped to the caller. The **storage delete is not
 
 ---
 
-***REMOVED******REMOVED*** 2. High — the login throttle can be bypassed in one call
+## 2. High — the login throttle can be bypassed in one call
 
 `src/lib/queries/loginThrottle.ts` is `"use server"` and exports `clearAttempts(email)`. Server Actions are invocable by ID from any route the app serves — including `/login`, which `proxy.ts` deliberately lets unauthenticated traffic reach.
 
@@ -116,7 +116,7 @@ Supabase Auth also has its own rate limits — worth confirming they are enabled
 
 ---
 
-***REMOVED******REMOVED*** 3. High — the service worker caches authenticated pages on shared tablets
+## 3. High — the service worker caches authenticated pages on shared tablets
 
 `public/sw.js` is thoughtfully written and the header comment lists the right safety rules. But the navigation handler does not follow them:
 
@@ -144,7 +144,7 @@ if (req.mode === "navigate") {
 
 ---
 
-***REMOVED******REMOVED*** 4. High — the database is not in version control
+## 4. High — the database is not in version control
 
 The `supabase/` directory contains only `.temp/` CLI state. There are no migrations and no policy definitions.
 
@@ -158,7 +158,7 @@ Once that exists, add a test that asserts RLS is enabled on every table: query `
 
 ---
 
-***REMOVED******REMOVED*** 5. Medium — real staff PII and a shared password in the repo
+## 5. Medium — real staff PII and a shared password in the repo
 
 `seed-stuttgart-team.mjs` contains the full Stuttgart roster: first names, teams, contract types, contract hours and **real mobile numbers** for ~30 people, plus:
 
@@ -175,7 +175,7 @@ Under GDPR this is personal data of identifiable employees, committed to Git and
 
 ---
 
-***REMOVED******REMOVED*** 6. Medium — `getRequiredChecklist` has no authorization check
+## 6. Medium — `getRequiredChecklist` has no authorization check
 
 `documents.ts:178` — every other function in this file checks `isManager(role)`. This one takes an arbitrary `userId` and checks only that *someone* is logged in:
 
@@ -196,7 +196,7 @@ Same treatment for `archiveDocument` (no ownership check in app code) and `appro
 
 ---
 
-***REMOVED******REMOVED*** 7. Medium — `set-staff-active` rank check and non-atomic write
+## 7. Medium — `set-staff-active` rank check and non-atomic write
 
 `src/app/api/set-staff-active/route.ts`
 
@@ -214,7 +214,7 @@ Strictly greater — so `manager` (rank 2) may ban another `manager`, and `branc
 
 ---
 
-***REMOVED******REMOVED*** 8. Medium — no security headers or CSP
+## 8. Medium — no security headers or CSP
 
 `next.config.ts` is effectively empty:
 
@@ -252,7 +252,7 @@ Also worth adding: `Cache-Control: no-store` on authenticated routes (pairs with
 
 ---
 
-***REMOVED******REMOVED*** 9. Medium — offline attendance trusts the device clock
+## 9. Medium — offline attendance trusts the device clock
 
 `attendanceQueue.ts:52` — `captured_at: new Date().toISOString()` is device time, and `sync.ts` sends it straight to `sync_attendance_events`.
 
@@ -265,11 +265,11 @@ Two more in the same subsystem:
 
 ---
 
-***REMOVED******REMOVED*** Database review (added 2026-07-18, after the schema dumps were provided)
+## Database review (added 2026-07-18, after the schema dumps were provided)
 
 The schema and functions were reviewed from `production-schema.sql` and `production-functions.sql`. This replaces the "depends on RLS, cannot verify" hedging in several items above.
 
-***REMOVED******REMOVED******REMOVED*** What is genuinely good
+### What is genuinely good
 
 Worth stating plainly, because this is better than most Supabase projects reach:
 
@@ -281,7 +281,7 @@ Worth stating plainly, because this is better than most Supabase projects reach:
 - `guard_role_change()` and `guard_users_sensitive_update()` correctly block privilege escalation, including "cannot grant a role above your own".
 - Attendance writes go through `SECURITY DEFINER` functions that stamp `now()` server-side; the online `clock_in()` properly *raises* on an invalid code and enforces the geofence.
 
-***REMOVED******REMOVED******REMOVED*** Correction to item 13
+### Correction to item 13
 
 **My earlier statement was wrong.** I said the RPC needed a server-side owner check. It does not — `sync_attendance_events()` opens with `v_uid uuid := auth.uid()` and uses that for every insert, ignoring any `user_id` the client sends. The database was never the weak point.
 
@@ -289,7 +289,7 @@ The bug was purely client-side: the queue had no owner, so employee A's events w
 
 ---
 
-***REMOVED******REMOVED*** 14. High — `current_clock_code()` role list is broken
+## 14. High — `current_clock_code()` role list is broken
 
 `production-functions.sql:2219`:
 
@@ -306,7 +306,7 @@ The newer `current_clock_token()` (line 2250) does it correctly with `is_manager
 
 ---
 
-***REMOVED******REMOVED*** 15. High — offline sync validates the code, then ignores the result
+## 15. High — offline sync validates the code, then ignores the result
 
 In `sync_attendance_events()`, step 2 computes:
 
@@ -322,7 +322,7 @@ Fixed in SECTION 3 — but read the note there first and run the counting query,
 
 ---
 
-***REMOVED******REMOVED*** 16. High — offline attendance is filed in the wrong timezone
+## 16. High — offline attendance is filed in the wrong timezone
 
 `sync_attendance_events()` computes the work date as:
 
@@ -343,7 +343,7 @@ where source = 'offline' group by 1 order by 1 desc limit 30;
 
 ---
 
-***REMOVED******REMOVED*** 17. High — `captured_at` is trusted without bounds
+## 17. High — `captured_at` is trusted without bounds
 
 `v_at := (e->>'captured_at')::timestamptz` comes straight from the device clock with no sanity check. Combined with item 15, on a branch where `qr_required = false` there is **no constraint on offline attendance at all** — set the tablet's clock back, clock in, sync, and the hours are recorded.
 
@@ -355,7 +355,7 @@ This closes the remaining half of item 9.
 
 ---
 
-***REMOVED******REMOVED*** 18. High — every employee can read their colleagues' wages
+## 18. High — every employee can read their colleagues' wages
 
 `users_select`:
 
@@ -381,7 +381,7 @@ For a German employer this is the most serious data-protection finding in the sy
 
 ---
 
-***REMOVED******REMOVED*** 19. Medium — staff can edit their own contract hours and leave allowance
+## 19. Medium — staff can edit their own contract hours and leave allowance
 
 `guard_users_sensitive_update()` protects `role`, `branch_id` and `hourly_wage`. It does not protect `contract_hours` or `annual_leave_days`, and `users_update` permits `id = auth.uid()`. Both values feed real calculations — contract hours drive the overtime comparison in `timepay.ts`, leave days drive the balance in `leave-balance.ts`.
 
@@ -391,7 +391,7 @@ Deliberately **not** guarded: `must_change_password`. `ChangePasswordForm.tsx:44
 
 ---
 
-***REMOVED******REMOVED*** 13. High — offline attendance events are attributed to whoever syncs them
+## 13. High — offline attendance events are attributed to whoever syncs them
 
 *Found while fixing item 3. Not yet fixed.*
 
@@ -422,7 +422,7 @@ Step 3 is the one that actually matters — steps 1, 2 and 4 are the client bein
 
 ---
 
-***REMOVED******REMOVED*** 10. Low — PWA icons do not exist
+## 10. Low — PWA icons do not exist
 
 `manifest.webmanifest` and `sw.js` both reference `/icons/icon-192.png`, `/icons/icon-512.png`, `/icons/icon-512-maskable.png`. **`public/icons/` does not exist** — `public/` contains only the default Next.js SVGs.
 
@@ -432,7 +432,7 @@ Consequences: the install prompt will not fire on Android (a valid icon is requi
 
 ---
 
-***REMOVED******REMOVED*** 11. Low — `create-staff` hardening
+## 11. Low — `create-staff` hardening
 
 `src/app/api/create-staff/route.ts` is well structured — caller verified, privilege escalation blocked, orphan auth-user cleanup on failure. Some gaps:
 
@@ -445,7 +445,7 @@ Consequences: the install prompt will not fire on Android (a valid icon is requi
 
 ---
 
-***REMOVED******REMOVED*** 12. Low — CI and tests
+## 12. Low — CI and tests
 
 `.github/workflows/ci.yml` runs vitest → `tsc --noEmit` → `next build`. Good baseline. Gaps:
 
@@ -463,7 +463,7 @@ Consequences: the install prompt will not fire on Android (a valid icon is requi
 
 ---
 
-***REMOVED******REMOVED*** Suggested order of work
+## Suggested order of work
 
 **Before deploy — these are the blockers:**
 
@@ -490,7 +490,7 @@ Every item above is additive or a deletion of dead code. None of them change a w
 
 ---
 
-***REMOVED******REMOVED*** What is working well
+## What is working well
 
 Worth saying plainly, because these are the things people usually get wrong:
 

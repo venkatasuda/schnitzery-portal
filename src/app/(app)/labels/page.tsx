@@ -43,11 +43,11 @@ export default function LabelsPage() {
       *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}
       body{margin:0;padding:10mm}
       .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm}
-      .lbl{border:1px solid ***REMOVED***ccc;border-radius:6px;padding:6mm;text-align:center;page-break-inside:avoid}
+      .lbl{border:1px solid #ccc;border-radius:6px;padding:6mm;text-align:center;page-break-inside:avoid}
       .lbl img{width:34mm;height:34mm}
       .nm{font-weight:700;font-size:12pt;margin-top:3mm}
-      .cat{color:***REMOVED***666;font-size:9pt}
-      @media print{.lbl{border:1px solid ***REMOVED***ddd}}
+      .cat{color:#666;font-size:9pt}
+      @media print{.lbl{border:1px solid #ddd}}
     </style></head><body><div class="grid">${cells}</div>
     <script>window.onload=function(){window.print()}</script></body></html>`);
     w.document.close();
@@ -60,7 +60,7 @@ export default function LabelsPage() {
       <div className="page-sub">{t("labels.subtitle")}</div>
 
       <button onClick={printLabels} disabled={loading || products.length === 0}
-        style={{ width: "100%", padding: 12, margin: "14px 0", borderRadius: 10, background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+        style={{ width: "100%", padding: 12, margin: "14px 0", borderRadius: 10, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
         🖨 {t("labels.print")}
       </button>
 
@@ -82,5 +82,5 @@ export default function LabelsPage() {
 }
 
 function escapeHtml(s: string) {
-  return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&***REMOVED***39;" }[c] as string));
+  return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 }

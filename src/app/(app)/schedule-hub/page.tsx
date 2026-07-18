@@ -89,7 +89,7 @@ export default function ScheduleHubPage() {
           {tab === "roster" && (
             <div className="hub-tab-panel active">
               <Link href="/roster" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***1a6b8a,***REMOVED***3498db)" }}><Icon e="📋" size={22} color="***REMOVED***fff" /></div>
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📋" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.openEditor")}</div><div className="feature-sub">{t("schedhub.openEditorSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
@@ -99,13 +99,13 @@ export default function ScheduleHubPage() {
                 <div className="card-title">{t("schedhub.upcomingWeek")}</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                   <Mini label={t("schedhub.week")} value={weekLabel} small color="var(--white)" />
-                  <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color={(ov?.submissionCount ?? 0) > 0 ? "***REMOVED***58d68d" : "***REMOVED***ec7063"} />
-                  <Mini label={t("schedhub.statusLabel")} value={ov?.rosterExists ? t("schedhub.built") : t("schedhub.open")} color={ov?.rosterExists ? "***REMOVED***58d68d" : "***REMOVED***e8a35a"} />
+                  <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color={(ov?.submissionCount ?? 0) > 0 ? "#58d68d" : "#ec7063"} />
+                  <Mini label={t("schedhub.statusLabel")} value={ov?.rosterExists ? t("schedhub.built") : t("schedhub.open")} color={ov?.rosterExists ? "#58d68d" : "#e8a35a"} />
                 </div>
               </div>
 
               <Link href="/approvals" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***1e8449,***REMOVED***27ae60)" }}><Icon e="✅" size={22} color="***REMOVED***fff" /></div>
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e8449,#27ae60)" }}><Icon e="✅" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.requests")}</div><div className="feature-sub">{t("schedhub.requestsSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
@@ -117,7 +117,7 @@ export default function ScheduleHubPage() {
             <div className="hub-tab-panel active">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
                 <Mini label={t("schedhub.totalShifts")} value={ov?.totalShifts ?? 0} color="var(--gold)" />
-                <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="***REMOVED***58d68d" />
+                <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="#58d68d" />
               </div>
 
               {(ov?.totalShifts ?? 0) === 0 ? (
@@ -127,7 +127,7 @@ export default function ScheduleHubPage() {
                   <div className="card">
                     <div className="card-title">{t("schedhub.shiftsByTeam")}</div>
                     {(ov?.byTeamArr || []).map((tm: any) => (
-                      <BarRow key={tm.team} label={teamLabel(tm.team)} count={tm.count} max={ov.totalShifts} color="***REMOVED***3498db" />
+                      <BarRow key={tm.team} label={teamLabel(tm.team)} count={tm.count} max={ov.totalShifts} color="#3498db" />
                     ))}
                   </div>
                   <div className="card">
@@ -142,7 +142,7 @@ export default function ScheduleHubPage() {
                   <div className="card">
                     <div className="card-title">{t("schedhub.byDay")}</div>
                     {(ov?.byDayArr || []).map((d: any) => (
-                      <BarRow key={d.day} label={dayLabel(d.day)} count={d.count} max={Math.max(1, ...(ov.byDayArr || []).map((x: any) => x.count))} color="***REMOVED***d4a847" />
+                      <BarRow key={d.day} label={dayLabel(d.day)} count={d.count} max={Math.max(1, ...(ov.byDayArr || []).map((x: any) => x.count))} color="#d4a847" />
                     ))}
                   </div>
                 </>
@@ -155,8 +155,8 @@ export default function ScheduleHubPage() {
             <div className="hub-tab-panel active">
               {(ov?.conflicts || []).length === 0 ? (
                 <div className="card" style={{ textAlign: "center", padding: 28 }}>
-                  <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="***REMOVED***58d68d" /></div>
-                  <div style={{ color: "***REMOVED***58d68d", fontSize: 14, fontWeight: 600 }}>{t("schedhub.noConflicts")}</div>
+                  <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="#58d68d" /></div>
+                  <div style={{ color: "#58d68d", fontSize: 14, fontWeight: 600 }}>{t("schedhub.noConflicts")}</div>
                   <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 4 }}>{t("schedhub.noConflictsSub")}</div>
                 </div>
               ) : (
@@ -167,7 +167,7 @@ export default function ScheduleHubPage() {
                       <span style={{ fontSize: 16 }}><Icon e={c.type === "Double-booked" ? "🔁" : "⚠️"} size={15} /></span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{c.name} <span style={{ color: "var(--gray)", fontWeight: 400, fontSize: 12 }}>· {dayLabel(c.day)}</span></div>
-                        <div style={{ fontSize: 11, color: "***REMOVED***e8a35a" }}>{c.type} — {c.detail}</div>
+                        <div style={{ fontSize: 11, color: "#e8a35a" }}>{c.type} — {c.detail}</div>
                       </div>
                     </div>
                   ))}
@@ -181,25 +181,25 @@ export default function ScheduleHubPage() {
           {tab === "tools" && (
             <div className="hub-tab-panel active">
               <Link href="/schedule/compare" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***7d3c98,***REMOVED***af7ac5)" }}><Icon e="📊" size={22} color="***REMOVED***fff" /></div>
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#7d3c98,#af7ac5)" }}><Icon e="📊" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("cmp.title")}</div><div className="feature-sub">{t("cmp.subtitle")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 
               <Link href="/schedule/shift-times" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***1f6f54,***REMOVED***27ae60)" }}><Icon e="⏱️" size={22} color="***REMOVED***fff" /></div>
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1f6f54,#27ae60)" }}><Icon e="⏱️" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("shiftcfg.title")}</div><div className="feature-sub">{t("shiftcfg.subtitle")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 
               <button onClick={copyForward} disabled={copyBusy} className="feature-card" style={{ width: "100%", textAlign: "left", cursor: copyBusy ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***6b2fa0,***REMOVED***9b59b6)" }}><Icon e="📑" size={22} color="***REMOVED***fff" /></div>
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}><Icon e="📑" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? t("schedhub.copying") : t("schedhub.copyWeek")}</div><div className="feature-sub">{t("schedhub.copyWeekSub")}</div></div>
                 <span className="feature-chev">›</span>
               </button>
 
               <Link href="/noshow?tab=missing" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,***REMOVED***b9770e,***REMOVED***e67e22)" }}><Icon e="📋" size={22} color="***REMOVED***fff" /></div>
+                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e="📋" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.availCheck")}</div><div className="feature-sub">{t("schedhub.availCheckSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>

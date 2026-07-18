@@ -72,7 +72,7 @@ export default function CoverPage() {
     } else toast(r.error || t("cover.failed"), "error");
   }
 
-  const statusColor = (s: string) => s === "approved" ? "***REMOVED***58d68d" : s === "rejected" || s === "cancelled" ? "***REMOVED***9a8f8f" : s === "claimed" ? "***REMOVED***d4a847" : "***REMOVED***5dade2";
+  const statusColor = (s: string) => s === "approved" ? "#58d68d" : s === "rejected" || s === "cancelled" ? "#9a8f8f" : s === "claimed" ? "#d4a847" : "#5dade2";
 
   return (
     <div className="fade-up">
@@ -111,7 +111,7 @@ export default function CoverPage() {
                       <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("cover.reasonPh")} rows={2}
                         style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, resize: "vertical" }} />
                       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                        <button onClick={doRequest} disabled={busy === "req"} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("cover.postRequest")}</button>
+                        <button onClick={doRequest} disabled={busy === "req"} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("cover.postRequest")}</button>
                         <button onClick={() => setReqFor(null)} style={{ padding: "9px 14px", borderRadius: 8, background: "transparent", color: "var(--gray)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, cursor: "pointer" }}>{t("cover.cancel")}</button>
                       </div>
                     </div>
@@ -131,7 +131,7 @@ export default function CoverPage() {
                         </div>
                       </div>
                       {(r.status === "open" || r.status === "claimed") && (
-                        <button onClick={() => doCancel(r.id)} disabled={busy === r.id} style={{ fontSize: 12, color: "***REMOVED***ec7063", background: "none", border: "none", cursor: "pointer" }}>{t("cover.cancel")}</button>
+                        <button onClick={() => doCancel(r.id)} disabled={busy === r.id} style={{ fontSize: 12, color: "#ec7063", background: "none", border: "none", cursor: "pointer" }}>{t("cover.cancel")}</button>
                       )}
                     </div>
                   ))}
@@ -151,9 +151,9 @@ export default function CoverPage() {
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{fmtDate(c.work_date)} · {c.shift}</div>
                       <div style={{ fontSize: 12, color: "var(--gray)" }}>{c.team} · {c.requester?.full_name || "—"}</div>
-                      {c.reason && <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginTop: 4, fontStyle: "italic" }}>“{c.reason}”</div>}
+                      {c.reason && <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 4, fontStyle: "italic" }}>“{c.reason}”</div>}
                     </div>
-                    <button onClick={() => doClaim(c.id)} disabled={busy === c.id} style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "***REMOVED***58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer", flex: "0 0 auto" }}>{busy === c.id ? "…" : t("cover.claim")}</button>
+                    <button onClick={() => doClaim(c.id)} disabled={busy === c.id} style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "#58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer", flex: "0 0 auto" }}>{busy === c.id ? "…" : t("cover.claim")}</button>
                   </div>
                 </div>
               ))}
@@ -181,16 +181,16 @@ export default function CoverPage() {
                 <div key={c.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{fmtDate(c.work_date)} · {c.shift} <span style={{ color: "var(--gray)", fontSize: 12 }}>({c.team})</span></div>
                   <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 3 }}>
-                    {c.requester?.full_name} → {c.claimer?.full_name || <span style={{ color: "***REMOVED***5dade2" }}>{t("cover.awaitingClaim")}</span>}
+                    {c.requester?.full_name} → {c.claimer?.full_name || <span style={{ color: "#5dade2" }}>{t("cover.awaitingClaim")}</span>}
                   </div>
-                  {c.reason && <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", marginTop: 4, fontStyle: "italic" }}>“{c.reason}”</div>}
+                  {c.reason && <div style={{ fontSize: 12, color: "#9a8f8f", marginTop: 4, fontStyle: "italic" }}>“{c.reason}”</div>}
                   {c.status === "claimed" ? (
                     <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <button onClick={() => doDecide(c.id, "approved")} disabled={busy === c.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "***REMOVED***58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{busy === c.id ? "…" : t("cover.approve")}</button>
-                      <button onClick={() => doDecide(c.id, "rejected")} disabled={busy === c.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "***REMOVED***ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("cover.reject")}</button>
+                      <button onClick={() => doDecide(c.id, "approved")} disabled={busy === c.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "#58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{busy === c.id ? "…" : t("cover.approve")}</button>
+                      <button onClick={() => doDecide(c.id, "rejected")} disabled={busy === c.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "#ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("cover.reject")}</button>
                     </div>
                   ) : (
-                    <div style={{ fontSize: 11, color: "***REMOVED***5dade2", marginTop: 8 }}>{t("cover.waitingForClaim")}</div>
+                    <div style={{ fontSize: 11, color: "#5dade2", marginTop: 8 }}>{t("cover.waitingForClaim")}</div>
                   )}
                 </div>
               ))}

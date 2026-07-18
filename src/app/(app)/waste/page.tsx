@@ -64,7 +64,7 @@ export default function WastePage() {
         <div className="card" style={{ margin: "12px 0", padding: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.thisWeek")}</span>
-            {summary.hasPrices && <span style={{ fontSize: 18, fontWeight: 700, color: "***REMOVED***ec7063" }}>{eur(summary.totalValue)}</span>}
+            {summary.hasPrices && <span style={{ fontSize: 18, fontWeight: 700, color: "#ec7063" }}>{eur(summary.totalValue)}</span>}
           </div>
           <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("waste.entries", { n: summary.count })}</div>
           {summary.reasons.length > 0 && (
@@ -107,7 +107,7 @@ export default function WastePage() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
               {REASONS.map((r) => (
                 <button key={r} onClick={() => setReason(r)}
-                  style={{ fontSize: 12, padding: "7px 11px", borderRadius: 8, cursor: "pointer", background: reason === r ? "rgba(231,76,60,0.15)" : "rgba(255,255,255,0.05)", color: reason === r ? "***REMOVED***ec7063" : "var(--gray)", border: `1px solid ${reason === r ? "rgba(231,76,60,0.35)" : "rgba(255,255,255,0.1)"}` }}>
+                  style={{ fontSize: 12, padding: "7px 11px", borderRadius: 8, cursor: "pointer", background: reason === r ? "rgba(231,76,60,0.15)" : "rgba(255,255,255,0.05)", color: reason === r ? "#ec7063" : "var(--gray)", border: `1px solid ${reason === r ? "rgba(231,76,60,0.35)" : "rgba(255,255,255,0.1)"}` }}>
                   {REASON_EMOJI[r]} {t("waste.r_" + r)}
                 </button>
               ))}
@@ -119,7 +119,7 @@ export default function WastePage() {
             </div>
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("waste.notePh")}
               style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, marginBottom: 12 }} />
-            <button onClick={submit} disabled={busy} style={{ width: "100%", padding: 13, borderRadius: 10, background: "***REMOVED***e74c3c", color: "***REMOVED***fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy ? "…" : t("waste.logIt")}</button>
+            <button onClick={submit} disabled={busy} style={{ width: "100%", padding: 13, borderRadius: 10, background: "#e74c3c", color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy ? "…" : t("waste.logIt")}</button>
           </>
         )}
       </div>
@@ -133,11 +133,11 @@ export default function WastePage() {
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, color: "var(--white)" }}>{REASON_EMOJI[e.reason] || "•"} {e.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
             <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("waste.r_" + e.reason)} · {fmtWhen(e.created_at)}{e.logged_by_name ? ` · ${e.logged_by_name}` : ""}</div>
-            {e.note && <div style={{ fontSize: 11, color: "***REMOVED***9a8f8f", fontStyle: "italic" }}>“{e.note}”</div>}
+            {e.note && <div style={{ fontSize: 11, color: "#9a8f8f", fontStyle: "italic" }}>“{e.note}”</div>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
-            {e.value != null && <span style={{ fontSize: 13, color: "***REMOVED***ec7063", fontWeight: 600 }}>{eur(e.value)}</span>}
-            <button onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: "***REMOVED***7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
+            {e.value != null && <span style={{ fontSize: 13, color: "#ec7063", fontWeight: 600 }}>{eur(e.value)}</span>}
+            <button onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
           </div>
         </div>
       ))}

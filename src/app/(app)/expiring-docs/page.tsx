@@ -12,12 +12,12 @@ const DOC_TYPE_KEYS = ["id_card", "tax_id", "contract", "health_certificate", "v
 type Tf = (k: string, v?: Record<string, string | number>) => string;
 function statusInfo(eff: string, t: Tf): { label: string; color: string } {
   switch (eff) {
-    case "approved":  return { label: t("docw.statusApproved"), color: "***REMOVED***58d68d" };
-    case "pending":   return { label: t("docw.statusPending"),  color: "***REMOVED***e8a35a" };
-    case "rejected":  return { label: t("docw.statusRejected"), color: "***REMOVED***ec7063" };
-    case "expiring":  return { label: t("docw.statusExpiring"), color: "***REMOVED***e8a35a" };
-    case "expired":   return { label: t("docw.statusExpired"),  color: "***REMOVED***ec7063" };
-    default:          return { label: t("docw.statusArchived"), color: "***REMOVED***9a8f8f" };
+    case "approved":  return { label: t("docw.statusApproved"), color: "#58d68d" };
+    case "pending":   return { label: t("docw.statusPending"),  color: "#e8a35a" };
+    case "rejected":  return { label: t("docw.statusRejected"), color: "#ec7063" };
+    case "expiring":  return { label: t("docw.statusExpiring"), color: "#e8a35a" };
+    case "expired":   return { label: t("docw.statusExpired"),  color: "#ec7063" };
+    default:          return { label: t("docw.statusArchived"), color: "#9a8f8f" };
   }
 }
 const fmtDate = (d?: string | null) =>
@@ -70,12 +70,12 @@ export default function ExpiringDocsPage() {
   if (docType) missing = missing.filter((m) => m.docType === docType);
 
   const cards: { key: Bucket; label: string; n: number; color: string }[] = [
-    { key: "30", label: t("docw.within30"), n: counts.within30, color: "***REMOVED***ec7063" },
-    { key: "60", label: t("docw.within60"), n: counts.within60, color: "***REMOVED***e8a35a" },
-    { key: "90", label: t("docw.within90"), n: counts.within90, color: "***REMOVED***e8a35a" },
-    { key: "expired", label: t("docw.expiredCount"), n: counts.expired, color: "***REMOVED***ec7063" },
-    { key: "pending", label: t("docw.pendingCount"), n: counts.pending, color: "***REMOVED***e8a35a" },
-    { key: "missing", label: t("docw.missingCount"), n: counts.missing, color: "***REMOVED***ec7063" },
+    { key: "30", label: t("docw.within30"), n: counts.within30, color: "#ec7063" },
+    { key: "60", label: t("docw.within60"), n: counts.within60, color: "#e8a35a" },
+    { key: "90", label: t("docw.within90"), n: counts.within90, color: "#e8a35a" },
+    { key: "expired", label: t("docw.expiredCount"), n: counts.expired, color: "#ec7063" },
+    { key: "pending", label: t("docw.pendingCount"), n: counts.pending, color: "#e8a35a" },
+    { key: "missing", label: t("docw.missingCount"), n: counts.missing, color: "#ec7063" },
   ];
 
   return (
@@ -123,12 +123,12 @@ export default function ExpiringDocsPage() {
               <div className="card" style={{ padding: 8 }}>
                 {missing.map((m, i) => (
                   <Link key={`${m.userId}-${m.docType}`} href={`/staff/${m.userId}`} style={rowLink(i < missing.length - 1)}>
-                    <Icon e="⚠️" size={18} color="***REMOVED***e8a35a" />
+                    <Icon e="⚠️" size={18} color="#e8a35a" />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{m.name}</div>
                       <div style={{ fontSize: 12, color: "var(--gray)" }}>{typeLabel(m.docType)}</div>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "***REMOVED***ec7063", background: "***REMOVED***ec706322", padding: "3px 9px", borderRadius: 20 }}>{t("docw.statusMissing")}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#ec7063", background: "#ec706322", padding: "3px 9px", borderRadius: 20 }}>{t("docw.statusMissing")}</span>
                     <span className="feature-chev">›</span>
                   </Link>
                 ))}
@@ -168,8 +168,8 @@ export default function ExpiringDocsPage() {
 function EmptyOk({ t }: { t: Tf }) {
   return (
     <div className="card" style={{ textAlign: "center", padding: 32 }}>
-      <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="***REMOVED***58d68d" /></div>
-      <div style={{ color: "***REMOVED***58d68d", fontSize: 15, fontWeight: 700 }}>{t("exp.nothing")}</div>
+      <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="#58d68d" /></div>
+      <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("exp.nothing")}</div>
       <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("exp.nothingSub")}</div>
     </div>
   );

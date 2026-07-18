@@ -95,7 +95,7 @@ export default function NotificationsPage() {
       {loading ? (
         <CardSkeleton rows={4} />
       ) : filtered.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon e="🎉" size={16} color="***REMOVED***58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
+        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon e="🎉" size={16} color="#58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
       ) : (
         groups.map((g) => (
           <div key={g.label} style={{ marginBottom: 12 }}>

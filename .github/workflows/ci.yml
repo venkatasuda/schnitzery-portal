@@ -1,9 +1,9 @@
-***REMOVED*** ============================================================================
-***REMOVED***  Schnitzery Portal — Continuous Checks
-***REMOVED***  Runs automatically on every push and pull request:
-***REMOVED***  unit tests → type-check → production build. A failure is caught HERE,
-***REMOVED***  in GitHub, before it ever reaches Vercel or your users.
-***REMOVED*** ============================================================================
+# ============================================================================
+#  Schnitzery Portal — Continuous Checks
+#  Runs automatically on every push and pull request:
+#  unit tests → type-check → production build. A failure is caught HERE,
+#  in GitHub, before it ever reaches Vercel or your users.
+# ============================================================================
 name: CI
 
 on:
@@ -37,25 +37,25 @@ jobs:
       - name: Unit tests (vitest)
         run: npm test
 
-      ***REMOVED*** ADVISORY, NOT BLOCKING — deliberately.
-      ***REMOVED*** Lint was added to CI on 2026-07-18 and immediately reported 461
-      ***REMOVED*** pre-existing errors across ~40 files. Blocking on them would hold up
-      ***REMOVED*** security fixes behind a large, risky style refactor. It still runs and
-      ***REMOVED*** the output is still visible in the log — it just doesn't fail the build.
-      ***REMOVED*** Flip continue-on-error to false once the backlog is cleared. The real
-      ***REMOVED*** lever is `supabase gen types typescript`, which removes most of the
-      ***REMOVED*** `any` warnings in one go.
+      # ADVISORY, NOT BLOCKING — deliberately.
+      # Lint was added to CI on 2026-07-18 and immediately reported 461
+      # pre-existing errors across ~40 files. Blocking on them would hold up
+      # security fixes behind a large, risky style refactor. It still runs and
+      # the output is still visible in the log — it just doesn't fail the build.
+      # Flip continue-on-error to false once the backlog is cleared. The real
+      # lever is `supabase gen types typescript`, which removes most of the
+      # `any` warnings in one go.
       - name: Lint (eslint)
         run: npm run lint
         continue-on-error: true
 
-      ***REMOVED*** Type-check DOES block. It catches real breakage, not style.
+      # Type-check DOES block. It catches real breakage, not style.
       - name: Type-check (tsc)
         run: npx tsc --noEmit
 
       - name: Dependency audit
         run: npm audit --audit-level=high
-        continue-on-error: true   ***REMOVED*** report, don't block — flip to false once clean
+        continue-on-error: true   # report, don't block — flip to false once clean
 
       - name: Production build (next build)
         run: npm run build

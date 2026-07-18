@@ -60,6 +60,6 @@ export default function Icon({ e, size = 20, color = "currentColor", className, 
 }
 
 // status dots keep their semantic color regardless of surrounding text
-export function StatusDot({ color = "***REMOVED***58d68d", size = 9 }: { color?: string; size?: number }) {
+export function StatusDot({ color = "#58d68d", size = 9 }: { color?: string; size?: number }) {
   return <Circle size={size} color={color} fill={color} strokeWidth={0} style={{ flexShrink: 0 }} />;
 }

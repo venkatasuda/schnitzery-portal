@@ -10,7 +10,7 @@ import Icon from "@/components/Icon";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TEAMS = Object.keys(SHIFT_MODEL); // Manager, Preparation, Kitchen
-const TEAM_COLORS: Record<string, string> = { Manager: "***REMOVED***3498db", Preparation: "***REMOVED***d4a847", Kitchen: "***REMOVED***27ae60" };
+const TEAM_COLORS: Record<string, string> = { Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60" };
 
 type Entry = { user_id: string; name: string; team: string; shift: string };
 type Roster = Record<string, Entry[]>;
@@ -169,13 +169,13 @@ export default function RosterPage() {
                   .map((p) => {
                     const over = p.pct != null && p.pct > 100;
                     const near = p.pct != null && p.pct >= 85 && p.pct <= 100;
-                    const barColor = over ? "***REMOVED***e74c3c" : near ? "***REMOVED***d4a847" : "***REMOVED***27ae60";
+                    const barColor = over ? "#e74c3c" : near ? "#d4a847" : "#27ae60";
                     const left = p.contractHours != null ? Math.round((p.contractHours - (p.workedH || 0)) * 10) / 10 : null;
                     return (
                       <div key={p.id} style={{ marginBottom: 10 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
                           <span style={{ color: "var(--white)" }}>{p.full_name}</span>
-                          <span style={{ color: over ? "***REMOVED***ec7063" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
+                          <span style={{ color: over ? "#ec7063" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
                             {p.contractHours != null ? `${p.workedH || 0}/${p.contractHours}h` : `${p.workedH || 0}h`}
                             {left != null && (over ? ` · ${t("roster.over")}` : ` · ${left}${t("roster.leftShort")}`)}
                           </span>
@@ -203,7 +203,7 @@ export default function RosterPage() {
                       <span style={{ fontSize: 11, fontWeight: 600, color: "var(--gold)", marginLeft: 8 }}>{t("roster.assigned", { n: entries.length })}</span>
                     )}
                   </div>
-                  <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--gold)" : "var(--dark3)", color: isActive ? "***REMOVED***1a0e0e" : "var(--white)", fontWeight: 600 }}>
+                  <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--gold)" : "var(--dark3)", color: isActive ? "#1a0e0e" : "var(--white)", fontWeight: 600 }}>
                     {isActive ? t("common.close") : t("roster.add")}
                   </button>
                 </div>
@@ -211,14 +211,14 @@ export default function RosterPage() {
                 {/* entries */}
                 {entries.map((e, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAM_COLORS[e.team] || "***REMOVED***888", flexShrink: 0 }} />
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAM_COLORS[e.team] || "#888", flexShrink: 0 }} />
                     <div style={{ flex: 1, fontSize: 13, color: "var(--white)" }}>
                       <b>{e.name}</b> <span style={{ color: "var(--gray)" }}>· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
                     {submitted(e.user_id) && !availableDay(e.user_id, day) && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: "***REMOVED***e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
                     )}
-                    <button onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "***REMOVED***ec7063", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
+                    <button onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "#ec7063", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
                   </div>
                 ))}
 
@@ -268,6 +268,6 @@ export default function RosterPage() {
 }
 
 const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--gold)", color: "***REMOVED***1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
 const miniLbl: React.CSSProperties = { display: "block", fontSize: 10, color: "var(--gray)", marginBottom: 4 };
 const miniSelect: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

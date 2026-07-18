@@ -32,14 +32,14 @@ export default function ConflictsPage() {
         <CardSkeleton rows={3} />
       ) : !d || d.total === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 36 }}>
-          <div style={{ marginBottom: 8 }}><Icon e="✅" size={34} color="***REMOVED***58d68d" /></div>
-          <div style={{ color: "***REMOVED***58d68d", fontSize: 16, fontWeight: 700 }}>{t("conf.none")}</div>
+          <div style={{ marginBottom: 8 }}><Icon e="✅" size={34} color="#58d68d" /></div>
+          <div style={{ color: "#58d68d", fontSize: 16, fontWeight: 700 }}>{t("conf.none")}</div>
           <div style={{ color: "var(--gray)", fontSize: 13, marginTop: 6 }}>{t("conf.noneSub")}</div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {d.conflicts.map((c: any, i: number) => (
-            <div key={i} className="card" style={{ padding: 14, borderLeft: "3px solid ***REMOVED***ec7063" }}>
+            <div key={i} className="card" style={{ padding: 14, borderLeft: "3px solid #ec7063" }}>
               <Link href={`/staff/${c.userId}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 10 }}>
                 <Icon e="👤" size={18} />
                 <div style={{ flex: 1 }}>
@@ -51,7 +51,7 @@ export default function ConflictsPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {c.shifts.map((s: any, j: number) => (
                   <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "var(--dark3)", borderRadius: 8, fontSize: 13 }}>
-                    <span style={{ color: "***REMOVED***ec7063" }}>●</span>
+                    <span style={{ color: "#ec7063" }}>●</span>
                     <span style={{ flex: 1 }}>{s.branch} · {s.team} · {s.shift}</span>
                     <span style={{ color: "var(--gold)", fontVariantNumeric: "tabular-nums" }}>{s.time}</span>
                   </div>

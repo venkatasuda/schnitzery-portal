@@ -58,7 +58,7 @@ export default function TransfersPage() {
     if (r.ok) { toast(t(okMsg), "success"); loadAll(); } else toast(r.error || t("xfer.failed"), "error");
   }
 
-  const stColor = (s: string) => s === "received" ? "***REMOVED***58d68d" : s === "sent" ? "***REMOVED***d4a847" : s === "requested" ? "***REMOVED***5dade2" : "***REMOVED***9a8f8f";
+  const stColor = (s: string) => s === "received" ? "#58d68d" : s === "sent" ? "#d4a847" : s === "requested" ? "#5dade2" : "#9a8f8f";
   const filtered = products.filter((p) => p.product.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
   const pending = queue.filter((q) => q.status === "requested").length;
 
@@ -113,7 +113,7 @@ export default function TransfersPage() {
                         <span style={{ fontSize: 13, color: "var(--gray)" }}>{sel.unit || ""}</span>
                       </div>
                       <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("xfer.notePh")} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, marginBottom: 12 }} />
-                      <button onClick={submit} disabled={busy === "req"} style={{ width: "100%", padding: 13, borderRadius: 10, background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("xfer.sendRequest")}</button>
+                      <button onClick={submit} disabled={busy === "req"} style={{ width: "100%", padding: 13, borderRadius: 10, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("xfer.sendRequest")}</button>
                     </>
                   )}
                 </div>
@@ -133,8 +133,8 @@ export default function TransfersPage() {
                   </div>
                   {(r.status === "requested" || r.status === "sent") && (
                     <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      {r.status === "sent" && <button onClick={() => act(receiveTransfer, r.id, "xfer.received")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "***REMOVED***58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("xfer.confirmReceived")}</button>}
-                      {r.status === "requested" && <button onClick={() => act(cancelTransfer, r.id, "xfer.cancelled")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "***REMOVED***ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, cursor: "pointer" }}>{t("xfer.cancel")}</button>}
+                      {r.status === "sent" && <button onClick={() => act(receiveTransfer, r.id, "xfer.received")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "#58d68d", border: "1px solid rgba(39,174,96,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("xfer.confirmReceived")}</button>}
+                      {r.status === "requested" && <button onClick={() => act(cancelTransfer, r.id, "xfer.cancelled")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "#ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, cursor: "pointer" }}>{t("xfer.cancel")}</button>}
                     </div>
                   )}
                 </div>
@@ -152,17 +152,17 @@ export default function TransfersPage() {
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
                       <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("xfer.for")} {r.to_branch_name || "—"}{r.requested_by_name ? ` · ${r.requested_by_name}` : ""}</div>
-                      {r.note && <div style={{ fontSize: 12, color: "***REMOVED***9a8f8f", fontStyle: "italic", marginTop: 3 }}>“{r.note}”</div>}
+                      {r.note && <div style={{ fontSize: 12, color: "#9a8f8f", fontStyle: "italic", marginTop: 3 }}>“{r.note}”</div>}
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: stColor(r.status) }}>{t("xfer.st_" + r.status)}</span>
                   </div>
                   {r.status === "requested" && (
                     <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                       <button onClick={() => act(sendTransfer, r.id, "xfer.sent")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(212,168,71,0.15)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("xfer.markSent")}</button>
-                      <button onClick={() => act(rejectTransfer, r.id, "xfer.rejected")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "***REMOVED***ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, cursor: "pointer" }}>{t("xfer.reject")}</button>
+                      <button onClick={() => act(rejectTransfer, r.id, "xfer.rejected")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "#ec7063", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, cursor: "pointer" }}>{t("xfer.reject")}</button>
                     </div>
                   )}
-                  {r.status === "sent" && <div style={{ fontSize: 11, color: "***REMOVED***d4a847", marginTop: 8 }}>{t("xfer.awaitingReceipt")}</div>}
+                  {r.status === "sent" && <div style={{ fontSize: 11, color: "#d4a847", marginTop: 8 }}>{t("xfer.awaitingReceipt")}</div>}
                 </div>
               ))}
             </div>

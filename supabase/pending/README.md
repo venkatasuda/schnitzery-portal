@@ -1,4 +1,4 @@
-***REMOVED*** Pending database fixes
+# Pending database fixes
 
 These are **not applied yet**. They live here, outside `supabase/migrations/`, so
 that `supabase db push` cannot run them by accident.
@@ -13,7 +13,7 @@ See `PRODUCTION-AUDIT.md` items 14–19 for the reasoning behind each one.
 | `04_user_pay_step_c_drop.sql` | 18 (step C) | **Drops `users.hourly_wage`** | Not yet applied — read the conditions at the top |
 | `20260718_audit_fixes.sql` | superseded | — | Delete: `git rm supabase/pending/20260718_audit_fixes.sql` |
 
-***REMOVED******REMOVED*** Item 18 — the three-step sequence
+## Item 18 — the three-step sequence
 
 The wage exposure cannot be fixed with a policy change. Postgres RLS is
 row-level, so any policy letting a staff member see a colleague's `users` row
@@ -35,7 +35,7 @@ the live Labour page and confirm wages still show → then apply C.
 `04` has a pre-flight block that aborts if any wage is missing from `user_pay`,
 and takes a 30-day backup table before dropping anything.
 
-***REMOVED******REMOVED*** Order
+## Order
 
 1. Back up: Supabase dashboard → Database → Backups.
 2. Apply `01_safe_fixes.sql` — SQL Editor → paste → Run.
@@ -48,7 +48,7 @@ and takes a 30-day backup table before dropping anything.
 rolls the enforcement back off while keeping the timezone fix — that is the
 intended rollback path.
 
-***REMOVED******REMOVED*** Still not written
+## Still not written
 
 **Item 18 — every employee can read colleagues' `hourly_wage`, `phone` and
 `email`.** This is the most serious data-protection finding in the system and it
@@ -63,7 +63,7 @@ application changes, sequenced so nothing breaks:
 A sketch is in the commented-out Section 4 of `20260718_audit_fixes.sql`. Do not
 run it as-is — dropping the column before step 2 breaks the labour report.
 
-***REMOVED******REMOVED*** Once applied
+## Once applied
 
 Move the file into `supabase/migrations/` with a timestamp **later** than
 `20260718081316_remote_schema.sql`, so the history reflects what actually ran.

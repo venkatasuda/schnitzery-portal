@@ -74,12 +74,12 @@ export default function OrderPage() {
     }).join("");
     const w = window.open("", "_blank"); if (!w) return;
     w.document.write(`<!doctype html><html><head><title>Schnitzery Purchase Order</title><style>
-      *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}body{margin:0;padding:16mm;color:***REMOVED***111}
-      h1{margin:0 0 2mm}.meta{color:***REMOVED***666;margin-bottom:8mm;font-size:11pt}
-      .po{margin-bottom:10mm;page-break-inside:avoid}h2{font-size:13pt;border-bottom:2px solid ***REMOVED***333;padding-bottom:2mm}
-      table{width:100%;border-collapse:collapse;font-size:11pt}th,td{padding:2mm 3mm;border-bottom:1px solid ***REMOVED***ddd;text-align:left}
+      *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}body{margin:0;padding:16mm;color:#111}
+      h1{margin:0 0 2mm}.meta{color:#666;margin-bottom:8mm;font-size:11pt}
+      .po{margin-bottom:10mm;page-break-inside:avoid}h2{font-size:13pt;border-bottom:2px solid #333;padding-bottom:2mm}
+      table{width:100%;border-collapse:collapse;font-size:11pt}th,td{padding:2mm 3mm;border-bottom:1px solid #ddd;text-align:left}
       .r{text-align:right}.sub{text-align:right;margin-top:3mm;font-size:12pt}
-      .grand{text-align:right;font-size:14pt;font-weight:700;border-top:2px solid ***REMOVED***333;padding-top:3mm;margin-top:6mm}
+      .grand{text-align:right;font-size:14pt;font-weight:700;border-top:2px solid #333;padding-top:3mm;margin-top:6mm}
     </style></head><body>
       <h1>Schnitzery — ${t("po.title")}</h1><div class="meta">${today()}</div>
       ${sections}
@@ -100,14 +100,14 @@ export default function OrderPage() {
           <button key={cd} onClick={() => { setCoverDays(cd); load(cd); }}
             style={{ fontSize: 12, padding: "5px 10px", borderRadius: 8, cursor: "pointer", background: coverDays === cd ? "rgba(212,168,71,0.15)" : "rgba(255,255,255,0.05)", color: coverDays === cd ? "var(--gold)" : "var(--gray)", border: `1px solid ${coverDays === cd ? "rgba(212,168,71,0.3)" : "rgba(255,255,255,0.1)"}` }}>{cd}d</button>
         ))}
-        <button onClick={printAll} disabled={loading || groups.length === 0} style={{ marginLeft: "auto", fontSize: 13, fontWeight: 700, padding: "8px 14px", borderRadius: 8, background: "var(--gold)", color: "***REMOVED***1a1a1a", border: "none", cursor: "pointer" }}>🖨 {t("po.printPdf")}</button>
+        <button onClick={printAll} disabled={loading || groups.length === 0} style={{ marginLeft: "auto", fontSize: 13, fontWeight: 700, padding: "8px 14px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", cursor: "pointer" }}>🖨 {t("po.printPdf")}</button>
       </div>
 
       {loading ? <CardSkeleton rows={4} /> : groups.length === 0 ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13 }}>{t("po.nothing")}</div>
       ) : (
         <>
-          {!hasPrices && <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "***REMOVED***d4a847", borderColor: "rgba(212,168,71,0.3)" }}>{t("po.noPrices")}</div>}
+          {!hasPrices && <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "#d4a847", borderColor: "rgba(212,168,71,0.3)" }}>{t("po.noPrices")}</div>}
           {groups.map((g, gi) => (
             <div key={gi} className="card" style={{ marginBottom: 12, padding: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -124,7 +124,7 @@ export default function OrderPage() {
                     style={{ width: 66, padding: "8px", textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14, fontWeight: 600 }} />
                   <span style={{ fontSize: 11, color: "var(--gray)", width: 26 }}>{it.unit}</span>
                   <span style={{ fontSize: 12, color: "var(--white)", width: 58, textAlign: "right" }}>{it.lineCost != null ? eur(it.lineCost) : "—"}</span>
-                  <button onClick={() => removeItem(gi, ii)} style={{ background: "none", border: "none", color: "***REMOVED***7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
+                  <button onClick={() => removeItem(gi, ii)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
                 </div>
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
