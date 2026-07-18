@@ -163,7 +163,7 @@ Once that exists, add a test that asserts RLS is enabled on every table: query `
 `seed-stuttgart-team.mjs` contains the full Stuttgart roster: first names, teams, contract types, contract hours and **real mobile numbers** for ~30 people, plus:
 
 ```js
-const TEMP_PASSWORD = "[REDACTED-PASSWORD]";
+const TEMP_PASSWORD = "<redacted — a single shared password for all ~30 staff>";
 ```
 
 Under GDPR this is personal data of identifiable employees, committed to Git and replicated to every clone and to GitHub. The shared temp password is mitigated by the `must_change_password` flow in `(app)/layout.tsx:30` — but note that flow only gates *page navigation*. A user who has not changed their password can still invoke every Server Action directly, and the `/kiosk` route does not check the flag at all.

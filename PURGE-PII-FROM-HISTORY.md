@@ -1,8 +1,7 @@
 ***REMOVED*** Removing staff phone numbers from Git history — item 5
 
 `seed-stuttgart-team.mjs` contains **32 phone numbers plus a shared password**
-(`[REDACTED-PASSWORD]`) for ~30 identifiable employees, and it was pushed to a
-**public** repository. Deleting the file in a new commit is not enough — every
+for ~30 identifiable employees, and it was pushed to a **public** repository. Deleting the file in a new commit is not enough — every
 previous commit still contains it, and `git log -p` or the GitHub UI will show
 it to anyone with access.
 
@@ -69,7 +68,7 @@ Must print **nothing**.
 Also search the whole history for a leaked number:
 
 ```
-git log -p --all -S "[REDACTED-PHONE]"
+git log -p --all -S "+49" -- "*.mjs"
 ```
 
 Must print **nothing**.
@@ -90,7 +89,7 @@ git push origin --force --tags
 
 ***REMOVED******REMOVED*** Step 5 — rotate the password
 
-`[REDACTED-PASSWORD]` was publicly readable. Treat it as compromised.
+The shared seed password was publicly readable. Treat it as compromised.
 
 Anyone who never signed in still has it as their live password, and the email
 pattern is predictable (`name.kit-001@schnitzery-stuttgart.de`), so a stranger

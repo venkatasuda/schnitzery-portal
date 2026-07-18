@@ -34,7 +34,9 @@ Approximately **30 identifiable employees** of Schnitzery Stuttgart:
 - Contract type (Full Time / Mini Job / Working Student)
 - Contract hours
 - **Mobile phone number** — 32 numbers, German (+49) and international (+91, +977)
-- **A shared temporary password** (`[REDACTED-PASSWORD]`) applied to every account
+- **A shared temporary password** applied to every account (value deliberately
+  not repeated here; it is redacted from history by the purge and rotated by
+  `rotate-passwords.mjs`)
 - The email address pattern (`firstname.kit-001@schnitzery-stuttgart.de`),
   making every account name derivable
 
