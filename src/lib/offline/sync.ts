@@ -58,8 +58,11 @@ export async function flushQueue(): Promise<FlushResult> {
       return { ok: false, synced: 0, remaining: readQueue().length };
     }
 
-    const confirmed: string[] = (res.results || [])
-      .map((r: { event_uuid?: string }) => r.event_uuid)
+    // `res.results` comes back untyped from the server action, so cast the
+    // array first — otherwise map/filter infer `any` and noImplicitAny trips.
+    const results = (res.results || []) as { event_uuid?: string }[];
+    const confirmed: string[] = results
+      .map((r) => r.event_uuid)
       .filter((id): id is string => typeof id === "string");
     removeFromQueue(confirmed);
 
