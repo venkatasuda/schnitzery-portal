@@ -38,7 +38,9 @@ export default function ChangePasswordForm() {
 
     // 2) Clear the must_change_password flag on our own profile row.
     //    (users_update RLS allows own-row; the guard trigger only protects
-    //    role / branch_id / hourly_wage, so this update is permitted.)
+    //    role / branch_id / contract_hours / annual_leave_days / employee_code,
+    //    so this update is permitted. Wages are not on this table at all —
+    //    they live in user_pay. See PRODUCTION-AUDIT.md item 18.)
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from("users").update({ must_change_password: false }).eq("id", user.id);

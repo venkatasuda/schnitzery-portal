@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
+import { wageMapForBranches } from "@/lib/pay/wages";
 
 // ============================================================================
 // BRANCH PERFORMANCE ANALYTICS — aggregate KPIs over a daily / weekly / monthly
@@ -115,12 +116,14 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   // data loads (scoped to target branches + window)
   const { data: rosters } = await supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks);
   const { data: logs } = await supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks, status").in("branch_id", targets).gte("work_date", from).lte("work_date", to);
-  const { data: users } = await supabase.from("users").select("id, hourly_wage, team").in("branch_id", targets);
+  const { data: users } = await supabase.from("users").select("id, team").in("branch_id", targets);
   const { data: sales } = await supabase.from("daily_sales").select("amount").in("branch_id", targets).gte("sale_date", from).lte("sale_date", to);
   const { data: psettings } = await supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets);
 
-  const wage: Record<string, number | null> = {}; const uteam: Record<string, string> = {};
-  (users || []).forEach((u) => { wage[u.id] = u.hourly_wage ?? null; uteam[u.id] = u.team || ""; });
+  // Wages from user_pay, not users — see src/lib/pay/wages.ts (item 18).
+  const wage = await wageMapForBranches(supabase, targets);
+  const uteam: Record<string, string> = {};
+  (users || []).forEach((u) => { uteam[u.id] = u.team || ""; });
   const otThresh: Record<string, number> = {}; targets.forEach((b) => { otThresh[b] = 8 * 60; });
   (psettings || []).forEach((p) => { otThresh[p.branch_id] = Number(p.ot_daily_hours ?? 8) * 60; });
 
@@ -296,11 +299,11 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
 
   const { data: rosters } = await supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks);
   const { data: logs } = await supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to);
-  const { data: users } = await supabase.from("users").select("id, full_name, team, status, hourly_wage").in("branch_id", targets);
+  const { data: users } = await supabase.from("users").select("id, full_name, team, status").in("branch_id", targets);
   const { data: psettings } = await supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets);
   const otThresh: Record<string, number> = {}; targets.forEach((b) => { otThresh[b] = 8 * 60; });
   (psettings || []).forEach((p) => { otThresh[p.branch_id] = Number(p.ot_daily_hours ?? 8) * 60; });
-  const wage: Record<string, number | null> = {}; (users || []).forEach((u) => { wage[u.id] = u.hourly_wage ?? null; });
+  const wage = await wageMapForBranches(supabase, targets);
 
   type S = { name: string; team: string; scheduled: number; attended: number; late: number; absent: number; workedMins: number; shifts: number; cost: number };
   const stat: Record<string, S> = {};
@@ -396,12 +399,12 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
   const days = daysBetween(from, to);
   const weeks = [...new Set(days.map(mondayOfDate))];
 
-  const [{ data: rosters }, { data: logs }, { data: users }] = await Promise.all([
+  const [{ data: rosters }, { data: logs }, wage] = await Promise.all([
     supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks),
     supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to),
-    supabase.from("users").select("id, branch_id, hourly_wage").in("branch_id", targets),
+    // Wages from user_pay, not users — see src/lib/pay/wages.ts (item 18).
+    wageMapForBranches(supabase, targets),
   ]);
-  const wage: Record<string, number | null> = {}; (users || []).forEach((u) => { wage[u.id] = u.hourly_wage ?? null; });
 
   // roster index: branch|date -> entries[]
   const sched: Record<string, any[]> = {};

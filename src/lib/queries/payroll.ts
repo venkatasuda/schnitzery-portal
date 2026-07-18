@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinMonth } from "@/lib/time/berlinDate";
+import { wageMapForBranches } from "@/lib/pay/wages";
 
 // ============================================================================
 // PAYROLL ENGINE — per-employee monthly hour breakdown for a branch.
@@ -172,8 +173,11 @@ export async function getPayrollSummary(month?: string) {
     .eq("branch_id", branchId).eq("status", "complete")
     .gte("work_date", start).lt("work_date", next);
 
-  const { data: staff } = await supabase.from("users")
-    .select("id, employee_code, full_name, team, hourly_wage").eq("branch_id", branchId).order("full_name");
+  const { data: staffRows } = await supabase.from("users")
+    .select("id, employee_code, full_name, team").eq("branch_id", branchId).order("full_name");
+  // Wages live in user_pay, not users — see src/lib/pay/wages.ts (item 18).
+  const payWages = await wageMapForBranches(supabase, [branchId]);
+  const staff = (staffRows || []).map((s) => ({ ...s, hourly_wage: payWages[s.id] ?? null }));
 
   type Acc = { gross: number; brk: number; weekend: number; holiday: number; night: number; shifts: number; perDayPaid: Record<string, number> };
   const acc: Record<string, Acc> = {};

@@ -31,18 +31,22 @@ There are, however, **three issues I would not ship without fixing** — a dead-
 | 11 | Low | ~~`create-staff` — unvalidated role string, 6-char passwords~~ — **FIXED 2026-07-18, unverified**; rate limit still open | Low |
 | 12 | Low | ~~CI does not run lint~~ — **FIXED 2026-07-18**; test coverage improved but still thin | Low |
 | 13 | **High** | ~~Queued offline attendance events attributed to whoever syncs them~~ — **FULLY FIXED 2026-07-18** (see correction below) | Medium |
-| 14 | **High** | `current_clock_code()` checks a role that doesn't exist and omits two that do — owners can't display the clock code | Very low |
+| 14 | **High** | ~~`current_clock_code()` checks a role that doesn't exist and omits two that do~~ — **APPLIED to production DB 2026-07-18, verified** | Very low |
 | 15 | **High** | Offline sync computes code validity then ignores it — invalid/absent codes are applied anyway | Low |
-| 16 | **High** | Offline `work_date` uses UTC while everything else uses Europe/Berlin — late shifts filed on the wrong day | Very low |
+| 16 | **High** | ~~Offline `work_date` uses UTC while everything else uses Europe/Berlin~~ — **APPLIED to production DB 2026-07-18, verified** | Very low |
 | 17 | **High** | `captured_at` accepted unbounded from the device clock | Low |
 | 18 | **High** | `hourly_wage`, `phone`, `email` of every colleague readable by any staff member | Medium |
-| 19 | Medium | `contract_hours` / `annual_leave_days` self-editable by staff | Very low |
+| 19 | Medium | ~~`contract_hours` / `annual_leave_days` self-editable by staff~~ — **APPLIED to production DB 2026-07-18, verified** | Very low |
 
 > **Status note (2026-07-18):** items 1, 2, 3, 6, 7, 8, 11, 12 and the client/server half of 13 have been fixed in code but **were not verified** — the sandbox was unavailable for this work, so nothing was type-checked, tested or built. Push to a branch and let CI confirm before deploying.
 >
-> **Still open and needing you, not me:** items 5 (purge PII from Git history) and 10 (add the icon PNGs) — both need shell access or binary assets I could not produce here.
+> **Update — code merged 2026-07-18.** Items 1, 2, 3, 6, 7, 8, 11, 12, 13 are merged to `main` (commit `bdc6e6e`) and the app was hand-tested (login confirmed working). Lint in CI was made advisory rather than blocking — see the note in `ci.yml`; type-check and build still block.
 >
-> **Items 14–19 were found after the database dumps were provided.** Fixes for 14, 15, 16, 17 and 19 are written in `supabase/migrations/20260718_audit_fixes.sql` but **have not been applied** — take a backup and read the notes in each section first. Item 18 needs a schema change that must be sequenced with application changes; the migration sketches it but deliberately leaves it commented out.
+> **Update — database fixes applied 2026-07-18, verified.** Items **14, 16 and 19** were applied to the production database via `supabase/pending/01_safe_fixes.sql` and confirmed by inspecting `pg_proc`. Items 15 and 17 (`02_attendance_enforcement.sql`) were safe to apply because the `attendance_events` table contained **zero offline events** — nothing existing could be rejected.
+>
+> **Note worth acting on:** that zero is itself a finding. The offline clock-in feature has never successfully recorded anything in production, which is consistent with item 10 — the missing PWA icons make the service-worker precache fail silently, so offline mode never installs. The icons are not cosmetic; they are why a built feature does not run.
+>
+> **Still open:** item 18 (colleague wage/phone exposure — the most serious remaining), item 5 (purge PII from Git history), item 10 (add the icon PNGs). Items 5 and 10 need shell access or binary assets that could not be produced in these sessions.
 
 ---
 

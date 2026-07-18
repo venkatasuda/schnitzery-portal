@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { wageMapForBranches, setWage } from "@/lib/pay/wages";
 
 // Labor cost = Σ(hours worked × hourly wage). Labor cost % = labor ÷ sales.
 // Managers enter daily sales + each person's wage. All branch-scoped, manager-only.
@@ -24,11 +25,11 @@ export async function getLaborSummary() {
   const now = new Date();
   const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
-  // wages
-  const { data: staff } = await supabase.from("users").select("id, hourly_wage").eq("branch_id", branchId);
+  // wages — from user_pay, not users. See src/lib/pay/wages.ts (item 18).
+  const wages = await wageMapForBranches(supabase, [branchId]);
   const wageOf: Record<string, number> = {};
   let withWage = 0;
-  for (const s of staff || []) { wageOf[s.id] = s.hourly_wage || 0; if (s.hourly_wage) withWage++; }
+  for (const [id, w] of Object.entries(wages)) { wageOf[id] = w || 0; if (w) withWage++; }
 
   // labor cost from completed attendance this month
   const { data: logs } = await supabase
@@ -91,9 +92,14 @@ export async function getStaffWages() {
   if (!user) return { ok: false, error: "Not logged in.", staff: [] };
   if (!isManager(role)) return { ok: false, error: "Managers only.", staff: [] };
   const { data, error } = await supabase
-    .from("users").select("id, full_name, team, hourly_wage").eq("branch_id", branchId).order("full_name");
+    .from("users").select("id, full_name, team").eq("branch_id", branchId).order("full_name");
   if (error) return { ok: false, error: error.message, staff: [] };
-  return { ok: true, staff: data || [] };
+
+  // Wages come from user_pay (item 18) and are stitched on here, so the shape
+  // the page receives is unchanged.
+  const wages = await wageMapForBranches(supabase, [branchId]);
+  const staff = (data || []).map((s) => ({ ...s, hourly_wage: wages[s.id] ?? null }));
+  return { ok: true, staff };
 }
 
 export async function setStaffWage(userId: string, wage: number) {
@@ -102,8 +108,9 @@ export async function setStaffWage(userId: string, wage: number) {
   if (!isManager(role)) return { ok: false, error: "Managers only." };
   const { data: tgt } = await supabase.from("users").select("branch_id").eq("id", userId).single();
   if (!tgt || tgt.branch_id !== branchId) return { ok: false, error: "Not in your branch." };
-  const { error } = await supabase.from("users").update({ hourly_wage: wage }).eq("id", userId);
-  if (error) return { ok: false, error: error.message };
+
+  const res = await setWage(supabase, userId, tgt.branch_id, wage, user.id);
+  if (!res.ok) return { ok: false, error: res.error };
   return { ok: true };
 }
 
@@ -120,10 +127,11 @@ export async function getMonthlySummary(month?: string) {
   const to = new Date(Date.UTC(Y, M, 0)).toISOString().slice(0, 10); // last day of the month
 
   const { data: staff } = await supabase.from("users")
-    .select("id, full_name, team, hourly_wage, contract_hours")
+    .select("id, full_name, team, contract_hours")
     .eq("branch_id", branchId);
+  const monthWages = await wageMapForBranches(supabase, [branchId]);
   const info: Record<string, any> = {};
-  for (const s of staff || []) info[s.id] = s;
+  for (const s of staff || []) info[s.id] = { ...s, hourly_wage: monthWages[s.id] ?? null };
 
   const { data: logs } = await supabase.from("attendance_logs")
     .select("user_id, duration_mins, late_mins, status")
