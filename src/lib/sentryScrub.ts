@@ -1,4 +1,4 @@
-import type { ErrorEvent, EventHint } from "@sentry/nextjs";
+import type { ErrorEvent } from "@sentry/nextjs";
 
 // ============================================================================
 // SENTRY PII SCRUBBING
@@ -56,7 +56,7 @@ function scrub(value: unknown, depth = 0, seen = new WeakSet<object>()): unknown
   return out;
 }
 
-export function scrubEvent(event: ErrorEvent, _hint?: EventHint): ErrorEvent | null {
+export function scrubEvent(event: ErrorEvent): ErrorEvent | null {
   try {
     // Identify the user by id only — never by email, name or IP.
     if (event.user) {

@@ -58,7 +58,9 @@ export async function flushQueue(): Promise<FlushResult> {
       return { ok: false, synced: 0, remaining: readQueue().length };
     }
 
-    const confirmed: string[] = (res.results || []).map((r: any) => r.event_uuid);
+    const confirmed: string[] = (res.results || [])
+      .map((r: { event_uuid?: string }) => r.event_uuid)
+      .filter((id): id is string => typeof id === "string");
     removeFromQueue(confirmed);
 
     const confirmedSet = new Set(confirmed);

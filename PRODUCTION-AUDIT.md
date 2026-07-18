@@ -30,11 +30,19 @@ There are, however, **three issues I would not ship without fixing** — a dead-
 | 10 | Low | PWA icons referenced but absent — **precache no longer fails atomically; icons still missing** | Very low |
 | 11 | Low | ~~`create-staff` — unvalidated role string, 6-char passwords~~ — **FIXED 2026-07-18, unverified**; rate limit still open | Low |
 | 12 | Low | ~~CI does not run lint~~ — **FIXED 2026-07-18**; test coverage improved but still thin | Low |
-| 13 | **High** | ~~Queued offline attendance events attributed to whoever syncs them~~ — **client + server fixed 2026-07-18**; RPC-side check still required | Medium |
+| 13 | **High** | ~~Queued offline attendance events attributed to whoever syncs them~~ — **FULLY FIXED 2026-07-18** (see correction below) | Medium |
+| 14 | **High** | `current_clock_code()` checks a role that doesn't exist and omits two that do — owners can't display the clock code | Very low |
+| 15 | **High** | Offline sync computes code validity then ignores it — invalid/absent codes are applied anyway | Low |
+| 16 | **High** | Offline `work_date` uses UTC while everything else uses Europe/Berlin — late shifts filed on the wrong day | Very low |
+| 17 | **High** | `captured_at` accepted unbounded from the device clock | Low |
+| 18 | **High** | `hourly_wage`, `phone`, `email` of every colleague readable by any staff member | Medium |
+| 19 | Medium | `contract_hours` / `annual_leave_days` self-editable by staff | Very low |
 
 > **Status note (2026-07-18):** items 1, 2, 3, 6, 7, 8, 11, 12 and the client/server half of 13 have been fixed in code but **were not verified** — the sandbox was unavailable for this work, so nothing was type-checked, tested or built. Push to a branch and let CI confirm before deploying.
 >
-> **Still open and needing you, not me:** items 4 (commit the schema), 5 (purge PII from Git history), 10 (add the icon PNGs), and the database half of items 9 and 13 — all of which need shell access, credentials, or binary assets I could not produce here.
+> **Still open and needing you, not me:** items 5 (purge PII from Git history) and 10 (add the icon PNGs) — both need shell access or binary assets I could not produce here.
+>
+> **Items 14–19 were found after the database dumps were provided.** Fixes for 14, 15, 16, 17 and 19 are written in `supabase/migrations/20260718_audit_fixes.sql` but **have not been applied** — take a backup and read the notes in each section first. Item 18 needs a schema change that must be sequenced with application changes; the migration sketches it but deliberately leaves it commented out.
 
 ---
 
@@ -250,6 +258,132 @@ Two more in the same subsystem:
 
 - **`attempts` is incremented but never acted on.** If the RPC persistently declines to confirm an event, it stays in `localStorage` forever and is re-sent on every flush. Add a cap (say 20) after which the event moves to a dead-letter list and surfaces to a manager rather than retrying silently.
 - **`syncOfflineEvents(events: any[])`** (`attendance-sync.ts:8`) has no auth check, no array-length cap and no shape validation before hitting the RPC. Even if the RPC is airtight on identity, add `if (events.length > 200) return error` and a light schema check — an unauthenticated caller can currently hand your database an arbitrary JSON blob of any size.
+
+---
+
+***REMOVED******REMOVED*** Database review (added 2026-07-18, after the schema dumps were provided)
+
+The schema and functions were reviewed from `production-schema.sql` and `production-functions.sql`. This replaces the "depends on RLS, cannot verify" hedging in several items above.
+
+***REMOVED******REMOVED******REMOVED*** What is genuinely good
+
+Worth stating plainly, because this is better than most Supabase projects reach:
+
+- **RLS is enabled on every table** — I checked all of them.
+- **`rls_auto_enable()` is an event trigger that turns RLS on automatically for any new table.** That is the single best defence against the classic Supabase breach (someone adds a table and forgets the policy), and it is rare to see.
+- **Every `SECURITY DEFINER` function sets an explicit `search_path`.** That is the standard Postgres privilege-escalation vector and it is closed everywhere, without exception.
+- `app_config` (which holds the clock-code secret) and `auth_throttle` have RLS enabled with **zero policies** — deny-all to end users, reachable only by the service role. Correct and deliberate.
+- `users_role_check` constrains `role` to exactly the six valid values, so the whitelist added in item 11 matches the database.
+- `guard_role_change()` and `guard_users_sensitive_update()` correctly block privilege escalation, including "cannot grant a role above your own".
+- Attendance writes go through `SECURITY DEFINER` functions that stamp `now()` server-side; the online `clock_in()` properly *raises* on an invalid code and enforces the geofence.
+
+***REMOVED******REMOVED******REMOVED*** Correction to item 13
+
+**My earlier statement was wrong.** I said the RPC needed a server-side owner check. It does not — `sync_attendance_events()` opens with `v_uid uuid := auth.uid()` and uses that for every insert, ignoring any `user_id` the client sends. The database was never the weak point.
+
+The bug was purely client-side: the queue had no owner, so employee A's events were sent under employee B's session and the RPC — correctly, from its point of view — attributed them to B. The fix shipped in the app closes it completely. **No database change is required for item 13.**
+
+---
+
+***REMOVED******REMOVED*** 14. High — `current_clock_code()` role list is broken
+
+`production-functions.sql:2219`:
+
+```sql
+if v_role not in ('manager', 'franchise_owner', 'brand_owner', 'kiosk') then
+  raise exception 'Not permitted.';
+```
+
+`franchise_owner` **is not a role in this system** — `users_role_check` allows only `super_admin`, `brand_owner`, `branch_owner`, `manager`, `staff`, `kiosk`. It looks like a rename that was never propagated. Meanwhile the list omits `branch_owner` and `super_admin`, both of which are real.
+
+**Live effect:** a branch owner or super admin calling `getCurrentClockCode()` gets "Not permitted." and cannot show the clock code on the kiosk screen.
+
+The newer `current_clock_token()` (line 2250) does it correctly with `is_manager() or v_role = 'kiosk'`. Fixed in SECTION 1 of the migration by using `is_manager()`, so the list can't drift again.
+
+---
+
+***REMOVED******REMOVED*** 15. High — offline sync validates the code, then ignores the result
+
+In `sync_attendance_events()`, step 2 computes:
+
+```sql
+v_valid := case when coalesce(v_qr, false) then public.code_valid_at(v_branch, v_code, v_at, 4) else null end;
+```
+
+...and step 3 applies the event to `attendance_logs` **without ever reading `v_valid`**. It is written to `attendance_events.code_valid` for audit and otherwise discarded.
+
+Compare the online path: `clock_in()` raises `'Invalid or expired code'` and refuses. So the same branch enforces its QR requirement online and ignores it offline. Anyone able to reach the sync endpoint could post a `clock_in` with no code at all and have it applied to their timesheet.
+
+Fixed in SECTION 3 — but read the note there first and run the counting query, because enforcing this will start rejecting events that were previously accepted.
+
+---
+
+***REMOVED******REMOVED*** 16. High — offline attendance is filed in the wrong timezone
+
+`sync_attendance_events()` computes the work date as:
+
+```sql
+v_wd := (v_at at time zone 'utc')::date;
+```
+
+`clock_in()` uses `(now() at time zone 'Europe/Berlin')::date`. `inventory_purchases.purchase_date` defaults to Berlin. `berlinDate.ts` — the one well-tested module in the app — exists precisely to keep this consistent.
+
+In summer (CEST, UTC+2) an offline clock-out at **00:30 Berlin is 22:30 UTC the previous day**. The shift is filed against the wrong `work_date`, which then drives `duration_mins`, the monthly totals and the payroll export. The staff most affected are the ones closing the restaurant after midnight — who are also the most likely to be on a flaky connection at that hour.
+
+One-word fix, in SECTION 3. Worth checking whether historical rows need correcting:
+
+```sql
+select work_date, count(*) from public.attendance_logs
+where source = 'offline' group by 1 order by 1 desc limit 30;
+```
+
+---
+
+***REMOVED******REMOVED*** 17. High — `captured_at` is trusted without bounds
+
+`v_at := (e->>'captured_at')::timestamptz` comes straight from the device clock with no sanity check. Combined with item 15, on a branch where `qr_required = false` there is **no constraint on offline attendance at all** — set the tablet's clock back, clock in, sync, and the hours are recorded.
+
+The rotating code does constrain this when QR is required (you cannot produce a code for a window you weren't present in), which is a good design. But it only bites once item 15 is fixed, and only on branches with the setting on.
+
+SECTION 3 clamps `captured_at` to "not more than 10 minutes in the future, not more than 14 days old". Tune the backdate window to how long a device might plausibly stay offline.
+
+This closes the remaining half of item 9.
+
+---
+
+***REMOVED******REMOVED*** 18. High — every employee can read their colleagues' wages
+
+`users_select`:
+
+```sql
+USING ((id = auth.uid()) OR (branch_id IN (SELECT accessible_branch_ids())))
+```
+
+and `accessible_branch_ids()` returns a staff member's own branch. RLS in Postgres is row-level, not column-level — so a staff member who passes this policy gets **every column** of every colleague's row:
+
+`hourly_wage`, `phone`, `email`, `annual_leave_days`, `contract_hours`, `employee_code`
+
+A single request with their own token returns the branch's entire pay and contact list:
+
+```
+GET /rest/v1/users?select=full_name,hourly_wage,phone
+```
+
+The app's UI never shows staff this data, which is exactly what makes it dangerous — the exposure is invisible from inside the product and would not turn up in any amount of clicking around.
+
+For a German employer this is the most serious data-protection finding in the system.
+
+**There is no safe one-line fix**, which is why SECTION 4 of the migration is commented out rather than ready to run. Column privileges would also block managers, who legitimately need `hourly_wage` for the labour-cost report (`labor.ts:123`). The proper fix is to move pay into a manager-only `user_pay` table; the migration sketches it with the correct order of operations (create and backfill → repoint the app → verify → only then drop the column).
+
+---
+
+***REMOVED******REMOVED*** 19. Medium — staff can edit their own contract hours and leave allowance
+
+`guard_users_sensitive_update()` protects `role`, `branch_id` and `hourly_wage`. It does not protect `contract_hours` or `annual_leave_days`, and `users_update` permits `id = auth.uid()`. Both values feed real calculations — contract hours drive the overtime comparison in `timepay.ts`, leave days drive the balance in `leave-balance.ts`.
+
+Fixed in SECTION 2, which also adds `employee_code`.
+
+Deliberately **not** guarded: `must_change_password`. `ChangePasswordForm.tsx:44` clears it as the user themselves, so guarding it would break the forced-password-change flow. Self-clearing it only skips a prompt on an account they already control.
 
 ---
 

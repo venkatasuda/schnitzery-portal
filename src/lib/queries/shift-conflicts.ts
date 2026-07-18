@@ -74,7 +74,8 @@ export async function getShiftConflicts(opts: { weeks?: number } = {}) {
         if (!e?.user_id) continue;
         const times = resolve(r.branch_id, e.team, e.shift);
         if (!times) continue;
-        let start = zonedToUtcMs(date, times.start), end = zonedToUtcMs(date, times.end);
+        const start = zonedToUtcMs(date, times.start);
+        let end = zonedToUtcMs(date, times.end);
         if (end <= start) end += 24 * 3600000;
         const key = `${e.user_id}|${date}`;
         (byUserDate[key] ||= []).push({

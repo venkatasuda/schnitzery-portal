@@ -86,7 +86,7 @@ export async function getLocationFlags(days = 14) {
     .limit(200);
   const rows = (data ?? []).filter((r: any) => r.geo_flagged === true || r.geo_ok === false);
   const ids = [...new Set(rows.map((r: any) => r.user_id))];
-  let names: Record<string, string> = {};
+  const names: Record<string, string> = {};
   if (ids.length) {
     const { data: us } = await supabase.from("users").select("id, full_name").in("id", ids);
     (us ?? []).forEach((u: any) => { names[u.id] = u.full_name; });

@@ -36,7 +36,7 @@ export async function getTodayChecklist() {
   if (!user) return { ok: false, error: "Not logged in.", tasks: [], canManage: false };
   const today = todayStr();
 
-  let { data: tasks } = await supabase
+  const { data: tasks } = await supabase
     .from("checklists")
     .select("*")
     .eq("branch_id", branchId)

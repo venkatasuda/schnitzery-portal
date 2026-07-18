@@ -9,6 +9,19 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 
 const eur = (n: number) => "€" + (n || 0).toLocaleString("de-DE");
+
+// Declared at module scope, NOT inside the page component. A component created
+// during render is a brand-new component type on every render, so React
+// unmounts and remounts it each time — losing any state and costing DOM work.
+function Kpi({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+  return (
+    <div className="card" style={{ padding: 14 }}>
+      <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: color || "var(--white)" }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+}
 const csvCell = (s: any) => `"${String(s ?? "").replace(/"/g, '""')}"`;
 
 function lastMonths(n: number) {
@@ -68,14 +81,6 @@ export default function SummaryPage() {
   }
 
   const primeColor = data?.primePct == null ? "var(--gray)" : data.primePct <= 60 ? "***REMOVED***27ae60" : data.primePct <= 68 ? "***REMOVED***d4a847" : "***REMOVED***e74c3c";
-
-  const Kpi = ({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) => (
-    <div className="card" style={{ padding: 14 }}>
-      <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: color || "var(--white)" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{sub}</div>}
-    </div>
-  );
 
   return (
     <div className="fade-up">
