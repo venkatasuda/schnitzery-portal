@@ -47,3 +47,12 @@ schnitzery.zip
 schnitzery.zip
 Work sheets/
 **/node_modules/
+
+***REMOVED*** ── PERSONAL DATA — NEVER COMMIT ────────────────────────────────────────────
+***REMOVED*** Staff rosters and generated credentials. seed-stuttgart-team.mjs used to hold
+***REMOVED*** ~30 employees' names, contract details and mobile numbers in source, in a
+***REMOVED*** public repo. See PRODUCTION-AUDIT.md item 5. Do not remove these lines.
+*.roster.csv
+team.passwords.txt
+rotated.passwords.txt
+*.passwords.txt
