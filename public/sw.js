@@ -23,7 +23,7 @@
 // after confirming it renders nothing user-specific.
 // ────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = "schnitzery-v2";
+const CACHE_VERSION = "schnitzery-v3";
 
 // Routes safe to serve to any user of a shared device.
 // "/" is deliberately ABSENT — it is the authenticated home page.
@@ -117,4 +117,32 @@ self.addEventListener("fetch", (event) => {
 
   // Other same-origin GETs (RSC payloads, data requests) → network-only.
   // These carry user-specific rendered output just like pages do.
+});
+
+// ── Push notifications ───────────────────────────────────────────────────────
+// Shows a notification when the server pushes one. Payload shape is set by
+// sendPushToUser() in src/lib/push/actions.ts: { title, body, url }.
+self.addEventListener("push", (event) => {
+  let data = { title: "Schnitzery", body: "", url: "/" };
+  try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url: data.url || "/" },
+    })
+  );
+});
+
+// Focus an existing tab on the target route, or open one.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data && event.notification.data.url ? event.notification.data.url : "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if (c.url.includes(url) && "focus" in c) return c.focus(); }
+      return self.clients.openWindow(url);
+    })
+  );
 });

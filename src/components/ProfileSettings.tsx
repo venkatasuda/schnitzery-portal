@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/Toast";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import { pushSupported, currentPushState, subscribeToPush, unsubscribeFromPush } from "@/lib/push/client";
 
 // Shared profile footer for every role: Light Mode (reuses the same theme
 // mechanism as the header toggle) + a working Change Password via Supabase auth.
@@ -19,6 +20,31 @@ export default function ProfileSettings() {
     document.documentElement.classList.toggle("light", next);
     try { localStorage.setItem("sch_theme", next ? "light" : "dark"); } catch { /* ignore */ }
   }
+
+  // ── Push notifications (opt-in) ──
+  const [pushState, setPushState] = useState<"unsupported" | "denied" | "subscribed" | "unsubscribed" | "loading">("loading");
+  const [pushBusy, setPushBusy] = useState(false);
+  useEffect(() => { currentPushState().then(setPushState).catch(() => setPushState("unsupported")); }, []);
+
+  async function toggleNotifications() {
+    setPushBusy(true);
+    try {
+      if (pushState === "subscribed") {
+        await unsubscribeFromPush();
+        setPushState("unsubscribed");
+        toast("Notifications turned off.", "success");
+      } else {
+        const res = await subscribeToPush();
+        if (res.ok) { setPushState("subscribed"); toast("Notifications turned on.", "success"); }
+        else toast(res.error || "Could not enable notifications.", "error");
+      }
+    } catch (e: any) {
+      toast(e?.message || "Could not change notifications.", "error");
+    }
+    setPushBusy(false);
+  }
+
+  const pushOn = pushState === "subscribed";
 
   // ── Change Password ──
   const [open, setOpen] = useState(false);
@@ -64,6 +90,32 @@ export default function ProfileSettings() {
           </button>
         </div>
       </div>
+
+      {/* NOTIFICATIONS — opt-in. Hidden entirely on devices that can't do push. */}
+      {pushState !== "unsupported" && (
+        <div className="card" style={{ marginTop: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>Push notifications</div>
+              <div style={{ fontSize: 12, color: "var(--gray)" }}>
+                {pushState === "denied"
+                  ? "Blocked in your browser settings — enable them there first."
+                  : "Get alerts for approvals and announcements on this device."}
+              </div>
+            </div>
+            <button
+              onClick={toggleNotifications}
+              disabled={pushBusy || pushState === "denied" || pushState === "loading"}
+              role="switch"
+              aria-checked={pushOn}
+              aria-label="Toggle push notifications"
+              style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: pushBusy || pushState === "denied" ? "default" : "pointer", padding: 3, background: pushOn ? "var(--gold)" : "rgba(128,128,128,0.35)", opacity: pushState === "denied" || pushState === "loading" ? 0.5 : 1, transition: "background .2s", display: "flex", justifyContent: pushOn ? "flex-end" : "flex-start" }}
+            >
+              <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ACCOUNT */}
       <div className="section-label">{t("settings.account")}</div>
