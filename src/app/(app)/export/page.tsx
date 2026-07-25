@@ -17,7 +17,7 @@ export default function PayrollExportPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [totals, setTotals] = useState<any>({});
   const [settings, setSettings] = useState({ otDailyHours: 8, nightStart: "22:00", nightEnd: "06:00" });
-  const [run, setRun] = useState<{ status: "draft" | "approved"; approvedBy: string | null; approvedAt: string | null }>({ status: "draft", approvedBy: null, approvedAt: null });
+  const [run, setRun] = useState<{ status: "draft" | "approved"; approvedBy?: string | null; approvedAt?: string | null }>({ status: "draft", approvedBy: null, approvedAt: null });
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [showRules, setShowRules] = useState(false);

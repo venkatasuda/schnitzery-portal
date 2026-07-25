@@ -14,7 +14,7 @@ type Kind = "leave" | "swap" | "attendance" | "correction";
 type Item = { kind: Kind; id: string; icon: string; name: string; detail: string };
 type Filter = "all" | Kind;
 
-const fmtH = (m: number) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
+const fmtH = (m: number | null | undefined) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
 const fmtD = (d?: string | null) => (d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short" }) : "—");
 const fmtT = (v?: string | null) => (v ? new Date(v).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
 
@@ -22,7 +22,7 @@ const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out
 
 export default function ApprovalsPage() {
   const { t } = useLang();
-  const dayLabel = (k: string) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(k.toLowerCase()) ? t("days." + k.toLowerCase()) : (k || "?"));
+  const dayLabel = (k: string | null | undefined) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(k.toLowerCase()) ? t("days." + k.toLowerCase()) : (k || "?"));
   const corrLabel = (k: string) => t("corr." + (CORR_KEY[k] || "typeMissing"));
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function ApprovalsPage() {
       out.push({ kind: "swap", id: s.id, icon: "🔄", name: (s as any).requester?.full_name || t("approvals.someone"), detail: `${t("approvals.swap")} · ${dayLabel(s.my_day)} ↔ ${dayLabel(s.their_day)}${other ? ` ${t("approvals.with")} ${other}` : ""}` });
     }
     for (const r of (att.ok && att.rows) || []) {
-      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${r.late_mins > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.overtime ? ` · ${t("approvals.overtime")}` : ""}` });
+      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${(r.late_mins || 0) > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.overtime ? ` · ${t("approvals.overtime")}` : ""}` });
     }
     for (const c of (corr.ok && (corr as any).items) || []) {
       const req = `${fmtT(c.requested_clock_in)} → ${fmtT(c.requested_clock_out)}`;

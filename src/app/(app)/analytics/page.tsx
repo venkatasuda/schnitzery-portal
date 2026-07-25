@@ -16,7 +16,7 @@ export default function AnalyticsPage() {
   const { t } = useLang();
   const [period, setPeriod] = useState<Period>("weekly");
   const [anchor, setAnchor] = useState(() => new Date().toISOString().slice(0, 10));
-  const [scope, setScope] = useState<{ canPickBranch: boolean; branches: any[]; defaultBranch?: string } | null>(null);
+  const [scope, setScope] = useState<{ canPickBranch: boolean; branches: any[]; defaultBranch?: string | null } | null>(null);
   const [branch, setBranch] = useState<string>("all");
   const [data, setData] = useState<any>(null);
   const [otTrend, setOtTrend] = useState<any[]>([]);

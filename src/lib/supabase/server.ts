@@ -3,6 +3,11 @@ import { cookies } from "next/headers";
 
 // Server-side Supabase client for Server Components, Route Handlers, and Actions.
 // Reads/writes the session cookie so auth persists across requests.
+//
+// NOTE: generated DB types live in src/lib/database.types.ts. We do NOT apply
+// <Database> globally here — doing so surfaced 243 pre-existing nullable-column
+// mismatches across the old query files at once. Adopt the types incrementally
+// in new code instead. See DB-TYPES-ADOPTION.md.
 export async function createClient() {
   const cookieStore = await cookies();
 
