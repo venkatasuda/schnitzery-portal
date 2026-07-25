@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Schnitzery — icon generator</title>
+<style>
+  body { background:#160c0c; color:#e8dcc8; font-family:system-ui,sans-serif; text-align:center; padding:32px; }
+  h1 { color:#d4a847; font-family:Georgia,serif; font-weight:700; }
+  p  { color:#9a8f8f; max-width:520px; margin:8px auto 24px; line-height:1.5; }
+  .row { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin:24px 0; }
+  .card { background:#241414; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:16px; }
+  .card div { font-size:12px; color:#9a8f8f; margin-top:8px; }
+  canvas { border-radius:12px; background:#000; }
+  button { background:#d4a847; color:#1a0e0e; border:none; border-radius:10px; padding:12px 22px;
+           font-size:15px; font-weight:700; cursor:pointer; margin-top:10px; }
+  code { background:rgba(255,255,255,.06); padding:2px 6px; border-radius:4px; color:#d4a847; }
+</style>
+</head>
+<body>
+  <h1>Schnitzery Portal — app icons</h1>
+  <p>These are the three PNGs your app expects in <code>public/icons/</code>.
+     Without them the install prompt never fires and the offline service worker's
+     precache silently fails. Click each button, then move the downloaded files
+     into <code>public/icons/</code>.</p>
+
+  <div class="row" id="cards"></div>
+
+  <p style="margin-top:28px">After saving all three:<br>
+     <code>git add public/icons && git commit -m "Add PWA icons (item 10)" && git push</code></p>
+
+<script>
+// Brand palette, from manifest.webmanifest
+const BG_DARK = "#160c0c";
+const RED1 = "#922b21", RED2 = "#c0392b";
+const GOLD = "#d4a847";
+
+// Draw the Schnitzery mark. `safe` = fraction of the canvas kept clear at the
+// edges (maskable icons get cropped to a circle by the OS, so content must sit
+// in the middle ~80%).
+function draw(ctx, size, { maskable }) {
+  ctx.clearRect(0, 0, size, size);
+
+  // Background fills the whole canvas for maskable (no rounded corners — the OS
+  // masks it); rounded square for the standard icon.
+  ctx.fillStyle = BG_DARK;
+  if (maskable) {
+    ctx.fillRect(0, 0, size, size);
+  } else {
+    const r = size * 0.22;
+    roundRect(ctx, 0, 0, size, size, r);
+    ctx.fill();
+  }
+
+  // Red accent ring/plate in the safe zone.
+  const pad = maskable ? size * 0.20 : size * 0.14;
+  const inner = size - pad * 2;
+  const grad = ctx.createLinearGradient(pad, pad, size - pad, size - pad);
+  grad.addColorStop(0, RED1);
+  grad.addColorStop(1, RED2);
+  ctx.fillStyle = grad;
+  roundRect(ctx, pad, pad, inner, inner, inner * 0.24);
+  ctx.fill();
+
+  // Gold "S" monogram.
+  ctx.fillStyle = GOLD;
+  ctx.font = `700 ${inner * 0.62}px Georgia, "Times New Roman", serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  // optical centering nudge
+  ctx.fillText("S", size / 2, size / 2 + inner * 0.03);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+const ICONS = [
+  { name: "icon-192.png",          size: 192, maskable: false },
+  { name: "icon-512.png",          size: 512, maskable: false },
+  { name: "icon-512-maskable.png", size: 512, maskable: true  },
+];
+
+const cards = document.getElementById("cards");
+for (const spec of ICONS) {
+  const card = document.createElement("div");
+  card.className = "card";
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = spec.size;
+  canvas.style.width = canvas.style.height = "160px";
+  const ctx = canvas.getContext("2d");
+  draw(ctx, spec.size, spec);
+  const label = document.createElement("div");
+  label.textContent = spec.name + " (" + spec.size + "×" + spec.size + (spec.maskable ? ", maskable" : "") + ")";
+  const btn = document.createElement("button");
+  btn.textContent = "Download";
+  btn.onclick = () => {
+    const a = document.createElement("a");
+    a.download = spec.name;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  };
+  card.append(canvas, label, btn);
+  cards.append(card);
+}
+</script>
+</body>
+</html>
