@@ -6,6 +6,7 @@ import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attend
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { getLaborSummary } from "@/lib/queries/labor";
 import { listMyDocuments } from "@/lib/queries/documents";
+import { getViewMode } from "@/lib/viewMode";
 import Link from "next/link";
 import StatusStrip from "@/components/StatusStrip";
 import Icon from "@/components/Icon";
@@ -31,8 +32,13 @@ export default async function HomePage() {
   }
   const role = profile?.role || "staff";
   const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
-  const isHQ = ["brand_owner", "super_admin"].includes(role); // cross-branch HQ: Command Center + all branches
+  const isHQrole = ["brand_owner", "super_admin"].includes(role); // brand owner / super admin
   const isBranchOwner = role === "branch_owner"; // owns one branch: manager toolkit + analytics + branch admin
+
+  // Brand owners choose HQ oversight or the single-branch toolkit (see viewMode.ts).
+  const viewMode = await getViewMode();
+  const hqBranchMode = isHQrole && viewMode === "branch"; // brand owner acting on their branch
+  const isHQ = isHQrole && !hqBranchMode;                 // true HQ oversight home
   const firstName = (profile?.full_name || "there").split(" ")[0];
 
   const hour = new Date().getHours();
@@ -118,9 +124,9 @@ export default async function HomePage() {
       {isManager && <StatusStrip />}
 
       {isHQ ? (
-        <OwnerDash stats={ownerStats} cost={mCost} t={t} />
+        <OwnerDash t={t} />
       ) : isManager ? (
-        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner} cost={mCost} t={t} />
+        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} t={t} />
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
       )}
@@ -318,10 +324,13 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
   );
 }
 
-// ─────────── OWNER DASHBOARD ───────────
-function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null; cost?: { laborPct: number | null; foodCostPct: number | null } | null; t: Tf }) {
-  const s = stats || { clockedIn: 0, staffCount: 0, pendingApprovals: 0, openIncidents: 0, lowStock: 0, checklistDone: 0, checklistTotal: 0 };
-
+// ─────────── OWNER DASHBOARD (HQ oversight only) ───────────
+// Cross-branch view for a brand owner. Deliberately contains NO single-branch
+// shop-floor tools (roster, temp log, waste log, food expiry, inventory,
+// transfers) — those live in the branch view, reachable via the HQ/Branch
+// toggle in the header. Keeping this screen to oversight is the whole point of
+// the split; see src/lib/viewMode.ts.
+function OwnerDash({ t }: { t: Tf }) {
   return (
     <>
       <Link href="/overview" className="feature-card" style={{ background: "linear-gradient(135deg,rgba(212,168,71,0.14),rgba(20,20,20,0.4))", borderColor: "rgba(212,168,71,0.3)" }}>
@@ -342,30 +351,13 @@ function OwnerDash({ stats, cost, t }: { stats: { clockedIn: number; staffCount:
         <span className="feature-chev">›</span>
       </Link>
 
-      <div className="section-label">{t("home.homeBranchToday")}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-        <Stat value={s.clockedIn} label={t("home.workingNow")} color="#58d68d" />
-        <Stat value={s.staffCount} label={t("home.teamSize")} />
-        <Stat value={s.pendingApprovals} label={t("home.approvals")} color={s.pendingApprovals > 0 ? "#e8a35a" : "var(--white)"} />
-      </div>
-
-      <Link href="/labor" className="feature-card" style={{ marginBottom: 14 }}>
-        <div className="feature-icon" style={{ background: "linear-gradient(135deg,#8b6914,#d4a847)" }}><Icon e="💶" size={22} color="#fff" /></div>
-        <div style={{ flex: 1 }}>
-          <div className="feature-title">{t("home.costThisMonth")}</div>
-          <div className="feature-sub">{t("home.costSub", { l: cost?.laborPct != null ? `${cost.laborPct}%` : "—", f: cost?.foodCostPct != null ? `${cost.foodCostPct}%` : "—" })}</div>
-        </div>
-        <span className="feature-chev">›</span>
-      </Link>
+      <div className="section-label">{t("home.insights")}</div>
+      <Shortcut href="/analytics" icon="📊" grad="linear-gradient(135deg,#1e6091,#2980b9)" title={t("home.analytics")} sub={t("home.analyticsSub")} />
+      <Shortcut href="/labor" icon="💶" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.costAnalytics")} sub={t("home.costAnalyticsSub")} />
+      <Shortcut href="/expiring-docs" icon="📑" grad="linear-gradient(135deg,#6c3483,#a569bd)" title={t("home.docsCompliance")} sub={t("home.docsComplianceSub")} />
 
       <div className="section-label">{t("home.manage")}</div>
-      <Shortcut href="/roster" icon="📋" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.weeklyRoster")} sub={t("home.weeklyRosterSub")} />
       <Shortcut href="/people-hub" icon="👥" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.peopleTeam")} sub={t("home.peopleTeamSub")} />
-      <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.inventory")} sub={t("home.inventorySub")} />
-      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
-      <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,#7b241c,#e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSubMgr")} />
-      <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,#6c3483,#a569bd)" title={t("home.expiry")} sub={t("home.expirySubMgr")} />
-      <Shortcut href="/transfers" icon="🔄" grad="linear-gradient(135deg,#0e6655,#16a085)" title={t("home.transfers")} sub={t("home.transfersSub")} />
       <Shortcut href="/profile" icon="⚙" grad="linear-gradient(135deg,#555,#777)" title={t("home.settings")} sub={t("home.settingsSub")} />
     </>
   );

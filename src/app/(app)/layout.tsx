@@ -8,7 +8,9 @@ import ToastHost from "@/components/Toast";
 import LanguageProvider from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import LanguageToggle from "@/components/LanguageToggle";
+import ViewToggle from "@/components/ViewToggle";
 import { getLocale } from "@/lib/i18n/server";
+import { getViewMode } from "@/lib/viewMode";
 
 // Protected layout — header (notifications + theme toggle) + content + nav.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +37,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (role === "kiosk") redirect("/kiosk");
 
   const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
+  const isHQ = ["brand_owner", "super_admin"].includes(role);
+  const viewMode = await getViewMode();
+  // A brand owner in "branch" mode navigates as a manager; otherwise as owner.
+  // Non-HQ roles ignore viewMode entirely.
+  const navRole = isHQ && viewMode === "branch" ? "manager" : role;
   const roleLabel: Record<string, string> = {
     staff: "Staff", manager: "Manager",
     branch_owner: "Branch Owner", brand_owner: "Brand Owner", super_admin: "Super Admin",
@@ -49,6 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="sub">{roleLabel[role]}</div>
         </div>
         <div className="header-right">
+          {isHQ && <ViewToggle mode={viewMode} />}
           <span className="header-name">{profile?.full_name || user?.email}</span>
           {isManager && <Link href="/search" aria-label="Search" style={{ display: "inline-flex", textDecoration: "none", lineHeight: 1 }}><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
@@ -67,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ToastHost />
       <AttendanceSync />
 
-      <BottomNav role={role} />
+      <BottomNav role={navRole} />
     </div>
     </LanguageProvider>
   );
