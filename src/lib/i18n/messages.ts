@@ -47,6 +47,7 @@ export const messages = {
       postAnnouncement: "Post Announcement", postAnnouncementSub: "Send news to all staff",
       allBranches: "All Branches", allBranchesSub: "Live stats across every location",
       insights: "Insights",
+      wasteByBranch: "Waste by branch", wasteByBranchSub: "Which branches waste the most",
       costAnalytics: "Cost & labour", costAnalyticsSub: "Labour % and food cost across the month",
       docsCompliance: "Documents", docsComplianceSub: "Expiring documents across the team",
       homeBranchToday: "Home Branch Today", workingNow: "Working Now", teamSize: "Team Size", approvals: "Approvals",
@@ -470,6 +471,12 @@ export const messages = {
       strandedHelp: "They will sync when that person next signs in here. Tell a manager if this doesn't clear.",
     },
     view: { label: "View mode", hq: "HQ", branch: "Branch" },
+    wbranch: {
+      title: "Waste by Branch", subtitle: "Total waste value per branch — highest first.",
+      ownersOnly: "This area is for owners only.", days: "{n} days",
+      none: "No waste logged in this period.", total: "Total across all branches",
+      entries: "{n} entries", pctOfSales: "{p}% of sales",
+    },
     corr: {
       title: "Attendance Corrections", request: "Request a correction", myRequests: "My requests",
       type: "What happened?", typeForgotIn: "Forgot to clock in", typeForgotOut: "Forgot to clock out",
@@ -769,6 +776,7 @@ export const messages = {
       postAnnouncement: "Ankündigung posten", postAnnouncementSub: "News an alle Mitarbeiter senden",
       allBranches: "Alle Filialen", allBranchesSub: "Live-Statistik aller Standorte",
       insights: "Auswertungen",
+      wasteByBranch: "Abfall nach Filiale", wasteByBranchSub: "Welche Filialen am meisten verschwenden",
       costAnalytics: "Kosten & Personal", costAnalyticsSub: "Personal- und Wareneinsatzquote im Monat",
       docsCompliance: "Dokumente", docsComplianceSub: "Ablaufende Dokumente im Team",
       homeBranchToday: "Heimfiliale heute", workingNow: "Arbeitet gerade", teamSize: "Teamgröße", approvals: "Genehmigungen",
@@ -1192,6 +1200,12 @@ export const messages = {
       strandedHelp: "Sie werden synchronisiert, sobald sich diese Person hier erneut anmeldet. Sag einem Manager Bescheid, falls das bestehen bleibt.",
     },
     view: { label: "Ansicht", hq: "Zentrale", branch: "Filiale" },
+    wbranch: {
+      title: "Abfall nach Filiale", subtitle: "Gesamter Abfallwert je Filiale — höchster zuerst.",
+      ownersOnly: "Dieser Bereich ist nur für Inhaber.", days: "{n} Tage",
+      none: "Kein Abfall in diesem Zeitraum erfasst.", total: "Gesamt über alle Filialen",
+      entries: "{n} Einträge", pctOfSales: "{p}% vom Umsatz",
+    },
     corr: {
       title: "Anwesenheitskorrekturen", request: "Korrektur anfragen", myRequests: "Meine Anfragen",
       type: "Was ist passiert?", typeForgotIn: "Einstempeln vergessen", typeForgotOut: "Ausstempeln vergessen",

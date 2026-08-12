@@ -1,7 +1,20 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { berlinToday } from "@/lib/time/berlinDate";
+
+function isOwner(r?: string | null) {
+  return ["brand_owner", "super_admin"].includes(r || "");
+}
+// Service-role client for cross-branch owner reads (same pattern as transfer.ts).
+function admin() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
 
 async function getMe() {
   const supabase = await createClient();
@@ -79,6 +92,67 @@ export async function getWasteLog(days = 14) {
     ...e, value: price[e.product] != null ? Math.round(price[e.product] * Number(e.qty) * 100) / 100 : null,
   }));
   return { ok: true, entries };
+}
+
+// ── HQ: waste value BY BRANCH (brand owner / super admin only) ───────────────
+// Ranks every branch by waste value over the window, so head office can see who
+// is wasting most. Uses the service-role client to read across branches (the
+// caller's role is checked first), the same privileged-read pattern as stock
+// transfers. Each branch is valued with ITS OWN purchase prices.
+export async function getWasteByBranch(days = 30) {
+  const { user, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (!isOwner(profile?.role)) return { ok: false, error: "Owners only." };
+
+  const a = admin();
+  const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
+  const from = new Date(anchor - days * 86400000).toISOString().slice(0, 10);
+  const priceFrom = new Date(anchor - 90 * 86400000).toISOString().slice(0, 10);
+
+  const [{ data: branches }, { data: waste }, { data: purch }, { data: sales }] = await Promise.all([
+    a.from("branches").select("id, name, is_active").eq("is_active", true).order("name"),
+    a.from("waste_log").select("branch_id, product, qty").gte("work_date", from),
+    a.from("inventory_purchases").select("branch_id, product, qty, cost").gte("purchase_date", priceFrom),
+    a.from("daily_sales").select("branch_id, amount").gte("sale_date", from),
+  ]);
+
+  // Per-branch weighted-average unit price: price[branchId][product].
+  const price: Record<string, Record<string, number>> = {};
+  const q: Record<string, Record<string, number>> = {};
+  const c: Record<string, Record<string, number>> = {};
+  for (const p of purch || []) {
+    const b = p.branch_id; if (!b) continue;
+    (q[b] ||= {}); (c[b] ||= {});
+    q[b][p.product] = (q[b][p.product] || 0) + (Number(p.qty) || 0);
+    c[b][p.product] = (c[b][p.product] || 0) + (Number(p.cost) || 0);
+  }
+  for (const b of Object.keys(q)) {
+    price[b] = {};
+    for (const prod of Object.keys(q[b])) if (q[b][prod] > 0) price[b][prod] = c[b][prod] / q[b][prod];
+  }
+
+  const wasteVal: Record<string, number> = {};
+  const wasteCnt: Record<string, number> = {};
+  for (const w of waste || []) {
+    const b = w.branch_id; if (!b) continue;
+    const unit = price[b]?.[w.product] || 0;
+    wasteVal[b] = (wasteVal[b] || 0) + unit * (Number(w.qty) || 0);
+    wasteCnt[b] = (wasteCnt[b] || 0) + 1;
+  }
+  const salesByBranch: Record<string, number> = {};
+  for (const s of sales || []) { const b = s.branch_id; if (b) salesByBranch[b] = (salesByBranch[b] || 0) + (Number(s.amount) || 0); }
+
+  const rows = (branches || []).map((b: any) => {
+    const value = Math.round((wasteVal[b.id] || 0) * 100) / 100;
+    const branchSales = salesByBranch[b.id] || 0;
+    return {
+      branchId: b.id, name: b.name, value, count: wasteCnt[b.id] || 0,
+      pct: branchSales > 0 ? Math.round((value / branchSales) * 1000) / 10 : null,
+    };
+  }).sort((x, y) => y.value - x.value);
+
+  const total = Math.round(rows.reduce((s, r) => s + r.value, 0) * 100) / 100;
+  return { ok: true, rows, total, days };
 }
 
 // ── TRENDS: weekly waste value over the last N weeks, plus waste as % of sales.

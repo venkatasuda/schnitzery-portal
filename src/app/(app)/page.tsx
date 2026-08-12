@@ -318,6 +318,11 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
 
       {/* DAILY OPERATIONS */}
       <div className="section-label">{t("home.dailyOps")}</div>
+      <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.inventory")} sub={t("home.inventorySub")} />
+      <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
+      <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,#7b241c,#e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSubMgr")} />
+      <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,#6c3483,#a569bd)" title={t("home.expiry")} sub={t("home.expirySubMgr")} />
+      <Shortcut href="/transfers" icon="🔄" grad="linear-gradient(135deg,#0e6655,#16a085)" title={t("home.transfers")} sub={t("home.transfersSub")} />
       <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSubMgr")} />
       <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.postAnnouncement")} sub={t("home.postAnnouncementSub")} />
     </>
@@ -353,6 +358,7 @@ function OwnerDash({ t }: { t: Tf }) {
 
       <div className="section-label">{t("home.insights")}</div>
       <Shortcut href="/analytics" icon="📊" grad="linear-gradient(135deg,#1e6091,#2980b9)" title={t("home.analytics")} sub={t("home.analyticsSub")} />
+      <Shortcut href="/waste-branches" icon="🗑️" grad="linear-gradient(135deg,#7b241c,#e74c3c)" title={t("home.wasteByBranch")} sub={t("home.wasteByBranchSub")} />
       <Shortcut href="/labor" icon="💶" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.costAnalytics")} sub={t("home.costAnalyticsSub")} />
       <Shortcut href="/expiring-docs" icon="📑" grad="linear-gradient(135deg,#6c3483,#a569bd)" title={t("home.docsCompliance")} sub={t("home.docsComplianceSub")} />
 
