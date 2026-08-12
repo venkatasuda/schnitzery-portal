@@ -1,0 +1,69 @@
+-- ============================================================================
+-- CONTACT PRIVACY — phone & email exposure (the cousin of the wage fix, item 18)
+-- 2026-07-19
+--
+-- STATUS: Option 1 (app-level) APPLIED 2026-07-19 — getDirectory() no longer
+-- selects email, so the staff directory shows phone but not email. The residual
+-- database-level read (Option 2) remains open by choice; see below.
+--
+-- ⚠ DECISION STILL OPEN for Option 2 — do not run blindly.
+--
+-- THE SITUATION
+-- users_select lets any staff member read every column of colleagues in their
+-- branch. src/lib/queries/people.ts getDirectory() uses this ON PURPOSE to show
+-- a staff directory with each colleague's phone and email. So this is partly a
+-- feature, not only a leak — which is why it needs your call, not a silent fix.
+--
+-- THE QUESTION FOR THE OWNER
+--   (A) Should staff be able to see colleagues' phone numbers? (e.g. to arrange
+--       a shift swap directly.) Many small teams say yes.
+--   (B) Should staff see colleagues' EMAIL addresses? Usually no — email is the
+--       login identifier and rarely needed in a directory.
+--
+-- Pick the option below that matches the answer. Both are reversible.
+--
+-- ────────────────────────────────────────────────────────────────────────────
+-- OPTION 1 — Keep the directory, hide only email  (lightest touch)
+--
+-- Staff keep seeing names, teams, roles and PHONE (the useful part), but email
+-- is removed from the directory query. No schema change needed — just edit the
+-- app:
+--   • src/lib/queries/people.ts getDirectory(): drop "email" from the select.
+-- That closes the email exposure via the app. NOTE: a determined staff member
+-- could still read email straight from PostgREST, because users_select allows
+-- it. If that residual risk is unacceptable, use Option 2.
+--
+-- ────────────────────────────────────────────────────────────────────────────
+-- OPTION 2 — Move contact details out of `users` (closes it at the database)
+--
+-- Same pattern as user_pay (item 18): move phone + email into a table whose RLS
+-- only lets a person read their OWN, and managers read their branch's. The
+-- directory is then rebuilt to show only what the owner allows (e.g. phone via a
+-- manager-curated field, or nothing).
+--
+-- This is a staged migration exactly like 03/04 (user_pay):
+--   STEP A  create public.user_contact (user_id, branch_id, phone, email), RLS
+--           own-row + manager-branch, backfill from users.
+--   STEP B  repoint the app: getDirectory(), getStaffList(), create-staff,
+--           people.ts updateStaff, profile pages — read/write user_contact.
+--   STEP C  drop users.phone and users.email, and rewrite guard/handle_new_user
+--           triggers that reference them.
+--
+-- Because email is the auth identifier, dropping users.email needs care — the
+-- login flow uses auth.users.email (Supabase Auth), NOT public.users.email, so
+-- removing the public column does not affect sign-in. Verify that before STEP C.
+--
+-- The full DDL for Option 2 is intentionally NOT expanded here until the owner
+-- has chosen A or B — writing and applying it blind is how the 243-error
+-- cascade happened with the type work. When you decide, say so and the STEP A/B/C
+-- files will be generated the same way user_pay was.
+--
+-- ────────────────────────────────────────────────────────────────────────────
+-- RECOMMENDATION
+-- For a single small team today, Option 1 (hide email, keep phone) is a
+-- reasonable, low-risk default and can ship immediately. Move to Option 2 when
+-- the business grows or if a data-protection review requires closing the
+-- database-level exposure. Either way, note the decision in writing — under GDPR
+-- "we considered it and chose X for reason Y" is a much stronger position than
+-- an accidental exposure.
+-- ============================================================================

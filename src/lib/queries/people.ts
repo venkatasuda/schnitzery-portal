@@ -45,12 +45,17 @@ export async function updateMyProfile(fields: {
 }
 
 // ── DIRECTORY: everyone in my branch (name, team, phone, role) ──
+// Email is deliberately NOT selected here — it is the login identifier and does
+// not belong in a staff-visible directory (contact-privacy, Option 1; see
+// supabase/pending/06_contact_privacy.sql). Phone is kept, as a small team
+// commonly wants to reach a colleague to arrange a swap. Managers who need the
+// full record use getStaffList() / staff-detail, which are role-gated.
 export async function getDirectory() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", people: [] };
   const { data, error } = await supabase
     .from("users")
-    .select("id, full_name, team, role, phone, email, avatar_url, status")
+    .select("id, full_name, team, role, phone, avatar_url, status")
     .eq("branch_id", branchId)
     .order("full_name");
   if (error) return { ok: false, error: error.message, people: [] };

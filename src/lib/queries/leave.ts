@@ -2,6 +2,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
+import { sendPushToUser } from "@/lib/push/actions";
+
+// Fire a push without ever blocking or breaking the caller. If push isn't set
+// up (no VAPID keys, no subscriptions), sendPushToUser simply sends nothing.
+async function pushSafe(userId: string | null | undefined, title: string, body: string, url: string) {
+  if (!userId) return;
+  try { await sendPushToUser(userId, { title, body, url }); } catch { /* best effort */ }
+}
 
 // ============================================================
 // LEAVE REQUESTS + MANAGER APPROVALS (leave + swaps)
@@ -91,11 +99,20 @@ export async function decideLeave(id: string, decision: "approved" | "denied") {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
 
-  const { error } = await supabase
+  const { data: row, error } = await supabase
     .from("leave_requests")
     .update({ status: decision, decided_by: profile?.full_name || "manager", decided_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("user_id")
+    .single();
   if (error) return { ok: false, error: error.message };
+
+  await pushSafe(
+    row?.user_id,
+    decision === "approved" ? "Time off approved" : "Time off declined",
+    decision === "approved" ? "Your time-off request was approved." : "Your time-off request was declined.",
+    "/leave",
+  );
   return { ok: true };
 }
 
@@ -105,11 +122,20 @@ export async function decideSwap(id: string, decision: "approved" | "denied") {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
 
-  const { error } = await supabase
+  const { data: row, error } = await supabase
     .from("swap_requests")
     .update({ status: decision })
-    .eq("id", id);
+    .eq("id", id)
+    .select("requester_id")
+    .single();
   if (error) return { ok: false, error: error.message };
+
+  await pushSafe(
+    row?.requester_id,
+    decision === "approved" ? "Shift swap approved" : "Shift swap declined",
+    decision === "approved" ? "Your shift-swap request was approved." : "Your shift-swap request was declined.",
+    "/schedule",
+  );
   return { ok: true };
 }
 
