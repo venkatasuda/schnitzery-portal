@@ -5,7 +5,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
-import { getWasteProducts, logWaste, getWasteLog, getWasteSummary, deleteWaste } from "@/lib/queries/waste";
+import { getWasteProducts, logWaste, getWasteLog, getWasteSummary, getWasteTrends, deleteWaste } from "@/lib/queries/waste";
 
 const REASONS = ["spoiled", "dropped", "overcooked", "expired", "other"];
 const REASON_EMOJI: Record<string, string> = { spoiled: "🦠", dropped: "💥", overcooked: "🔥", expired: "📅", other: "🗑️" };
@@ -17,6 +17,7 @@ export default function WastePage() {
   const [products, setProducts] = useState<any[]>([]);
   const [entries, setEntries] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
+  const [trends, setTrends] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -27,10 +28,11 @@ export default function WastePage() {
   const [busy, setBusy] = useState(false);
 
   async function loadAll() {
-    const [p, e, s] = await Promise.all([getWasteProducts(), getWasteLog(14), getWasteSummary(7)]);
+    const [p, e, s, tr] = await Promise.all([getWasteProducts(), getWasteLog(14), getWasteSummary(7), getWasteTrends(6)]);
     if (p.ok) setProducts(p.products || []);
     if (e.ok) setEntries(e.entries || []);
     if (s.ok) setSummary(s);
+    setTrends(tr.ok ? tr : null); // ok:false for non-managers — card simply won't render
     setLoading(false);
   }
   useEffect(() => { loadAll(); }, []);
@@ -75,6 +77,34 @@ export default function WastePage() {
                 </span>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* WEEKLY TREND — managers only (getWasteTrends returns ok:false otherwise) */}
+      {trends && trends.weeks && (
+        <div className="card" style={{ margin: "12px 0", padding: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+            <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.trend6w")}</span>
+            {trends.overallPct != null && (
+              <span style={{ fontSize: 13, fontWeight: 700, color: trends.overallPct > 5 ? "#ec7063" : "#58d68d" }}>
+                {t("waste.pctOfSales", { p: trends.overallPct })}
+              </span>
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 70 }}>
+            {(() => {
+              const max = Math.max(1, ...trends.weeks.map((w: any) => w.wasteValue));
+              return trends.weeks.map((w: any, i: number) => (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <div title={eur(w.wasteValue)} style={{ width: "100%", height: `${Math.round((w.wasteValue / max) * 52)}px`, minHeight: 3, borderRadius: 4, background: "linear-gradient(180deg,#e67e22,#c0392b)" }} />
+                  <span style={{ fontSize: 9, color: "var(--gray)" }}>{w.weekStart.slice(5)}</span>
+                </div>
+              ));
+            })()}
+          </div>
+          {trends.hasPrices && (
+            <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8, textAlign: "right" }}>{t("waste.trendTotal", { v: eur(trends.totalWaste) })}</div>
           )}
         </div>
       )}

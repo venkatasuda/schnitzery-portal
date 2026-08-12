@@ -81,6 +81,61 @@ export async function getWasteLog(days = 14) {
   return { ok: true, entries };
 }
 
+// ── TRENDS: weekly waste value over the last N weeks, plus waste as % of sales.
+// Read-only. Complements getWasteSummary (which is a single-window snapshot) by
+// showing whether waste is rising or falling, and how big it is relative to
+// takings. Managers only — this is a cost-analysis view.
+export async function getWasteTrends(weeks = 6) {
+  const { supabase, user, branchId, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+
+  // Anchor to the Monday of the current Berlin week, then walk back.
+  const today = new Date(berlinToday() + "T12:00:00Z");
+  const dow = (today.getUTCDay() + 6) % 7; // 0 = Monday
+  const thisMonday = new Date(today.getTime() - dow * 86400000);
+  const firstMonday = new Date(thisMonday.getTime() - (weeks - 1) * 7 * 86400000);
+  const fromStr = firstMonday.toISOString().slice(0, 10);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+  const [{ data: waste }, { data: sales }, price] = await Promise.all([
+    supabase.from("waste_log").select("product, qty, work_date").eq("branch_id", branchId).gte("work_date", fromStr),
+    supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", fromStr),
+    unitPrices(supabase, branchId),
+  ]);
+
+  // Bucket index by which week a date falls in.
+  const weekIndex = (dateStr: string) => {
+    const t = new Date(dateStr + "T12:00:00Z").getTime();
+    return Math.floor((t - firstMonday.getTime()) / (7 * 86400000));
+  };
+
+  const buckets = Array.from({ length: weeks }, (_, i) => ({
+    weekStart: iso(new Date(firstMonday.getTime() + i * 7 * 86400000)),
+    wasteValue: 0, sales: 0, pct: null as number | null,
+  }));
+
+  for (const w of waste || []) {
+    const i = weekIndex(w.work_date);
+    if (i >= 0 && i < weeks) buckets[i].wasteValue += (price[w.product] || 0) * Number(w.qty || 0);
+  }
+  for (const s of sales || []) {
+    const i = weekIndex(s.sale_date);
+    if (i >= 0 && i < weeks) buckets[i].sales += Number(s.amount) || 0;
+  }
+  for (const b of buckets) {
+    b.wasteValue = Math.round(b.wasteValue * 100) / 100;
+    b.sales = Math.round(b.sales);
+    b.pct = b.sales > 0 ? Math.round((b.wasteValue / b.sales) * 1000) / 10 : null;
+  }
+
+  const totalWaste = Math.round(buckets.reduce((s, b) => s + b.wasteValue, 0) * 100) / 100;
+  const totalSales = buckets.reduce((s, b) => s + b.sales, 0);
+  const overallPct = totalSales > 0 ? Math.round((totalWaste / totalSales) * 1000) / 10 : null;
+
+  return { ok: true, weeks: buckets, totalWaste, overallPct, hasPrices: Object.keys(price).length > 0 };
+}
+
 export async function getWasteSummary(days = 7) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };

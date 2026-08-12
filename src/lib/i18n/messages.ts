@@ -312,6 +312,7 @@ export const messages = {
     waste: {
       title: "Waste Log", subtitle: "Log thrown-away stock in a few taps — it sharpens your food-cost numbers.",
       thisWeek: "This week's waste", entries: "{n} entries", logWaste: "Log waste",
+      trend6w: "Waste — last 6 weeks", pctOfSales: "{p}% of sales", trendTotal: "6-week total: {v}",
       searchProduct: "Search product…", noProduct: "No matching product.", change: "change", units: "units",
       notePh: "Note (optional)", logIt: "Log waste", recent: "Recent", none: "No waste logged in the last 14 days.",
       pickProduct: "Pick a product.", enterQty: "Enter a quantity.", logged: "Waste logged", failed: "Something went wrong.",
@@ -1033,6 +1034,7 @@ export const messages = {
     waste: {
       title: "Abfallprotokoll", subtitle: "Weggeworfene Ware in wenigen Tipps erfassen — schärft deine Wareneinsatz-Zahlen.",
       thisWeek: "Abfall diese Woche", entries: "{n} Einträge", logWaste: "Abfall erfassen",
+      trend6w: "Abfall — letzte 6 Wochen", pctOfSales: "{p}% vom Umsatz", trendTotal: "6-Wochen-Summe: {v}",
       searchProduct: "Produkt suchen…", noProduct: "Kein passendes Produkt.", change: "ändern", units: "Einheiten",
       notePh: "Notiz (optional)", logIt: "Abfall erfassen", recent: "Zuletzt", none: "Kein Abfall in den letzten 14 Tagen.",
       pickProduct: "Produkt wählen.", enterQty: "Menge eingeben.", logged: "Abfall erfasst", failed: "Etwas ist schiefgelaufen.",
