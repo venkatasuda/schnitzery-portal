@@ -246,6 +246,35 @@ The UI ships in **English** and **German**, switchable at runtime, covering ever
 
 ---
 
+## Maintenance & operations scripts
+
+One-off Node scripts live in the project root. Each reads `.env.local` for the
+Supabase URL and service-role key, and is safe to re-run.
+
+| Script | Purpose |
+|---|---|
+| `node create-demo-accounts.mjs` | Create one demo login per role (owner / branch / manager / staff) for evaluation. `--delete` removes them. |
+| `node make-demo-data.mjs` | Populate the demo branch with sample inventory, counts and announcements so the portals look alive. `--delete` cleans up. |
+| `node rotate-passwords.mjs` | Reset the shared onboarding password to a unique random one per account still on it. Dry-run by default; `--apply` to act. |
+| `node seed-team.mjs` | Bulk-create real staff from an untracked `team.roster.csv` (unique random password each). |
+| `make-icons.html` | Open in a browser to generate the three PWA icons into `public/icons/` (required for install prompt + offline precache). |
+| `node make-overview-doc.mjs` / `-de.mjs` | Generate the business overview (EN / DE) as a Word document. |
+
+## Pending database changes
+
+`supabase/pending/` holds reviewed-but-not-yet-applied SQL, each with notes:
+
+- `01_safe_fixes.sql`, `02_attendance_enforcement.sql` — applied (clock-code, timezone, guard fixes).
+- `03_user_pay_step_a.sql` / `04_user_pay_step_c_drop.sql` — wage privacy (applied): pay moved off the `users` table.
+- `05_push_subscriptions.sql` — table for web-push device subscriptions.
+- `06_contact_privacy.sql` — phone/email exposure: email removed from the staff directory (applied at the app layer); optional database-level lockdown documented.
+
+## Known limitations
+
+- **PWA icons** must be generated (`make-icons.html`) for the install prompt and offline cold-load to work.
+- **Push notifications** require VAPID keys in the environment and the `push_subscriptions` table; triggers currently fire on leave and shift-swap decisions.
+- Generated Supabase types (`src/lib/database.types.ts`) are adopted incrementally, not applied globally — see `DB-TYPES-ADOPTION.md`.
+
 ## Deployment
 
 Deployed on **Vercel** with continuous deployment from the main branch. Database, auth, and storage are hosted on **Supabase**. The app is a mobile-first PWA (installable via Add to Home Screen).
