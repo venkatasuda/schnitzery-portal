@@ -26,7 +26,11 @@ import * as Sentry from "@sentry/nextjs";
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 // Per-account limit: tight, because a real person knows their own password.
-const MAX_EMAIL = 6;
+// 3 wrong tries for your own address, then a 15-minute cooldown (auto-unlocks —
+// see WINDOW_MS). No manager needed; raise this before the window if 3 is too
+// tight for shared tablets. A manager can still unlock early if that flow is
+// added (see note in checkLogin).
+const MAX_EMAIL = 3;
 
 // Per-IP limit: deliberately generous. An entire branch shares one NAT'd office
 // IP — 30 staff on shared tablets at shift change legitimately produce a burst of
@@ -76,10 +80,18 @@ function retryAfterFrom(oldest: number | null): number {
 // ── Call BEFORE attempting sign-in ──────────────────────────────────────────
 // Returns only { blocked, retryAfter }. It deliberately does NOT report how many
 // attempts remain — that told an attacker exactly how much room they had left.
-export async function checkLogin(email: string): Promise<{ blocked: boolean; retryAfter?: number }> {
+export async function checkLogin(email: string): Promise<{ blocked: boolean; retryAfter?: number; locked?: boolean }> {
   const id = norm(email);
   const ipKey = await clientIpKey();
   try {
+    // Hard lock takes priority: once MAX_EMAIL is hit the account is flagged
+    // login_locked and only a manager can clear it (see recordFail + the
+    // /api/unlock-login route). No retryAfter — waiting does nothing.
+    if (id) {
+      const { data: u } = await admin().from("users").select("login_locked").eq("email", id).maybeSingle();
+      if (u?.login_locked) return { blocked: true, locked: true };
+    }
+
     const [byEmail, byIp] = await Promise.all([
       id ? countSince(id) : Promise.resolve({ n: 0, oldest: null }),
       countSince(ipKey),
@@ -110,6 +122,16 @@ export async function recordFail(email: string): Promise<void> {
     const cutoff = new Date(Date.now() - WINDOW_MS).toISOString();
     await a.from("auth_throttle").delete()
       .in("identifier", rows.map((r) => r.identifier)).lt("attempted_at", cutoff);
+
+    // Hard-lock the account once it reaches MAX_EMAIL failures in the window.
+    // The lock persists until a manager clears it (auto-cooldown does not lift
+    // it) — see /api/unlock-login.
+    if (id) {
+      const { n } = await countSince(id);
+      if (n >= MAX_EMAIL) {
+        await a.from("users").update({ login_locked: true }).eq("email", id);
+      }
+    }
   } catch (err) {
     Sentry.captureException(err, { tags: { area: "loginThrottle", op: "recordFail" } });
   }

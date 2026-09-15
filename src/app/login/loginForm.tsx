@@ -24,7 +24,9 @@ export default function LoginForm() {
     const gate = await checkLogin(email);
     if (gate.blocked) {
       setLoading(false);
-      setError(t("login.tooManyAttempts", { min: Math.ceil((gate.retryAfter || 60) / 60) }));
+      setError(gate.locked
+        ? t("login.locked")
+        : t("login.tooManyAttempts", { min: Math.ceil((gate.retryAfter || 60) / 60) }));
       return;
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });

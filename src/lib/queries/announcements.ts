@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendPushToUser } from "@/lib/push/actions";
 
 // ============================================================
 // ANNOUNCEMENTS — manager posts, everyone reads.
@@ -49,6 +50,22 @@ export async function postAnnouncement(title: string, message: string, category:
     pinned: !!pinned,
   });
   if (error) return { ok: false, error: error.message };
+
+  // Push to every active branch member except the author. Uses the manager's own
+  // wording so it's naturally in their language; best-effort, never blocks the post.
+  try {
+    const { data: members } = await supabase
+      .from("users").select("id")
+      .eq("branch_id", branchId).eq("status", "active").neq("id", user.id);
+    const body = message.length > 120 ? message.slice(0, 117) + "…" : message;
+    await Promise.all(
+      (members || []).slice(0, 100).map((m) =>
+        sendPushToUser(m.id, { title: `📣 ${title || "Schnitzery"}`, body, url: "/announcements" })
+          .catch(() => { /* best effort per recipient */ }),
+      ),
+    );
+  } catch { /* push is optional — a posting must still succeed without it */ }
+
   return { ok: true };
 }
 

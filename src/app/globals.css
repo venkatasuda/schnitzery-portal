@@ -176,3 +176,61 @@ html.light .hub-tab:not(.active):hover { color: #1a1a1a; }
 .fade-up-3 { animation: fadeUp 0.4s 0.18s ease both; }
 .scale-in { animation: scaleIn 0.3s ease both; }
 .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--red); border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MOTION LAYER — app-wide polish. One file, every page. Fast and subtle by
+   design: this is a kitchen ops tool, not a landing page. Honours reduced-motion.
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root { --ease: cubic-bezier(0.22, 1, 0.36, 1); --ease-out: cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Smooth theme (dark/light) flip on the surfaces that change colour. */
+body, .app-header, .bottom-nav, .card, .feature-card {
+  transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+/* Page content rises in with a soft, staggered cascade — the first few blocks
+   under a page wrapper animate in sequence for a "composed" feel. */
+.fade-up > * { animation: fadeUp 0.4s var(--ease-out) both; }
+.fade-up > *:nth-child(1) { animation-delay: 0.02s; }
+.fade-up > *:nth-child(2) { animation-delay: 0.06s; }
+.fade-up > *:nth-child(3) { animation-delay: 0.10s; }
+.fade-up > *:nth-child(4) { animation-delay: 0.14s; }
+.fade-up > *:nth-child(5) { animation-delay: 0.18s; }
+.fade-up > *:nth-child(n+6) { animation-delay: 0.22s; }
+
+/* Cards lift on hover (desktop) and depress on tap — tactile feedback everywhere. */
+.card { transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease), border-color 0.18s var(--ease); }
+a.card:hover, .card[role="button"]:hover, .card[onclick]:hover { transform: translateY(-2px); border-color: rgba(212,168,71,0.22); }
+a.card:active { transform: scale(0.99); }
+.feature-card:hover .feature-icon { transform: scale(1.06) rotate(-2deg); }
+.feature-icon { transition: transform 0.2s var(--ease); }
+.feature-card:hover .feature-chev { transform: translateX(3px); }
+.feature-chev { transition: transform 0.2s var(--ease); }
+
+/* Universal tactile press for buttons and links — cheap, consistent. */
+button:active, a[class*="card"]:active, [role="switch"]:active { transform: scale(0.97); }
+button { transition: transform 0.12s var(--ease), background-color 0.15s var(--ease), opacity 0.15s var(--ease); }
+
+/* Nav icon gets a gentle pop when its tab becomes active. */
+.nav-btn.active svg { animation: navPop 0.3s var(--ease-out); }
+@keyframes navPop { 0% { transform: scale(0.9); } 60% { transform: scale(1.18); } 100% { transform: scale(1.1); } }
+
+/* Skeleton shimmer — loading states feel alive instead of static grey. */
+@keyframes shimmer { 100% { background-position: -200% 0; } }
+.skeleton, [class*="skeleton" i] {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%);
+  background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Toast entrance (if a .toast class is used anywhere). */
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.toast { animation: toastIn 0.3s var(--ease-out) both; }
+
+/* Accessibility: respect the OS "reduce motion" setting — kill all of the above. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+  }
+}

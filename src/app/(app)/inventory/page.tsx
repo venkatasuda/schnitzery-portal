@@ -194,7 +194,21 @@ export default function InventoryPage() {
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📦" size={22} /> {t("inv.title")}</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 14 }}>{t("inv.subtitle")}</p>
+      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 12 }}>{t("inv.subtitle")}</p>
+
+      {/* Stock operations that live on their own pages, grouped here under Inventory. */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+        {[
+          { href: "/stock-alerts", icon: "🔔", label: t("home.stockAlerts") },
+          { href: "/waste", icon: "🗑️", label: t("home.wasteLog") },
+          { href: "/expiry", icon: "📅", label: t("home.expiry") },
+          { href: "/transfers", icon: "🔄", label: t("home.transfers") },
+        ].map((l) => (
+          <Link key={l.href} href={l.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "var(--white)", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}>
+            <Icon e={l.icon} size={14} /> {l.label}
+          </Link>
+        ))}
+      </div>
 
       <div style={tabBar}>
         <TabBtn active={tab === "count"} onClick={() => setTab("count")}>{t("inv.tabCount")}</TabBtn>

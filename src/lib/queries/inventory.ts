@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
+import { sendPushToUser } from "@/lib/push/actions";
 
 // ============================================================
 // INVENTORY
@@ -122,6 +123,67 @@ export async function getOrderAlert() {
     }
   }
   return { ok: true, lowStock };
+}
+
+// ── CUSTOM ALERT LEVEL: set the per-item reorder point (manager) ─────────────
+// `soll` on inventory_master is the level below which the item counts as "low".
+// It is per-product and manager-editable, so each item gets its own threshold —
+// a lot of one thing, a little of another. Editing it here is the "customise".
+export async function setAlertLevel(id: string, level: number) {
+  const { supabase, user, branchId, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  if (!(level >= 0)) return { ok: false, error: "Enter a valid level." };
+  const { error } = await supabase
+    .from("inventory_master").update({ soll: level })
+    .eq("id", id).eq("branch_id", branchId); // scope to own branch
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// ── STOCK ALERTS view: every product with its current level vs alert level ───
+export async function getStockAlerts() {
+  const { user, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in.", items: [] };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only.", items: [] };
+
+  const [products, counts] = await Promise.all([getProducts(), getCounts()]);
+  if (!products.ok) return { ok: false, error: products.error, items: [] };
+  const countMap: Record<string, any> = {};
+  for (const c of (counts.counts || [])) countMap[c.product] = c;
+
+  const items = products.products.map((p: any) => {
+    const c = countMap[p.product];
+    const ist = c ? Number(c.ist) : null;
+    const level = Number(p.soll) || 0;
+    return {
+      id: p.id, product: p.product, category: p.category, unit: p.unit,
+      level, ist, counted: ist != null,
+      low: ist != null && ist < level,
+    };
+  });
+  // Low ones first, then the rest by category/name.
+  items.sort((a, b) => (b.low ? 1 : 0) - (a.low ? 1 : 0) || a.category.localeCompare(b.category) || a.product.localeCompare(b.product));
+  const lowCount = items.filter((i) => i.low).length;
+  return { ok: true, items, lowCount };
+}
+
+// ── Push the current low-stock list to the requesting manager's device ───────
+// On-demand (tap "Alert me"): finds items below their alert level and sends one
+// summary notification. Best-effort — silently does nothing if push isn't set up.
+export async function notifyLowStock() {
+  const { user, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+
+  const alert = await getOrderAlert();
+  const low = alert.ok ? alert.lowStock : [];
+  if (low.length === 0) return { ok: true, count: 0 };
+
+  const names = low.slice(0, 5).map((l: any) => l.product).join(", ");
+  const body = low.length <= 5 ? `Low: ${names}` : `Low: ${names} +${low.length - 5} more`;
+  try { await sendPushToUser(user.id, { title: `${low.length} item(s) low on stock`, body, url: "/stock-alerts" }); } catch { /* best effort */ }
+  return { ok: true, count: low.length };
 }
 
 // ── Record a delivery / stock-in (manager). Captures € paid. ──

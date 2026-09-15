@@ -3,10 +3,15 @@
 -- 2026-07-19
 --
 -- STATUS: Option 1 (app-level) APPLIED 2026-07-19 — getDirectory() no longer
--- selects email, so the staff directory shows phone but not email. The residual
--- database-level read (Option 2) remains open by choice; see below.
+-- selects email, so the staff directory shows phone but not email.
 --
--- ⚠ DECISION STILL OPEN for Option 2 — do not run blindly.
+-- DECISION (2026-09-15): Option 1 CHOSEN and CLOSED for now. For a single small
+-- team the residual risk (a staff member reading a same-branch colleague's email
+-- via raw PostgREST) is acceptable — RLS already blocks all cross-branch reads,
+-- and phone is intentionally kept so staff can arrange shift swaps. Reason for
+-- the record (GDPR): "considered Option 2, chose Option 1 as proportionate for
+-- current team size." REVISIT Option 2 when the business grows to multiple
+-- unrelated teams or a data-protection review requires closing it at the DB.
 --
 -- THE SITUATION
 -- users_select lets any staff member read every column of colleagues in their

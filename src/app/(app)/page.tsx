@@ -11,6 +11,8 @@ import Link from "next/link";
 import StatusStrip from "@/components/StatusStrip";
 import Icon from "@/components/Icon";
 import { getT } from "@/lib/i18n/server";
+import { ProgressRing, DonutStat, MiniBars, RankBars, Legend } from "@/components/dash/Charts";
+import { getWasteTrends, getWasteByBranch } from "@/lib/queries/waste";
 
 type Tf = (k: string, v?: Record<string, string | number>) => string;
 
@@ -53,19 +55,23 @@ export default async function HomePage() {
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
   let mCost: { laborPct: number | null; foodCostPct: number | null } | null = null;
+  let mWaste: { label: string; value: number }[] = [];
+  let hqWaste: { label: string; value: number }[] = [];
 
   // kick off the document check now so it runs in parallel with the role queries
   const docsP = listMyDocuments();
 
   if (isHQ) {
-    const [d, cRes] = await Promise.all([getDashboardStats(), getLaborSummary()]);
+    const [d, cRes, wRes] = await Promise.all([getDashboardStats(), getLaborSummary(), getWasteByBranch(30)]);
     if (d.ok) ownerStats = d.stats ?? null;
     if ((cRes as any).ok) mCost = cRes as any;
+    if ((wRes as any).ok) hqWaste = ((wRes as any).rows || []).filter((r: any) => r.value > 0).map((r: any) => ({ label: r.name, value: r.value })).slice(0, 8);
   } else if (isManager) {
-    const [dRes, liveRes, otRes, schedRes, stRes, cRes] = await Promise.all([
-      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(),
+    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes] = await Promise.all([
+      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6),
     ]);
     if ((cRes as any).ok) mCost = cRes as any;
+    if ((wRes as any).ok) mWaste = ((wRes as any).weeks || []).map((w: any) => ({ label: String(w.weekStart).slice(5), value: w.wasteValue }));
     if (stRes.ok) { staffClockedIn = stRes.clockedIn || false; staffOnBreak = stRes.onBreak || false; }
     if (dRes.ok) mOps = dRes.stats ?? null;
     if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0 };
@@ -124,9 +130,9 @@ export default async function HomePage() {
       {isManager && <StatusStrip />}
 
       {isHQ ? (
-        <OwnerDash t={t} />
+        <OwnerDash t={t} waste={hqWaste} />
       ) : isManager ? (
-        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} t={t} />
+        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} t={t} />
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
       )}
@@ -155,10 +161,13 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
         <span className="feature-chev">›</span>
       </Link>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, margin: "4px 0 14px" }}>
-        <Stat value={`${hours?.totalHours ?? 0}h`} label={t("home.thisMonthStat")} color="var(--gold-light)" />
-        <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
-        <Stat value={target != null ? `${pct}%` : "—"} label={t("home.ofTarget")} color={pct >= 80 ? "#58d68d" : "var(--white)"} />
+      <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "4px 0 14px", padding: 16 }}>
+        {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <Stat value={`${hours?.totalHours ?? 0}h`} label={t("home.thisMonthStat")} color="var(--gold-light)" />
+          <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
+          {target == null && <Stat value="—" label={t("home.ofTarget")} />}
+        </div>
       </div>
 
       <div className="section-label">{t("home.workplace")}</div>
@@ -172,12 +181,12 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, t }: {
+function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, t }: {
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
   live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null } | null; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null } | null; waste?: { label: string; value: number }[]; t: Tf;
 }) {
   const clockTitle = onBreak ? t("home.clockOnBreak") : clockedIn ? t("home.clockWorking") : t("home.clockInOut");
   const clockSub = onBreak ? t("home.clockSubBreak") : clockedIn ? t("home.clockSubWorking") : t("home.clockSubIdle");
@@ -235,11 +244,28 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
 
       {/* TODAY */}
       <div className="section-label">{t("home.today")}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
-        <Stat value={lv.workingNow} label={t("home.statWorking")} color="#58d68d" />
-        <Stat value={lv.completed} label={t("home.statDone")} />
-        <Stat value={lv.late} label={t("home.statLate")} color={lv.late > 0 ? "#ec7063" : "var(--white)"} />
-        <Stat value={fmtH(lv.totalMins)} label={t("home.hours")} color="var(--gold)" />
+      <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10, padding: 16 }}>
+        <DonutStat
+          size={128}
+          centerValue={lv.workingNow + lv.completed}
+          centerLabel={t("home.today")}
+          segments={[
+            { name: t("home.statWorking"), value: lv.workingNow, tone: "green" },
+            { name: t("home.statDone"), value: lv.completed, tone: "gold" },
+            { name: t("home.statLate"), value: lv.late, tone: "red" },
+          ]}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Legend items={[
+            { name: t("home.statWorking"), tone: "green", value: lv.workingNow },
+            { name: t("home.statDone"), tone: "gold", value: lv.completed },
+            { name: t("home.statLate"), tone: "red", value: lv.late },
+          ]} />
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(128,128,128,0.15)", display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{ fontSize: 19, fontWeight: 700, color: "var(--gold)", fontFamily: "var(--font-display)" }}>{fmtH(lv.totalMins)}</span>
+            <span style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.hours")}</span>
+          </div>
+        </div>
       </div>
       <Link href={owner ? "/checklist-status" : "/checklist"} className="feature-card">
         <div className="feature-icon" style={{ background: checklistDone ? "linear-gradient(135deg,#1e8449,#27ae60)" : "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e={checklistDone ? "✅" : "📋"} size={22} color="#fff" /></div>
@@ -280,14 +306,37 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
         <span className="feature-chev">›</span>
       </Link>
 
-      <Link href="/labor" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
-        <Icon e="💶" size={18} color="var(--gold)" />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.costThisMonth")}</div>
-          <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.costSub", { l: cost?.laborPct != null ? `${cost.laborPct}%` : "—", f: cost?.foodCostPct != null ? `${cost.foodCostPct}%` : "—" })}</div>
-        </div>
-        <span className="feature-chev">›</span>
-      </Link>
+      {(cost?.laborPct != null || cost?.foodCostPct != null) ? (
+        <Link href="/labor" className="card" style={{ display: "block", textDecoration: "none", marginTop: 8, padding: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 8 }}><Icon e="💶" size={16} color="var(--gold)" /> {t("home.costThisMonth")}</div>
+            <span className="feature-chev">›</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-around", gap: 12 }}>
+            {cost?.laborPct != null && <ProgressRing pct={cost.laborPct} label={t("home.laborPct")} tone={cost.laborPct <= 30 ? "green" : cost.laborPct <= 35 ? "gold" : "red"} size={102} />}
+            {cost?.foodCostPct != null && <ProgressRing pct={cost.foodCostPct} label={t("home.foodCostPct")} tone={cost.foodCostPct <= 30 ? "green" : cost.foodCostPct <= 35 ? "gold" : "red"} size={102} />}
+          </div>
+        </Link>
+      ) : (
+        <Link href="/labor" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
+          <Icon e="💶" size={18} color="var(--gold)" />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("home.costThisMonth")}</div>
+            <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("home.costSub", { l: "—", f: "—" })}</div>
+          </div>
+          <span className="feature-chev">›</span>
+        </Link>
+      )}
+
+      {waste && waste.some((w) => w.value > 0) && (
+        <Link href="/waste" className="card" style={{ display: "block", textDecoration: "none", marginTop: 8, padding: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗑️" size={16} color="var(--gold)" /> {t("home.wasteTrend")}</div>
+            <span className="feature-chev">›</span>
+          </div>
+          <MiniBars data={waste} tone="red" unit="€" />
+        </Link>
+      )}
 
       <Link href="/summary" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 8 }}>
         <Icon e="📊" size={18} color="var(--gold)" />
@@ -318,11 +367,9 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
 
       {/* DAILY OPERATIONS */}
       <div className="section-label">{t("home.dailyOps")}</div>
-      <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.inventory")} sub={t("home.inventorySub")} />
+      {/* Inventory groups stock counts, alerts, waste, expiry and transfers on its own page. */}
+      <Shortcut href="/inventory" icon="📦" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.inventory")} sub={t("home.inventoryHubSub")} />
       <Shortcut href="/temp" icon="🌡️" grad="linear-gradient(135deg,#1a6b8a,#3498db)" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
-      <Shortcut href="/waste" icon="🗑️" grad="linear-gradient(135deg,#7b241c,#e74c3c)" title={t("home.wasteLog")} sub={t("home.wasteLogSubMgr")} />
-      <Shortcut href="/expiry" icon="📅" grad="linear-gradient(135deg,#6c3483,#a569bd)" title={t("home.expiry")} sub={t("home.expirySubMgr")} />
-      <Shortcut href="/transfers" icon="🔄" grad="linear-gradient(135deg,#0e6655,#16a085)" title={t("home.transfers")} sub={t("home.transfersSub")} />
       <Shortcut href="/incidents" icon="🚨" grad="linear-gradient(135deg,#b9770e,#e67e22)" title={t("home.reportIncident")} sub={t("home.reportIncidentSubMgr")} />
       <Shortcut href="/announcements" icon="📣" grad="linear-gradient(135deg,#922b21,#c0392b)" title={t("home.postAnnouncement")} sub={t("home.postAnnouncementSub")} />
     </>
@@ -335,7 +382,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
 // transfers) — those live in the branch view, reachable via the HQ/Branch
 // toggle in the header. Keeping this screen to oversight is the whole point of
 // the split; see src/lib/viewMode.ts.
-function OwnerDash({ t }: { t: Tf }) {
+function OwnerDash({ t, waste }: { t: Tf; waste?: { label: string; value: number }[] }) {
   return (
     <>
       <Link href="/overview" className="feature-card" style={{ background: "linear-gradient(135deg,rgba(212,168,71,0.14),rgba(20,20,20,0.4))", borderColor: "rgba(212,168,71,0.3)" }}>
@@ -357,6 +404,15 @@ function OwnerDash({ t }: { t: Tf }) {
       </Link>
 
       <div className="section-label">{t("home.insights")}</div>
+      {waste && waste.length > 0 && (
+        <Link href="/waste-branches" className="card" style={{ display: "block", textDecoration: "none", marginBottom: 10, padding: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗑️" size={16} color="var(--gold)" /> {t("home.wasteByBranch")}</div>
+            <span className="feature-chev">›</span>
+          </div>
+          <RankBars data={waste} tone="red" unit="€" />
+        </Link>
+      )}
       <Shortcut href="/analytics" icon="📊" grad="linear-gradient(135deg,#1e6091,#2980b9)" title={t("home.analytics")} sub={t("home.analyticsSub")} />
       <Shortcut href="/waste-branches" icon="🗑️" grad="linear-gradient(135deg,#7b241c,#e74c3c)" title={t("home.wasteByBranch")} sub={t("home.wasteByBranchSub")} />
       <Shortcut href="/labor" icon="💶" grad="linear-gradient(135deg,#8b6914,#d4a847)" title={t("home.costAnalytics")} sub={t("home.costAnalyticsSub")} />

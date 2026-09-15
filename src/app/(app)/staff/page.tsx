@@ -95,6 +95,16 @@ export default function StaffPage() {
     else setMsg(res.error || t("staff.failed"));
   }
 
+  async function unlock(id: string) {
+    setMsg(null);
+    const res = await fetch("/api/unlock-login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: id }),
+    }).then((r) => r.json()).catch(() => ({ ok: false, error: t("staff.networkErr") }));
+    if (res.ok) { setMsg(t("staff.unlocked")); load(); }
+    else setMsg(res.error || t("staff.unlockFailed"));
+  }
+
   async function createStaff() {
     setAdding(true); setAddMsg(null);
     if (!addForm.email || !addForm.password) { setAddMsg(t("staff.emailReqMsg")); setAdding(false); return; }
@@ -194,7 +204,7 @@ export default function StaffPage() {
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "#9a8f8f" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> · {t("staff.former")}</span>}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "#9a8f8f" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 10, fontWeight: 700, color: "#ec7063", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
                   <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
@@ -213,6 +223,7 @@ export default function StaffPage() {
                   {filter === "active" ? (
                     <>
                       <button onClick={() => startEdit(p)} style={editBtn}>{t("common.edit")}</button>
+                      {p.login_locked && <button onClick={() => unlock(p.id)} style={{ ...editBtn, color: "#58d68d" }}>🔓 {t("staff.unlock")}</button>}
                       <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "#e08283" }}>{t("staff.remove")}</button>
                     </>
                   ) : (

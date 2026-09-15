@@ -32,14 +32,14 @@ export default function ProfileSettings() {
       if (pushState === "subscribed") {
         await unsubscribeFromPush();
         setPushState("unsubscribed");
-        toast("Notifications turned off.", "success");
+        toast(t("settings.notifOff"), "success");
       } else {
         const res = await subscribeToPush();
-        if (res.ok) { setPushState("subscribed"); toast("Notifications turned on.", "success"); }
-        else toast(res.error || "Could not enable notifications.", "error");
+        if (res.ok) { setPushState("subscribed"); toast(t("settings.notifOn"), "success"); }
+        else toast(res.error || t("settings.notifError"), "error");
       }
     } catch (e: any) {
-      toast(e?.message || "Could not change notifications.", "error");
+      toast(e?.message || t("settings.notifError"), "error");
     }
     setPushBusy(false);
   }
@@ -96,11 +96,9 @@ export default function ProfileSettings() {
         <div className="card" style={{ marginTop: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>Push notifications</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{t("settings.notifications")}</div>
               <div style={{ fontSize: 12, color: "var(--gray)" }}>
-                {pushState === "denied"
-                  ? "Blocked in your browser settings — enable them there first."
-                  : "Get alerts for approvals and announcements on this device."}
+                {pushState === "denied" ? t("settings.notificationsBlocked") : t("settings.notificationsSub")}
               </div>
             </div>
             <button
