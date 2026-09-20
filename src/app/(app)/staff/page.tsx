@@ -28,6 +28,7 @@ export default function StaffPage() {
   const [filter, setFilter] = useState<"active" | "former">("active");
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [resetInfo, setResetInfo] = useState<{ name: string; temp: string } | null>(null);
 
   // add new staff
   const [showAdd, setShowAdd] = useState(false);
@@ -105,6 +106,16 @@ export default function StaffPage() {
     else setMsg(res.error || t("staff.unlockFailed"));
   }
 
+  async function resetPassword(id: string) {
+    setMsg(null); setResetInfo(null);
+    const res = await fetch("/api/reset-staff-password", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: id }),
+    }).then((r) => r.json()).catch(() => ({ ok: false, error: t("staff.networkErr") }));
+    if (res.ok) { setResetInfo({ name: res.name || "", temp: res.tempPassword }); load(); }
+    else setMsg(res.error || t("staff.failed"));
+  }
+
   async function createStaff() {
     setAdding(true); setAddMsg(null);
     if (!addForm.email || !addForm.password) { setAddMsg(t("staff.emailReqMsg")); setAdding(false); return; }
@@ -146,6 +157,18 @@ export default function StaffPage() {
       </p>
 
       {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
+
+      {resetInfo && (
+        <div style={{ ...card, marginBottom: 14, borderColor: "rgba(212,168,71,0.5)", background: "rgba(212,168,71,0.08)" }}>
+          <div style={{ fontSize: 13, color: "#d4a847", fontWeight: 600, marginBottom: 6 }}>{t("staff.resetPwFor", { name: resetInfo.name })}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <code style={{ fontSize: 18, fontWeight: 700, letterSpacing: 1, background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderRadius: 8, color: "#fff", userSelect: "all" }}>{resetInfo.temp}</code>
+            <button onClick={() => { navigator.clipboard?.writeText(resetInfo.temp).catch(() => {}); }} style={editBtn}>⧉ Copy</button>
+            <button onClick={() => setResetInfo(null)} style={editBtn}>{t("common.cancel")}</button>
+          </div>
+          <div style={{ fontSize: 11, color: "#9a8f8f", marginTop: 8 }}>{t("staff.resetPwHint")}</div>
+        </div>
+      )}
 
       <button onClick={() => { setShowAdd(true); setAddMsg(null); }} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>{t("staff.addNew")}</button>
 
@@ -223,6 +246,7 @@ export default function StaffPage() {
                   {filter === "active" ? (
                     <>
                       <button onClick={() => startEdit(p)} style={editBtn}>{t("common.edit")}</button>
+                      <button onClick={() => resetPassword(p.id)} style={editBtn}>🔑 {t("staff.resetPw")}</button>
                       {p.login_locked && <button onClick={() => unlock(p.id)} style={{ ...editBtn, color: "#58d68d" }}>🔓 {t("staff.unlock")}</button>}
                       <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "#e08283" }}>{t("staff.remove")}</button>
                     </>
