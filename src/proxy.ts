@@ -33,9 +33,12 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isLoginPage = path === "/login";
+  // Pages that must be viewable without signing in (legal pages are often
+  // required to be reachable pre-login).
+  const isPublic = isLoginPage || path === "/privacy" || path === "/terms";
 
   // Not logged in + trying to view a protected page → go to login
-  if (!user && !isLoginPage) {
+  if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

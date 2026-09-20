@@ -89,7 +89,17 @@ export async function checkLogin(email: string): Promise<{ blocked: boolean; ret
     // /api/unlock-login route). No retryAfter — waiting does nothing.
     if (id) {
       const { data: u } = await admin().from("users").select("login_locked").eq("email", id).maybeSingle();
-      if (u?.login_locked) return { blocked: true, locked: true };
+      if (u?.login_locked) {
+        // Stay locked only while failed attempts are still arriving. recordFail()
+        // is a public endpoint, so without this anyone could permanently lock any
+        // account just by posting its email a few times. If the window has passed
+        // with no new fails, auto-clear (a manager can still unlock instantly via
+        // /api/unlock-login). A genuine ongoing attack keeps the counter warm and
+        // stays locked.
+        const { n } = await countSince(id);
+        if (n > 0) return { blocked: true, locked: true };
+        await admin().from("users").update({ login_locked: false }).eq("email", id);
+      }
     }
 
     const [byEmail, byIp] = await Promise.all([
@@ -124,8 +134,9 @@ export async function recordFail(email: string): Promise<void> {
       .in("identifier", rows.map((r) => r.identifier)).lt("attempted_at", cutoff);
 
     // Hard-lock the account once it reaches MAX_EMAIL failures in the window.
-    // The lock persists until a manager clears it (auto-cooldown does not lift
-    // it) — see /api/unlock-login.
+    // A manager can clear it instantly (/api/unlock-login); otherwise checkLogin
+    // auto-clears it once the failure window passes with no new attempts, so a
+    // malicious lockout via this public endpoint can't strand anyone for long.
     if (id) {
       const { n } = await countSince(id);
       if (n >= MAX_EMAIL) {

@@ -1,9 +1,13 @@
 :root {
   --red:#c0392b; --red-dark:#96281b; --red-light:#e74c3c;
   --gold:#d4a847; --gold-light:#f0c860;
+  /* gold for TEXT: same as --gold in dark mode, but a darker gold in light mode
+     so gold headings/links stay >=4.5:1 on light backgrounds. Use for text;
+     keep --gold for fills/backgrounds (which pair with dark text). */
+  --gold-ink:#d4a847;
   --black:#0a0a0a; --dark:#141414; --dark2:#1e1e1e; --dark3:#2a2a2a;
   --white:#ffffff; --off-white:#f5f0eb;
-  --gray:#888; --gray-light:#aaa;
+  --gray:#999; --gray-light:#aaa;
   --success:#27ae60; --warn:#e67e22;
   --radius:16px; --radius-sm:10px;
   --shadow:0 8px 32px rgba(0,0,0,0.4);
@@ -17,6 +21,7 @@ html.light {
   --black:#f0ece8; --dark:#ffffff; --dark2:#f5f1ed; --dark3:#ede8e3;
   --white:#1a1a1a; --off-white:#2a2a2a;
   --gray:#666; --gray-light:#555;
+  --gold-ink:#8a6d15;
 }
 html.light body { background: var(--black); color: var(--white); }
 html.light .app-header { background: rgba(245,241,237,0.95); border-bottom-color: rgba(0,0,0,0.08); }
@@ -49,7 +54,7 @@ html, body {
   padding: 14px 18px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.app-header .brand { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--gold); }
+.app-header .brand { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--gold-ink); }
 .app-header .sub { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gray); }
 .header-right { display: flex; align-items: center; gap: 10px; }
 .header-name { font-size: 12px; color: var(--gray-light); }
@@ -100,7 +105,7 @@ html.light .theme-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0
 }
 .card-title {
   font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  color: var(--gold-ink); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
 }
 .card-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, rgba(212,168,71,0.3), transparent); }
 
@@ -136,7 +141,7 @@ html.light .theme-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0
 }
 .avatar.mgr { background: linear-gradient(135deg, var(--gold), #b8860b); }
 .profile-name { font-size: 15px; font-weight: 600; color: var(--white); }
-.profile-sub { font-size: 11px; color: var(--gold); margin-top: 2px; letter-spacing: 0.5px; }
+.profile-sub { font-size: 11px; color: var(--gold-ink); margin-top: 2px; letter-spacing: 0.5px; }
 .mgr-badge {
   display: inline-block; font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
   background: linear-gradient(135deg, var(--gold), #b8860b); color: var(--black);
@@ -144,7 +149,7 @@ html.light .theme-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0
 }
 
 /* Section header */
-.section-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin: 22px 0 10px; }
+.section-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-ink); margin: 22px 0 10px; }
 
 /* Page title */
 .page-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 2px; }

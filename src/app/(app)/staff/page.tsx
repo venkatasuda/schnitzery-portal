@@ -158,7 +158,7 @@ export default function StaffPage() {
               <Field label={t("staff.emailReq")}><input value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} style={input} placeholder="name@email.com" /></Field>
               <Field label={t("staff.tempPw")}><input value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} style={input} placeholder={t("staff.minChars")} /></Field>
               <Field label={t("profile.fullName")}><input value={addForm.full_name} onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })} style={input} /></Field>
-              <Field label={t("profile.employeeCode")}><input value={addForm.employee_code} onChange={(e) => setAddForm({ ...addForm, employee_code: e.target.value })} style={input} placeholder="KIT-021" /></Field>
+              <Field label={t("profile.employeeCode")}><input value={addForm.employee_code} onChange={(e) => setAddForm({ ...addForm, employee_code: e.target.value })} style={input} placeholder={t("staff.codeAuto")} /></Field>
               <Field label={t("staff.team")}>
                 <select value={addForm.team} onChange={(e) => setAddForm({ ...addForm, team: e.target.value })} style={input}>
                   <option value="">—</option>{TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}

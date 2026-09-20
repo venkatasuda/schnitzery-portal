@@ -1,7 +1,9 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import { Analytics } from "@vercel/analytics/react";
 import PWARegister from "@/components/PWARegister";
+import CookieNotice from "@/components/CookieNotice";
 
 export const metadata: Metadata = {
   title: "Schnitzery Portal",
@@ -40,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
       </head>
-      <body suppressHydrationWarning><PWARegister />{children}</body>
+      <body suppressHydrationWarning><PWARegister />{children}<CookieNotice /><Analytics /></body>
     </html>
   );
 }

@@ -37,6 +37,7 @@ The latest development cycle added a full **inventory and operations layer** on 
 - **Cost tooling** — a monthly operations summary (with CSV export) and a food-cost what-if simulator.
 - **Scheduling** — a cover-request flow with automatic roster reassignment, and a team hours-vs-contract board.
 - **Correctness** — Europe/Berlin business-date handling extended across roster and analytics week-start math.
+- **Notifications & account security** — opt-in web-push (approvals, leave/shift-swap decisions, and new announcements), a 3-strike login lockout that a manager clears from the Staff page, and role dashboards with at-a-glance charts (attendance, labour/food cost, waste trend, waste-by-branch).
 - **Production hardening** — CI on every push (type-check + build), Sentry error monitoring, a forced first-login password change, and a show/hide toggle across all password fields.
 
 ---
@@ -98,6 +99,8 @@ The latest development cycle added a full **inventory and operations layer** on 
 - Unified action center (pending approvals, corrections, expiring docs, no-shows…)
 - Live status strip (connection, sync, kiosk health)
 - Audit log and notification center
+- **Push notifications** — opt-in per device (Profile), firing on approvals, leave/shift-swap decisions, and new announcements
+- **Role dashboards with charts** — target ring (staff); attendance donut, labour/food-cost rings and a 6-week waste trend (manager); ranked waste-by-branch (HQ)
 
 ---
 
@@ -228,6 +231,7 @@ src/
 - Cross-branch access is scoped per role; non-owners are limited to their assigned branch. Cross-branch transfers are visible only to the two branches involved.
 - The Supabase service-role key is confined to server-side code (staff creation and branch-name lookups for transfers).
 - Accounts issued with a temporary password are flagged `must_change_password`; the app forces a private password before granting access, and the flag clears on change.
+- **Failed-login lockout** — repeated wrong passwords are throttled per-email and per-IP; after 3 failures the account is locked until a manager unlocks it from the Staff page (a `login_locked` flag, protected by a DB guard so a user can't clear their own). The auth provider's own rate limits back this at the edge.
 - Errors are captured in Sentry (production only) with a branded fallback screen, so failures are visible rather than silent.
 
 ---
@@ -266,13 +270,13 @@ Supabase URL and service-role key, and is safe to re-run.
 
 - `01_safe_fixes.sql`, `02_attendance_enforcement.sql` — applied (clock-code, timezone, guard fixes).
 - `03_user_pay_step_a.sql` / `04_user_pay_step_c_drop.sql` — wage privacy (applied): pay moved off the `users` table.
-- `05_push_subscriptions.sql` — table for web-push device subscriptions.
-- `06_contact_privacy.sql` — phone/email exposure: email removed from the staff directory (applied at the app layer); optional database-level lockdown documented.
+- `05_push_subscriptions.sql` — web-push device subscriptions table (applied).
+- `06_contact_privacy.sql` — phone/email exposure: email removed from the staff directory (Option 1, applied); database-level lockdown (Option 2) documented and deferred by decision.
+- `07_login_lock.sql` — failed-login lockout: `login_locked` flag on `users` + guard trigger so only managers/service-role can clear it (applied).
 
 ## Known limitations
 
-- **PWA icons** must be generated (`make-icons.html`) for the install prompt and offline cold-load to work.
-- **Push notifications** require VAPID keys in the environment and the `push_subscriptions` table; triggers currently fire on leave and shift-swap decisions.
+- **Push notifications** require VAPID keys in the environment (`.env.local` **and** Vercel — `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is baked in at build time, so redeploy after adding them) plus the `push_subscriptions` table. Opt-in per device from Profile; pushes fire on leave/shift-swap decisions and new announcements.
 - Generated Supabase types (`src/lib/database.types.ts`) are adopted incrementally, not applied globally — see `DB-TYPES-ADOPTION.md`.
 
 ## Deployment

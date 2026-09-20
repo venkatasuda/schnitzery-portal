@@ -159,6 +159,12 @@ export default function LoginForm() {
         >
           {loading ? t("login.signingIn") : t("login.signIn")}
         </button>
+
+        <div style={{ marginTop: 18, textAlign: "center", fontSize: 11, color: "#7a6f6f" }}>
+          <a href="/privacy" style={{ color: "#9a8f8f", textDecoration: "none" }}>Privacy</a>
+          <span style={{ margin: "0 8px" }}>·</span>
+          <a href="/terms" style={{ color: "#9a8f8f", textDecoration: "none" }}>Terms</a>
+        </div>
       </div>
     </div>
   );

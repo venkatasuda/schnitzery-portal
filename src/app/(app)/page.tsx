@@ -62,13 +62,13 @@ export default async function HomePage() {
   const docsP = listMyDocuments();
 
   if (isHQ) {
-    const [d, cRes, wRes] = await Promise.all([getDashboardStats(), getLaborSummary(), getWasteByBranch(30)]);
+    const [d, cRes, wRes] = await Promise.all([getDashboardStats(), getLaborSummary(), getWasteByBranch(30).catch(() => ({ ok: false }))]);
     if (d.ok) ownerStats = d.stats ?? null;
     if ((cRes as any).ok) mCost = cRes as any;
     if ((wRes as any).ok) hqWaste = ((wRes as any).rows || []).filter((r: any) => r.value > 0).map((r: any) => ({ label: r.name, value: r.value })).slice(0, 8);
   } else if (isManager) {
     const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes] = await Promise.all([
-      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6),
+      getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6).catch(() => ({ ok: false })),
     ]);
     if ((cRes as any).ok) mCost = cRes as any;
     if ((wRes as any).ok) mWaste = ((wRes as any).weeks || []).map((w: any) => ({ label: String(w.weekStart).slice(5), value: w.wasteValue }));

@@ -77,6 +77,26 @@ export async function POST(request: Request) {
   }
   const admin = createAdminClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
+  // 3b. Auto-generate an employee code when the manager left it blank.
+  // Format: <BRANCH CODE>-<next number in that branch>, e.g. STG-001. This is a
+  // DEFAULT only — a manager can type their own code, and edit it later. The
+  // prefix comes from branches.code (editable), so the scheme stays flexible.
+  // ponytail: next-number is max+1; a rare double-add could collide — fine for a
+  // single branch, add a unique index + retry if it ever bites.
+  let code = typeof employee_code === "string" ? employee_code.trim() : "";
+  if (!code) {
+    const { data: br } = await admin.from("branches").select("code, name").eq("id", me.branch_id).single();
+    const prefix = ((br?.code || (br?.name || "EMP").replace(/[^A-Za-z]/g, "").slice(0, 3)) || "EMP").toUpperCase();
+    const { data: existing } = await admin
+      .from("users").select("employee_code").eq("branch_id", me.branch_id).ilike("employee_code", `${prefix}-%`);
+    let max = 0;
+    for (const r of existing || []) {
+      const m = /-(\d+)\s*$/.exec(r.employee_code || "");
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    }
+    code = `${prefix}-${String(max + 1).padStart(3, "0")}`;
+  }
+
   // 4. Create the auth user (email confirmed so they can log in immediately)
   const { data: created, error: authErr } = await admin.auth.admin.createUser({
     email,
@@ -98,7 +118,7 @@ export async function POST(request: Request) {
     full_name: full_name || null,
     team: team || null,
     role: newRole,
-    employee_code: employee_code || null,
+    employee_code: code || null,
     contract_type: contract_type || null,
     contract_hours: contract_hours == null || contract_hours === "" || Number.isNaN(Number(contract_hours)) ? null : Number(contract_hours),
     phone: phone || null,

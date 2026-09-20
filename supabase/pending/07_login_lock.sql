@@ -32,9 +32,10 @@ declare
   caller_rank int;
   new_rank    int;
 begin
+  -- NOTE: users.hourly_wage was dropped in migration 04 (wages live in user_pay).
+  -- Do NOT reference it here or the trigger throws on every users update.
   if (new.role              is distinct from old.role)
   or (new.branch_id         is distinct from old.branch_id)
-  or (new.hourly_wage       is distinct from old.hourly_wage)
   or (new.contract_hours    is distinct from old.contract_hours)
   or (new.annual_leave_days is distinct from old.annual_leave_days)
   or (new.employee_code     is distinct from old.employee_code)
