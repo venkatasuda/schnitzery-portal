@@ -9,8 +9,12 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const TEAMS = Object.keys(SHIFT_MODEL); // Manager, Preparation, Kitchen
-const TEAM_COLORS: Record<string, string> = { Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60" };
+// Every team a manager can roster — not only the ones that happen to have preset
+// shift times. Teams without presets simply use a custom start/end time.
+const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"];
+const TEAM_COLORS: Record<string, string> = { Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60", Cashier: "#9b59b6", Dishwashing: "#5dade2" };
+const CUSTOM = "__custom__";
+const presetsFor = (team: string) => SHIFT_MODEL[team] || [];
 
 type Entry = { user_id: string; name: string; team: string; shift: string };
 type Roster = Record<string, Entry[]>;
@@ -18,7 +22,7 @@ type Roster = Record<string, Entry[]>;
 export default function RosterPage() {
   const { t } = useLang();
   const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"].includes(k) ? t("teams." + k) : k);
   const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
   const [weekOffset, setWeekOffset] = useState(0);
   const [weekStart, setWeekStart] = useState("");
@@ -34,7 +38,9 @@ export default function RosterPage() {
   const [showHours, setShowHours] = useState(false);
   const [selStaff, setSelStaff] = useState("");
   const [selTeam, setSelTeam] = useState(TEAMS[0]);
-  const [selShift, setSelShift] = useState(SHIFT_MODEL[TEAMS[0]][0].shift);
+  const [selShift, setSelShift] = useState(presetsFor(TEAMS[0])[0]?.shift ?? CUSTOM);
+  const [customStart, setCustomStart] = useState("09:00");
+  const [customEnd, setCustomEnd] = useState("17:00");
 
   async function load(offset: number) {
     setLoading(true);
@@ -64,7 +70,13 @@ export default function RosterPage() {
     if (!activeDay || !selStaff) { toast(t("roster.pickStaff"), "error"); return; }
     const person = staff.find((p) => p.id === selStaff);
     if (!person) return;
-    const entry: Entry = { user_id: person.id, name: person.full_name, team: selTeam, shift: selShift };
+    // Custom time → store the actual "HH:MM–HH:MM" range as the shift value.
+    let shiftVal = selShift;
+    if (selShift === CUSTOM) {
+      if (!customStart || !customEnd) { toast(t("roster.badTime"), "error"); return; }
+      shiftVal = `${customStart}–${customEnd}`;
+    }
+    const entry: Entry = { user_id: person.id, name: person.full_name, team: selTeam, shift: shiftVal };
     setRoster((r) => {
       const day = r[activeDay] ? [...r[activeDay]] : [];
       // prevent exact duplicate
@@ -241,16 +253,29 @@ export default function RosterPage() {
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
                       <label style={miniLbl}>{t("roster.team")}</label>
-                      <select value={selTeam} onChange={(e) => { setSelTeam(e.target.value); setSelShift(SHIFT_MODEL[e.target.value][0].shift); }} style={miniSelect}>
+                      <select value={selTeam} onChange={(e) => { const tm = e.target.value; setSelTeam(tm); setSelShift(presetsFor(tm)[0]?.shift ?? CUSTOM); }} style={miniSelect}>
                         {TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
                       </select>
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
                       <label style={miniLbl}>{t("roster.shift")}</label>
                       <select value={selShift} onChange={(e) => setSelShift(e.target.value)} style={miniSelect}>
-                        {SHIFT_MODEL[selTeam].map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time})</option>)}
+                        {presetsFor(selTeam).map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time})</option>)}
+                        <option value={CUSTOM}>{t("roster.customTime")}</option>
                       </select>
                     </div>
+                    {selShift === CUSTOM && (
+                      <div style={{ flex: "1 1 180px", display: "flex", gap: 6, alignItems: "flex-end" }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={miniLbl}>{t("roster.from")}</label>
+                          <input type="time" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={miniSelect} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={miniLbl}>{t("roster.to")}</label>
+                          <input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={miniSelect} />
+                        </div>
+                      </div>
+                    )}
                     <button onClick={addEntry} style={{ ...primaryBtn, width: "auto", padding: "10px 18px", flex: "0 0 auto" }}>{t("common.add")}</button>
                   </div>
                 )}

@@ -63,7 +63,7 @@ export const messages = {
       settings: "Settings", settingsSub: "Config, payroll export & audit",
     },
     days: { monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday", friday: "Friday", saturday: "Saturday", sunday: "Sunday" },
-    teams: { Manager: "Manager", Preparation: "Preparation", Kitchen: "Kitchen", Cashier: "Cashier" },
+    teams: { Manager: "Manager", Preparation: "Preparation", Kitchen: "Kitchen", Cashier: "Cashier", Dishwashing: "Dishwashing" },
     myday: {
       title: "My Day", subtitle: "Plan ahead · request time off · review your hours",
       tabAvail: "Availability", tabTimeOff: "Time Off", tabHours: "My Hours", tabWork: "Workplace",
@@ -352,6 +352,7 @@ export const messages = {
       thisWeek: "This week", weeksPlus: "+{n}w", weeksMinus: "{n}w", saveRoster: "💾 Save Roster",
       weekGlance: "Week at a Glance · {n} shifts", assigned: "{n} assigned", add: "+ Add",
       staff: "Staff", select: "Select…", team: "Team", shift: "Shift", noOne: "No one assigned.",
+      customTime: "Custom time…", from: "From", to: "To", badTime: "Set a start and end time.",
       pickStaff: "Pick a staff member.", saved: "Roster saved", saveFailed: "Save failed.",
       notAvail: "not available", avAvailable: "✓ available", avNot: "not available", avNone: "no availability set",
       teamHours: "Team hours · this month", teamHoursSub: "Worked this month vs monthly contract. Over-contract shown in red.", over: "over", leftShort: "h left", leftWord: "left",
@@ -807,7 +808,7 @@ export const messages = {
       settings: "Einstellungen", settingsSub: "Konfiguration, Lohn-Export & Protokoll",
     },
     days: { monday: "Montag", tuesday: "Dienstag", wednesday: "Mittwoch", thursday: "Donnerstag", friday: "Freitag", saturday: "Samstag", sunday: "Sonntag" },
-    teams: { Manager: "Manager", Preparation: "Vorbereitung", Kitchen: "Küche", Cashier: "Kasse" },
+    teams: { Manager: "Manager", Preparation: "Vorbereitung", Kitchen: "Küche", Cashier: "Kasse", Dishwashing: "Spülküche" },
     myday: {
       title: "Mein Tag", subtitle: "Vorausplanen · Urlaub beantragen · Stunden prüfen",
       tabAvail: "Verfügbarkeit", tabTimeOff: "Urlaub", tabHours: "Meine Stunden", tabWork: "Arbeitsplatz",
@@ -1096,6 +1097,7 @@ export const messages = {
       thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "💾 Dienstplan speichern",
       weekGlance: "Wochenüberblick · {n} Schichten", assigned: "{n} zugewiesen", add: "+ Hinzufügen",
       staff: "Mitarbeiter", select: "Wählen…", team: "Team", shift: "Schicht", noOne: "Niemand zugewiesen.",
+      customTime: "Eigene Zeit…", from: "Von", to: "Bis", badTime: "Start- und Endzeit angeben.",
       pickStaff: "Wähle einen Mitarbeiter.", saved: "Dienstplan gespeichert", saveFailed: "Speichern fehlgeschlagen.",
       notAvail: "nicht verfügbar", avAvailable: "✓ verfügbar", avNot: "nicht verfügbar", avNone: "keine Verfügbarkeit",
       teamHours: "Teamstunden · diesen Monat", teamHoursSub: "Diesen Monat geleistet vs. Monatsvertrag. Über Vertrag in Rot.", over: "über", leftShort: "h übrig", leftWord: "übrig",

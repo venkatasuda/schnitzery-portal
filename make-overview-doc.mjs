@@ -1,7 +1,8 @@
 // Generates "Schnitzery-Portal-Overview.docx" — the combined, business-friendly
 // pitch + features document (same content as the print page, no "about me").
+// Every feature is one line: what it does AND why it matters.
 //
-// RUN:
+// RUN (close the .docx in Word first, or it can't overwrite):
 //   npm i docx        (once, if not already installed)
 //   node make-overview-doc.mjs
 
@@ -24,18 +25,20 @@ const h2 = (text) => new Paragraph({
   children: [t(text, { size: 28, bold: true, color: GOLD })],
 });
 
-const bullet = (text) => new Paragraph({ bullet: { level: 0 }, spacing: { after: 50 }, children: [t(text, { size: 21 })] });
+// One feature per line: "Feature — why it matters."
+const bwhy = (feature, why) => new Paragraph({
+  bullet: { level: 0 }, spacing: { after: 60 },
+  children: [t(feature + " — ", { size: 21, bold: true, color: DARK }), t(why, { size: 21 })],
+});
 
-// Lead-in bold benefit paragraph: "Bold thing. rest of sentence."
 const benefit = (lead, rest) => new Paragraph({
   spacing: { after: 110 },
   children: [t(lead + " ", { size: 22, bold: true, color: DARK }), t(rest, { size: 22 })],
 });
 
-const roleTitle = (text) => new Paragraph({ spacing: { before: 140, after: 2 }, children: [t(text, { size: 24, bold: true, color: DARK })] });
+const roleTitle = (text) => new Paragraph({ spacing: { before: 160, after: 2 }, children: [t(text, { size: 24, bold: true, color: DARK })] });
 const roleWho = (text) => new Paragraph({ spacing: { after: 60 }, children: [t(text, { size: 19, italics: true, color: MUTED })] });
 
-// Four pillars as a shaded 4-column table.
 function pillars() {
   const cell = (n, title) => new TableCell({
     width: { size: 2340, type: WidthType.DXA },
@@ -77,39 +80,48 @@ const doc = new Document({
       benefit("Comfortable for everyone.", "Works in both English and German, on any phone, with nothing to install."),
 
       h2("What each person gets"),
-      p(t("Everyone sees a view built for their job — nothing more to learn than that.", { size: 19, italics: true, color: MUTED }), { spacing: { after: 60 } }),
+      p(t("Everyone sees a view built for their job — nothing more to learn than that. Each line below is what it does and why it matters.", { size: 19, italics: true, color: MUTED }), { spacing: { after: 60 } }),
 
       roleTitle("Employees"),
       roleWho("The everyday view for the kitchen and floor team."),
-      bullet("Clock in and out from their phone in seconds"),
-      bullet("See their shifts and weekly schedule"),
-      bullet("Tell managers when they're available, and request time off or a shift swap"),
-      bullet("See their own hours for the month"),
-      bullet("Keep personal documents in one place, with reminders before they expire"),
-      bullet("Report a problem or accident, with a photo"),
-      bullet("Log fridge and freezer temperature checks and record any waste"),
-      bullet("Read team announcements"),
+      bwhy("Clock in / out from their phone", "worked hours are captured accurately and can't be faked, so pay is right and there's no paper punch card."),
+      bwhy("See shifts and weekly schedule", "everyone knows when they're on, so fewer missed or misremembered shifts."),
+      bwhy("Set availability, request time-off or a shift swap", "requests go straight to the manager, ending the WhatsApp back-and-forth."),
+      bwhy("See their own hours for the month", "staff can check their pay looks right themselves, which cuts disputes."),
+      bwhy("Personal documents with expiry reminders", "visas and work permits never lapse unnoticed — a real legal and right-to-work risk removed."),
+      bwhy("Report a problem or accident with a photo", "incidents are logged with evidence for safety and insurance."),
+      bwhy("Log fridge/freezer temperatures and waste", "the food-safety records the law requires, captured in seconds instead of a clipboard."),
+      bwhy("Read team announcements", "one place for updates so nothing important gets lost in chat."),
 
       roleTitle("Managers"),
       roleWho("Everything the team has, plus the tools to run a branch day-to-day."),
-      bullet("See who's working, who's late, and who's on break at a glance"),
-      bullet("Approve time-off and shift-swap requests in a tap"),
-      bullet("Build the weekly rota in minutes and spot no-shows"),
-      bullet("Add and manage staff, and check their documents"),
-      bullet("Track stock levels, orders, and move stock between branches"),
-      bullet("Enter daily sales and see staff cost against them instantly"),
-      bullet("Get a one-click monthly pay summary for payroll"),
-      bullet("See branch performance — hours, overtime and punctuality — with built-in working-time checks"),
+      bwhy("Live view of who's working, late, or on break", "spot gaps and lateness the moment they happen, not at day's end."),
+      bwhy("Approve time-off and shift swaps in a tap", "decisions in seconds, and the staff member is notified instantly."),
+      bwhy("Build the weekly rota fast and spot no-shows", "less admin time and fewer uncovered shifts."),
+      bwhy("Add and manage staff, check their documents", "onboarding and compliance handled in one place, not a folder."),
+      bwhy("Track stock, orders, and transfers between branches", "avoid running out and avoid over-ordering — both cost money."),
+      bwhy("Enter daily sales, see labour cost vs sales instantly", "control the biggest controllable cost while the month is still live."),
+      bwhy("One-click monthly pay summary", "payroll is prepared without anyone adding up timesheets by hand."),
+      bwhy("Branch performance with working-time checks", "stay on the right side of labour law on breaks, rest and overtime."),
 
       roleTitle("Branch owners"),
-      roleWho("Everything a manager has, for the branch they own — plus its performance insights."),
+      roleWho("Everything a manager has for the branch they own — plus its performance insights, so they can see the health of their location at a glance."),
 
       roleTitle("Owners & Head office"),
       roleWho("The whole business in one place."),
-      bullet("One overview across every branch, with the detail of any branch a tap away"),
-      bullet("Compare performance and track cost and staffing month by month"),
-      bullet("See document compliance across all staff, and manage people business-wide"),
-      bullet("Step into any branch's own tools whenever needed"),
+      bwhy("One overview across every branch, drill into any", "spot the branch that needs attention fast, then see the detail."),
+      bwhy("Compare performance, cost and staffing month by month", "decisions based on data, not gut feel."),
+      bwhy("Document compliance across all staff", "audit-ready across the whole company, not one branch at a time."),
+      bwhy("Waste by branch, ranked", "see which location wastes the most and act on it."),
+
+      h2("Safe sign-in and access"),
+      p(t("Security that protects staff data and the business — mostly invisible, always on.", { size: 19, italics: true, color: MUTED }), { spacing: { after: 60 } }),
+      bwhy("Role-based access", "each person sees only what their job needs; it's enforced in the database, so one branch can never see another's data."),
+      bwhy("Forced password change on first login", "the shared onboarding password is replaced by a private one immediately — no shared secret left lying around."),
+      bwhy("Automatic lockout after repeated wrong tries", "stops password guessing cold; a manager can unlock in a tap."),
+      bwhy("Manager password reset", "no company email needed — when someone forgets their password, a manager issues a one-time code on the spot."),
+      bwhy("Automatic employee IDs per branch", "every hire gets a clean branch code (e.g. STG-001) with no duplicates as the business grows across cities."),
+      bwhy("Instant notifications", "approvals, low stock and announcements reach the right person's phone straight away."),
 
       h2("See it for yourself"),
       p([t("It's a working app, not a mock-up. Live demo: ", { size: 22 }), t("https://schnitzery-portal.vercel.app", { size: 22, bold: true, color: GOLD })]),

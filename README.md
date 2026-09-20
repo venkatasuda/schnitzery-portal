@@ -104,6 +104,52 @@ The latest development cycle added a full **inventory and operations layer** on 
 
 ---
 
+## Feature reference — what each does & why it matters
+
+One line per feature: **what it does** — *why it's needed*.
+
+**Time & attendance**
+
+- **Phone clock in/out** — staff clock from their own phone; *tamper-proof hours mean correct pay and no paper punch cards.*
+- **Geofence + rotating QR/6-digit code** — clock-ins are verified on-site; *stops off-site or "buddy" punching.*
+- **Offline queue** — clock events save when Wi-Fi drops and sync on reconnect; *a flaky kitchen connection never loses someone's hours.*
+- **Corrections workflow** — staff request a fix, a manager approves; *mistakes are corrected with an audit trail, not silent edits.*
+
+**Scheduling**
+
+- **Weekly rota builder** — assign shifts while seeing availability and contract hours; *fewer clashes and uncovered shifts.*
+- **Availability, time-off and swaps** — staff self-serve from their phone; *ends the WhatsApp and paper back-and-forth.*
+- **Cover requests** — a dropped shift is claimed by a colleague and auto-reassigned; *gaps fill themselves.*
+
+**Stock & food safety**
+
+- **Stock counts + per-item low-stock alerts (editable)** — know exactly what to reorder; *avoids both run-outs and over-buying.*
+- **Auto-costed waste log** — every waste entry is valued in euros; *shows where money is actually being lost.*
+- **Expiry / FIFO tracking** — oldest stock flagged first; *less spoilage and safer food.*
+- **Temperature / HACCP logs** — legally required fridge/freezer checks with forced corrective actions; *always audit-ready.*
+- **Cross-branch transfers** — move stock between branches; *use what you already have instead of buying more.*
+
+**Cost & payroll**
+
+- **Labour cost vs sales, live** — see the biggest controllable cost during the month; *act while it still matters.*
+- **One-click monthly pay summary** — payroll-ready hours; *no manual timesheet maths, fewer errors.*
+- **Food-cost simulator** — model price/cost changes; *decide before committing, not after.*
+
+**People, oversight & compliance**
+
+- **Role-based access (6 tiers)** — each person sees only their job's data; *enforced in the database, so branches can't see each other.*
+- **Document expiry tracking** — visas/permits flagged before they lapse; *removes a real legal and right-to-work risk.*
+- **Branch + HQ oversight** — owners see every branch and drill into any; *act on the outlier fast.*
+
+**Security & access**
+
+- **Forced first-login password change** — the shared onboarding password is replaced immediately; *no shared secret lingers.*
+- **Login lockout + manager unlock** — repeated wrong tries lock the account; *stops guessing, recover in a tap.*
+- **Manager password reset** — one-time temp password for staff with no real email; *the only workable recovery for a deskless team.*
+- **Auto branch-scoped employee IDs** — clean codes like `STG-001`; *no duplicates as the business grows across cities.*
+- **Push notifications** — approvals, low stock and announcements; *reach the right phone instantly.*
+- **Per-role dashboards with charts** — target ring, attendance donut, labour/food-cost rings, waste trends, waste-by-branch; *the numbers each role needs, at a glance.*
+
 ## Tech Stack
 
 | Layer | Technology |
