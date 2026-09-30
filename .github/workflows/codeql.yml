@@ -1,0 +1,33 @@
+# ============================================================================
+#  CodeQL — static application security testing (SAST).
+#  Scans JS/TS for injection, auth, and data-flow vulnerabilities.
+#  NOTE: free on PUBLIC repos. On a PRIVATE repo this needs GitHub Advanced
+#  Security (paid). If the repo is private and you don't have GHAS, this run
+#  will fail to start — that's expected; keep it for when the repo is public or
+#  GHAS is enabled. Secret scanning (secret-scan.yml) works on private repos.
+# ============================================================================
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1"   # weekly, Monday 03:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v3

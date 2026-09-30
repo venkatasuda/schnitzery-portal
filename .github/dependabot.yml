@@ -1,0 +1,19 @@
+# Automated dependency + GitHub Actions updates. Works on private repos (free).
+# Opens small, reviewable PRs weekly instead of letting deps rot — each PR runs
+# through CI above, so you only merge what stays green.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for routine minor/patch bumps; majors come as their own PRs.
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    labels: ["dependencies"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: weekly }
+    labels: ["ci"]
