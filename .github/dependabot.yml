@@ -1,19 +1,26 @@
 # Automated dependency + GitHub Actions updates. Works on private repos (free).
-# Opens small, reviewable PRs weekly instead of letting deps rot — each PR runs
-# through CI above, so you only merge what stays green.
+# Tuned to be QUIET: only safe minor/patch bumps are auto-proposed (grouped into
+# one PR). MAJOR upgrades (e.g. typescript 5→7, vitest 4→5) are IGNORED here —
+# they break builds and must be done deliberately, not by a bot. Do majors by hand.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: "/"
     schedule: { interval: weekly }
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     groups:
-      # One PR for routine minor/patch bumps; majors come as their own PRs.
-      minor-and-patch:
+      npm-safe:
         update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels: ["dependencies"]
 
   - package-ecosystem: github-actions
     directory: "/"
     schedule: { interval: weekly }
+    open-pull-requests-limit: 2
+    groups:
+      actions-all:
+        patterns: ["*"]
     labels: ["ci"]
