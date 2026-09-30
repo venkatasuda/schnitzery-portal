@@ -33,6 +33,9 @@ const csp = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Emit a self-contained server bundle (.next/standalone) so the app can run in
+  // a Docker container on Cloud Run / GKE later. Harmless on Vercel (ignored).
+  output: "standalone",
 
   async headers() {
     return [

@@ -239,3 +239,68 @@ button { transition: transform 0.12s var(--ease), background-color 0.15s var(--e
     transition-duration: 0.001ms !important; scroll-behavior: auto !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   PREMIUM POLISH — depth + warmth. The base UI was correct but FLAT ("raw");
+   this adds ambient light, layered shadows and edge highlights so surfaces
+   read as real, lit objects. CSS-only, brand colours, both themes.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* 1) Ambient glows behind everything — kills the flat black, adds warmth/depth. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(192,57,43,0.18), transparent 60%),
+    radial-gradient(900px 520px at 105% -5%, rgba(212,168,71,0.12), transparent 55%),
+    radial-gradient(760px 760px at 50% 118%, rgba(192,57,43,0.10), transparent 60%);
+}
+html.light body::before {
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(192,57,43,0.07), transparent 60%),
+    radial-gradient(900px 520px at 105% -5%, rgba(212,168,71,0.10), transparent 55%);
+}
+
+/* 2) Cards: a hairline top highlight + a soft, layered shadow instead of one
+   flat black box-shadow. This is the single biggest "designed vs raw" change. */
+.card, .feature-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 12px 34px -14px rgba(0,0,0,0.6),
+    0 2px 8px -4px rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.08);
+}
+html.light .card, html.light .feature-card {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 10px 28px -16px rgba(0,0,0,0.18);
+  border-color: rgba(0,0,0,0.07);
+}
+a.card:hover, .feature-card:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 20px 48px -16px rgba(0,0,0,0.65),
+    0 0 0 1px rgba(212,168,71,0.18);
+}
+
+/* 3) Feature-icon tiles read as raised buttons: inner sheen + soft drop + glow. */
+.feature-icon {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -2px 6px rgba(0,0,0,0.25),
+    0 8px 18px -6px rgba(0,0,0,0.5);
+}
+
+/* 4) Titles get subtle character — the display face in warm gold gradient. */
+.page-title {
+  background: linear-gradient(180deg, var(--white), color-mix(in srgb, var(--white) 78%, var(--gold-ink)));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* 5) The profile pill gets a bit more presence (top of every home screen). */
+.profile-pill { box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 14px 34px -16px rgba(192,57,43,0.4); }
+
+/* 6) Gold "primary" surfaces (buttons using var(--gold) bg) get a faint gradient
+   + glow via a shared class you can opt into. Existing inline gold buttons are
+   untouched; add class="btn-gold" where you want the upgrade. */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold)) !important;
+  box-shadow: 0 8px 20px -8px rgba(212,168,71,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+}

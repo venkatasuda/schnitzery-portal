@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (gitignored) and fill in. NO secret values here —
+# the service-role key and VAPID private key go into Secret Manager, not this file.
+project_id        = "your-gcp-project-id"
+region            = "europe-west3"
+image             = "europe-west3-docker.pkg.dev/your-gcp-project-id/schnitzery/web:latest"
+supabase_url      = "https://vxwtmtlkwvwcdegtcjuz.supabase.co"
+supabase_anon_key = "your-anon-key"
+vapid_public_key  = "your-vapid-public-key"
+vapid_subject     = "mailto:admin@schnitzery-stuttgart.de"

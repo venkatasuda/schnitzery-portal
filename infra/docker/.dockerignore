@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+android
+docs
+deliverables
+scripts
+*.md
+*.docx
+*.html
+.env*
+!.env.example

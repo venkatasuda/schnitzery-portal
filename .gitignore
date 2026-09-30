@@ -56,3 +56,15 @@ Work sheets/
 team.passwords.txt
 rotated.passwords.txt
 *.passwords.txt
+# Credential sheets and pitch deliverables — contain passwords / are generated.
+Staff-Credentials.html
+Schnitzery-Portal-Package.html
+/deliverables/
+
+# ── INFRA / TERRAFORM ───────────────────────────────────────────────────────
+# State and tfvars hold secrets and live infrastructure detail — never commit.
+infra/terraform/terraform.tfvars
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl

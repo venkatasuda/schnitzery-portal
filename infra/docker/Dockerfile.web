@@ -1,0 +1,34 @@
+# Next.js (standalone) container for the Schnitzery web app.
+# Works today from the repo root; after the monorepo migration, build with
+# context = repo root and this app at apps/web (see docs/architecture/MONOREPO-MIGRATION.md).
+#
+# Build:  docker build -f infra/docker/Dockerfile.web -t schnitzery-web .
+# Run:    docker run -p 3000:3000 --env-file .env.local schnitzery-web
+# Deploy: push to Artifact Registry → Cloud Run (see infra/README.md).
+
+# 1) Install deps
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# 2) Build (needs the public NEXT_PUBLIC_* vars at build time)
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# NEXT_PUBLIC_* are inlined at build; pass them as build args in CI.
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# 3) Minimal runtime image from the standalone output
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+USER nextjs
+EXPOSE 3000
+CMD ["node", "server.js"]
