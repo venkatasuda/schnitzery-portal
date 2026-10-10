@@ -8,7 +8,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend, getStaffPerformance } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 
-const GOLD = "#d4a847", BLUE = "#3498db", GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063";
+const GOLD = "var(--gold-ink)", BLUE = "var(--info)", GREEN = "var(--success)", AMBER = "var(--warn)", RED = "var(--danger)";
 const TEAM_COLORS = ["#c0392b", "#3498db", "#27ae60", "#d4a847", "#9b59b6", "#e67e22"];
 type Period = "daily" | "weekly" | "monthly";
 
@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
                 <Kpi value={`€${m.totalSales.toFixed(0)}`} label={t("bana.totalSales")} color={GOLD} />
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: "var(--gray)" }}>{t("bana.noSales")} <Link href="/labor" style={{ color: "var(--gold)", textDecoration: "none" }}>{t("bana.laborLink")}</Link></div>
+              <div style={{ fontSize: 13, color: "var(--gray)" }}>{t("bana.noSales")} <Link href="/labor" style={{ color: "var(--gold-ink)", textDecoration: "none" }}>{t("bana.laborLink")}</Link></div>
             )}
           </div>
 
@@ -184,38 +184,38 @@ export default function AnalyticsPage() {
             <div style={{ color: "var(--gray)", fontSize: 12, textAlign: "center", padding: "14px 0" }}>{t("bana.noStaffData")}</div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <table className="data-table">
                 <thead>
-                  <tr style={{ color: "var(--gray)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-                    <th style={{ textAlign: "left", padding: "6px 8px 6px 0", fontWeight: 600 }}>{t("bana.colEmployee")}</th>
-                    <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colAtt")}</th>
-                    <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colLate")}</th>
-                    <th style={{ textAlign: "right", padding: "6px 6px", fontWeight: 600 }}>{t("bana.colHours")}</th>
-                    <th style={{ textAlign: "right", padding: "6px 0 6px 6px", fontWeight: 600 }}>{t("bana.colCost")}</th>
+                  <tr>
+                    <th scope="col" style={{ textAlign: "left", fontWeight: 600 }}>{t("bana.colEmployee")}</th>
+                    <th scope="col" style={{ textAlign: "center", fontWeight: 600 }}>{t("bana.colAtt")}</th>
+                    <th scope="col" style={{ textAlign: "center", fontWeight: 600 }}>{t("bana.colLate")}</th>
+                    <th scope="col" style={{ textAlign: "right", fontWeight: 600 }}>{t("bana.colHours")}</th>
+                    <th scope="col" style={{ textAlign: "right", fontWeight: 600 }}>{t("bana.colCost")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {staff.map((s) => {
                     const att = s.attendancePct as number | null;
-                    const attColor = att == null ? "var(--gray)" : att >= 90 ? "#58d68d" : att >= 80 ? "#e8a35a" : "#ec7063";
+                    const attColor = att == null ? "var(--gray)" : att >= 90 ? "var(--success)" : att >= 80 ? "var(--warn)" : "var(--danger)";
                     return (
-                      <tr key={s.id} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                        <td style={{ padding: "8px 8px 8px 0" }}>
+                      <tr key={s.id} style={{ borderTop: "1px solid var(--border)" }}>
+                        <td>
                           <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.name}</div>
                           <div style={{ fontSize: 10, color: "var(--gray)", textTransform: "capitalize" }}>{s.team}</div>
                         </td>
-                        <td style={{ textAlign: "center", padding: "8px 6px", color: attColor, fontWeight: 700 }}>{att == null ? "—" : `${att}%`}</td>
-                        <td style={{ textAlign: "center", padding: "8px 6px" }}>
-                          <span style={{ color: s.late > 0 ? "#e8a35a" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
-                          {s.absent > 0 && <span style={{ fontSize: 10, color: "#ec7063", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
+                        <td style={{ textAlign: "center", color: attColor, fontWeight: 700 }}>{att == null ? "—" : `${att}%`}</td>
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ color: s.late > 0 ? "var(--warn)" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
+                          {s.absent > 0 && <span style={{ fontSize: 10, color: "var(--danger)", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
                         </td>
-                        <td style={{ textAlign: "right", padding: "8px 6px" }}>
+                        <td style={{ textAlign: "right" }}>
                           <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.totalHours}h</div>
                           {s.avgShiftHours > 0 && <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("bana.avgShort")} {s.avgShiftHours}h</div>}
                         </td>
-                        <td style={{ textAlign: "right", padding: "8px 0 8px 6px" }}>
-                          <div style={{ color: "var(--gold)", fontWeight: 600 }}>{s.cost ? `€${s.cost.toFixed(0)}` : "—"}</div>
-                          {s.otHours > 0 && <div style={{ fontSize: 10, color: "#e8a35a" }}>+{s.otHours}h OT</div>}
+                        <td style={{ textAlign: "right" }}>
+                          <div style={{ color: "var(--gold-ink)", fontWeight: 600 }}>{s.cost ? `€${s.cost.toFixed(0)}` : "—"}</div>
+                          {s.otHours > 0 && <div style={{ fontSize: 10, color: "var(--warn)" }}>+{s.otHours}h OT</div>}
                         </td>
                       </tr>
                     );
@@ -230,18 +230,18 @@ export default function AnalyticsPage() {
       {!loading && staff.length > 0 && (
         <div className="card" style={{ marginBottom: 14 }}>
           <div className="card-title" style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}><Icon e="💶" size={16} color="var(--gold)" /> {t("bana.laborByTeam")}</div>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-            <thead><tr style={{ color: "var(--gray)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-              <th style={{ textAlign: "left", padding: "6px 8px 6px 0", fontWeight: 600 }}>{t("bana.colTeam")}</th>
-              <th style={{ textAlign: "center", padding: "6px", fontWeight: 600 }}>{t("bana.colHours")}</th>
-              <th style={{ textAlign: "right", padding: "6px 0 6px 6px", fontWeight: 600 }}>{t("bana.colCost")}</th>
+          <table className="data-table">
+            <thead><tr>
+              <th scope="col" style={{ textAlign: "left", fontWeight: 600 }}>{t("bana.colTeam")}</th>
+              <th scope="col" style={{ textAlign: "center", fontWeight: 600 }}>{t("bana.colHours")}</th>
+              <th scope="col" style={{ textAlign: "right", fontWeight: 600 }}>{t("bana.colCost")}</th>
             </tr></thead>
             <tbody>
               {teamRows.map((tr: any) => (
-                <tr key={tr.team} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                  <td style={{ padding: "8px 8px 8px 0", color: "var(--white)", fontWeight: 600, textTransform: "capitalize" }}>{tr.team}</td>
-                  <td style={{ textAlign: "center", padding: "8px 6px", color: "var(--white)" }}>{tr.hours.toFixed(1)}h</td>
-                  <td style={{ textAlign: "right", padding: "8px 0 8px 6px", color: "var(--gold)", fontWeight: 600 }}>€{tr.cost.toFixed(0)}</td>
+                <tr key={tr.team} style={{ borderTop: "1px solid var(--border)" }}>
+                  <td style={{ color: "var(--white)", fontWeight: 600, textTransform: "capitalize" }}>{tr.team}</td>
+                  <td style={{ textAlign: "center", color: "var(--white)" }}>{tr.hours.toFixed(1)}h</td>
+                  <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>€{tr.cost.toFixed(0)}</td>
                 </tr>
               ))}
             </tbody>
@@ -254,14 +254,14 @@ export default function AnalyticsPage() {
           <div className="card-title" style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗓️" size={16} color="var(--gold)" /> {t("bana.shiftStats")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <Kpi value={mostWorked ? `${mostWorked.totalHours}h` : "—"} label={t("bana.mostWorked")} color={GOLD} sub={mostWorked ? mostWorked.name : undefined} />
-            <Kpi value={topOT && topOT.otHours > 0 ? `${topOT.otHours}h` : "—"} label={t("bana.topOvertime")} color={topOT && topOT.otHours > 0 ? "#e8a35a" : "var(--gray)"} sub={topOT && topOT.otHours > 0 ? topOT.name : undefined} />
+            <Kpi value={topOT && topOT.otHours > 0 ? `${topOT.otHours}h` : "—"} label={t("bana.topOvertime")} color={topOT && topOT.otHours > 0 ? "var(--warn)" : "var(--gray)"} sub={topOT && topOT.otHours > 0 ? topOT.name : undefined} />
             <Kpi value={swaps} label={t("bana.swaps")} color={GOLD} />
-            <Kpi value={missedTotal} label={t("bana.missed")} color={missedTotal > 0 ? "#ec7063" : "#58d68d"} />
+            <Kpi value={missedTotal} label={t("bana.missed")} color={missedTotal > 0 ? "var(--danger)" : "var(--success)"} />
           </div>
         </div>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold-ink)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }

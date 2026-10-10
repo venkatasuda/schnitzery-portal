@@ -8,7 +8,7 @@ import { getOrgOverview } from "@/lib/queries/org-overview";
 import { getBranchComparison } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 
-const GREEN = "#58d68d", AMBER = "#e8a35a", RED = "#ec7063", GOLD = "#d4a847";
+const GREEN = "var(--success)", AMBER = "var(--warn)", RED = "var(--danger)", GOLD = "var(--gold-ink)";
 
 export default function OverviewPage() {
   const { t } = useLang();
@@ -77,9 +77,9 @@ export default function OverviewPage() {
                   <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
                   <div style={{ fontSize: 11, color: "var(--gray)" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="#58d68d" />{b.workingNow}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="var(--success)" />{b.workingNow}</span>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="👥" size={11} />{b.employees}</span>
-                      {b.issues > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "#e8a35a" }}><Icon e="⚠" size={11} />{b.issues}</span>}
+                      {b.issues > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--warn)" }}><Icon e="⚠" size={11} />{b.issues}</span>}
                       {b.expiringDocs > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="📄" size={11} />{b.expiringDocs}</span>}
                     </span>
                   </div>
@@ -102,20 +102,20 @@ export default function OverviewPage() {
           </div>
           {cmp?.ok && (
             <div className="card" style={{ padding: 0, overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead><tr style={{ color: "var(--gray)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-                  <th style={{ textAlign: "left", padding: "10px 12px", fontWeight: 600 }}>{t("org.colBranch")}</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", fontWeight: 600 }}>{t("org.colAttendance")}</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", fontWeight: 600 }}>{t("org.colHours")}</th>
-                  <th style={{ textAlign: "right", padding: "10px 12px", fontWeight: 600 }}>{t("org.colCost")}</th>
+              <table className="data-table">
+                <thead><tr>
+                  <th scope="col" style={{ textAlign: "left", fontWeight: 600 }}>{t("org.colBranch")}</th>
+                  <th scope="col" style={{ textAlign: "center", fontWeight: 600 }}>{t("org.colAttendance")}</th>
+                  <th scope="col" style={{ textAlign: "center", fontWeight: 600 }}>{t("org.colHours")}</th>
+                  <th scope="col" style={{ textAlign: "right", fontWeight: 600 }}>{t("org.colCost")}</th>
                 </tr></thead>
                 <tbody>
                   {cmp.rows.map((b: any) => (
-                    <tr key={b.id} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                      <td style={{ padding: "10px 12px", color: "var(--white)", fontWeight: 600 }}>{b.name}</td>
-                      <td style={{ textAlign: "center", padding: "10px 8px", color: rateColor(b.attendancePct), fontWeight: 700 }}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
-                      <td style={{ textAlign: "center", padding: "10px 8px", color: "var(--white)" }}>{b.laborHours}h</td>
-                      <td style={{ textAlign: "right", padding: "10px 12px", color: "var(--gold)", fontWeight: 600 }}>{b.laborCost ? `€${b.laborCost.toFixed(0)}` : "—"}</td>
+                    <tr key={b.id} style={{ borderTop: "1px solid var(--border)" }}>
+                      <td style={{ color: "var(--white)", fontWeight: 600 }}>{b.name}</td>
+                      <td style={{ textAlign: "center", color: rateColor(b.attendancePct), fontWeight: 700 }}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
+                      <td style={{ textAlign: "center", color: "var(--white)" }}>{b.laborHours}h</td>
+                      <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>{b.laborCost ? `€${b.laborCost.toFixed(0)}` : "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -125,7 +125,7 @@ export default function OverviewPage() {
         </>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold-ink)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }

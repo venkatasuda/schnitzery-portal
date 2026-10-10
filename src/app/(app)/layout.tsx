@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
+import ManagementNav from "@/components/ManagementNav";
+import ThemeToggle from "@/components/ThemeToggle";
+import AgentWidget from "@/components/AgentWidget";
 import NotificationBell from "@/components/NotificationBell";
 import AttendanceSync from "@/components/AttendanceSync";
 import ToastHost from "@/components/Toast";
@@ -49,7 +52,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <LanguageProvider initialLocale={locale}>
-    <div>
+    <div className={isManager ? "management-shell" : "employee-shell"}>
+      <a href="#main-content" className="skip-link">{locale === "de" ? "Zum Inhalt" : "Skip to content"}</a>
+      {isManager && <ManagementNav role={navRole} />}
       <header className="app-header">
         <div>
           <div className="brand">Schnitzery Portal</div>
@@ -61,6 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {isManager && <Link href="/search" aria-label="Search" style={{ display: "inline-flex", textDecoration: "none", lineHeight: 1 }}><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
           <LanguageToggle />
+          <ThemeToggle />
           {profile?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
@@ -70,12 +76,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      <div className="screen-wrap fade-up">{children}</div>
+      <main id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{children}</main>
 
       <ToastHost />
       <AttendanceSync />
 
-      <BottomNav role={navRole} />
+      {process.env.AGENT_CHAT_ENABLED === "true" && isManager && <AgentWidget />}
+
+      {!isManager && <BottomNav role={navRole} />}
     </div>
     </LanguageProvider>
   );

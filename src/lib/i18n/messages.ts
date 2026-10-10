@@ -6,9 +6,18 @@
 
 export const messages = {
   en: {
+    inventoryWorkflow: {
+      movements: "Stock movements", catalog: "Catalog tools", reorder: "Reorder planning", reports: "Costs & usage",
+      countHelp: "Record physical stock counts. Filter by category, enter quantities or scan products, then save each count.",
+      deliveriesHelp: "Record received goods, supplier details and purchase costs, then review recent deliveries.",
+      forecastHelp: "Review estimated stock coverage and suggested quantities, then build a purchase order draft.",
+      analyticsHelp: "Review purchase spending, estimated usage and cost trends. Use Stock movements to record waste, expiry and transfers.",
+    },
+    homeDashboard: { lowStock: "Below target", reviewAll: "Review all", details: "Details", unavailable: "Some data is unavailable. Try refreshing.", rosterReady: "Next week · roster built", rosterOpen: "Next week · roster open", noWasteTrend: "No recorded waste trend to display.", workflows: "Quick actions", offlineKiosks: "Offline kiosks" },
+    workspace: { dashboard: "Dashboard", operations: "Operations", workforce: "Workforce", business: "Business", reports: "Reports & costs", management: "Management workspace", navigation: "Navigation" },
     nav: {
       home: "Home", myDay: "My Day", shifts: "Shifts", schedule: "Schedule",
-      attendance: "Attendance", inventory: "Inventory", profile: "Profile", branches: "Branches",
+      attendance: "Attendance", inventory: "Inventory", profile: "Profile", branches: "Branches", assistant: "Assistant",
     },
     common: {
       save: "Save", saving: "Saving…", cancel: "Cancel", submit: "Submit", submitting: "Submitting…",
@@ -19,6 +28,15 @@ export const messages = {
       super_admin: "Super Admin", brand_owner: "Brand Owner", branch_owner: "Branch Owner", manager: "Manager", staff: "Staff",
     },
     greeting: { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" },
+    assistant: {
+      title: "Ops Assistant",
+      subtitle: "Ask about stock, expiry and waste. Read-only.",
+      placeholder: "e.g. What's below reorder point?",
+      send: "Send",
+      thinking: "Thinking…",
+      empty: "Ask a question to get started.",
+      error: "Something went wrong. Try again.",
+    },
     home: {
       updateInProfile: "Update in Profile",
       docsNeedAttention: "Documents need attention",
@@ -161,6 +179,7 @@ export const messages = {
       timeOff: "Time off", swap: "Swap", with: "with", mLate: "m late", overtime: "overtime",
     },
     inv: {
+      status: "Status", lowStatus: "Below target", atTargetStatus: "At target",
       title: "Inventory", subtitle: "Stock counts by date · low-stock alerts.",
       belowTarget: "⚠️ {n} item(s) below target", allAtTarget: "✅ All counted items at or above target", short: "short",
       addToCatalog: "➕ Add Product to Catalog", category: "Category", product: "Product", target: "Target (soll)", unit: "Unit",
@@ -751,9 +770,18 @@ export const messages = {
   },
 
   de: {
+    inventoryWorkflow: {
+      movements: "Bestandsbewegungen", catalog: "Katalogwerkzeuge", reorder: "Nachbestellung", reports: "Kosten & Verbrauch",
+      countHelp: "Bestände zählen: Kategorie wählen, Mengen eingeben oder Produkte scannen und jede Zählung speichern.",
+      deliveriesHelp: "Wareneingänge, Lieferanten und Einkaufskosten erfassen und letzte Lieferungen prüfen.",
+      forecastHelp: "Geschätzte Bestandsreichweite und vorgeschlagene Mengen prüfen und einen Bestellentwurf erstellen.",
+      analyticsHelp: "Einkaufsausgaben, geschätzten Verbrauch und Kostentrends prüfen. Abfall, Ablaufdaten und Transfers unter Bestandsbewegungen erfassen.",
+    },
+    homeDashboard: { lowStock: "Unter Zielbestand", reviewAll: "Alle prüfen", details: "Details", unavailable: "Einige Daten sind nicht verfügbar. Bitte neu laden.", rosterReady: "Nächste Woche · Dienstplan erstellt", rosterOpen: "Nächste Woche · Dienstplan offen", noWasteTrend: "Kein erfasster Abfallverlauf vorhanden.", workflows: "Schnellaktionen", offlineKiosks: "Offline-Kiosks" },
+    workspace: { dashboard: "Übersicht", operations: "Betrieb", workforce: "Personal", business: "Unternehmen", reports: "Berichte & Kosten", management: "Verwaltungsportal", navigation: "Navigation" },
     nav: {
       home: "Start", myDay: "Mein Tag", shifts: "Schichten", schedule: "Dienstplan",
-      attendance: "Zeiterfassung", inventory: "Inventar", profile: "Profil", branches: "Filialen",
+      attendance: "Zeiterfassung", inventory: "Inventar", profile: "Profil", branches: "Filialen", assistant: "Assistent",
     },
     common: {
       save: "Speichern", saving: "Speichern…", cancel: "Abbrechen", submit: "Absenden", submitting: "Wird gesendet…",
@@ -764,6 +792,15 @@ export const messages = {
       super_admin: "Super-Admin", brand_owner: "Markeninhaber", branch_owner: "Filialinhaber", manager: "Manager", staff: "Mitarbeiter",
     },
     greeting: { morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend" },
+    assistant: {
+      title: "Betriebsassistent",
+      subtitle: "Frag nach Bestand, Ablauf und Abfall. Nur Lesezugriff.",
+      placeholder: "z. B. Was ist unter dem Meldebestand?",
+      send: "Senden",
+      thinking: "Denkt nach…",
+      empty: "Stell eine Frage, um zu starten.",
+      error: "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    },
     home: {
       updateInProfile: "Im Profil aktualisieren",
       docsNeedAttention: "Dokumente beachten",
@@ -906,6 +943,7 @@ export const messages = {
       timeOff: "Urlaub", swap: "Tausch", with: "mit", mLate: " Min. zu spät", overtime: "Überstunden",
     },
     inv: {
+      status: "Status", lowStatus: "Unter Zielbestand", atTargetStatus: "Zielbestand erreicht",
       title: "Inventar", subtitle: "Bestandszählung nach Datum · Warnungen bei niedrigem Bestand.",
       belowTarget: "⚠️ {n} Artikel unter Ziel", allAtTarget: "✅ Alle gezählten Artikel auf oder über Ziel", short: "fehlt",
       addToCatalog: "➕ Produkt zum Katalog hinzufügen", category: "Kategorie", product: "Produkt", target: "Ziel (Soll)", unit: "Einheit",
