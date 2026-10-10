@@ -64,7 +64,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+// Reporting is already disabled locally; avoid instrumenting every dev route.
+export default process.env.NODE_ENV === "development" ? nextConfig : withSentryConfig(nextConfig, {
   // keep the build quiet; Sentry logs only on CI
   silent: !process.env.CI,
   // Route Sentry traffic through our own origin so ad/tracker blockers — common

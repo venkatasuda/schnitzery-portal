@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import PWARegister from "@/components/PWARegister";
 import CookieNotice from "@/components/CookieNotice";
@@ -25,7 +26,7 @@ export const viewport: Viewport = {
 
 // Inline script runs before paint to apply the saved theme — prevents a flash
 // of the wrong colour scheme on load. Sets the `light` class on <html>.
-const themeScript = `try{if(localStorage.getItem('sch_theme')==='light'){document.documentElement.classList.add('light')}}catch(e){}`;
+const themeScript = `try{if(localStorage.getItem('sch_theme')!=='dark'){document.documentElement.classList.add('light')}}catch(e){document.documentElement.classList.add('light')}`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // reflect the chosen language on <html lang> so screen readers and browser
@@ -34,7 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} translate="no" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

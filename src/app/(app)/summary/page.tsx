@@ -100,7 +100,7 @@ export default function SummaryPage() {
         <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14 }}>
           {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
-        <button onClick={downloadCsv} disabled={!data} style={{ padding: "9px 14px", borderRadius: 8, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: data ? "pointer" : "default" }}>{t("summary.downloadCsv")}</button>
+        <button onClick={downloadCsv} disabled={!data} style={{ padding: "9px 14px", borderRadius: 8, background: "rgba(212,168,71,0.12)", color: "var(--gold-ink)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: data ? "pointer" : "default" }}>{t("summary.downloadCsv")}</button>
       </div>
 
       {loading ? (
@@ -130,22 +130,22 @@ export default function SummaryPage() {
               <div style={{ color: "var(--gray)", fontSize: 13, padding: "8px 0" }}>{t("summary.noStaffData")}</div>
             ) : (
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <table className="data-table">
                   <thead>
-                    <tr style={{ color: "var(--gray)", textAlign: "left", fontSize: 11 }}>
-                      <th style={{ padding: "6px 4px" }}>{t("summary.name")}</th>
-                      <th style={{ padding: "6px 4px", textAlign: "right" }}>{t("summary.hours")}</th>
-                      <th style={{ padding: "6px 4px", textAlign: "right" }}>{t("summary.ot")}</th>
-                      <th style={{ padding: "6px 4px", textAlign: "right" }}>{t("summary.late")}</th>
+                    <tr>
+                      <th scope="col">{t("summary.name")}</th>
+                      <th scope="col" style={{ textAlign: "right" }}>{t("summary.hours")}</th>
+                      <th scope="col" style={{ textAlign: "right" }}>{t("summary.ot")}</th>
+                      <th scope="col" style={{ textAlign: "right" }}>{t("summary.late")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.rows.map((r: any, i: number) => (
-                      <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                        <td style={{ padding: "7px 4px", color: "var(--white)" }}>{r.name}<span style={{ color: "var(--gray)", fontSize: 11 }}> · {r.team}</span></td>
-                        <td style={{ padding: "7px 4px", textAlign: "right" }}>{r.hours}h</td>
-                        <td style={{ padding: "7px 4px", textAlign: "right", color: r.overtime > 0 ? "#ec7063" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
-                        <td style={{ padding: "7px 4px", textAlign: "right", color: r.late > 0 ? "#d4a847" : "var(--gray)" }}>{r.late || "—"}</td>
+                      <tr key={i} style={{ borderTop: "1px solid var(--border)" }}>
+                        <td style={{ color: "var(--white)" }}>{r.name}<span style={{ color: "var(--gray)", fontSize: 11 }}> · {r.team}</span></td>
+                        <td style={{ textAlign: "right" }}>{r.hours}h</td>
+                        <td style={{ textAlign: "right", color: r.overtime > 0 ? "var(--danger)" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
+                        <td style={{ textAlign: "right", color: r.late > 0 ? "var(--warn)" : "var(--gray)" }}>{r.late || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
