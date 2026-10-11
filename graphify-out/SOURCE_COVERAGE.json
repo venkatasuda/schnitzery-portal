@@ -112,6 +112,16 @@
       "sha256": "68b05eecb9597b85f23e4c0c100d7557c7c3898d97b8b9570c7543b1e8fda3bb"
     },
     {
+      "path": "scripts/checks/business-ui.cjs",
+      "lines": 33,
+      "sha256": "6ea85d888c7a2d2b436ba7b9863816e1a34215f0fedd5b677b24221ae7dfdd85"
+    },
+    {
+      "path": "scripts/checks/business.cjs",
+      "lines": 59,
+      "sha256": "c266187e77dfcdafb8c15bb04d1b29fd085c99be627106059a2a50d6975ee6a2"
+    },
+    {
       "path": "scripts/checks/dashboard.cjs",
       "lines": 38,
       "sha256": "e17645da58e440063c7e75e31a5afc7591aff6f0a7008a1547ba81e732867995"
@@ -198,8 +208,8 @@
     },
     {
       "path": "src/app/(app)/analytics/page.tsx",
-      "lines": 285,
-      "sha256": "a83a84cc770e1db3a66d433ed0b13e5f8574cdd78d1d1313fe6dd23f0a473db0"
+      "lines": 304,
+      "sha256": "da08b5a86294d6e962b496c35a7b011855f37ee9e2da057daf9e9184c9d79c64"
     },
     {
       "path": "src/app/(app)/announcements/page.tsx",
@@ -339,7 +349,7 @@
     {
       "path": "src/app/(app)/inventory/page.tsx",
       "lines": 635,
-      "sha256": "874075fec559ba56d98e1bddef0f604de464b553f8893fac7c5e7e94927fe25d"
+      "sha256": "5e61f3f59b8be8a20282d1d9afc3750d4af0c73090bf9f1ec538aa4cc14c32b9"
     },
     {
       "path": "src/app/(app)/kiosks/page.tsx",
@@ -404,7 +414,7 @@
     {
       "path": "src/app/(app)/page.tsx",
       "lines": 312,
-      "sha256": "f049e50d012119a4470b3b2b1fec84bbce15d2710916a2c3cefc805f19421378"
+      "sha256": "f1e98434ed5d1c7a4f57a075b502845ee4d0e57ecbc49f7d71a4ac5e15c6a7dc"
     },
     {
       "path": "src/app/(app)/people-hub/page.tsx",
@@ -508,8 +518,8 @@
     },
     {
       "path": "src/app/api/agent/chat/route.ts",
-      "lines": 213,
-      "sha256": "1466f239d0615af808d0d1af912f4649ede148c37fd88cbd7bf8128eec4c9490"
+      "lines": 225,
+      "sha256": "cbec2a19373be59bc6b225506cabfa7f18ec440da359e5c76c0fb9f60ddaa569"
     },
     {
       "path": "src/app/api/create-staff/route.ts",
@@ -593,13 +603,13 @@
     },
     {
       "path": "src/components/AgentChat.tsx",
-      "lines": 74,
-      "sha256": "65421c2b96df82ee86e09a4d277eab927f63fb5a019669e1ed92c93183f4bb2d"
+      "lines": 76,
+      "sha256": "bae9eabe0ec2327e676bf9df963568d683d64e150a92e4a6b26b522325a807a6"
     },
     {
       "path": "src/components/AgentWidget.tsx",
-      "lines": 67,
-      "sha256": "61424a79f7a04d3a736a345fee0ed764931ee63e007ec000b0af5f558ca1861c"
+      "lines": 48,
+      "sha256": "e4e6807c8b626863ebeb6fb74722b447aa25997511058aaca80db58621ee4849"
     },
     {
       "path": "src/components/AttendanceSync.tsx",
@@ -615,6 +625,11 @@
       "path": "src/components/BottomNav.tsx",
       "lines": 66,
       "sha256": "f01a58adb2a50a0d99feb4d84b1c66c1f82bb395267e7b260d98eee75086aa18"
+    },
+    {
+      "path": "src/components/BusinessOverview.tsx",
+      "lines": 39,
+      "sha256": "ce0ac501e7ef4b1399affc1d742de0f656c8c2b6eb8a4357d48086bde36cfe11"
     },
     {
       "path": "src/components/CookieNotice.tsx",
@@ -718,8 +733,8 @@
     },
     {
       "path": "src/lib/agent/validation.ts",
-      "lines": 19,
-      "sha256": "f347b8b0ab5dc88e1a2988e6476b2712f6e564cdad6fa512c45824534b775106"
+      "lines": 21,
+      "sha256": "0e0aa594c5e0db220e7da7ab57b8c02eaaa83f687556a320cc8193f3d8b02780"
     },
     {
       "path": "src/lib/auth/rank.test.ts",
@@ -743,8 +758,8 @@
     },
     {
       "path": "src/lib/i18n/messages.ts",
-      "lines": 1541,
-      "sha256": "4e18be3b07149491801008eb0657697aebd9d1decb2e4465d39df7c0c825d351"
+      "lines": 1555,
+      "sha256": "95092c5e5c731ef8ee5c44ef56d9c24b6a46a57066ffd982acc2d880c7af63b6"
     },
     {
       "path": "src/lib/i18n/server.ts",
@@ -853,8 +868,8 @@
     },
     {
       "path": "src/lib/queries/branch-analytics.ts",
-      "lines": 463,
-      "sha256": "13809b076c7e013846ce6085020b6abd8d76849181692555fdfcb701380bfca7"
+      "lines": 475,
+      "sha256": "1c24e80d7dc1ff377bd4bec97a1118c873e33f60cca8786caece1783829ad902"
     },
     {
       "path": "src/lib/queries/clockcode.ts",
@@ -913,8 +928,8 @@
     },
     {
       "path": "src/lib/queries/labor.ts",
-      "lines": 206,
-      "sha256": "aaa52d06aff254cefa7b3dfccb47aeab88f3e5bee8fde22d2e7a00259b83f9c8"
+      "lines": 208,
+      "sha256": "55bc7b97c29058fb770710f26f39758c47b3af9513545032ba2415bb7501c00b"
     },
     {
       "path": "src/lib/queries/leave-balance.ts",

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend, getStaffPerformance } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
+import BusinessOverview from "@/components/BusinessOverview";
+import { berlinToday } from "@/lib/time/berlinDate";
 
 const GOLD = "var(--gold-ink)", BLUE = "var(--info)", GREEN = "var(--success)", AMBER = "var(--warn)", RED = "var(--danger)";
 const TEAM_COLORS = ["#c0392b", "#3498db", "#27ae60", "#d4a847", "#9b59b6", "#e67e22"];
@@ -15,7 +17,10 @@ type Period = "daily" | "weekly" | "monthly";
 export default function AnalyticsPage() {
   const { t } = useLang();
   const [period, setPeriod] = useState<Period>("weekly");
-  const [anchor, setAnchor] = useState(() => new Date().toISOString().slice(0, 10));
+  const [anchor, setAnchor] = useState(berlinToday);
+  const [view, setView] = useState("business");
+  const [error, setError] = useState("");
+  const requestId = useRef(0);
   const [scope, setScope] = useState<{ canPickBranch: boolean; branches: any[]; defaultBranch?: string | null } | null>(null);
   const [branch, setBranch] = useState<string>("all");
   const [data, setData] = useState<any>(null);
@@ -26,24 +31,31 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
 
-  useEffect(() => { getAnalyticsScope().then((s) => { if (s.ok) { setScope(s); if (!s.canPickBranch) setBranch(s.defaultBranch || ""); } else setDenied(true); }); }, []);
+  useEffect(() => { getAnalyticsScope().then((s) => { if (s.ok) { setScope(s); if (!s.canPickBranch) setBranch(s.defaultBranch || ""); } else { setDenied(true); setLoading(false); } }).catch(() => { setError(t("assistant.error")); setLoading(false); }); }, [t]);
 
   // overtime trend (6 months) — depends only on branch, not the period toggle
   useEffect(() => {
-    if (!scope) return;
-    getOvertimeTrend({ branchId: scope.canPickBranch ? branch : null, months: 6 }).then((r) => { if (r.ok) setOtTrend(r.trend || []); });
-    getBranchAnalytics({ period: "daily", branchId: scope.canPickBranch ? branch : null }).then((r) => { setToday(r.ok ? r : null); });
-  }, [branch, scope]);
+    if (!scope || view !== "workforce") return;
+    let cancelled = false;
+    getOvertimeTrend({ branchId: scope.canPickBranch ? branch : null, months: 6 }).then((r) => { if (!cancelled) setOtTrend(r.ok ? r.trend || [] : []); }).catch(() => { if (!cancelled) setOtTrend([]); });
+    getBranchAnalytics({ period: "daily", branchId: scope.canPickBranch ? branch : null }).then((r) => { if (!cancelled) setToday(r.ok ? r : null); }).catch(() => { if (!cancelled) setToday(null); });
+    return () => { cancelled = true; };
+  }, [branch, scope, view]);
 
   const load = useCallback(() => {
+    const id = ++requestId.current;
     setLoading(true);
+    setData(null);
+    setError("");
     getBranchAnalytics({ period, date: anchor, branchId: scope?.canPickBranch ? branch : null }).then((r) => {
+      if (id !== requestId.current) return;
       if (r.ok) setData(r);
       else if (r.error?.includes("Managers")) setDenied(true);
+      else setError(r.error || t("assistant.error"));
       setLoading(false);
-    });
-    getStaffPerformance({ period, date: anchor, branchId: scope?.canPickBranch ? branch : null }).then((r) => { setStaff(r.ok ? r.rows : []); setSwaps(r.ok ? (r.swapCount || 0) : 0); });
-  }, [period, anchor, branch, scope]);
+    }).catch(() => { if (id === requestId.current) { setError(t("assistant.error")); setLoading(false); } });
+    if (view === "workforce") getStaffPerformance({ period, date: anchor, branchId: scope?.canPickBranch ? branch : null }).then((r) => { if (id === requestId.current) { setStaff(r.ok ? r.rows : []); setSwaps(r.ok ? (r.swapCount || 0) : 0); } }).catch(() => { if (id === requestId.current) setStaff([]); });
+  }, [period, anchor, branch, scope, view, t]);
   useEffect(() => { if (scope) load(); }, [load, scope]);
 
   if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
@@ -57,11 +69,14 @@ export default function AnalyticsPage() {
   const missedTotal = staff.reduce((n: number, s: any) => n + (s.absent || 0), 0);
 
   return (
-    <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("bana.title")}</div>
+    <div className="fade-up analytics-workspace">
+      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("business.performance")}</div>
       <div className="page-sub">{data?.scope ? `${data.scope} · ` : ""}{t("bana.subtitle")}</div>
 
-      {today?.ok && (
+      <div className="hub-tabs" role="group" aria-label={t("business.reportView")}>
+        {["business", "workforce"].map(v => <button key={v} aria-pressed={view === v} className={`hub-tab${view === v ? " active" : ""}`} onClick={() => setView(v)}>{t(`business.${v}`)}</button>)}
+      </div>
+      {view === "workforce" && today?.ok && (
         <div className="card" style={{ marginBottom: 12, padding: 14 }}>
           <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}><Icon e="📅" size={14} color="var(--gold)" /> {t("bana.today")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -96,9 +111,12 @@ export default function AnalyticsPage() {
         {data && <span style={{ fontSize: 12, color: "var(--gray)", marginLeft: "auto" }}>{data.from} → {data.to}</span>}
       </div>
 
-      {loading || !m ? (
+      {error && <div className="business-note" role="alert">{error}<button className="btn-secondary" onClick={load}>{t("business.retry")}</button></div>}
+      {view === "business" && !loading && data?.ok && <BusinessOverview data={data} />}
+      <div hidden={view !== "workforce"} className="workforce-report">
+      {loading ? (
         <div style={{ marginTop: 14 }}><StatsSkeleton count={4} /><div style={{ height: 12 }} /><Skeleton height={210} radius={14} /></div>
-      ) : m.scheduled === 0 && m.laborHours === 0 ? (
+      ) : !m || m.scheduled === 0 && m.laborHours === 0 ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 36, fontSize: 14, lineHeight: 1.6 }}><Icon e="📊" size={26} color="var(--gray)" /> {t("bana.noData")}</div>
       ) : (
         <>
@@ -261,7 +279,8 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold-ink)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      </div>
+      {view === "business" && loading && <StatsSkeleton count={4} />}
     </div>
   );
 }
