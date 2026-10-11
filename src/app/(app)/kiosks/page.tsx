@@ -57,7 +57,7 @@ export default function KiosksPage() {
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder={t("kioskadm.addPlaceholder")}
           style={{ flex: 1, padding: "11px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" }} />
-        <button onClick={add} disabled={busy || !newLabel.trim()} style={{ padding: "11px 16px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy || !newLabel.trim() ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("kioskadm.add")}</button>
+        <button onClick={add} disabled={busy || !newLabel.trim()} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy || !newLabel.trim() ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("kioskadm.add")}</button>
       </div>
 
       {loading ? (
@@ -93,7 +93,7 @@ export default function KiosksPage() {
       )}
 
       <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 14, lineHeight: 1.5 }}><Icon e="💡" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("kioskadm.revokeHint")}</div>
-      <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 14, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
+      <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 14, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
     </div>
   );
 }

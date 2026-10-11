@@ -66,7 +66,7 @@ export default function StockAlertsPage() {
           <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("salert.lowNow")}</div>
         </div>
         <button onClick={alertMe} disabled={notifying}
-          style={{ padding: "10px 16px", borderRadius: 10, border: "none", cursor: notifying ? "default" : "pointer", background: "var(--gold)", color: "#1a0e0e", fontSize: 13, fontWeight: 700 }}>
+          style={{ padding: "10px 16px", borderRadius: 10, border: "none", cursor: notifying ? "default" : "pointer", background: "var(--action)", color: "var(--on-action)", fontSize: 13, fontWeight: 700 }}>
           {notifying ? t("salert.sending") : `🔔 ${t("salert.alertMe")}`}
         </button>
       </div>
@@ -97,7 +97,7 @@ export default function StockAlertsPage() {
               </div>
               {edits[it.id] !== undefined && edits[it.id] !== String(it.level) && (
                 <button onClick={() => saveLevel(it.id)} disabled={savingId === it.id}
-                  style={{ padding: "8px 10px", borderRadius: 8, border: "none", cursor: "pointer", background: "var(--gold)", color: "#1a0e0e", fontSize: 12, fontWeight: 700 }}>
+                  style={{ padding: "8px 10px", borderRadius: 8, border: "none", cursor: "pointer", background: "var(--action)", color: "var(--on-action)", fontSize: 12, fontWeight: 700 }}>
                   {savingId === it.id ? "…" : t("common.save")}
                 </button>
               )}

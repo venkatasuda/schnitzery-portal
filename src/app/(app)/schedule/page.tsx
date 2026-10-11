@@ -80,7 +80,7 @@ export default function SchedulePage() {
       <div className="page-sub">{weekLabel || t("common.loading")}</div>
 
       <Link href="/cover" className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", margin: "12px 0" }}>
-        <Icon e="🔁" size={20} color="var(--gold)" />
+        <Icon e="🔁" size={20} color="var(--action)" />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{t("cover.title")}</div>
           <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("cover.navSub")}</div>
@@ -101,7 +101,7 @@ export default function SchedulePage() {
           {/* week nav */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <button onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
-            <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{weekOffset === 0 ? t("shifts.thisWeek") : weekOffset > 0 ? t("shifts.weeksPlus", { n: weekOffset }) : t("shifts.weeksMinus", { n: weekOffset })}</span>
+            <span style={{ fontSize: 13, color: "var(--action)", fontWeight: 600 }}>{weekOffset === 0 ? t("shifts.thisWeek") : weekOffset > 0 ? t("shifts.weeksPlus", { n: weekOffset }) : t("shifts.weeksMinus", { n: weekOffset })}</span>
             <button onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
           </div>
 
@@ -114,7 +114,7 @@ export default function SchedulePage() {
                 const isToday = d === todayName && weekOffset === 0;
                 return (
                   <div key={d} style={{ flex: 1, textAlign: "center", padding: "8px 2px", borderRadius: 8, background: isToday ? "rgba(212,168,71,0.15)" : "transparent" }}>
-                    <div style={{ fontSize: 12, color: isToday ? "var(--gold)" : "var(--gray)", fontWeight: isToday ? 700 : 400 }}>{dayLabel(d)[0]}</div>
+                    <div style={{ fontSize: 12, color: isToday ? "var(--action)" : "var(--gray)", fontWeight: isToday ? 700 : 400 }}>{dayLabel(d)[0]}</div>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", margin: "6px auto 0", background: has ? "#27ae60" : "rgba(128,128,128,0.25)" }} />
                   </div>
                 );
@@ -142,7 +142,7 @@ export default function SchedulePage() {
                     <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{dayLabel(s.day)}</div>
                     <div style={{ fontSize: 12, color: "var(--gray)" }}>{teamLabel(s.team)} · {s.shift}</div>
                   </div>
-                  <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{s.time || "—"}</div>
+                  <div style={{ fontSize: 13, color: "var(--action)", fontWeight: 600 }}>{s.time || "—"}</div>
                 </div>
               ))}
             </div>
@@ -175,7 +175,7 @@ export default function SchedulePage() {
               </select>
             </Field>
             <button onClick={doSubmitSwap} style={primaryBtn}>{t("shifts.submitSwap")}</button>
-            {swapMsg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--gold)", textAlign: "center" }}>{swapMsg}</div>}
+            {swapMsg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--action)", textAlign: "center" }}>{swapMsg}</div>}
           </div>
         </div>
       )}
@@ -190,7 +190,7 @@ export default function SchedulePage() {
               <div key={sw.id} className="card" style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ fontSize: 14, color: "var(--white)" }}>{t("shifts.give")} <b>{dayLabel(sw.my_day)}</b> → {t("shifts.get")} <b>{dayLabel(sw.their_day)}</b></div>
-                  <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 12, background: sw.status === "approved" ? "rgba(39,174,96,0.15)" : sw.status === "denied" ? "rgba(231,76,60,0.15)" : "rgba(212,168,71,0.15)", color: sw.status === "approved" ? "var(--success)" : sw.status === "denied" ? "var(--danger)" : "var(--gold)" }}>
+                  <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 12, background: sw.status === "approved" ? "rgba(39,174,96,0.15)" : sw.status === "denied" ? "rgba(231,76,60,0.15)" : "rgba(212,168,71,0.15)", color: sw.status === "approved" ? "var(--success)" : sw.status === "denied" ? "var(--danger)" : "var(--action)" }}>
                     {t("shifts.status_" + sw.status)}
                   </span>
                 </div>
@@ -214,4 +214,4 @@ function Field({ label, children }: any) {
 
 const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
 const select: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
