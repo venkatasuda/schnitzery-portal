@@ -1,4 +1,6 @@
 "use client";
+
+import { berlinToday } from "@/lib/time/berlinDate";
 import { inventoryKey } from "@/lib/inventory/identity";
 
 import { useEffect, useState } from "react";
@@ -147,7 +149,7 @@ export default function InventoryPage() {
     const csv = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const head = ["Product", "Category", "Current", "Target", "To buy", "Unit"];
     const rows = lowStock.map((l: any) => [csv(l.product), csv(l.category), l.ist, l.soll, l.short, csv(l.unit)].join(","));
-    const day = new Date().toISOString().slice(0, 10);
+    const day = berlinToday();
     const blob = new Blob(["\uFEFF" + [head.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `schnitzery-shopping-${day}.csv`;

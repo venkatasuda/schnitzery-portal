@@ -1,5 +1,7 @@
 "use client";
 
+import { berlinMonth } from "@/lib/time/berlinDate";
+
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -13,7 +15,7 @@ const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "
 
 export default function PayrollExportPage() {
   const { t } = useLang();
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [month, setMonth] = useState(() => berlinMonth());
   const [rows, setRows] = useState<any[]>([]);
   const [totals, setTotals] = useState<any>({});
   const [settings, setSettings] = useState({ otDailyHours: 8, nightStart: "22:00", nightEnd: "06:00" });

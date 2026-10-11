@@ -1,5 +1,7 @@
 "use client";
 
+import { berlinToday } from "@/lib/time/berlinDate";
+
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -9,7 +11,7 @@ import { toast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
 
 const eur = (n: number) => "€" + (n || 0).toLocaleString("de-DE");
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => berlinToday();
 
 export default function LaborPage() {
   const { t } = useLang();

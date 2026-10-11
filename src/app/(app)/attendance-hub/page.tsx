@@ -1,5 +1,7 @@
 "use client";
 
+import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
+
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -80,7 +82,7 @@ export default function AttendanceHubPage() {
   }
 
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = berlinToday();
     setDate(today);
     setMonth(today.slice(0, 7));
     loadLive(today);
@@ -88,16 +90,16 @@ export default function AttendanceHubPage() {
 
   function openTab(t: Tab) {
     setTab(t);
-    if (t === "overtime" && !otLoaded) loadOvertime(month || new Date().toISOString().slice(0, 7));
+    if (t === "overtime" && !otLoaded) loadOvertime(month || berlinMonth());
     if (t === "approval" && !appLoaded) loadApprovals();
   }
   function changeDate(d: string) { setDate(d); loadLive(d); }
-  function goToday() { const t = new Date().toISOString().slice(0, 10); setDate(t); loadLive(t); }
+  function goToday() { const t = berlinToday(); setDate(t); loadLive(t); }
   function changeMonth(m: string) { setMonth(m); loadOvertime(m); }
 
   const liveHours = fmtH(stats.totalMins);
   const filtered = rows.filter((r) => r.name.toLowerCase().includes(filter.toLowerCase()));
-  const isToday = date === new Date().toISOString().slice(0, 10);
+  const isToday = date === berlinToday();
 
   if (denied) {
     return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("common.managersOnly")}</div>;
