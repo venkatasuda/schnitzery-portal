@@ -1,0 +1,2 @@
+# False positive: runtime subscription input validation, no literal credential.
+12cef38a24cdd3aff28f88f22dc34b91e43a6a86:src/lib/push/actions.ts:generic-api-key:13

@@ -1,6 +1,10 @@
 "use server";
+import { readAll } from "@/lib/supabase/readAll";
+
 
 import { createClient } from "@/lib/supabase/server";
+import { monthRange } from "@/lib/time/berlinDate";
+import { shiftMinutes } from "@/lib/pay/calculations";
 
 // ============================================================
 // TIME & PAY — all computed from attendance_logs (no new tables)
@@ -20,31 +24,21 @@ function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 // First & last day of a month (YYYY-MM). Default: current month.
-function monthRange(month?: string) {
-  const now = new Date();
-  const ym = month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const [y, m] = ym.split("-").map(Number);
-  const from = `${ym}-01`;
-  const to = new Date(y, m, 0).toISOString().slice(0, 10); // last day
-  return { ym, from, to };
-}
-
-// ── STAFF: my hours summary for a month ──
 export async function getMyHours(month?: string) {
   const { supabase, user, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   const { ym, from, to } = monthRange(month);
 
-  const { data, error } = await supabase
+  const { data, error } = await readAll(supabase
     .from("attendance_logs")
-    .select("work_date, duration_mins, status")
+    .select("work_date, duration_mins, status, breaks, clock_in, clock_out")
     .eq("user_id", user.id)
     .gte("work_date", from)
     .lte("work_date", to)
-    .eq("status", "complete");
+    .eq("status", "complete").order("id"));
   if (error) return { ok: false, error: error.message };
 
-  const totalMins = (data || []).reduce((s, r) => s + (r.duration_mins || 0), 0);
+  const totalMins = (data || []).reduce((s, r) => s + shiftMinutes(r).paidMin, 0);
   const shifts = (data || []).length;
   const targetHours = profile?.contract_hours ? Number(profile.contract_hours) : null;
   const totalHours = +(totalMins / 60).toFixed(1);
@@ -61,13 +55,13 @@ export async function getMyTimesheet(month?: string) {
   const { supabase, user } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", rows: [] };
   const { ym, from, to } = monthRange(month);
-  const { data, error } = await supabase
+  const { data, error } = await readAll(supabase
     .from("attendance_logs")
     .select("*")
     .eq("user_id", user.id)
     .gte("work_date", from)
     .lte("work_date", to)
-    .order("work_date", { ascending: false });
+    .order("work_date", { ascending: false }).order("id"));
   if (error) return { ok: false, error: error.message, rows: [] };
   return { ok: true, month: ym, rows: data || [] };
 }
@@ -80,13 +74,13 @@ export async function getPayrollExport(month?: string) {
   const { ym, from, to } = monthRange(month);
 
   // all completed logs for the branch in the month, with staff names
-  const { data: logs, error } = await supabase
+  const { data: logs, error } = await readAll(supabase
     .from("attendance_logs")
-    .select("user_id, duration_mins, work_date, users:user_id (full_name, employee_code, contract_hours)")
+    .select("user_id, duration_mins, breaks, clock_in, clock_out, work_date, users:user_id (full_name, employee_code, contract_hours)")
     .eq("branch_id", branchId)
     .gte("work_date", from)
     .lte("work_date", to)
-    .eq("status", "complete");
+    .eq("status", "complete").order("id"));
   if (error) return { ok: false, error: error.message, rows: [] };
 
   // aggregate per staff
@@ -101,7 +95,7 @@ export async function getPayrollExport(month?: string) {
         totalMins: 0, shifts: 0,
       };
     }
-    byUser[id].totalMins += l.duration_mins || 0;
+    byUser[id].totalMins += shiftMinutes(l).paidMin;
     byUser[id].shifts += 1;
   }
 

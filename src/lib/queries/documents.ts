@@ -163,14 +163,7 @@ export async function approveDocument(docId: string) {
   // A manager must not approve their own document.
   if (doc.user_id === user.id) return { ok: false, error: "You can't approve your own document." };
 
-  // Demote any other versions of the same type for this employee.
-  await supabase.from("user_documents")
-    .update({ is_active: false })
-    .eq("user_id", doc.user_id).eq("doc_type", doc.doc_type).neq("id", docId);
-
-  const { error } = await supabase.from("user_documents")
-    .update({ status: "approved", is_active: true, reviewed_by: user.id, reviewed_at: new Date().toISOString(), rejection_reason: null })
-    .eq("id", docId);
+  const { error } = await supabase.rpc("approve_document_atomic", { p_id: docId });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
@@ -234,7 +227,8 @@ export async function getRequiredChecklist(userId: string) {
     return { ok: false, error: "Not allowed.", items: [] };
   }
 
-  const { data: target } = await supabase.from("users").select("branch_id").eq("id", userId).single();
+  const { data: target, error: targetError } = await supabase.from("users").select("branch_id").eq("id", userId).single();
+  if (targetError) return { ok: false, error: targetError.message, items: [] };
   const branchId = target?.branch_id ?? null;
 
   const isOwner = ["brand_owner", "super_admin"].includes(role || "");
@@ -243,8 +237,9 @@ export async function getRequiredChecklist(userId: string) {
   }
 
   // Branch-specific rule overrides the global rule for the same doc_type.
-  const { data: rules } = await supabase
+  const { data: rules, error: rulesError } = await supabase
     .from("required_documents").select("doc_type, is_required, sort_order, branch_id");
+  if (rulesError) return { ok: false, error: rulesError.message, items: [] };
   const byType: Record<string, any> = {};
   for (const r of rules || []) {
     if (r.branch_id === null && byType[r.doc_type]) continue;          // keep branch-specific
@@ -253,11 +248,12 @@ export async function getRequiredChecklist(userId: string) {
   }
   const ruleList = Object.values(byType).sort((a: any, b: any) => a.sort_order - b.sort_order);
 
-  const { data: docs } = await supabase
+  const { data: docs, error: docsError } = await supabase
     .from("user_documents")
     .select("id, doc_type, status, expiry_date, is_active, rejection_reason, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
+  if (docsError) return { ok: false, error: docsError.message, items: [] };
 
   const items = ruleList.map((r: any) => {
     const ofType = (docs || []).filter((d) => d.doc_type === r.doc_type);
@@ -291,14 +287,16 @@ export async function getDocumentsDashboard() {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
 
-  const { data: staff } = await supabase.from("users").select("id, full_name, branch_id");
+  const { data: staff, error: staffError } = await supabase.from("users").select("id, full_name, branch_id");
+  if (staffError) return { ok: false, error: staffError.message };
   const nameOf: Record<string, string> = {};
   for (const s of staff || []) nameOf[s.id] = s.full_name;
 
-  const { data: rawDocs } = await supabase
+  const { data: rawDocs, error: rawDocsError } = await supabase
     .from("user_documents")
     .select("id, user_id, branch_id, doc_type, expiry_date, status, is_active, file_path, reviewed_at")
     .order("expiry_date", { ascending: true });
+  if (rawDocsError) return { ok: false, error: rawDocsError.message };
 
   const docs = (rawDocs || []).map((d) => ({
     ...d, name: nameOf[d.user_id] || "Unknown",
@@ -306,13 +304,15 @@ export async function getDocumentsDashboard() {
   }));
 
   // Required-doc rules → which staff are MISSING which required doc.
-  const { data: rules } = await supabase.from("required_documents").select("doc_type, is_required, branch_id");
-  const requiredTypes = (rules || []).filter((r) => r.is_required).map((r) => r.doc_type);
+  const { data: rules, error: rulesError } = await supabase.from("required_documents").select("doc_type, is_required, branch_id");
+  if (rulesError) return { ok: false, error: rulesError.message };
   const haveActive = new Set(
     docs.filter((d) => d.is_active && d.status === "approved").map((d) => `${d.user_id}|${d.doc_type}`)
   );
   const missing: { userId: string; name: string; docType: string; branch_id: string | null }[] = [];
   for (const s of staff || []) {
+    const effectiveRules = new Map([...(rules || []).filter(r => r.branch_id === null), ...(rules || []).filter(r => r.branch_id === s.branch_id)].map(r => [r.doc_type, r.is_required]));
+    const requiredTypes = [...effectiveRules].filter(([, required]) => required).map(([type]) => type);
     for (const dt of requiredTypes) {
       if (!haveActive.has(`${s.id}|${dt}`)) {
         missing.push({ userId: s.id, name: s.full_name, docType: dt, branch_id: s.branch_id });

@@ -1,7 +1,8 @@
 "use server";
 
+import { validInventoryItem } from "@/lib/inventory/identity";
 import { createClient } from "@/lib/supabase/server";
-import { berlinToday } from "@/lib/time/berlinDate";
+import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
 
 async function getMe() {
   const supabase = await createClient();
@@ -19,18 +20,19 @@ const daysBetween = (a: string, b: string) =>
 export async function getBatchProducts() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", products: [] };
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("inventory_master").select("product, category, unit, is_active")
     .eq("branch_id", branchId).eq("is_active", true).order("product");
+  if (error) return { ok: false, error: error.message, products: [] };
   return { ok: true, products: data || [] };
 }
 
 export async function addBatch(product: string, category: string, qty: number, unit: string, expiryDate: string, note: string) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  if (!product) return { ok: false, error: "Pick a product." };
-  if (!(qty > 0)) return { ok: false, error: "Enter a quantity." };
-  if (!expiryDate) return { ok: false, error: "Pick an expiry date." };
+  if (!branchId || !validInventoryItem({ product, category, unit })) return { ok: false, error: "Pick a product." };
+  if (!Number.isFinite(qty) || !(qty > 0)) return { ok: false, error: "Enter a quantity." };
+  if (!isCalendarDate(expiryDate)) return { ok: false, error: "Pick an expiry date." };
   const { error } = await supabase.from("stock_batches").insert({
     branch_id: branchId, product, category: category || null, qty, unit: unit || null,
     received_date: berlinToday(), expiry_date: expiryDate, note: note || null,
@@ -45,9 +47,10 @@ export async function getBatches() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", batches: [] };
   const today = berlinToday();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("stock_batches").select("*")
     .eq("branch_id", branchId).eq("status", "active").order("expiry_date", { ascending: true });
+  if (error) return { ok: false, error: error.message, batches: [] };
   const batches = (data || []).map((b: any) => {
     const d = daysBetween(today, b.expiry_date);
     const flag = d < 0 ? "expired" : d <= 3 ? "soon" : "ok";
@@ -60,9 +63,10 @@ export async function getExpirySummary() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   const today = berlinToday();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("stock_batches").select("expiry_date")
     .eq("branch_id", branchId).eq("status", "active");
+  if (error) return { ok: false, error: error.message, expired: 0, soon: 0, active: 0 };
   let expired = 0, soon = 0;
   for (const b of data || []) {
     const d = daysBetween(today, b.expiry_date);
@@ -83,18 +87,7 @@ export async function markBatchUsed(id: string) {
 export async function discardBatch(id: string) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  const { data: b } = await supabase.from("stock_batches").select("*").eq("id", id).maybeSingle();
-  if (!b) return { ok: false, error: "Batch not found." };
-
-  const { error } = await supabase.from("stock_batches").update({ status: "discarded" }).eq("id", id);
+  const { error } = await supabase.rpc("discard_batch_atomic", { p_id: id });
   if (error) return { ok: false, error: error.message };
-
-  // best-effort waste record (won't block the discard if the waste table is absent)
-  await supabase.from("waste_log").insert({
-    branch_id: branchId, product: b.product, category: b.category, qty: b.qty, unit: b.unit,
-    reason: "expired", note: "Auto from expiry", logged_by: user.id,
-    logged_by_name: profile?.full_name || null, work_date: berlinToday(),
-  });
-
   return { ok: true };
 }

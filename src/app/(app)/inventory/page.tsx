@@ -1,4 +1,5 @@
 "use client";
+import { inventoryKey } from "@/lib/inventory/identity";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -18,7 +19,9 @@ const BLUE = "var(--info)";
 
 export default function InventoryPage() {
   const { t } = useLang();
-  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast">("count");
+  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast" | "catalog">("count");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // shared catalog
   const [products, setProducts] = useState<any[]>([]);
@@ -47,50 +50,51 @@ export default function InventoryPage() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [days, setDays] = useState(30);
   const [monthTrend, setMonthTrend] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState("");
   const [variance, setVariance] = useState<any>(null);
   const [forecast, setForecast] = useState<any>(null);
   const [coverDays, setCoverDays] = useState(7);
 
   async function load() {
     setLoading(true);
+    setLoadError("");
     const pRes = await getProducts();
-    if (!pRes.ok) { setLoading(false); return; }
+    if (!pRes.ok) { setLoadError(pRes.error || t("inv.failed")); setLoading(false); return; }
     setProducts(pRes.products);
     const cRes = await getCounts();
+    if (!cRes.ok) { setLoadError(cRes.error || t("inv.failed")); setLoading(false); return; }
     const cMap: Record<string, any> = {};
-    for (const c of (cRes.counts || [])) cMap[c.product] = c;
+    for (const c of (cRes.counts || [])) cMap[inventoryKey(c)] = c;
     setCounts(cMap);
     const aRes = await getOrderAlert();
-    if (aRes.ok) setLowStock(aRes.lowStock);
-    const cats = [...new Set(pRes.products.map((p: any) => p.category))];
-    if (cats.length && !activeCat) setActiveCat(cats[0] as string);
+    if (aRes.ok) setLowStock(aRes.lowStock); else setLoadError(aRes.error || t("inv.failed"));
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
 
   async function loadDeliveries() {
     const res = await getDeliveries(30);
-    if (res.ok) setDeliveries(res.deliveries);
+    if (res.ok) setDeliveries(res.deliveries); else setLoadError(res.error || t("inv.failed"));
   }
   async function loadAnalytics(d: number) {
     setAnalytics(null);
     const res = await getInventoryAnalytics(d);
-    if (res.ok) setAnalytics(res);
+    if (res.ok) setAnalytics(res); else setLoadError(res.error || t("inv.failed"));
   }
   useEffect(() => {
     if (tab === "deliveries") loadDeliveries();
     if (tab === "analytics") { loadAnalytics(days); getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }); getInventoryVariance(30).then((r) => { if (r.ok) setVariance(r); }); }
-    if (tab === "forecast") { getDepletionForecast(30, coverDays).then((r) => { if (r.ok) setForecast(r); }); }
+    if (tab === "forecast") { getDepletionForecast(30, coverDays).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   async function doSaveCount(p: any) {
-    const val = entry[p.product];
+    const val = entry[inventoryKey(p)];
     if (val === undefined || val === "") { toast(t("inv.enterCount"), "error"); return; }
     setSavingP(p.product);
     const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit);
     setSavingP(null);
-    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setEntry((e) => ({ ...e, [p.product]: "" })); load(); }
+    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setEntry((e) => ({ ...e, [inventoryKey(p)]: "" })); load(); }
     else { toast(res.error || t("inv.failed"), "error"); if (res.error?.includes("Managers")) setDenied(true); }
   }
   async function doAddProduct() {
@@ -108,10 +112,10 @@ export default function InventoryPage() {
   async function doAddDelivery() {
     if (!del.product) { toast(t("inv.pickProduct"), "error"); return; }
     if (del.qty === "" && del.cost === "") { toast(t("inv.enterQtyCost"), "error"); return; }
-    const prod = products.find((p) => p.product === del.product);
+    const prod = products.find((p) => p.id === del.product);
     setSavingDel(true);
     const res = await addDelivery({
-      product: del.product, category: prod?.category || "",
+      product: prod?.product || "", category: prod?.category || "",
       qty: Number(del.qty) || 0, unit: prod?.unit || "", cost: Number(del.cost) || 0,
       supplier: del.supplier || undefined, note: del.note || undefined, date: del.date || undefined,
     });
@@ -121,7 +125,7 @@ export default function InventoryPage() {
   }
 
   function stockStatus(p: any): "green" | "amber" | "red" | "none" {
-    const c = counts[p.product];
+    const c = counts[inventoryKey(p)];
     const ist = c ? Number(c.ist) : null;
     const soll = Number(p.soll) || 0;
     if (ist === null) return "none";
@@ -187,19 +191,25 @@ export default function InventoryPage() {
   if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const categories = [...new Set(products.map((p) => p.category))];
-  const shownProducts = products.filter((p) => p.category === activeCat);
+  const shownProducts = products.filter((p) => {
+    const counted = counts[inventoryKey(p)];
+    const status = !counted ? "uncounted" : Number(counted.ist) < Number(p.soll) ? "low" : "good";
+    return (!activeCat || p.category === activeCat)
+      && `${p.product} ${p.category}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+      && (statusFilter === "all" || statusFilter === status);
+  });
   const eur = (n: number) => `€${Math.round(n || 0).toLocaleString()}`;
 
   return (
     <div className="inventory-page">
+      {loadError && <div role="alert" style={{ ...card, color: "var(--danger)", marginBottom: 16 }}>{loadError}</div>}
       <div className="inventory-heading">
         <div>
           <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon e="📦" size={22} /> {t("inv.title")}</h1>
           <p className="page-sub">{t("inv.subtitle")}</p>
         </div>
-        <Link href="/inventory/order" className="btn-secondary" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}><Icon e="🧾" size={16} />{t("inv.buildOrder")}</Link>
-      </div>
-
+        <div className="inventory-heading-actions">
+        <Link href="/inventory/order" className="btn-gold"><Icon e="🧾" size={16} />{t("inv.buildOrder")}</Link>
       <details className="inventory-operation-menu">
         <summary><Icon e="🔄" size={16} /> {t("inventoryWorkflow.movements")}</summary>
         <nav className="inventory-links" aria-label={t("inventoryWorkflow.movements")}>
@@ -214,19 +224,22 @@ export default function InventoryPage() {
         ))}
         </nav>
       </details>
+        </div>
+      </div>
 
       <div className="hub-tabs" role="group" aria-label={t("inv.title")}>
         <TabBtn active={tab === "count"} onClick={() => setTab("count")}>{t("inv.tabCount")}</TabBtn>
         <TabBtn active={tab === "deliveries"} onClick={() => setTab("deliveries")}>{t("inv.tabDeliveries")}</TabBtn>
         <TabBtn active={tab === "forecast"} onClick={() => setTab("forecast")}>{t("inventoryWorkflow.reorder")}</TabBtn>
         <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")}>{t("inventoryWorkflow.reports")}</TabBtn>
+        <TabBtn active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabBtn>
       </div>
       <p className="inventory-task-description">{t(`inventoryWorkflow.${tab}Help`)}</p>
 
       {loading ? <CardSkeleton rows={4} /> : (
         <>
           {/* ============ COUNT ============ */}
-          {tab === "count" && (
+          {(tab === "count" || tab === "catalog") && (
             <>
               {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load()} />}
               {gridSel && (
@@ -234,7 +247,7 @@ export default function InventoryPage() {
                   <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--dark)", borderRadius: 14, padding: 20, width: "100%", maxWidth: 320, border: "1px solid var(--border)" }}>
                     <div style={{ fontSize: 12, color: "var(--gray)" }}>{gridSel.category}</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{gridSel.product}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[gridSel.product] ? ` · ${t("inv.current")} ${counts[gridSel.product].ist}` : ""}</div>
+                    <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[inventoryKey(gridSel)] ? ` · ${t("inv.current")} ${counts[inventoryKey(gridSel)].ist}` : ""}</div>
                     <input type="number" inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
                       style={{ width: "100%", padding: 14, fontSize: 20, textAlign: "center", borderRadius: 10, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontWeight: 700 }} />
                     <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -245,46 +258,44 @@ export default function InventoryPage() {
                 </div>
               )}
               <div className="inventory-toolbar">
+                <label className="inventory-search">
+                  <span>{t("inventoryWorkflow.search")}</span>
+                  <input type="search" className="form-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("inventoryWorkflow.searchPlaceholder")} />
+                </label>
                 <label className="inventory-category">
                   <span>{t("inv.category")}</span>
                   <select className="form-select" value={activeCat} onChange={(e) => setActiveCat(e.target.value)}>
+                    <option value="">{t("inventoryWorkflow.allCategories")}</option>
                     {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </label>
+                <label className="inventory-filter">
+                  <span>{t("inv.status")}</span>
+                  <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                    <option value="all">{t("inventoryWorkflow.allStatuses")}</option>
+                    <option value="low">{t("inv.lowStatus")}</option>
+                    <option value="uncounted">{t("salert.notCounted")}</option>
+                    <option value="good">{t("inv.atTargetStatus")}</option>
+                  </select>
+                </label>
+                {tab === "count" && <>
                 <div className="inventory-view" role="group" aria-label={t("inv.tabCount")}>
                   <button className={countView === "list" ? "active" : ""} aria-pressed={countView === "list"} onClick={() => setCountView("list")}>{t("inv.viewList")}</button>
                   <button className={countView === "grid" ? "active" : ""} aria-pressed={countView === "grid"} onClick={() => setCountView("grid")}>{t("inv.viewGrid")}</button>
                 </div>
                 <button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button>
-                <details className="inventory-operation-menu inventory-catalog-menu">
-                  <summary>{t("inventoryWorkflow.catalog")}</summary>
-                  <div className="inventory-links">
-                    <Link href="/labels">{t("scan.labels")}</Link>
+                </>}
+                {tab === "catalog" && <>
+                    <Link href="/labels" className="btn-secondary">{t("scan.labels")}</Link>
                     <button className="btn-secondary" onClick={() => setShowAdd(!showAdd)} aria-expanded={showAdd}>{showAdd ? t("common.close") : t("inv.addToCatalog")}</button>
-                  </div>
-                </details>
+                </>}
               </div>
-              <details className="inventory-summary">
-                <summary>
-                  {lowStock.length ? t("inv.belowTarget", { n: lowStock.length }) : t("inv.allAtTarget")}
-                </summary>
-                {lowStock.map((l, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
-                    <span>{l.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>({l.category})</span></span>
-                    <span style={{ color: "var(--danger)" }}>{l.ist}/{l.soll} {l.unit || ""} · {t("inv.short")} {l.short}</span>
-                  </div>
-                ))}
-                {lowStock.length > 0 && (
-                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    <button onClick={copyShoppingList} style={{ flex: 1, padding: "9px", background: "var(--dark2)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📋 {t("inv.copyShort")}</button>
-                    <button onClick={downloadShoppingCsv} style={{ flex: 1, padding: "9px", background: "var(--dark2)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⬇ CSV</button>
-                    <button onClick={printShoppingList} style={{ flex: 1, padding: "9px", background: "var(--dark2)", color: GOLD, border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>🖨 PDF</button>
-                  </div>
-                )}
-                <Link href="/stock-alerts" className="inventory-alert-link">{t("home.stockAlerts")} →</Link>
-              </details>
+              <div className="inventory-result-bar">
+                <span>{t("inventoryWorkflow.results", { n: shownProducts.length, total: products.length })}</span>
+                {tab === "count" && <Link href="/stock-alerts">{t("home.stockAlerts")} →</Link>}
+              </div>
 
-              {showAdd && (
+              {tab === "catalog" && showAdd && (
                 <div style={{ ...card, marginBottom: 14 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <Field label={t("inv.category")}><input value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })} style={input} placeholder={t("inv.phCategory")} /></Field>
@@ -300,13 +311,14 @@ export default function InventoryPage() {
                 <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("inv.noProducts")}</div>
               ) : (
                 <>
-                  {countView === "grid" ? (
+                  {countView === "grid" && tab === "count" ? (
                     <div className="inventory-grid">
+                      {shownProducts.length === 0 && <div className="inventory-empty">{t("inventoryWorkflow.noMatches")} <button className="btn-secondary" onClick={() => { setSearch(""); setActiveCat(""); setStatusFilter("all"); }}>{t("inventoryWorkflow.reset")}</button></div>}
                       {shownProducts.map((p) => {
                         const st = stockStatus(p);
                         const bg = st === "green" ? "rgba(39,174,96,0.18)" : st === "amber" ? "rgba(212,168,71,0.18)" : st === "red" ? "rgba(231,76,60,0.18)" : "var(--dark2)";
                         const bd = st === "green" ? "rgba(39,174,96,0.4)" : st === "amber" ? "rgba(212,168,71,0.4)" : st === "red" ? "rgba(231,76,60,0.4)" : "var(--border)";
-                        const c = counts[p.product];
+                        const c = counts[inventoryKey(p)];
                         return (
                           <button key={p.id} onClick={() => { setGridSel(p); setGridVal(""); }}
                             style={{ background: bg, border: `1px solid ${bd}`, borderRadius: 10, padding: 10, textAlign: "left", cursor: "pointer", minHeight: 68 }}>
@@ -325,34 +337,34 @@ export default function InventoryPage() {
                       <th scope="col" className="numeric">{t("inv.currentCol")}</th>
                       <th scope="col" className="numeric">{t("inv.targetCol")}</th>
                       <th scope="col">{t("inv.status")}</th>
-                      <th scope="col" className="numeric">{t("inv.count")}</th>
+                      <th scope="col" className="numeric">{tab === "catalog" ? t("inventoryWorkflow.actions") : t("inv.count")}</th>
                     </tr></thead>
                     <tbody>
                   {shownProducts.map((p) => {
-                    const counted = counts[p.product];
+                    const counted = counts[inventoryKey(p)];
                     const isLow = counted && Number(counted.ist) < Number(p.soll);
                     return (
                       <tr key={p.id}>
                         <td>
                           <div style={{ fontWeight: 600 }}>{p.product}</div>
                           <div className="muted">{p.category}{p.unit ? ` · ${p.unit}` : ""}</div>
-                          <button onClick={() => doRemoveProduct(p)} className="inventory-archive" aria-label={`${t("inv.removeProduct")}: ${p.product}`}>{t("inv.removeProduct")}</button>
                         </td>
                         <td className="numeric" data-label={t("inv.currentCol")}>{counted ? counted.ist : "—"}{counted && p.unit ? ` ${p.unit}` : ""}</td>
                         <td className="numeric" data-label={t("inv.targetCol")}>{p.soll}{p.unit ? ` ${p.unit}` : ""}</td>
                         <td data-label={t("inv.status")}><span className={`status-badge${counted ? isLow ? " low" : " good" : ""}`}>{!counted ? t("salert.notCounted") : isLow ? t("inv.lowStatus") : t("inv.atTargetStatus")}</span></td>
                         <td>
-                          <div className="row-actions">
-                          <input type="number" inputMode="decimal" min="0" step="any" aria-label={`${t("inv.count")}: ${p.product}${p.unit ? ` (${p.unit})` : ""}`} value={entry[p.product] ?? ""} onChange={(e) => setEntry({ ...entry, [p.product]: e.target.value })}
+                          {tab === "catalog" ? <button onClick={() => doRemoveProduct(p)} className="inventory-archive" aria-label={`${t("inv.removeProduct")}: ${p.product}`}>{t("inv.removeProduct")}</button> : <div className="row-actions">
+                          <input type="number" inputMode="decimal" min="0" step="any" aria-label={`${t("inv.count")}: ${p.product}${p.unit ? ` (${p.unit})` : ""}`} value={entry[inventoryKey(p)] ?? ""} onChange={(e) => setEntry({ ...entry, [inventoryKey(p)]: e.target.value })}
                             placeholder={counted ? String(counted.ist) : "0"} className="form-input quantity-input" />
                           <button onClick={() => doSaveCount(p)} disabled={savingP === p.product} className="btn-gold">
                             {savingP === p.product ? "…" : t("inv.count")}
                           </button>
-                          </div>
+                          </div>}
                         </td>
                       </tr>
                     );
                   })}
+                      {shownProducts.length === 0 && <tr><td colSpan={5} className="inventory-empty">{t("inventoryWorkflow.noMatches")} <button className="btn-secondary" onClick={() => { setSearch(""); setActiveCat(""); setStatusFilter("all"); }}>{t("inventoryWorkflow.reset")}</button></td></tr>}
                     </tbody>
                   </table>
                   </div>
@@ -365,7 +377,7 @@ export default function InventoryPage() {
 
           {/* ============ DELIVERIES ============ */}
           {tab === "deliveries" && (
-            <>
+            <div className="inventory-delivery-grid">
               {products.length === 0 ? (
                 <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("inv.addProductsFirst")}</div>
               ) : (
@@ -376,7 +388,7 @@ export default function InventoryPage() {
                     <Field label={t("inv.product")}>
                       <select value={del.product} onChange={(e) => setDel({ ...del, product: e.target.value })} style={input}>
                         <option value="">{t("inv.pickProductOpt")}</option>
-                        {products.map((p) => <option key={p.id} value={p.product}>{p.product}{p.unit ? ` (${p.unit})` : ""}</option>)}
+                        {products.map((p) => <option key={p.id} value={p.id}>{p.product} · {p.category}{p.unit ? ` (${p.unit})` : ""}</option>)}
                       </select>
                     </Field>
                     <Field label={t("inv.qtyReceived")}><input type="number" value={del.qty} onChange={(e) => setDel({ ...del, qty: e.target.value })} style={input} placeholder="100" /></Field>
@@ -389,7 +401,7 @@ export default function InventoryPage() {
                 </div>
               )}
 
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gray)", margin: "4px 2px 8px" }}>{t("inv.recentDeliveries")}</div>
+              <section><h2 className="inventory-section-title">{t("inv.recentDeliveries")}</h2>
               {deliveries.length === 0 ? (
                 <div style={{ ...card, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>{t("inv.noDeliveries")}</div>
               ) : deliveries.map((d) => (
@@ -403,7 +415,8 @@ export default function InventoryPage() {
                   </div>
                 </div>
               ))}
-            </>
+              </section>
+            </div>
           )}
 
           {/* ============ ANALYTICS ============ */}
@@ -419,17 +432,16 @@ export default function InventoryPage() {
               {!analytics ? <CardSkeleton rows={4} /> : !analytics.hasPurchases && !analytics.hasCounts ? (
                 <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("inv.noAnalytics")}</div>
               ) : (
-                <>
+                <div className="inventory-report-grid">
                   <div style={{ ...card, marginBottom: 14, borderColor: "rgba(212,168,71,0.3)" }}>
                     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: GOLD }}>{eur(analytics.totalSpend)}</div>
+                      <strong>{t("inv.spentOnStock")}</strong>
                       {analytics.spendPctChange != null && (
                         <div style={{ fontSize: 13, fontWeight: 700, color: analytics.spendPctChange > 0 ? "var(--danger)" : "var(--success)" }}>
                           {analytics.spendPctChange > 0 ? "▲" : "▼"} {Math.abs(analytics.spendPctChange)}% {t("inv.vsPrev")}
                         </div>
                       )}
                     </div>
-                    <div style={{ fontSize: 13, color: "var(--gray-light)", marginTop: 3 }}>{t("inv.spentOnStock")}</div>
                     <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                       {analytics.foodCostPct != null ? (
                         <span style={chip}>{t("inv.foodCost")}: <b style={{ color: fcColor(analytics.foodCostPct) }}>{analytics.foodCostPct}%</b></span>
@@ -440,7 +452,7 @@ export default function InventoryPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  <div className="inventory-report-kpis">
                     <Kpi label={t("inv.kSpend")} value={eur(analytics.totalSpend)} color={GOLD} />
                     <Kpi label={t("inv.kUsed")} value={eur(analytics.totalUsageEur)} color={BLUE} />
                     <Kpi label={t("inv.kStockValue")} value={eur(analytics.stockValue)} color="var(--success)" />
@@ -458,7 +470,7 @@ export default function InventoryPage() {
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <YAxis tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                            <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 12 }} />
+                            <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
                             <Legend wrapperStyle={{ fontSize: 11 }} />
                             <Bar name={t("inv.legendSpend")} dataKey="spend" fill="var(--gold)" radius={[4, 4, 0, 0]} maxBarSize={22} />
                             <Bar name={t("inv.legendUse")} dataKey="usageEur" fill={BLUE} radius={[4, 4, 0, 0]} maxBarSize={22} />
@@ -479,7 +491,7 @@ export default function InventoryPage() {
                             <XAxis dataKey="month" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <YAxis yAxisId="l" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} unit="%" />
-                            <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 12 }} />
+                            <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
                             <Legend wrapperStyle={{ fontSize: 11 }} />
                             <Bar yAxisId="l" name={t("inv.legendSpend")} dataKey="spend" fill="var(--gold)" radius={[4, 4, 0, 0]} maxBarSize={26} />
                             <Line yAxisId="r" name={t("inv.foodCost")} dataKey="foodCostPct" stroke={BLUE} strokeWidth={2} dot={{ r: 3 }} connectNulls />
@@ -550,7 +562,7 @@ export default function InventoryPage() {
                         </div>
                       ))}
                   </div>
-                </>
+                </div>
               )}
             </>
           )}
@@ -559,10 +571,18 @@ export default function InventoryPage() {
             <>
               <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.forecastIntro")}</div>
               <Link href="/stock-alerts" className="inventory-alert-link">{t("home.stockAlerts")} →</Link>
+              {lowStock.length > 0 && <details className="inventory-operation-menu">
+                <summary>{t("inventoryWorkflow.exportShortages")}</summary>
+                <div className="inventory-links">
+                  <button className="btn-secondary" onClick={copyShoppingList}>{t("inv.copyShort")}</button>
+                  <button className="btn-secondary" onClick={downloadShoppingCsv}>CSV</button>
+                  <button className="btn-secondary" onClick={printShoppingList}>{t("inventoryWorkflow.print")}</button>
+                </div>
+              </details>}
               <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
                 <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("inv.coverFor")}</span>
                 {[7, 14, 30].map((cd) => (
-                  <button key={cd} onClick={() => { setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); }); }}
+                  <button key={cd} onClick={() => { setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }}
                     style={{ ...chip, background: coverDays === cd ? "rgba(212,168,71,0.15)" : "var(--dark2)", color: coverDays === cd ? "var(--gold-ink)" : "var(--gray)", borderColor: coverDays === cd ? "rgba(212,168,71,0.3)" : "var(--border)", cursor: "pointer" }}>
                     {cd}{t("inv.daysShort")}
                   </button>
@@ -571,24 +591,21 @@ export default function InventoryPage() {
               </div>
               {!forecast ? <CardSkeleton rows={4} /> : forecast.items.length === 0 ? (
                 <div style={{ ...card, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>{forecast.hasData ? t("inv.forecastNoUse") : t("inv.forecastNoData")}</div>
-              ) : forecast.items.map((it: any, i: number) => {
+              ) : <div className="table-scroll" role="region" aria-label={t("inventoryWorkflow.reorder")} tabIndex={0}><table className="data-table inventory-table"><thead><tr>
+                <th scope="col">{t("inv.product")}</th><th scope="col" className="numeric">{t("inv.onHand")}</th><th scope="col" className="numeric">{t("inventoryWorkflow.dailyUsage")}</th><th scope="col" className="numeric">{t("inventoryWorkflow.coverage")}</th><th scope="col" className="numeric">{t("inv.order")}</th>
+              </tr></thead><tbody>{forecast.items.map((it: any, i: number) => {
                 const dl = it.daysLeft;
                 const c = dl == null ? "var(--gray)" : dl < 2 ? "var(--danger)" : dl < 4 ? "var(--gold-ink)" : "var(--success)";
                 return (
-                  <div key={i} style={{ ...card, padding: 14, marginBottom: 8 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{it.product}</div>
-                        <div style={{ fontSize: 11, color: "var(--gray)" }}>{it.category} · {t("inv.onHand")} {it.current}{it.unit ? " " + it.unit : ""}{it.usageRate > 0 ? ` · ${it.usageRate}/${t("inv.dayShort")}` : ""}</div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: c }}>{dl == null ? "—" : t("inv.daysLeftVal", { n: dl })}</div>
-                        {it.suggested > 0 && <div style={{ fontSize: 11, color: "var(--gold-ink)" }}>{t("inv.order")} {it.suggested}{it.unit ? " " + it.unit : ""}</div>}
-                      </div>
-                    </div>
-                  </div>
+                  <tr key={i}>
+                    <td><strong>{it.product}</strong><div className="muted">{it.category}</div><div className="muted">{it.countDate} · {it.stale ? t("inventoryWorkflow.recount") : t("inventoryWorkflow.observed", { n: it.observedDays || 0 })}</div></td>
+                    <td className="numeric" data-label={t("inv.onHand")}>{it.current} {it.unit || ""}</td>
+                    <td className="numeric" data-label={t("inventoryWorkflow.dailyUsage")}>{it.usageRate > 0 ? `${it.usageRate} ${it.unit || ""}` : "—"}</td>
+                    <td className="numeric" data-label={t("inventoryWorkflow.coverage")} style={{ color: c }}>{dl == null ? "—" : t("inv.daysLeftVal", { n: dl })}</td>
+                    <td className="numeric" data-label={t("inv.order")}>{it.suggested > 0 ? `${it.suggested} ${it.unit || ""}` : "—"}</td>
+                  </tr>
                 );
-              })}
+              })}</tbody></table></div>}
             </>
           )}
         </>

@@ -31,17 +31,17 @@ export default function DirectoryPage() {
   );
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto" }}>
+    <div className="workspace-page">
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📇" size={22} /> {t("directory.title")}</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("directory.subtitle")}</p>
+      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("directory.subtitle")}</p>
 
       <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}
-        style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
+        style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : filtered.length === 0 ? (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 30 }}>{t("directory.empty")}</div>
+        <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("directory.empty")}</div>
       ) : (
         filtered.map((p) => (
           <div key={p.id} style={{ ...card, marginBottom: 8, display: "flex", alignItems: "center", gap: 14 }}>
@@ -49,8 +49,8 @@ export default function DirectoryPage() {
               {(p.full_name || "?")[0].toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"}{p.status === "inactive" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> ({t("directory.inactive")})</span>}</div>
-              <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")}</div>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"}{p.status === "inactive" && <span style={{ fontSize: 11, color: "var(--gray)" }}> ({t("directory.inactive")})</span>}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")}</div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               {p.phone && <a href={`tel:${p.phone}`} style={iconBtn} title={t("directory.call")}><Icon e="📞" size={16} /></a>}
@@ -64,5 +64,5 @@ export default function DirectoryPage() {
   );
 }
 
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 14 };
-const iconBtn: React.CSSProperties = { width: 38, height: 38, borderRadius: 9, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, textDecoration: "none" };
+const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 14 };
+const iconBtn: React.CSSProperties = { width: 44, height: 44, borderRadius: 9, background: "var(--dark2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, textDecoration: "none", color: "var(--gold-ink)" };

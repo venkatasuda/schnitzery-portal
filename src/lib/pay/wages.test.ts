@@ -24,7 +24,7 @@ function mockClient(rows: any[] = [], captured: any = {}) {
             in(col: string, ids: any[]) {
               captured.inColumn = col;
               captured.inIds = ids;
-              return Promise.resolve({ data: rows, error: null });
+              return { order: () => ({ range: async (from: number, to: number) => ({ data: rows.slice(from, to + 1), error: captured.readError ?? null }) }) };
             },
           };
         },
@@ -110,4 +110,8 @@ describe("setWage", () => {
     expect(res.ok).toBe(true);
     expect(cap.upsert.hourly_wage).toBeNull();
   });
+});
+
+it("does not turn a failed wage read into an empty wage map", async () => {
+  await expect(wageMapForBranches(mockClient([], { readError: { message: "denied" } }), ["b1"])).rejects.toThrow("Wage lookup failed");
 });

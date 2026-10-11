@@ -1,8 +1,11 @@
 "use server";
+import { readAll } from "@/lib/supabase/readAll";
+
 
 import { createClient } from "@/lib/supabase/server";
-import { berlinToday } from "@/lib/time/berlinDate";
-import { sendPushToUser } from "@/lib/push/actions";
+import { berlinToday, berlinMonth, isCalendarDate } from "@/lib/time/berlinDate";
+import { sendPushToUser } from "@/lib/push/delivery";
+import { inventoryKey, validInventoryItem } from "@/lib/inventory/identity";
 
 // ============================================================
 // INVENTORY
@@ -30,12 +33,12 @@ function todayStr() { return berlinToday(); }
 export async function getProducts() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", products: [] };
-  const { data, error } = await supabase
+  const { data, error } = await readAll(supabase
     .from("inventory_master")
     .select("*")
     .eq("branch_id", branchId)
     .eq("is_active", true)
-    .order("category").order("product");
+    .order("category").order("product").order("id"));
   if (error) return { ok: false, error: error.message, products: [] };
   return { ok: true, products: data || [] };
 }
@@ -45,7 +48,8 @@ export async function addProduct(category: string, product: string, soll: number
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
-  if (!category || !product) return { ok: false, error: "Category and product are required." };
+  if (!category || !validInventoryItem({ category, product, unit })) return { ok: false, error: "Category and product are required." };
+  if (!branchId || !Number.isFinite(soll) || soll < 0) return { ok: false, error: "Enter a valid target." };
   const { error } = await supabase.from("inventory_master").insert({
     branch_id: branchId, category, product, soll: soll || 0, unit: unit || null, is_active: true,
   });
@@ -68,18 +72,19 @@ export async function getCounts(date?: string) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", counts: [] };
   const d = date || todayStr();
-  const { data, error } = await supabase
+  if (!isCalendarDate(d)) return { ok: false, error: "Invalid count date.", counts: [] };
+  const { data, error } = await readAll(supabase
     .from("inventory_counts")
     .select("*")
     .eq("branch_id", branchId)
     .eq("count_date", d)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }).order("id", { ascending: false }).order("id"));
   if (error) return { ok: false, error: error.message, counts: [] };
 
   // keep only the latest count per product for that date
   const latest: Record<string, any> = {};
   for (const c of data || []) {
-    if (!latest[c.product]) latest[c.product] = c;
+    if (!latest[inventoryKey(c)]) latest[inventoryKey(c)] = c;
   }
   return { ok: true, counts: Object.values(latest), date: d };
 }
@@ -89,6 +94,7 @@ export async function saveCount(product: string, category: string, ist: number, 
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  if (!branchId || !category || !validInventoryItem({ product, category, unit }) || ![ist, soll].every(n => Number.isFinite(n) && n >= 0)) return { ok: false, error: "Enter valid stock quantities." };
   const { error } = await supabase.from("inventory_counts").insert({
     branch_id: branchId,
     count_date: todayStr(),
@@ -108,13 +114,14 @@ export async function getOrderAlert() {
   if (!products.ok) return { ok: false, error: products.error, lowStock: [] };
 
   const counts = await getCounts();
+  if (!counts.ok) return { ok: false, error: counts.error, lowStock: [] };
   const countMap: Record<string, any> = {};
-  for (const c of (counts.counts || [])) countMap[c.product] = c;
+  for (const c of (counts.counts || [])) countMap[inventoryKey(c)] = c;
 
   // a product is "low" if it has a count today and ist < soll
   const lowStock = [];
   for (const p of products.products) {
-    const c = countMap[p.product];
+    const c = countMap[inventoryKey(p)];
     if (c && Number(c.ist) < Number(p.soll)) {
       lowStock.push({
         product: p.product, category: p.category, unit: p.unit,
@@ -133,7 +140,7 @@ export async function setAlertLevel(id: string, level: number) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
-  if (!(level >= 0)) return { ok: false, error: "Enter a valid level." };
+  if (!Number.isFinite(level) || !(level >= 0)) return { ok: false, error: "Enter a valid level." };
   const { error } = await supabase
     .from("inventory_master").update({ soll: level })
     .eq("id", id).eq("branch_id", branchId); // scope to own branch
@@ -149,11 +156,12 @@ export async function getStockAlerts() {
 
   const [products, counts] = await Promise.all([getProducts(), getCounts()]);
   if (!products.ok) return { ok: false, error: products.error, items: [] };
+  if (!counts.ok) return { ok: false, error: counts.error, items: [] };
   const countMap: Record<string, any> = {};
-  for (const c of (counts.counts || [])) countMap[c.product] = c;
+  for (const c of (counts.counts || [])) countMap[inventoryKey(c)] = c;
 
   const items = products.products.map((p: any) => {
-    const c = countMap[p.product];
+    const c = countMap[inventoryKey(p)];
     const ist = c ? Number(c.ist) : null;
     const level = Number(p.soll) || 0;
     return {
@@ -177,6 +185,7 @@ export async function notifyLowStock() {
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
 
   const alert = await getOrderAlert();
+  if (!alert.ok) return { ok: false, error: alert.error };
   const low = alert.ok ? alert.lowStock : [];
   if (low.length === 0) return { ok: true, count: 0 };
 
@@ -194,7 +203,9 @@ export async function addDelivery(input: {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
-  if (!input.product) return { ok: false, error: "Product is required." };
+  if (!input || !validInventoryItem(input)) return { ok: false, error: "Product is required." };
+  if (input.date !== undefined && !isCalendarDate(input.date)) return { ok: false, error: "Invalid delivery date." };
+  if (!branchId || !Number.isFinite(input.qty) || input.qty <= 0 || !Number.isFinite(input.cost) || input.cost < 0) return { ok: false, error: "Enter a positive quantity and a valid cost." };
   const { error } = await supabase.from("inventory_purchases").insert({
     branch_id: branchId,
     category: input.category || null,
@@ -215,15 +226,15 @@ export async function addDelivery(input: {
 export async function getDeliveries(days = 30) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", deliveries: [] };
-  const since = new Date(); since.setDate(since.getDate() - days);
+  const since = new Date(berlinToday() + "T12:00:00Z"); since.setUTCDate(since.getUTCDate() - days);
   const sinceStr = since.toISOString().slice(0, 10);
-  const { data, error } = await supabase
+  const { data, error } = await readAll(supabase
     .from("inventory_purchases")
     .select("*")
     .eq("branch_id", branchId)
     .gte("purchase_date", sinceStr)
     .order("purchase_date", { ascending: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }).order("id"));
   if (error) return { ok: false, error: error.message, deliveries: [] };
   return { ok: true, deliveries: data || [] };
 }
@@ -234,30 +245,34 @@ export async function getDeliveries(days = 30) {
 export async function getInventoryAnalytics(days = 30) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  const since = new Date(); since.setDate(since.getDate() - days);
+  const since = new Date(berlinToday() + "T12:00:00Z"); since.setUTCDate(since.getUTCDate() - days);
   const sinceStr = since.toISOString().slice(0, 10);
 
-  const { data: purchases } = await supabase
+  const { data: purchases, error: purchasesError } = await readAll(supabase
     .from("inventory_purchases")
-    .select("product, category, qty, cost, purchase_date")
-    .eq("branch_id", branchId).gte("purchase_date", sinceStr);
-  const { data: counts } = await supabase
+    .select("product, category, qty, cost, purchase_date, unit")
+    .eq("branch_id", branchId).gte("purchase_date", sinceStr).order("id"));
+  if (purchasesError) return { ok: false, error: purchasesError.message };
+  const { data: counts, error: countsError } = await readAll(supabase
     .from("inventory_counts")
-    .select("product, ist, count_date, created_at")
+    .select("product, ist, count_date, created_at, category, unit")
     .eq("branch_id", branchId).gte("count_date", sinceStr)
-    .order("count_date", { ascending: true }).order("created_at", { ascending: true });
+    .order("count_date", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).order("id"));
+  if (countsError) return { ok: false, error: countsError.message };
 
   // sales (for food cost %) + previous-window spend (for trend vs last period)
-  const { data: salesRows } = await supabase
-    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", sinceStr);
+  const { data: salesRows, error: salesRowsError } = await readAll(supabase
+    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", sinceStr).order("id"));
+  if (salesRowsError) return { ok: false, error: salesRowsError.message };
   let totalSales = 0;
   for (const s of salesRows || []) totalSales += Number(s.amount) || 0;
 
-  const prevSince = new Date(); prevSince.setDate(prevSince.getDate() - days * 2);
+  const prevSince = new Date(berlinToday() + "T12:00:00Z"); prevSince.setUTCDate(prevSince.getUTCDate() - days * 2);
   const prevSinceStr = prevSince.toISOString().slice(0, 10);
-  const { data: prevPurch } = await supabase
+  const { data: prevPurch, error: prevPurchError } = await readAll(supabase
     .from("inventory_purchases").select("cost").eq("branch_id", branchId)
-    .gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr);
+    .gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr).order("id"));
+  if (prevPurchError) return { ok: false, error: prevPurchError.message };
   let prevSpend = 0;
   for (const p of prevPurch || []) prevSpend += Number(p.cost) || 0;
 
@@ -275,11 +290,11 @@ export async function getInventoryAnalytics(days = 30) {
   for (const p of P) {
     const d = p.purchase_date, c = Number(p.cost) || 0, q = Number(p.qty) || 0;
     spendByDate[d] = (spendByDate[d] || 0) + c;
-    spendByProduct[p.product] = (spendByProduct[p.product] || 0) + c;
+    spendByProduct[inventoryKey(p)] = (spendByProduct[inventoryKey(p)] || 0) + c;
     spendByCategory[p.category || "—"] = (spendByCategory[p.category || "—"] || 0) + c;
-    qtyByProduct[p.product] = (qtyByProduct[p.product] || 0) + q;
-    costByProduct[p.product] = (costByProduct[p.product] || 0) + c;
-    (purchByProdDate[p.product] ||= {})[d] = (purchByProdDate[p.product]?.[d] || 0) + q;
+    qtyByProduct[inventoryKey(p)] = (qtyByProduct[inventoryKey(p)] || 0) + q;
+    costByProduct[inventoryKey(p)] = (costByProduct[inventoryKey(p)] || 0) + c;
+    (purchByProdDate[inventoryKey(p)] ||= {})[d] = (purchByProdDate[inventoryKey(p)]?.[d] || 0) + q;
     totalSpend += c;
   }
   const unitCost: Record<string, number> = {};
@@ -291,7 +306,7 @@ export async function getInventoryAnalytics(days = 30) {
   const countsByProduct: Record<string, { date: string; ist: number }[]> = {};
   const byProdDate: Record<string, Record<string, number>> = {};
   for (const c of C) {
-    (byProdDate[c.product] ||= {})[c.count_date] = Number(c.ist) || 0; // asc → last wins (latest)
+    (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = Number(c.ist) || 0; // asc → last wins (latest)
   }
   for (const prod of Object.keys(byProdDate)) {
     countsByProduct[prod] = Object.keys(byProdDate[prod]).sort()
@@ -335,10 +350,10 @@ export async function getInventoryAnalytics(days = 30) {
     usageEur: Math.round((usageEurByDate[d] || 0) * 100) / 100,
   }));
   const topSpend = Object.entries(spendByProduct)
-    .map(([product, eur]) => ({ product, eur: Math.round(eur) }))
+    .map(([product, eur]) => ({ product: JSON.parse(product)[1], category: JSON.parse(product)[0], eur: Math.round(eur) }))
     .sort((a, b) => b.eur - a.eur).slice(0, 8);
   const topUsage = Object.entries(usageEurByProduct)
-    .map(([product, eur]) => ({ product, eur: Math.round(eur), qty: Math.round((usageQtyByProduct[product] || 0) * 10) / 10 }))
+    .map(([product, eur]) => ({ product: JSON.parse(product)[1], category: JSON.parse(product)[0], eur: Math.round(eur), qty: Math.round((usageQtyByProduct[product] || 0) * 10) / 10 }))
     .sort((a, b) => b.eur - a.eur).slice(0, 8);
   const totalUsageEur = Object.values(usageEurByDate).reduce((s, v) => s + v, 0);
 
@@ -368,15 +383,16 @@ export async function getInventoryAnalytics(days = 30) {
 export async function getInventoryTrend(months = 6) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", trend: [] };
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+  const now = new Date(berlinMonth() + "-01T12:00:00Z");
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1, 12));
   const startStr = start.toISOString().slice(0, 10);
 
   const [purchRes, salesRes] = await Promise.all([
-    supabase.from("inventory_purchases").select("cost, purchase_date").eq("branch_id", branchId).gte("purchase_date", startStr),
-    supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", startStr),
+    readAll(supabase.from("inventory_purchases").select("cost, purchase_date").eq("branch_id", branchId).gte("purchase_date", startStr).order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", startStr).order("id")),
   ]);
 
+  if (purchRes.error || salesRes.error) return { ok: false, error: purchRes.error?.message || salesRes.error?.message, trend: [] };
   const spend: Record<string, number> = {};
   const sale: Record<string, number> = {};
   if (!purchRes.error) for (const p of purchRes.data || []) { const ym = (p.purchase_date || "").slice(0, 7); spend[ym] = (spend[ym] || 0) + (Number(p.cost) || 0); }
@@ -385,11 +401,11 @@ export async function getInventoryTrend(months = 6) {
   const ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const trend = [];
   for (let i = months - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1, 12));
     const ym = d.toISOString().slice(0, 7);
     const sp = Math.round(spend[ym] || 0);
     const sl = sale[ym] || 0;
-    trend.push({ month: ABBR[d.getMonth()], ym, spend: sp, foodCostPct: sl > 0 ? Math.round((sp / sl) * 1000) / 10 : null });
+    trend.push({ month: ABBR[d.getUTCMonth()], ym, spend: sp, foodCostPct: sl > 0 ? Math.round((sp / sl) * 1000) / 10 : null });
   }
   return { ok: true, trend };
 }
@@ -411,11 +427,11 @@ export async function getInventoryVariance(days = 30) {
   const fetchFrom = at(3 * days); // lead-in so the first count pair in each window is complete
 
   const [countsRes, purchRes, salesRes] = await Promise.all([
-    supabase.from("inventory_counts").select("product, count_date, ist").eq("branch_id", branchId).gte("count_date", fetchFrom).order("count_date"),
-    supabase.from("inventory_purchases").select("product, purchase_date, qty, cost").eq("branch_id", branchId).gte("purchase_date", fetchFrom),
-    supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", prevStart),
+    readAll(supabase.from("inventory_counts").select("product, count_date, ist, category, unit").eq("branch_id", branchId).gte("count_date", fetchFrom).order("count_date").order("created_at").order("id").order("id")),
+    readAll(supabase.from("inventory_purchases").select("product, purchase_date, qty, cost, category, unit").eq("branch_id", branchId).gte("purchase_date", fetchFrom).order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", prevStart).order("id")),
   ]);
-  if (purchRes.error || countsRes.error) return { ok: true, items: [], hasData: false, normalised: false, days };
+  if (purchRes.error || countsRes.error || salesRes.error) return { ok: false, error: purchRes.error?.message || countsRes.error?.message || salesRes.error?.message, items: [], hasData: false };
 
   const C = countsRes.data || [];
   const P = purchRes.data || [];
@@ -425,15 +441,15 @@ export async function getInventoryVariance(days = 30) {
   const purchByProdDate: Record<string, Record<string, number>> = {};
   for (const p of P) {
     const q = Number(p.qty) || 0, c = Number(p.cost) || 0;
-    qtyByProduct[p.product] = (qtyByProduct[p.product] || 0) + q;
-    costByProduct[p.product] = (costByProduct[p.product] || 0) + c;
-    (purchByProdDate[p.product] ||= {})[p.purchase_date] = (purchByProdDate[p.product]?.[p.purchase_date] || 0) + q;
+    qtyByProduct[inventoryKey(p)] = (qtyByProduct[inventoryKey(p)] || 0) + q;
+    costByProduct[inventoryKey(p)] = (costByProduct[inventoryKey(p)] || 0) + c;
+    (purchByProdDate[inventoryKey(p)] ||= {})[p.purchase_date] = (purchByProdDate[inventoryKey(p)]?.[p.purchase_date] || 0) + q;
   }
   const unitCost: Record<string, number> = {};
   for (const prod of Object.keys(qtyByProduct)) unitCost[prod] = qtyByProduct[prod] > 0 ? costByProduct[prod] / qtyByProduct[prod] : 0;
 
   const byProdDate: Record<string, Record<string, number>> = {};
-  for (const c of C) (byProdDate[c.product] ||= {})[c.count_date] = Number(c.ist) || 0;
+  for (const c of C) (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = Number(c.ist) || 0;
   const series: Record<string, { date: string; ist: number }[]> = {};
   for (const prod of Object.keys(byProdDate)) series[prod] = Object.keys(byProdDate[prod]).sort().map((d) => ({ date: d, ist: byProdDate[prod][d] }));
 
@@ -476,7 +492,7 @@ export async function getInventoryVariance(days = 30) {
     if (changePct === null) flag = c > 0 ? "new" : "ok";
     else if (changePct >= 25 && c >= 20) flag = "up";
     else if (changePct <= -25) flag = "down";
-    return { product: prod, curEur: c, prevEur: p, changePct, flag };
+    return { product: JSON.parse(prod)[1], curEur: c, prevEur: p, changePct, flag };
   })
     .filter((x) => x.curEur > 0 || x.prevEur > 0)
     .sort((a, b) => (b.changePct ?? -999) - (a.changePct ?? -999));
@@ -494,6 +510,7 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", items: [], hasData: false };
 
+  if (!Number.isInteger(windowDays) || windowDays < 1 || windowDays > 365 || !Number.isInteger(coverDays) || coverDays < 1 || coverDays > 90) return { ok: false, error: "Invalid forecast period.", items: [], hasData: false };
   const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
   const dayMs = 86400000;
   const at = (off: number) => new Date(anchor - off * dayMs).toISOString().slice(0, 10);
@@ -501,29 +518,29 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
   const fetchFrom = at(windowDays * 2); // lead-in so the first pair in the window is complete
 
   const [countsRes, purchRes, prodRes] = await Promise.all([
-    supabase.from("inventory_counts").select("product, category, count_date, ist, soll, unit")
-      .eq("branch_id", branchId).gte("count_date", fetchFrom).order("count_date"),
-    supabase.from("inventory_purchases").select("product, purchase_date, qty")
-      .eq("branch_id", branchId).gte("purchase_date", fetchFrom),
-    supabase.from("inventory_master").select("product, category, soll, unit, is_active")
-      .eq("branch_id", branchId).eq("is_active", true),
+    readAll(supabase.from("inventory_counts").select("product, category, count_date, ist, soll, unit")
+      .eq("branch_id", branchId).gte("count_date", fetchFrom).lte("count_date", berlinToday()).order("count_date").order("created_at").order("id").order("id")),
+    readAll(supabase.from("inventory_purchases").select("product, purchase_date, qty, category, unit")
+      .eq("branch_id", branchId).gte("purchase_date", fetchFrom).lte("purchase_date", berlinToday()).order("id")),
+    readAll(supabase.from("inventory_master").select("product, category, soll, unit, is_active")
+      .eq("branch_id", branchId).eq("is_active", true).order("id")),
   ]);
 
+  if (countsRes.error || purchRes.error || prodRes.error) return { ok: false, error: countsRes.error?.message || purchRes.error?.message || prodRes.error?.message, items: [], hasData: false };
   const C = countsRes.data || [];
   const purchByProdDate: Record<string, Record<string, number>> = {};
   if (!purchRes.error) for (const p of purchRes.data || []) {
-    (purchByProdDate[p.product] ||= {})[p.purchase_date] = (purchByProdDate[p.product]?.[p.purchase_date] || 0) + (Number(p.qty) || 0);
+    (purchByProdDate[inventoryKey(p)] ||= {})[p.purchase_date] = (purchByProdDate[inventoryKey(p)]?.[p.purchase_date] || 0) + (Number(p.qty) || 0);
   }
 
   const byProdDate: Record<string, Record<string, number>> = {};
   const meta: Record<string, any> = {};
   for (const c of C) {
-    (byProdDate[c.product] ||= {})[c.count_date] = Number(c.ist) || 0;
-    meta[c.product] = { category: c.category, soll: Number(c.soll) || 0, unit: c.unit };
+    (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = Number(c.ist) || 0;
+    meta[inventoryKey(c)] = { category: c.category, soll: Number(c.soll) || 0, unit: c.unit };
   }
   for (const m of prodRes.data || []) {
-    if (!meta[m.product]) meta[m.product] = { category: m.category, soll: Number(m.soll) || 0, unit: m.unit };
-    else if (!meta[m.product].soll) meta[m.product].soll = Number(m.soll) || 0;
+    meta[inventoryKey(m)] = { category: m.category, soll: Number(m.soll) || 0, unit: m.unit };
   }
 
   const purchasedBetween = (prod: string, after: string, through: string) => {
@@ -532,29 +549,34 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
     return s;
   };
 
+  const activeKeys = new Set((prodRes.data || []).map(inventoryKey));
   const items: any[] = [];
-  for (const prod of Object.keys(byProdDate)) {
+  for (const prod of Object.keys(byProdDate).filter(key => activeKeys.has(key))) {
     const series = Object.keys(byProdDate[prod]).sort().map((d) => ({ date: d, ist: byProdDate[prod][d] }));
     if (series.length === 0) continue;
     const current = series[series.length - 1].ist;
 
-    let usage = 0;
+    let usage = 0, observedDays = 0;
     for (let i = 0; i + 1 < series.length; i++) {
       const a = series[i], b = series[i + 1];
-      if (b.date <= from) continue; // pair closes outside the window
+      if (a.date < from || b.date > berlinToday()) continue; // pair closes outside the window
       let used = a.ist + purchasedBetween(prod, a.date, b.date) - b.ist;
       if (used < 0) used = 0;
       usage += used;
+      observedDays += (Date.parse(b.date) - Date.parse(a.date)) / dayMs;
     }
-    const usageRate = usage / windowDays; // per day
+    const usageRate = observedDays > 0 ? usage / observedDays : 0; // per day
     const soll = meta[prod]?.soll || 0;
-    const daysLeft = usageRate > 0 ? Math.round((current / usageRate) * 10) / 10 : null;
-    const suggested = usageRate > 0
+    const countDate = series[series.length - 1].date;
+    const stale = (anchor - Date.parse(countDate + "T12:00:00Z")) / dayMs > 1;
+    const daysLeft = !stale && usageRate > 0 ? Math.round((current / usageRate) * 10) / 10 : null;
+    const suggested = stale ? 0 : usageRate > 0
       ? Math.max(0, Math.ceil(usageRate * coverDays - current))
       : Math.max(0, Math.round((soll - current) * 10) / 10);
 
     items.push({
-      product: prod, category: meta[prod]?.category || "", unit: meta[prod]?.unit || "",
+      product: JSON.parse(prod)[1], category: meta[prod]?.category || "", unit: meta[prod]?.unit || "",
+      countDate, stale, observedDays,
       current: Math.round(current * 10) / 10, soll,
       usageRate: Math.round(usageRate * 100) / 100, daysLeft, suggested,
     });
@@ -576,19 +598,20 @@ export async function getPurchaseOrderDraft(coverDays = 7) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", groups: [], total: 0, hasPrices: false };
 
-  const { data: purch } = await supabase
-    .from("inventory_purchases").select("product, qty, cost, supplier, purchase_date")
-    .eq("branch_id", branchId).order("purchase_date", { ascending: false });
+  const { data: purch, error: priceError } = await readAll(supabase
+    .from("inventory_purchases").select("product, qty, cost, supplier, purchase_date, category, unit")
+    .eq("branch_id", branchId).order("purchase_date", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).order("id"));
 
+  if (priceError) return { ok: false, error: priceError.message, groups: [], total: 0, hasPrices: false };
   const priceInfo: Record<string, { unitPrice: number; supplier: string }> = {};
   for (const p of purch || []) {
-    if (!priceInfo[p.product] && Number(p.qty) > 0) {
-      priceInfo[p.product] = { unitPrice: Number(p.cost) / Number(p.qty), supplier: p.supplier || "" };
+    if (!priceInfo[inventoryKey(p)] && Number(p.qty) > 0) {
+      priceInfo[inventoryKey(p)] = { unitPrice: Number(p.cost) / Number(p.qty), supplier: p.supplier || "" };
     }
   }
 
   const items = suggested.map((x: any) => {
-    const pi = priceInfo[x.product];
+    const pi = priceInfo[inventoryKey(x)];
     const unitPrice = pi ? Math.round(pi.unitPrice * 100) / 100 : null;
     return {
       product: x.product, category: x.category, qty: x.suggested, unit: x.unit || "",

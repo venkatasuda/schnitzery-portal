@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canActOnUser, rankOf, isManagerRole } from "./rank";
+import { canActOnUser, canCreateRole, rankOf, isManagerRole } from "./rank";
 
 const A = "branch-a";
 const B = "branch-b";
@@ -85,7 +85,7 @@ describe("canActOnUser", () => {
 
   it("treats an unknown target role as bottom rank rather than failing open", () => {
     // A junk role must not accidentally outrank a manager.
-    expect(check("manager", "wizard").ok).toBe(true);
+    expect(check("manager", "wizard").ok).toBe(false);
     // ...and must not let a junk-role actor do anything.
     expect(check("wizard", "staff").ok).toBe(false);
   });
@@ -95,4 +95,12 @@ describe("canActOnUser", () => {
       meRole: "manager", meBranchId: null, targetRole: "staff", targetBranchId: A,
     }).ok).toBe(false);
   });
+});
+
+it("prevents account creation above the actor's authority", () => {
+  expect(canCreateRole("branch_owner", "super_admin")).toBe(false);
+  expect(canCreateRole("manager", "manager")).toBe(false);
+  expect(canCreateRole("branch_owner", "manager")).toBe(true);
+  expect(canCreateRole("brand_owner", "super_admin")).toBe(false);
+  expect(check("brand_owner", "super_admin").ok).toBe(false);
 });

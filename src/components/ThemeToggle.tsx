@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 
 // Light/dark toggle. Persists to localStorage and flips the `light` class on <html>.
 // A tiny inline script in the root layout applies the saved theme before paint
@@ -30,7 +31,7 @@ export default function ThemeToggle() {
       title={light ? "Switch to dark mode" : "Switch to light mode"}
       aria-label="Toggle light or dark mode"
     >
-      {light ? "🌙" : "☀️"}
+      <Icon e={light ? "🌙" : "☀️"} size={18} />
     </button>
   );
 }

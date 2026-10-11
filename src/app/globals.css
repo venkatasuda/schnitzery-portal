@@ -216,6 +216,28 @@ html.light .btn-gold { color: #fff; }
 .status-badge.low { background: var(--danger-soft); color: var(--danger); }
 .status-badge.good { background: var(--success-soft); color: var(--success); }
 .inventory-page { width: 100%; }
+.inventory-heading-actions { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+.inventory-heading-actions > a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; }
+.inventory-heading-actions .inventory-operation-menu { margin: 0; }
+.inventory-search { flex: 2; min-width: 200px; }
+.inventory-filter { min-width: 150px; }
+.inventory-search > span, .inventory-filter > span { display: block; color: var(--gray); font-size: 12px; margin-bottom: 6px; }
+.inventory-result-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; color: var(--gray); font-size: 13px; }
+.inventory-result-bar a { color: var(--gold-ink); text-decoration: none; }
+.inventory-empty { text-align: center; padding: 32px !important; }
+.inventory-empty button { margin-left: 12px; }
+.inventory-section-title { font-size: 16px; font-weight: 600; margin: 0 0 16px; }
+.inventory-delivery-grid { display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+.inventory-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.inventory-report-grid > div { min-width: 0; margin-bottom: 0 !important; }
+.inventory-report-grid > div:nth-child(-n+2) { grid-column: 1 / -1; }
+.inventory-report-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.inventory-page .hub-tabs { overflow-x: auto; }
+@media (max-width: 800px) {
+  .inventory-delivery-grid, .inventory-report-grid { grid-template-columns: minmax(0, 1fr); }
+  .inventory-report-kpis { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .management-shell .screen-wrap:has(.inventory-page) { padding: 20px 16px 48px; }
+}
 .skip-link { position: fixed; top: -80px; left: 16px; z-index: 200; padding: 12px 16px; background: var(--dark); color: var(--gold-ink); border: 1px solid var(--border); border-radius: 8px; }
 .skip-link:focus { top: 12px; }
 .management-sidebar { position: fixed; inset: 0 auto 0 0; width: 240px; padding: 28px 16px; overflow-y: auto; background: var(--dark); border-right: 1px solid var(--border); z-index: 95; }
@@ -227,10 +249,24 @@ html.light .btn-gold { color: #fff; }
 .management-nav-link:hover { background: var(--dark2); color: var(--white); }
 .management-nav-link.active { background: var(--accent-soft); color: var(--gold-ink); font-weight: 600; }
 .management-nav-link svg { flex-shrink: 0; }
-.management-shell { padding-left: 240px; }
+.management-shell { padding-left: 240px; font-size: 14px; line-height: 1.5; }
+.management-shell h1, .management-shell h2, .management-shell h3 { font-family: var(--font-body); letter-spacing: -0.3px; }
+.workspace-page { max-width: 640px; margin: 0 auto; }
+.management-shell .workspace-page { max-width: none; margin: 0; }
+.management-shell .hub-tab-panel.active { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; align-items: start; }
+.management-shell .hub-tab-panel.active > .card, .management-shell .hub-tab-panel.active > .feature-card { margin-bottom: 0; }
+.management-shell .card { padding: 20px; }
+.management-shell .data-table { font-size: 14px; }
+.management-shell .data-table th { font-size: 12px; letter-spacing: 0.2px; }
+.management-shell .feature-title { font-size: 15px; }
+.management-shell .feature-sub { font-size: 13px; }
+.management-shell .hub-tab { font-size: 14px; }
+.management-shell .hub-tabs { scrollbar-width: thin; }
+.management-shell .page-title { font-size: clamp(24px, 2vw, 30px); }
+.management-shell .page-sub { font-size: 14px; }
 .management-shell .app-header { padding: 16px 32px; min-height: 76px; }
 .management-shell .app-header .brand { font-family: var(--font-body); font-size: 14px; color: var(--white); }
-.management-shell .screen-wrap { max-width: 1440px; padding: 32px 32px 48px; }
+.management-shell .screen-wrap { max-width: none; padding: 24px 24px 48px; }
 .management-shell .hub-tabs { background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 0; gap: 24px; }
 .management-shell .hub-tab { flex: 0 0 auto; border-radius: 0; padding: 12px 4px; border-bottom: 2px solid transparent; min-width: auto; box-shadow: none; }
 .management-shell .hub-tab.active { color: var(--gold-ink); background: transparent; border-bottom-color: var(--gold-ink); outline: none; }
@@ -324,18 +360,12 @@ html.light .btn-gold { color: #fff; }
 .inventory-operation-menu summary::after { content: "+"; margin-left: 8px; }
 .inventory-operation-menu[open] summary::after { content: "−"; }
 .inventory-operation-menu .inventory-links { margin: 10px 0 0; }
-.inventory-catalog-menu { margin-bottom: 0; }
 .inventory-task-description { color: var(--gray); font-size: 13px; line-height: 1.6; margin: 0 0 20px; }
 .inventory-alert-link { display: inline-block; color: var(--gold-ink); font-size: 13px; min-height: 44px; padding: 12px 0; text-decoration: none; }
 .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
 .inventory-grid button { font-family: var(--font-body); }
 .inventory-archive { display: block; border: 0; background: transparent; color: var(--gray); padding: 4px 0; font-size: 12px; cursor: pointer; }
 .inventory-archive:hover { color: var(--danger); }
-.inventory-summary { border: 1px solid var(--border); border-radius: var(--radius); background: var(--dark); padding: 14px 16px; margin-bottom: 16px; }
-.inventory-summary summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 32px; cursor: pointer; font-size: 13px; font-weight: 600; }
-.inventory-summary summary::after { content: "+"; color: var(--gray); }
-.inventory-summary[open] summary::after { content: "−"; }
-.inventory-summary[open] summary { margin-bottom: 12px; }
 @media (max-width: 600px) {
   .management-shell .hub-tabs { gap: 16px; }
   .management-shell .app-header { flex-wrap: wrap; gap: 12px; }

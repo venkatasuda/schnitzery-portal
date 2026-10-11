@@ -141,43 +141,8 @@ export async function decideCover(id: string, decision: "approved" | "rejected")
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
-  const { data: row } = await supabase.from("cover_requests").select("*").eq("id", id).maybeSingle();
-  if (!row) return { ok: false, error: "Not found." };
-
-  const stamp = { resolved_by: profile?.full_name || "manager", resolved_at: new Date().toISOString() };
-
-  if (decision === "rejected") {
-    const { error } = await supabase.from("cover_requests").update({ status: "rejected", ...stamp }).eq("id", id);
-    if (error) return { ok: false, error: error.message };
-    return { ok: true };
-  }
-
-  if (!row.claimer_id) return { ok: false, error: "No one has claimed this shift yet." };
-
-  const { data: claimer } = await supabase.from("users").select("full_name").eq("id", row.claimer_id).maybeSingle();
-
-  // reassign the shift in the weekly roster
-  const ws = mondayOfDate(row.work_date);
-  const { data: rosterRow } = await supabase
-    .from("weekly_roster").select("id, roster_data")
-    .eq("branch_id", branchId).eq("week_start", ws).maybeSingle();
-
-  let reassigned = false;
-  if (rosterRow) {
-    const rd = (rosterRow.roster_data as any) || {};
-    const list = rd[row.day] || [];
-    for (const e of list) {
-      if (e.user_id === row.requester_id && e.team === row.team && e.shift === row.shift) {
-        e.user_id = row.claimer_id;
-        e.name = claimer?.full_name || e.name;
-        reassigned = true;
-        break;
-      }
-    }
-    if (reassigned) await supabase.from("weekly_roster").update({ roster_data: rd }).eq("id", rosterRow.id);
-  }
-
-  const { error } = await supabase.from("cover_requests").update({ status: "approved", ...stamp }).eq("id", id);
+  if (!["approved", "rejected"].includes(decision)) return { ok: false, error: "Invalid decision." };
+  const { data: reassigned, error } = await supabase.rpc("decide_cover_atomic", { p_id: id, p_decision: decision });
   if (error) return { ok: false, error: error.message };
-  return { ok: true, reassigned };
+  return { ok: true, reassigned: Boolean(reassigned) };
 }
