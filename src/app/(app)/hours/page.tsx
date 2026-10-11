@@ -30,7 +30,7 @@ export default function HoursPage() {
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⏱" size={22} /> My Hours</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⏱" size={22} /> My Hours</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>Your worked hours this month.</p>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -46,7 +46,7 @@ export default function HoursPage() {
       ) : (
         <>
           <div style={{ ...card, textAlign: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 44, fontWeight: 700, color: "#d4a847", fontFamily: "Georgia, serif" }}>{data.totalHours}h</div>
+            <div style={{ fontSize: 44, fontWeight: 700, color: "#d4a847", fontFamily: "var(--font-body)" }}>{data.totalHours}h</div>
             <div style={{ fontSize: 12, color: "var(--gray)", letterSpacing: 1, marginTop: 4 }}>WORKED THIS MONTH</div>
           </div>
 

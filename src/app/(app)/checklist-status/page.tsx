@@ -65,7 +65,7 @@ export default function ChecklistStatusPage() {
             </div>
           </div>
           {it.input_kind === "number" && (
-            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "Georgia, serif", color: it.value ? "#d4a847" : "var(--gray)", flexShrink: 0 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "var(--font-body)", color: it.value ? "#d4a847" : "var(--gray)", flexShrink: 0 }}>
               {it.value || "—"}
             </div>
           )}
@@ -76,7 +76,7 @@ export default function ChecklistStatusPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 14 }}>{t("checklist.statusSub")}</p>
 
       <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>

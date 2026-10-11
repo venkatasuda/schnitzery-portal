@@ -151,7 +151,7 @@ export default function StaffPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>
         {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
@@ -170,7 +170,11 @@ export default function StaffPage() {
         </div>
       )}
 
-      <button onClick={() => { setShowAdd(true); setAddMsg(null); }} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>{t("staff.addNew")}</button>
+      <div className="workspace-toolbar">
+        <button className="workspace-button primary" onClick={() => { setShowAdd(true); setAddMsg(null); }}>{t("staff.addNew")}</button>
+        <Link className="workspace-button" href="/directory">{t("directory.title")}</Link>
+        <Link className="workspace-button" href="/notes">{t("schedhub.notes")}</Link>
+      </div>
 
       {showAdd && (
         <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 100, padding: 20, overflowY: "auto" }}>

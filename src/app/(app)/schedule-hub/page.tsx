@@ -74,6 +74,7 @@ export default function ScheduleHubPage() {
 
       {/* quick actions */}
       <div className="workspace-toolbar">
+        <Link href="/roster" className="workspace-button primary">{t("schedhub.openEditor")}</Link>
         <Link href="/announcements" style={quickBtn}>{t("schedhub.broadcast")}</Link>
         <Link href="/cover" style={quickBtn}>{t("schedhub.covers")}</Link>
         <Link href="/noshow" style={quickBtn}>{t("schedhub.reminders")}</Link>
@@ -92,35 +93,20 @@ export default function ScheduleHubPage() {
         <>
           {/* ───────── ROSTER ───────── */}
           {tab === "roster" && (
-            <div className="hub-tab-panel active workspace-grid">
-              <Link href="/roster" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📋" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.openEditor")}</div><div className="feature-sub">{t("schedhub.openEditorSub")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
-
-              {/* This Week panel */}
-              <div className="card">
-                <div className="card-title">{t("schedhub.upcomingWeek")}</div>
-                <div className="workspace-stats">
-                  <Mini label={t("schedhub.week")} value={weekLabel} small color="var(--white)" />
-                  <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color={(ov?.submissionCount ?? 0) > 0 ? "var(--success)" : "var(--danger)"} />
-                  <Mini label={t("schedhub.statusLabel")} value={ov?.rosterExists ? t("schedhub.built") : t("schedhub.open")} color={ov?.rosterExists ? "var(--success)" : "var(--warn)"} />
-                </div>
+            <div className="hub-tab-panel active">
+              <h2 className="card-title">{t("schedhub.upcomingWeek")}</h2>
+              <div className="workspace-stats">
+                <Mini label={t("schedhub.week")} value={weekLabel} small color="var(--white)" />
+                <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="var(--white)" />
+                <Mini label={t("schedhub.statusLabel")} value={ov?.rosterExists ? t("schedhub.built") : t("schedhub.open")} color={ov?.rosterExists ? "var(--success)" : "var(--warn)"} />
               </div>
-
-              <Link href="/approvals" className="feature-card">
-                <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e8449,#27ae60)" }}><Icon e="✅" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.requests")}</div><div className="feature-sub">{t("schedhub.requestsSub")}</div></div>
-                <span className="feature-chev">›</span>
-              </Link>
             </div>
           )}
 
           {/* ───────── INSIGHTS ───────── */}
           {tab === "insights" && (
             <div className="hub-tab-panel active workspace-grid">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+              <div className="workspace-stats">
                 <Mini label={t("schedhub.totalShifts")} value={ov?.totalShifts ?? 0} color="var(--gold)" />
                 <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="var(--success)" />
               </div>
@@ -218,9 +204,9 @@ export default function ScheduleHubPage() {
 
 function Mini({ label, value, color, small }: { label: string; value: string | number; color: string; small?: boolean }) {
   return (
-    <div style={{ background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.12)", borderRadius: 10, padding: "12px 8px", textAlign: "center" }}>
-      <div style={{ fontSize: small ? 14 : 24, fontWeight: 700, fontFamily: "var(--font-body)", color, lineHeight: 1.2 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{label}</div>
+    <div className="workspace-stat">
+      <strong style={{ color, fontSize: small ? 20 : undefined }}>{value}</strong>
+      <span>{label}</span>
     </div>
   );
 }

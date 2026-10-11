@@ -32,7 +32,7 @@ export default function DirectoryPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📇" size={22} /> {t("directory.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📇" size={22} /> {t("directory.title")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("directory.subtitle")}</p>
 
       <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}

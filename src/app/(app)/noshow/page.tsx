@@ -53,7 +53,7 @@ export default function NoShowPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("ns.subtitle")}</p>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, padding: 4 }}>

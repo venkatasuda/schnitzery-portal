@@ -19,7 +19,7 @@ export default function ManagementNav({ role }: { role: string }) {
     { label: "workspace.workforce", items: [
       { href: "/schedule-hub", label: "nav.schedule", icon: CalendarDays, routes: ["/schedule-hub", "/schedule", "/roster", "/availability", "/leave", "/leave-calendar", "/cover", "/conflicts"] },
       { href: "/attendance-hub", label: "nav.attendance", icon: Clock, routes: ["/attendance-hub", "/attendance", "/noshow", "/clock-display"] },
-      { href: "/people-hub", label: "home.peopleTeam", icon: Users, routes: ["/people-hub", "/staff", "/directory", "/notes", "/expiring-docs"] },
+      { href: "/staff", label: "home.peopleTeam", icon: Users, routes: ["/people-hub", "/staff", "/directory", "/notes", "/expiring-docs"] },
       { href: "/approvals", label: "home.approvals", icon: ClipboardCheck, routes: ["/approvals"] },
     ] },
     { label: "workspace.business", items: [
