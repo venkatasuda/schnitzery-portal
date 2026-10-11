@@ -53,7 +53,7 @@ export default function NoShowPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("ns.subtitle")}</p>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, padding: 4 }}>
@@ -73,10 +73,10 @@ export default function NoShowPage() {
             rosteredCount === 0 ? (
               <div style={{ color: "var(--gray)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.noneRostered")}</div>
             ) : noShows.length === 0 ? (
-              <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allClockedIn")}</div>
+              <div style={{ color: "var(--success)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allClockedIn")}</div>
             ) : (
               <div>
-                <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
+                <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
                 {noShows.map((n, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <span style={{ fontSize: 14, fontWeight: 600 }}>{n.name}</span>
@@ -98,10 +98,10 @@ export default function NoShowPage() {
           ) : (
             <>
               {missing.length === 0 ? (
-                <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allSubmitted")}</div>
+                <div style={{ color: "var(--success)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allSubmitted")}</div>
               ) : (
                 <>
-                  <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{t("ns.notSubmittedN", { n: missing.length })}</div>
+                  <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.notSubmittedN", { n: missing.length })}</div>
                   {missing.map((m) => (
                     <div key={m.id} style={{ padding: "8px 0", fontSize: 14, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{m.full_name}</div>
                   ))}

@@ -16,9 +16,9 @@ const eur = (n: number) => "€" + (n || 0).toLocaleString("de-DE");
 function Kpi({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
     <div className="card" style={{ padding: 14 }}>
-      <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 20, fontWeight: 700, color: color || "var(--white)" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
@@ -91,7 +91,7 @@ export default function SummaryPage() {
         <Icon e="🎛️" size={18} color="var(--gold)" />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{t("summary.simulator")}</div>
-          <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("summary.simulatorSub")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("summary.simulatorSub")}</div>
         </div>
         <span style={{ color: "var(--gray)" }}>›</span>
       </Link>
@@ -142,7 +142,7 @@ export default function SummaryPage() {
                   <tbody>
                     {data.rows.map((r: any, i: number) => (
                       <tr key={i} style={{ borderTop: "1px solid var(--border)" }}>
-                        <td style={{ color: "var(--white)" }}>{r.name}<span style={{ color: "var(--gray)", fontSize: 11 }}> · {r.team}</span></td>
+                        <td style={{ color: "var(--white)" }}>{r.name}<span style={{ color: "var(--gray)", fontSize: 12 }}> · {r.team}</span></td>
                         <td style={{ textAlign: "right" }}>{r.hours}h</td>
                         <td style={{ textAlign: "right", color: r.overtime > 0 ? "var(--danger)" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
                         <td style={{ textAlign: "right", color: r.late > 0 ? "var(--warn)" : "var(--gray)" }}>{r.late || "—"}</td>

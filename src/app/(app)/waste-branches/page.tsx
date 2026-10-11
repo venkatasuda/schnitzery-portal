@@ -50,21 +50,21 @@ export default function WasteByBranchPage() {
         <>
           <div className="card" style={{ padding: 14, marginBottom: 12 }}>
             <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("wbranch.total")}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#ec7063" }}>{eur(data.total)}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "var(--danger)" }}>{eur(data.total)}</div>
           </div>
 
           {rows.map((r: any, i: number) => (
             <div key={r.branchId} className="card" style={{ padding: 14, marginBottom: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
                 <span style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>
-                  <span style={{ color: i === 0 ? "#ec7063" : "var(--gray)", marginRight: 6 }}>#{i + 1}</span>{r.name}
+                  <span style={{ color: i === 0 ? "var(--danger)" : "var(--gray)", marginRight: 6 }}>#{i + 1}</span>{r.name}
                 </span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#ec7063" }}>{eur(r.value)}</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "var(--danger)" }}>{eur(r.value)}</span>
               </div>
               <div style={{ height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 5, overflow: "hidden" }}>
                 <div style={{ width: `${Math.round((r.value / max) * 100)}%`, height: "100%", background: "linear-gradient(90deg,#e67e22,#c0392b)" }} />
               </div>
-              <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 6, display: "flex", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, display: "flex", justifyContent: "space-between" }}>
                 <span>{t("wbranch.entries", { n: r.count })}</span>
                 {r.pct != null && <span>{t("wbranch.pctOfSales", { p: r.pct })}</span>}
               </div>

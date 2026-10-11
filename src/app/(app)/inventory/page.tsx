@@ -323,7 +323,7 @@ export default function InventoryPage() {
                           <button key={p.id} onClick={() => { setGridSel(p); setGridVal(""); }}
                             style={{ background: bg, border: `1px solid ${bd}`, borderRadius: 10, padding: 10, textAlign: "left", cursor: "pointer", minHeight: 68 }}>
                             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--white)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.product}</div>
-                            <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 4 }}>{c ? `${c.ist}` : "—"}/{p.soll}{p.unit ? " " + p.unit : ""}</div>
+                            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>{c ? `${c.ist}` : "—"}/{p.soll}{p.unit ? " " + p.unit : ""}</div>
                           </button>
                         );
                       })}
@@ -409,7 +409,7 @@ export default function InventoryPage() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{d.product} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {d.qty} {d.unit || ""}</span></div>
-                      <div style={{ fontSize: 11, color: "var(--gray)" }}>{d.purchase_date}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
+                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{d.purchase_date}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>{eur(Number(d.cost))}</div>
                   </div>
@@ -460,7 +460,7 @@ export default function InventoryPage() {
 
                   <div style={{ ...card, marginBottom: 14 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.spendVsUse")}</div>
-                    <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>{t("inv.spendVsUseSub")}</div>
+                    <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.spendVsUseSub")}</div>
                     {analytics.trend.length === 0 ? (
                       <div style={{ color: "var(--gray)", fontSize: 12, textAlign: "center", padding: 20 }}>{t("inv.noTrend")}</div>
                     ) : (
@@ -468,10 +468,10 @@ export default function InventoryPage() {
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={analytics.trend} margin={{ top: 6, right: 6, bottom: 0, left: -18 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                            <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                            <YAxis tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                            <YAxis tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Legend wrapperStyle={{ fontSize: 12 }} />
                             <Bar name={t("inv.legendSpend")} dataKey="spend" fill="var(--gold)" radius={[4, 4, 0, 0]} maxBarSize={22} />
                             <Bar name={t("inv.legendUse")} dataKey="usageEur" fill={BLUE} radius={[4, 4, 0, 0]} maxBarSize={22} />
                           </BarChart>
@@ -483,16 +483,16 @@ export default function InventoryPage() {
                   {monthTrend.length > 0 && (
                     <div style={{ ...card, marginBottom: 14 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.sixMonth")}</div>
-                      <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>{t("inv.sixMonthSub")}</div>
+                      <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.sixMonthSub")}</div>
                       <div style={{ width: "100%", height: 220 }}>
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart data={monthTrend} margin={{ top: 6, right: -12, bottom: 0, left: -18 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                            <XAxis dataKey="month" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                            <YAxis yAxisId="l" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                            <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 10, fill: "var(--gray)" }} tickLine={false} axisLine={false} unit="%" />
+                            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                            <YAxis yAxisId="l" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                            <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} unit="%" />
                             <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Legend wrapperStyle={{ fontSize: 12 }} />
                             <Bar yAxisId="l" name={t("inv.legendSpend")} dataKey="spend" fill="var(--gold)" radius={[4, 4, 0, 0]} maxBarSize={26} />
                             <Line yAxisId="r" name={t("inv.foodCost")} dataKey="foodCostPct" stroke={BLUE} strokeWidth={2} dot={{ r: 3 }} connectNulls />
                           </ComposedChart>
@@ -504,14 +504,14 @@ export default function InventoryPage() {
                   {variance?.hasData && variance.items.some((v: any) => v.flag === "up" || v.flag === "down") && (
                     <div style={{ ...card, marginBottom: 14 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.variance")}</div>
-                      <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>{variance.normalised ? t("inv.varianceSubNorm") : t("inv.varianceSubRaw")}</div>
+                      <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{variance.normalised ? t("inv.varianceSubNorm") : t("inv.varianceSubRaw")}</div>
                       {variance.items.filter((v: any) => v.flag === "up" || v.flag === "down").slice(0, 8).map((v: any, i: number) => {
                         const up = v.flag === "up";
                         return (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
                             <div>
                               <div style={{ fontSize: 13, color: "var(--white)" }}>{v.product}</div>
-                              <div style={{ fontSize: 11, color: "var(--gray)" }}>€{v.prevEur} → €{v.curEur}</div>
+                              <div style={{ fontSize: 12, color: "var(--gray)" }}>€{v.prevEur} → €{v.curEur}</div>
                             </div>
                             <div style={{ fontSize: 13, fontWeight: 700, color: up ? "var(--danger)" : "var(--success)" }}>
                               {v.changePct != null ? `${v.changePct > 0 ? "▲" : "▼"} ${Math.abs(v.changePct)}%` : "—"}
@@ -519,7 +519,7 @@ export default function InventoryPage() {
                           </div>
                         );
                       })}
-                      <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 10 }}>{t("inv.varianceNote")}</div>
+                      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 10 }}>{t("inv.varianceNote")}</div>
                     </div>
                   )}
 
@@ -553,11 +553,11 @@ export default function InventoryPage() {
 
                   <div style={{ ...card }}>
                     <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.topUse")}</div>
-                    <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 10 }}>{t("inv.topUseSub")}</div>
+                    <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>{t("inv.topUseSub")}</div>
                     {analytics.topUsage.length === 0 ? <div style={{ color: "var(--gray)", fontSize: 12 }}>{t("inv.noUseData")}</div> :
                       analytics.topUsage.map((r: any, i: number) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
-                          <span>{r.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {r.qty}</span></span>
+                          <span>{r.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {r.qty}</span></span>
                           <span style={{ color: BLUE, fontWeight: 600 }}>{eur(r.eur)}</span>
                         </div>
                       ))}

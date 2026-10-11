@@ -51,10 +51,10 @@ export default function OpsPage() {
   const m = data?.metrics;
   const rows: any[] = data?.rows || [];
   const statusMeta: Record<string, { key: string; color: string }> = {
-    working: { key: "ops.stWorking", color: "#58d68d" },
+    working: { key: "ops.stWorking", color: "var(--success)" },
     completed: { key: "ops.stCompleted", color: "#7f8c8d" },
-    absent: { key: "ops.stAbsent", color: "#ec7063" },
-    not_checked_in: { key: "ops.stNotIn", color: "#e8a35a" },
+    absent: { key: "ops.stAbsent", color: "var(--danger)" },
+    not_checked_in: { key: "ops.stNotIn", color: "var(--warn)" },
     unscheduled: { key: "ops.stUnscheduled", color: "#5dade2" },
   };
 
@@ -64,18 +64,18 @@ export default function OpsPage() {
       <div className="page-sub">{t("ops.subtitle")}{data?.asOf ? ` · ${t("ops.asOf")} ${fmtClock(data.asOf)}` : ""}</div>
 
       {/* FILTERS */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+      <div className="workspace-toolbar">
         {filters?.branches?.length > 1 && (
-          <select value={branch} onChange={(e) => setBranch(e.target.value)} style={sel}>
+          <select aria-label={t("nav.branches")} value={branch} onChange={(e) => setBranch(e.target.value)} style={sel}>
             {filters.branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
         )}
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={sel} />
-        <select value={team} onChange={(e) => setTeam(e.target.value)} style={sel}>
+        <input aria-label={t("ops.today")} type="date" value={date} onChange={(e) => setDate(e.target.value)} style={sel} />
+        <select aria-label={t("ops.filterDept")} value={team} onChange={(e) => setTeam(e.target.value)} style={sel}>
           <option value="">{t("ops.filterDept")}: {t("ops.all")}</option>
           {(filters?.teams || []).map((tm: string) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
         </select>
-        <select value={shift} onChange={(e) => setShift(e.target.value)} style={sel}>
+        <select aria-label={t("ops.filterShift")} value={shift} onChange={(e) => setShift(e.target.value)} style={sel}>
           <option value="">{t("ops.filterShift")}: {t("ops.all")}</option>
           {(filters?.shifts || []).map((sh: string) => <option key={sh} value={sh}>{sh}</option>)}
         </select>
@@ -89,11 +89,11 @@ export default function OpsPage() {
       ) : (
         <>
           {/* METRIC CARDS */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(108px, 1fr))", gap: 8, marginBottom: 14 }}>
-            <Metric icon="🟢" value={m.workingNow} label={t("ops.workingNow")} color="#58d68d" />
-            <Metric icon="⏰" value={m.late} label={t("ops.late")} color={m.late ? "#e8a35a" : "var(--white)"} />
-            <Metric icon="🚫" value={m.absent} label={t("ops.absent")} color={m.absent ? "#ec7063" : "var(--white)"} />
-            <Metric icon="⏳" value={m.notCheckedIn} label={t("ops.notCheckedIn")} color={m.notCheckedIn ? "#e8a35a" : "var(--white)"} />
+          <div className="workspace-stats operations-stats">
+            <Metric icon="🟢" value={m.workingNow} label={t("ops.workingNow")} color="var(--success)" />
+            <Metric icon="⏰" value={m.late} label={t("ops.late")} color={m.late ? "var(--warn)" : "var(--white)"} />
+            <Metric icon="🚫" value={m.absent} label={t("ops.absent")} color={m.absent ? "var(--danger)" : "var(--white)"} />
+            <Metric icon="⏳" value={m.notCheckedIn} label={t("ops.notCheckedIn")} color={m.notCheckedIn ? "var(--warn)" : "var(--white)"} />
             <Metric icon="👥" value={`${m.workingNow}/${m.scheduledNow}`} label={t("ops.staffing")} color="#3498db" />
             <Metric icon="⏱️" value={fmtLabor(m.laborMins)} label={t("ops.laborHours")} color="#d4a847" />
           </div>
@@ -102,12 +102,12 @@ export default function OpsPage() {
           <div className="card" style={{ padding: 14, marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 13, color: "var(--gray)" }}>{t("ops.utilization")}</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization >= 90 ? "#58d68d" : m.utilization >= 70 ? "#e8a35a" : "#ec7063" }}>{m.utilization}%</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }}>{m.utilization}%</span>
             </div>
             <div style={{ height: 8, background: "rgba(128,128,128,0.18)", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ width: `${m.utilization}%`, height: "100%", background: m.utilization >= 90 ? "#58d68d" : m.utilization >= 70 ? "#e8a35a" : "#ec7063" }} />
+              <div style={{ width: `${m.utilization}%`, height: "100%", background: m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }} />
             </div>
-            <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("ops.scheduled")}: {m.scheduledTotal} · {t("ops.completed")}: {m.completed}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("ops.scheduled")}: {m.scheduledTotal} · {t("ops.completed")}: {m.completed}</div>
           </div>
 
           {/* WHO'S ON */}
@@ -122,14 +122,14 @@ export default function OpsPage() {
                   <div key={r.userId + r.shift} className="card" style={{ padding: 11, borderLeft: `3px solid ${meta.color}`, display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{r.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--gray)" }}>
+                      <div style={{ fontSize: 12, color: "var(--gray)" }}>
                         {r.shift ? `${teamLabel(r.team)} · ${r.shift}` : (r.team ? teamLabel(r.team) : t("ops.stUnscheduled"))}
                         {r.schedStart != null && ` · ${t("ops.sched")} ${fmtFromMs(r.schedStart)}–${fmtFromMs(r.schedEnd)}`}
                         {r.clockIn && ` · ${t("ops.actual")} ${fmtClock(r.clockIn)}–${fmtClock(r.clockOut)}`}
                       </div>
                     </div>
-                    {r.lateMins > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: "#e8a35a", background: "rgba(232,163,90,0.15)", padding: "2px 7px", borderRadius: 12 }}>+{r.lateMins}m</span>}
-                    <span style={{ fontSize: 10, fontWeight: 700, color: meta.color, background: `${meta.color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{t(meta.key)}</span>
+                    {r.lateMins > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--warn)", background: "rgba(232,163,90,0.15)", padding: "2px 7px", borderRadius: 12 }}>+{r.lateMins}m</span>}
+                    <span style={{ fontSize: 12, fontWeight: 700, color: meta.color, background: "var(--dark2)", padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{t(meta.key)}</span>
                   </div>
                 );
               })}
@@ -145,10 +145,9 @@ export default function OpsPage() {
 
 function Metric({ icon, value, label, color }: { icon: string; value: any; label: string; color: string }) {
   return (
-    <div className="card" style={{ padding: 12, textAlign: "center" }}>
-      <div style={{ marginBottom: 3 }}><Icon e={icon} size={18} color={color} /></div>
-      <div style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 10.5, color: "var(--gray)", marginTop: 3 }}>{label}</div>
+    <div className="workspace-stat">
+      <strong style={{ color }}>{value}</strong>
+      <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e={icon} size={16} />{label}</span>
     </div>
   );
 }

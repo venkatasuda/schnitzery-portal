@@ -54,13 +54,13 @@ export default function OverviewPage() {
           {/* signals row */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
             <Link href="/export" className="card" style={{ padding: 13, textDecoration: "none" }}>
-              <div style={{ fontSize: 11, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.payrollStatus")}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.payrollStatus")}</div>
               <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, color: data.payroll.approved === data.payroll.total ? GREEN : AMBER }}>
                 {data.payroll.approved}/{data.payroll.total} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>{t("org.approved")}</span>
               </div>
             </Link>
             <Link href="/kiosks" className="card" style={{ padding: 13, textDecoration: "none" }}>
-              <div style={{ fontSize: 11, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.systemHealth")}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.systemHealth")}</div>
               <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, color: data.health.status === "ok" ? GREEN : AMBER }}>
                 {data.health.status === "ok" ? `✓ ${t("org.healthOk")}` : `${data.health.kiosksOffline} ${t("org.kiosksOffline")}`}
               </div>
@@ -75,7 +75,7 @@ export default function OverviewPage() {
                 <div style={{ fontSize: 16, fontWeight: 800, color: b.rank === 1 ? GOLD : "var(--gray)", width: 26, textAlign: "center" }}>{b.rank}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--gray)" }}>
+                  <div style={{ fontSize: 12, color: "var(--gray)" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="var(--success)" />{b.workingNow}</span>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="👥" size={11} />{b.employees}</span>
@@ -86,7 +86,7 @@ export default function OverviewPage() {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 17, fontWeight: 700, color: rateColor(b.attendanceRate) }}>{b.attendanceRate == null ? "—" : `${b.attendanceRate}%`}</div>
-                  <div style={{ fontSize: 9, color: "var(--gray)", textTransform: "uppercase" }}>{b.attendanceRate == null ? t("org.noRoster") : t("org.attendance")}</div>
+                  <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase" }}>{b.attendanceRate == null ? t("org.noRoster") : t("org.attendance")}</div>
                 </div>
               </div>
             ))}
@@ -134,7 +134,7 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
   return (
     <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
       <div style={{ fontSize: 21, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
-      <div style={{ fontSize: 9, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
     </div>
   );
 }

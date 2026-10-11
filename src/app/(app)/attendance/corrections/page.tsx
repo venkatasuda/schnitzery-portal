@@ -90,9 +90,9 @@ export default function CorrectionsPage() {
 
   function statusBadge(s: string) {
     const map: Record<string, { label: string; color: string }> = {
-      pending: { label: t("corr.statusPending"), color: "#e8a35a" },
-      approved: { label: t("corr.statusApproved"), color: "#58d68d" },
-      rejected: { label: t("corr.statusRejected"), color: "#ec7063" },
+      pending: { label: t("corr.statusPending"), color: "var(--warn)" },
+      approved: { label: t("corr.statusApproved"), color: "var(--success)" },
+      rejected: { label: t("corr.statusRejected"), color: "var(--danger)" },
     };
     return map[s] || map.pending;
   }
@@ -179,17 +179,17 @@ export default function CorrectionsPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{typeLabel(r.type)} · {fmtDate(r.target_date)}</div>
-                    <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>
                       {r.requested_clock_in && `${t("corr.reqIn")}: ${fmtTime(r.requested_clock_in)}`}
                       {r.requested_clock_in && r.requested_clock_out && " · "}
                       {r.requested_clock_out && `${t("corr.reqOut")}: ${fmtTime(r.requested_clock_out)}`}
                     </div>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: b.color, background: `${b.color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{b.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: b.color, background: `color-mix(in srgb, ${b.color} 14%, transparent)`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{b.label}</span>
                 </div>
                 <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{r.reason}</div>
                 {r.status === "rejected" && r.manager_note && (
-                  <div style={{ fontSize: 12, color: "#ec7063", marginTop: 6, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "7px 10px" }}>
+                  <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "7px 10px" }}>
                     {t("corr.managerNote")} {r.manager_note}
                   </div>
                 )}
@@ -207,5 +207,5 @@ export default function CorrectionsPage() {
   );
 }
 
-const lbl: React.CSSProperties = { fontSize: 10, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
+const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
 const input: React.CSSProperties = { width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

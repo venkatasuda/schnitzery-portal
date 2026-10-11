@@ -17,17 +17,17 @@ export default function PeopleHubPage() {
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("ph.title")}</div>
       <div className="page-sub">{t("ph.subtitle")}</div>
 
-      <div className="hub-tabs">
-        <button className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>
+      <div className="hub-tabs" role="group" aria-label={t("ph.title")}>
+        <button aria-pressed={tab === "team"} className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>
           {t("ph.tabTeam")}
         </button>
-        <button className={`hub-tab${tab === "notes" ? " active" : ""}`} onClick={() => setTab("notes")}>
+        <button aria-pressed={tab === "notes"} className={`hub-tab${tab === "notes" ? " active" : ""}`} onClick={() => setTab("notes")}>
           {t("ph.tabNotes")}
         </button>
       </div>
 
       {tab === "team" && (
-        <div className="hub-tab-panel active">
+        <div className="hub-tab-panel active workspace-grid">
           <HubLink
             href="/staff"
             icon="👥"
@@ -46,7 +46,7 @@ export default function PeopleHubPage() {
       )}
 
       {tab === "notes" && (
-        <div className="hub-tab-panel active">
+        <div className="hub-tab-panel active workspace-grid">
           <HubLink
             href="/notes"
             icon="📝"

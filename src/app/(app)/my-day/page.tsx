@@ -61,7 +61,7 @@ export default function MyDayPage() {
               <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ width: `${bal.allowance > 0 ? Math.min(100, Math.round((bal.used / bal.allowance) * 100)) : 0}%`, height: "100%", background: "var(--gold)" }} />
               </div>
-              <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 6 }}>{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6 }}>{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
             </div>
           )}
           <HubLink

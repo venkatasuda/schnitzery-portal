@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
 import { getPendingApprovals, decideLeave, decideSwap } from "@/lib/queries/leave";
 import { getAttendanceApprovals, setAttendanceApproval } from "@/lib/queries/live-attendance";
 import { getCorrectionApprovals, decideCorrection } from "@/lib/queries/corrections";
@@ -21,10 +20,12 @@ const fmtT = (v?: string | null) => (v ? new Date(v).toLocaleTimeString([], { ho
 const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
 
 export default function ApprovalsPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const dayLabel = (k: string | null | undefined) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(k.toLowerCase()) ? t("days." + k.toLowerCase()) : (k || "?"));
   const corrLabel = (k: string) => t("corr." + (CORR_KEY[k] || "typeMissing"));
   const [items, setItems] = useState<Item[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const rejectDialog = useRef<HTMLDialogElement>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
@@ -34,8 +35,13 @@ export default function ApprovalsPage() {
 
   async function load() {
     setLoading(true);
+    setError(null);
+    try {
     const [pa, att, corr] = await Promise.all([getPendingApprovals(), getAttendanceApprovals(), getCorrectionApprovals()]);
     if (!pa.ok && pa.error?.includes("Managers")) { setDenied(true); setLoading(false); return; }
+
+    const failed = [pa, att, corr].find((result) => !result.ok);
+    if (failed) { setError(failed.error || (locale === "de" ? "Anfragen konnten nicht geladen werden." : "Could not load requests.")); setLoading(false); return; }
 
     const out: Item[] = [];
     for (const l of (pa.ok && pa.leave) || []) {
@@ -54,9 +60,11 @@ export default function ApprovalsPage() {
       out.push({ kind: "correction", id: c.id, icon: "✏️", name: c.name, detail: `${corrLabel(c.type)} · ${fmtD(c.target_date)} · ${req}${orig} · ${c.reason}` });
     }
     setItems(out);
-    setLoading(false);
+    } catch { setError(locale === "de" ? "Anfragen konnten nicht geladen werden." : "Could not load requests."); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
+  useEffect(() => { if (rejectItem) rejectDialog.current?.showModal(); }, [rejectItem]);
 
   function remove(item: Item) {
     setItems((cur) => cur.filter((x) => !(x.kind === item.kind && x.id === item.id)));
@@ -97,57 +105,54 @@ export default function ApprovalsPage() {
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("approvals.title")}</div>
       <div className="page-sub">{t("approvals.subtitle")}</div>
 
-      <div className="hub-tabs">
-        <button className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>
-        <button className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}><Icon e="🌴" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabLeave")} {count("leave") || ""}</button>
-        <button className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}><Icon e="🔄" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabSwaps")} {count("swap") || ""}</button>
-        <button className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}><Icon e="🕐" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabTime")} {count("attendance") || ""}</button>
-        <button className={`hub-tab${filter === "correction" ? " active" : ""}`} onClick={() => setFilter("correction")}><Icon e="✏️" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("corr.inbox")} {count("correction") || ""}</button>
+      <div className="hub-tabs" role="group" aria-label={t("approvals.title")}>
+        <button aria-pressed={filter === "all"} className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>
+        <button aria-pressed={filter === "leave"} className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}><Icon e="🌴" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabLeave")} {count("leave") || ""}</button>
+        <button aria-pressed={filter === "swap"} className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}><Icon e="🔄" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabSwaps")} {count("swap") || ""}</button>
+        <button aria-pressed={filter === "attendance"} className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}><Icon e="🕐" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabTime")} {count("attendance") || ""}</button>
+        <button aria-pressed={filter === "correction"} className={`hub-tab${filter === "correction" ? " active" : ""}`} onClick={() => setFilter("correction")}><Icon e="✏️" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("corr.inbox")} {count("correction") || ""}</button>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="workspace-error" role="alert"><p>{error}</p><button className="workspace-button" onClick={load}>{t("analytics.retry")}</button></div>
+      ) : loading ? (
         <CardSkeleton rows={3} />
       ) : shown.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 34 }}>
-          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={32} color="#58d68d" /></div>
-          <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
+          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={32} color="var(--success)" /></div>
+          <div style={{ color: "var(--success)", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
           <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("approvals.caughtUp")}</div>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="approval-list">
           {shown.map((item) => {
             const busy = busyId === item.kind + item.id;
             return (
-              <div key={item.kind + item.id} className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: 14 }}>
+              <div key={item.kind + item.id} className="approval-row">
                 <Icon e={item.icon} size={20} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{item.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)" }}>{item.detail}</div>
+                <div className="approval-detail"><strong>{item.name}</strong><p>{item.detail}</p></div>
+                <div className="approval-actions">
+                  <button className="workspace-button primary" onClick={() => decide(item, true)} disabled={!!busyId} aria-label={`${t("ahub.approve")} ${item.name}`}>{busy ? "…" : t("ahub.approve")}</button>
+                  <button className="workspace-button danger" onClick={() => decide(item, false)} disabled={!!busyId} aria-label={`${t("ahub.reject")} ${item.name}`}>{t("ahub.reject")}</button>
                 </div>
-                <button onClick={() => decide(item, true)} disabled={busy} style={{ padding: "8px 12px", background: "#1e6b3f", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✓" size={16} /></button>
-                <button onClick={() => decide(item, false)} disabled={busy} style={{ padding: "8px 12px", background: "var(--dark3)", color: "#ec7063", border: "1px solid rgba(231,76,60,0.3)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer" }}><Icon e="✕" size={16} /></button>
               </div>
             );
           })}
         </div>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
 
       {/* Reject-with-reason modal (corrections) */}
       {rejectItem && (
-        <div onClick={() => setRejectItem(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 50 }}>
-          <div onClick={(e) => e.stopPropagation()} className="card" style={{ maxWidth: 420, width: "100%", padding: 18 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{t("corr.rejectTitle")}</div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{rejectItem.name} · {rejectItem.detail}</div>
-            <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder={t("corr.rejectPlaceholder")}
-              style={{ width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box", resize: "vertical", marginBottom: 12 }} />
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setRejectItem(null)} style={{ flex: 1, padding: 11, background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--gray)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("corr.dismiss")}</button>
-              <button onClick={confirmReject} style={{ flex: 1, padding: 11, background: "#a93226", border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("corr.confirmReject")}</button>
-            </div>
+        <dialog ref={rejectDialog} className="workspace-dialog" aria-labelledby="reject-title" onCancel={() => setRejectItem(null)} onClose={() => setRejectItem(null)}>
+          <h2 id="reject-title">{t("corr.rejectTitle")}</h2>
+          <p>{rejectItem.name} · {rejectItem.detail}</p>
+          <textarea autoFocus aria-label={t("corr.rejectPlaceholder")} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder={t("corr.rejectPlaceholder")} />
+          <div className="approval-actions">
+            <button className="workspace-button" disabled={!!busyId} onClick={() => setRejectItem(null)}>{t("corr.dismiss")}</button>
+            <button className="workspace-button danger" disabled={!!busyId} onClick={confirmReject}>{t("corr.confirmReject")}</button>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

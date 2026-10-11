@@ -63,7 +63,7 @@ export default function SearchPage() {
                   <Link key={e.id} href={`/staff/${e.id}`} className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
                     <div className="avatar" style={{ width: 34, height: 34, fontSize: 14 }}>{(e.name || "?")[0].toUpperCase()}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.name} {e.code && <span style={{ fontSize: 11, color: "var(--gray)" }}>· {e.code}</span>}</div>
+                      <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.name} {e.code && <span style={{ fontSize: 12, color: "var(--gray)" }}>· {e.code}</span>}</div>
                       {e.sub && <div style={{ fontSize: 12, color: "var(--gray)" }}>{e.sub}</div>}
                     </div>
                     <span style={{ color: "var(--gray)" }}>›</span>

@@ -288,8 +288,9 @@ html.light .btn-gold { color: #fff; }
 .management-shell h1, .management-shell h2, .management-shell h3 { font-family: var(--font-body); letter-spacing: -0.3px; }
 .workspace-page { max-width: 640px; margin: 0 auto; }
 .management-shell .workspace-page { max-width: none; margin: 0; }
-.management-shell .hub-tab-panel.active { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; align-items: start; }
-.management-shell .hub-tab-panel.active > .card, .management-shell .hub-tab-panel.active > .feature-card { margin-bottom: 0; }
+.management-shell .hub-tab-panel.active { display: block; }
+.management-shell .hub-tab-panel.workspace-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 20px; align-items: start; }
+.management-shell .workspace-grid > .card, .management-shell .workspace-grid > .feature-card { margin-bottom: 0; }
 .management-shell .card { padding: 20px; }
 .management-shell .data-table { font-size: 14px; }
 .management-shell .data-table th { font-size: 12px; letter-spacing: 0.2px; }
@@ -427,3 +428,51 @@ html.light .btn-gold { color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 }
+
+/* Workspace controls remain above their results; only peer panels use a grid. */
+.workspace-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.workspace-toolbar > input { flex: 1; min-width: 180px; max-width: 320px; }
+.workspace-toolbar a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; }
+.workspace-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 16px; margin-bottom: 24px; }
+.workspace-stat { background: var(--dark); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.workspace-stat strong { display: block; font-size: 28px; font-weight: 650; font-family: var(--font-body); line-height: 1.3; font-variant-numeric: tabular-nums; }
+.workspace-stat span { display: block; color: var(--gray); font-size: 13px; margin-top: 8px; }
+.workspace-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 20px; }
+.workspace-error { padding: 24px; background: var(--danger-soft); border: 1px solid var(--border); border-radius: 10px; margin: 20px 0; }
+.workspace-error p { margin: 0 0 16px; color: var(--danger); }
+.approval-list { border: 1px solid var(--border); border-radius: 10px; background: var(--dark); overflow: hidden; }
+.approval-row { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.approval-row:last-child { border-bottom: 0; }
+.approval-detail { flex: 1; min-width: 0; }
+.approval-detail strong { display: block; font-size: 15px; }
+.approval-detail p { color: var(--gray); font-size: 13px; line-height: 1.6; margin: 6px 0 0; overflow-wrap: anywhere; }
+.approval-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.workspace-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--dark); color: var(--white); cursor: pointer; font: inherit; text-decoration: none; }
+.workspace-button.primary { background: var(--action); border-color: var(--action); color: var(--on-action); }
+.workspace-button.danger { color: var(--danger); background: var(--danger-soft); }
+.workspace-button:disabled { opacity: .55; cursor: wait; }
+.workspace-dialog { border: 1px solid var(--border); border-radius: 12px; padding: 28px; width: min(520px, calc(100% - 32px)); max-height: 85vh; overflow: auto; background: var(--dark); color: var(--white); }
+.workspace-dialog::backdrop { background: rgba(15, 23, 42, .45); }
+.workspace-dialog h2 { font-size: 20px; margin: 0 0 12px; }
+.workspace-dialog p { color: var(--gray); line-height: 1.6; }
+.workspace-dialog textarea { width: 100%; margin: 12px 0 20px; }
+@media (max-width: 600px) {
+  .workspace-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .workspace-stat { padding: 16px; }
+  .workspace-stat strong { font-size: 24px; }
+  .approval-row { flex-wrap: wrap; padding: 16px; }
+  .approval-detail { flex-basis: calc(100% - 48px); }
+  .approval-actions { width: 100%; }
+  .approval-actions button { flex: 1; }
+}
+
+.workspace-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.management-shell .settings-workspace { max-width: 960px; margin: 0; }
+.profile-admin { margin: 20px 0; }
+.profile-admin .feature-card { margin-bottom: 0; }
+@media (max-width: 600px) { .workspace-form-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.workspace-grid > .workspace-stats { grid-column: 1 / -1; }
+
+.operations-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 600px) { .operations-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

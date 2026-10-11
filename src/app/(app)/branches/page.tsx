@@ -43,9 +43,9 @@ export default function BranchesPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 18 }}>
             <Total label={t("branches.branches")} value={totals.branches} />
             <Total label={t("branches.totalStaff")} value={totals.staff} color="#3498db" />
-            <Total label={t("branches.workingNow")} value={totals.workingNow} color="#58d68d" />
-            <Total label={t("branches.pendingLeave")} value={totals.pendingLeave} color={totals.pendingLeave ? "#d4a847" : "#58d68d"} />
-            <Total label={t("branches.openIncidents")} value={totals.openIncidents} color={totals.openIncidents ? "#ec7063" : "#58d68d"} />
+            <Total label={t("branches.workingNow")} value={totals.workingNow} color="var(--success)" />
+            <Total label={t("branches.pendingLeave")} value={totals.pendingLeave} color={totals.pendingLeave ? "#d4a847" : "var(--success)"} />
+            <Total label={t("branches.openIncidents")} value={totals.openIncidents} color={totals.openIncidents ? "var(--danger)" : "var(--success)"} />
           </div>
 
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("branches.search")}
@@ -59,9 +59,9 @@ export default function BranchesPage() {
                 <div className="feature-sub">{b.address || "—"}</div>
                 <div style={{ display: "flex", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
                   <Mini label={t("branches.miniStaff")} value={b.staff} />
-                  <Mini label={t("branches.miniWorking")} value={b.workingNow} color="#58d68d" />
+                  <Mini label={t("branches.miniWorking")} value={b.workingNow} color="var(--success)" />
                   {b.pendingLeave > 0 && <Mini label={t("branches.miniLeave")} value={b.pendingLeave} color="#d4a847" />}
-                  {b.openIncidents > 0 && <Mini label={t("branches.miniIncidents")} value={b.openIncidents} color="#ec7063" />}
+                  {b.openIncidents > 0 && <Mini label={t("branches.miniIncidents")} value={b.openIncidents} color="var(--danger)" />}
                 </div>
               </div>
               <span className="feature-chev" style={{ alignSelf: "center" }}>›</span>
@@ -77,7 +77,7 @@ function Total({ label, value, color }: any) {
   return (
     <div className="card" style={{ textAlign: "center", marginBottom: 0, padding: 16 }}>
       <div style={{ fontSize: 26, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{label}</div>
     </div>
   );
 }

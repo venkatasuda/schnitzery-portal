@@ -34,17 +34,17 @@ export default function SimulatorPage() {
   const primePct = foodPct != null && laborPct != null ? foodPct + laborPct : null;
   const marginPct = simSales > 0 ? ((simSales - simFood - simLabor) / simSales) * 100 : null;
 
-  const primeColor = primePct == null ? "var(--gray)" : primePct <= 60 ? "#58d68d" : primePct <= 68 ? "#d4a847" : "#ec7063";
-  const marginColor = marginPct == null ? "var(--gray)" : marginPct >= 25 ? "#58d68d" : marginPct >= 12 ? "#d4a847" : "#ec7063";
+  const primeColor = primePct == null ? "var(--gray)" : primePct <= 60 ? "var(--success)" : primePct <= 68 ? "#d4a847" : "var(--danger)";
+  const marginColor = marginPct == null ? "var(--gray)" : marginPct >= 25 ? "var(--success)" : marginPct >= 12 ? "#d4a847" : "var(--danger)";
 
   const Slider = ({ label, val, set, hint }: { label: string; val: number; set: (n: number) => void; hint: string }) => (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
         <span style={{ fontSize: 13, color: "var(--white)" }}>{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: val === 0 ? "var(--gray)" : val > 0 ? "#ec7063" : "#58d68d" }}>{val > 0 ? "+" : ""}{val}%</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: val === 0 ? "var(--gray)" : val > 0 ? "var(--danger)" : "var(--success)" }}>{val > 0 ? "+" : ""}{val}%</span>
       </div>
       <input type="range" min={-20} max={40} step={1} value={val} onChange={(e) => set(Number(e.target.value))} style={{ width: "100%", accentColor: "#d4a847" }} />
-      <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{hint}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{hint}</div>
     </div>
   );
 
@@ -52,11 +52,11 @@ export default function SimulatorPage() {
     const delta = baseVal != null && simVal != null ? Math.round((simVal - baseVal) * 10) / 10 : null;
     return (
       <div style={{ padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--gray)" }}>{label}</div>
+        <div style={{ fontSize: 12, color: "var(--gray)" }}>{label}</div>
         <div style={{ fontSize: 22, fontWeight: 700, color }}>{pct(simVal)}</div>
-        <div style={{ fontSize: 11, color: "var(--gray)" }}>
+        <div style={{ fontSize: 12, color: "var(--gray)" }}>
           {t("sim.was")} {pct(baseVal)}
-          {delta != null && delta !== 0 && <span style={{ color: delta > 0 ? "#ec7063" : "#58d68d", marginLeft: 4 }}>{delta > 0 ? "▲" : "▼"}{Math.abs(delta)}</span>}
+          {delta != null && delta !== 0 && <span style={{ color: delta > 0 ? "var(--danger)" : "var(--success)", marginLeft: 4 }}>{delta > 0 ? "▲" : "▼"}{Math.abs(delta)}</span>}
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ export default function SimulatorPage() {
               <Metric label={t("sim.foodPct")} baseVal={base.foodPct} simVal={foodPct} color="var(--white)" />
               <Metric label={t("sim.laborPct")} baseVal={base.laborPct} simVal={laborPct} color="var(--white)" />
             </div>
-            <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center", marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: "var(--gray)", textAlign: "center", marginTop: 8 }}>
               {t("sim.projected", { sales: eur(simSales), food: eur(simFood), labor: eur(simLabor) })}
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function SimulatorPage() {
             <Slider label={t("sim.salesPrice")} val={sales} set={setSales} hint={t("sim.salesHint")} />
           </div>
 
-          <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 12, textAlign: "center" }}>{t("sim.note")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 12, textAlign: "center" }}>{t("sim.note")}</div>
         </>
       )}
     </div>
