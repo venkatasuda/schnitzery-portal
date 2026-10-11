@@ -1,5 +1,13 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { berlinToday, berlinMonth, mondayOfDate, berlinMonday, berlinWeekdayIndex } from "./berlinDate";
+import { berlinToday, berlinMonth, monthRange, isCalendarDate, mondayOfDate, berlinMonday, berlinWeekdayIndex } from "./berlinDate";
+
+it("keeps month boundaries as date-only UTC calendar dates", () => {
+  expect(monthRange("2026-10")).toEqual({ ym: "2026-10", from: "2026-10-01", to: "2026-10-31", next: "2026-11-01" });
+  expect(monthRange("2024-02").to).toBe("2024-02-29");
+  expect(() => monthRange("2026-13")).toThrow();
+  expect(isCalendarDate("2026-02-30")).toBe(false);
+  expect(isCalendarDate("2024-02-29")).toBe(true);
+});
 
 describe("mondayOfDate — week starts on Monday, timezone-stable", () => {
   it("returns the same Monday for any day in that week", () => {

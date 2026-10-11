@@ -25,7 +25,7 @@ export default function BranchesPage() {
     })();
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("branches.ownersOnly")}</div>;
+  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("branches.ownersOnly")}</div>;
 
   const roleLabel = role === "brand_owner" ? t("branches.allBranches") : t("branches.myFranchise");
   const filtered = branches.filter((b) => b.name.toLowerCase().includes(search.toLowerCase()) || (b.address || "").toLowerCase().includes(search.toLowerCase()));
@@ -49,7 +49,7 @@ export default function BranchesPage() {
           </div>
 
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("branches.search")}
-            style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
+            style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
           <div className="section-label">{t("branches.sectionBranches")}</div>
           {filtered.map((b) => (
@@ -77,10 +77,10 @@ function Total({ label, value, color }: any) {
   return (
     <div className="card" style={{ textAlign: "center", marginBottom: 0, padding: 16 }}>
       <div style={{ fontSize: 26, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "#9a8f8f", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{label}</div>
     </div>
   );
 }
 function Mini({ label, value, color }: any) {
-  return <span style={{ fontSize: 12, color: "#9a8f8f" }}><b style={{ color: color || "#fff" }}>{value}</b> {label}</span>;
+  return <span style={{ fontSize: 12, color: "var(--gray)" }}><b style={{ color: color || "#fff" }}>{value}</b> {label}</span>;
 }

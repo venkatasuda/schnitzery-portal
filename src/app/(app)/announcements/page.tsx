@@ -71,9 +71,9 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 620, margin: "0 auto" }}>
+    <div className="workspace-page">
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📣" size={22} /> {t("announcements.title")}</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("announcements.subtitle")}</p>
+      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("announcements.subtitle")}</p>
 
       {canPost && (
         <>
@@ -92,7 +92,7 @@ export default function AnnouncementsPage() {
                     </select>
                   </Field>
                 </div>
-                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9a8f8f", paddingBottom: 18, cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--gray)", paddingBottom: 18, cursor: "pointer" }}>
                   <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} /> {t("announcements.pin")}
                 </label>
               </div>
@@ -105,7 +105,7 @@ export default function AnnouncementsPage() {
       {loading ? (
         <CardSkeleton rows={3} />
       ) : list.length === 0 ? (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", padding: 40 }}><Icon e="📭" size={30} color="#9a8f8f" /><br />{t("announcements.empty")}</div>
+        <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 40 }}><Icon e="📭" size={30} color="var(--gray)" /><br />{t("announcements.empty")}</div>
       ) : (
         list.map((a) => (
           <div key={a.id} style={{ ...card, marginBottom: 10, borderColor: a.pinned ? "rgba(212,168,71,0.35)" : "rgba(255,255,255,0.08)" }}>
@@ -115,11 +115,11 @@ export default function AnnouncementsPage() {
                 {a.category && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, padding: "2px 8px", borderRadius: 10, background: (CAT_COLORS[a.category] || "#666") + "26", color: CAT_COLORS[a.category] || "#aaa" }}>{catLabel(a.category).toUpperCase()}</span>}
                 {a.title && <span style={{ fontSize: 15, fontWeight: 700 }}>{a.title}</span>}
               </div>
-              <span style={{ fontSize: 11, color: "#6f6565", whiteSpace: "nowrap" }}>{fmtWhen(a.created_at)}</span>
+              <span style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmtWhen(a.created_at)}</span>
             </div>
-            <div style={{ fontSize: 14, color: "#e8e0e0", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{a.message}</div>
+            <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{a.message}</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
-              <span style={{ fontSize: 11, color: "#9a8f8f" }}>— {a.author || "Manager"}</span>
+              <span style={{ fontSize: 11, color: "var(--gray)" }}>— {a.author || "Manager"}</span>
               {canPost && (
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => pin(a)} disabled={busyId === a.id} style={miniBtn}>{a.pinned ? t("announcements.unpin") : t("announcements.pin")}</button>
@@ -135,9 +135,9 @@ export default function AnnouncementsPage() {
 }
 
 function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "#9a8f8f", marginBottom: 6 }}>{label}</label>{children}</div>;
+  return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</label>{children}</div>;
 }
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 };
-const input: React.CSSProperties = { width: "100%", padding: "11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "13px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
-const miniBtn: React.CSSProperties = { padding: "6px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, color: "#fff", fontSize: 12, cursor: "pointer" };
+const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
+const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
+const primaryBtn: React.CSSProperties = { width: "100%", padding: "13px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const miniBtn: React.CSSProperties = { padding: "6px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 7, color: "var(--white)", fontSize: 12, cursor: "pointer" };

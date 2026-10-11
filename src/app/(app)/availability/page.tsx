@@ -59,7 +59,7 @@ export default function AvailabilityPage() {
   return (
     <div style={{ maxWidth: 640, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗓" size={22} /> {t("avail.title")}</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
+      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>
         {t("avail.subtitle", { week: weekLabel })}
       </p>
 
@@ -77,7 +77,7 @@ export default function AvailabilityPage() {
                     <button key={sh.key} onClick={() => toggleShift(day, sh.key)}
                       style={{ flex: "1 1 100px", padding: "10px", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 600,
                         background: on ? "#d4a847" : "rgba(255,255,255,0.04)",
-                        color: on ? "#1a0e0e" : "#9a8f8f",
+                        color: on ? "#1a0e0e" : "var(--gray)",
                         border: on ? "1px solid #d4a847" : "1px solid rgba(255,255,255,0.12)" }}>
                       {shiftLabel(sh.key)}<div style={{ fontSize: 10, fontWeight: 400, marginTop: 2 }}>{sh.time}</div>
                     </button>
@@ -95,5 +95,5 @@ export default function AvailabilityPage() {
   );
 }
 
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16 };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 16 };
+const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

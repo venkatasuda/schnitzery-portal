@@ -1,4 +1,6 @@
 "use server";
+import { readAll } from "@/lib/supabase/readAll";
+
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
@@ -34,7 +36,8 @@ export async function getOrgOverview() {
   const { data: me } = await supabase.from("users").select("role").eq("id", user.id).single();
   if (!OWNER.includes(me?.role ?? "")) return { ok: false as const, error: "Owners only." };
 
-  const { data: branches } = await supabase.from("branches").select("id, name").order("name");
+  const { data: branches, error: branchError } = await readAll(supabase.from("branches").select("id, name").order("name").order("id"));
+  if (branchError) return { ok: false as const, error: branchError.message };
   const ids = (branches || []).map((b) => b.id);
   if (!ids.length) return { ok: false as const, error: "No branches." };
 
@@ -45,13 +48,16 @@ export async function getOrgOverview() {
   const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
 
   const [usersR, logsR, rosterR, docsR, kioskR, payR] = await Promise.all([
-    supabase.from("users").select("id, branch_id, role").in("branch_id", ids),
-    supabase.from("attendance_logs").select("branch_id, user_id, clock_in, status, late_mins").in("branch_id", ids).eq("work_date", today),
-    supabase.from("weekly_roster").select("branch_id, roster_data").in("branch_id", ids).eq("week_start", monday),
-    supabase.from("user_documents").select("branch_id, expiry_date").in("branch_id", ids).not("expiry_date", "is", null).lte("expiry_date", in30),
-    supabase.from("kiosks").select("branch_id, is_active, last_seen").in("branch_id", ids),
-    supabase.from("payroll_runs").select("branch_id, status").in("branch_id", ids).eq("month", month),
+    readAll(supabase.from("users").select("id, branch_id, role").in("branch_id", ids).order("id")),
+    readAll(supabase.from("attendance_logs").select("branch_id, user_id, clock_in, status, late_mins").in("branch_id", ids).eq("work_date", today).order("id")),
+    readAll(supabase.from("weekly_roster").select("branch_id, roster_data").in("branch_id", ids).eq("week_start", monday).order("id")),
+    readAll(supabase.from("user_documents").select("branch_id, expiry_date").in("branch_id", ids).not("expiry_date", "is", null).lte("expiry_date", in30).order("id")),
+    readAll(supabase.from("kiosks").select("branch_id, is_active, last_seen").in("branch_id", ids).order("id")),
+    readAll(supabase.from("payroll_runs").select("branch_id, status").in("branch_id", ids).eq("month", month).order("id")),
   ]);
+
+  const failed = [usersR, logsR, rosterR, docsR, kioskR, payR].find(r => r.error);
+  if (failed?.error) return { ok: false as const, error: failed.error.message };
 
   type B = { id: string; name: string; employees: number; workingNow: number; attended: number; scheduled: number; late: number };
   const map: Record<string, B> = {};

@@ -27,6 +27,17 @@ export function isManagerRole(role?: string | null): boolean {
   return MANAGER_ROLES.includes(role || "");
 }
 
+const CREATE_ROLES: Record<string, readonly string[]> = {
+  manager: ["staff", "kiosk"],
+  branch_owner: ["staff", "kiosk", "manager"],
+  brand_owner: ["staff", "kiosk", "manager", "branch_owner", "brand_owner"],
+  super_admin: Object.keys(RANK),
+};
+
+export function canCreateRole(actor: string | null, requested: string): boolean {
+  return (CREATE_ROLES[actor || ""] || []).includes(requested);
+}
+
 export type ActorCheck = {
   meRole: string | null;
   meBranchId: string | null;
@@ -50,10 +61,13 @@ export function canActOnUser({ meRole, meBranchId, targetRole, targetBranchId }:
     return { ok: false, error: "Managers only.", status: 403 };
   }
 
+  if (!Object.prototype.hasOwnProperty.call(RANK, targetRole || "") || rankOf(targetRole) > rankOf(meRole)) {
+    return { ok: false, error: "You can't act on a higher or unknown role.", status: 403 };
+  }
   const isOwner = CROSS_BRANCH_ROLES.includes(meRole || "");
   if (isOwner) return { ok: true };
 
-  if (targetBranchId !== meBranchId) {
+  if (!meBranchId || targetBranchId !== meBranchId) {
     return { ok: false, error: "You can only manage staff in your own branch.", status: 403 };
   }
   if (rankOf(targetRole) >= rankOf(meRole)) {

@@ -121,14 +121,14 @@ export default function OrderPage() {
                     <div style={{ fontSize: 11, color: "var(--gray)" }}>{it.unitPrice != null ? `${eur(it.unitPrice)}/${it.unit || t("po.unit")}` : t("po.noPrice")}</div>
                   </div>
                   <input type="number" inputMode="decimal" value={it.qty} onChange={(e) => setQty(gi, ii, e.target.value)}
-                    style={{ width: 66, padding: "8px", textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14, fontWeight: 600 }} />
+                    style={{ width: 66, padding: "8px", textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, fontWeight: 600 }} />
                   <span style={{ fontSize: 11, color: "var(--gray)", width: 26 }}>{it.unit}</span>
                   <span style={{ fontSize: 12, color: "var(--white)", width: 58, textAlign: "right" }}>{it.lineCost != null ? eur(it.lineCost) : "—"}</span>
                   <button onClick={() => removeItem(gi, ii)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
                 </div>
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <button onClick={() => copyGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(255,255,255,0.05)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, cursor: "pointer" }}>📋 {t("po.copy")}</button>
+                <button onClick={() => copyGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(255,255,255,0.05)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>📋 {t("po.copy")}</button>
                 <button onClick={() => emailGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>✉ {t("po.email")}</button>
               </div>
             </div>

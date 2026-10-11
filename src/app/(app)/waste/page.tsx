@@ -115,12 +115,12 @@ export default function WastePage() {
         {!sel ? (
           <>
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("waste.searchProduct")}
-              style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14, marginBottom: 8 }} />
+              style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
             {search && (filtered.length === 0 ? (
               <div style={{ fontSize: 12, color: "var(--gray)", padding: "4px 2px" }}>{t("waste.noProduct")}</div>
             ) : filtered.map((p) => (
               <button key={p.product} onClick={() => { setSel(p); setSearch(""); }}
-                style={{ display: "block", width: "100%", textAlign: "left", padding: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+                style={{ display: "block", width: "100%", textAlign: "left", padding: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
                 {p.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>({p.category})</span>
               </button>
             )))}
@@ -144,11 +144,11 @@ export default function WastePage() {
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
               <input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)}
-                style={{ width: 90, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 15, fontWeight: 600 }} />
+                style={{ width: 90, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
               <span style={{ fontSize: 13, color: "var(--gray)" }}>{sel.unit || t("waste.units")}</span>
             </div>
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("waste.notePh")}
-              style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, marginBottom: 12 }} />
+              style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
             <button onClick={submit} disabled={busy} style={{ width: "100%", padding: 13, borderRadius: 10, background: "#e74c3c", color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy ? "…" : t("waste.logIt")}</button>
           </>
         )}
@@ -163,7 +163,7 @@ export default function WastePage() {
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, color: "var(--white)" }}>{REASON_EMOJI[e.reason] || "•"} {e.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
             <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("waste.r_" + e.reason)} · {fmtWhen(e.created_at)}{e.logged_by_name ? ` · ${e.logged_by_name}` : ""}</div>
-            {e.note && <div style={{ fontSize: 11, color: "#9a8f8f", fontStyle: "italic" }}>“{e.note}”</div>}
+            {e.note && <div style={{ fontSize: 11, color: "var(--gray)", fontStyle: "italic" }}>“{e.note}”</div>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
             {e.value != null && <span style={{ fontSize: 13, color: "#ec7063", fontWeight: 600 }}>{eur(e.value)}</span>}

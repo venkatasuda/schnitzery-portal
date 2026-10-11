@@ -1,3 +1,4 @@
+import { readAll } from "../supabase/readAll";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ============================================================================
@@ -36,11 +37,12 @@ export async function wageMapForBranches(
   const ids = branchIds.filter((b): b is string => !!b);
   if (ids.length === 0) return {};
 
-  const { data } = await supabase
+  const { data, error } = await readAll(supabase
     .from("user_pay")
     .select("user_id, hourly_wage")
-    .in("branch_id", ids);
+    .in("branch_id", ids).order("user_id"));
 
+  if (error) throw new Error("Wage lookup failed: " + error.message);
   return toMap(data);
 }
 
@@ -52,11 +54,12 @@ export async function wageMapForUsers(
   const ids = userIds.filter((u): u is string => !!u);
   if (ids.length === 0) return {};
 
-  const { data } = await supabase
+  const { data, error } = await readAll(supabase
     .from("user_pay")
     .select("user_id, hourly_wage")
-    .in("user_id", ids);
+    .in("user_id", ids).order("user_id"));
 
+  if (error) throw new Error("Wage lookup failed: " + error.message);
   return toMap(data);
 }
 
@@ -70,6 +73,7 @@ export async function setWage(
   wage: number | null,
   actor: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (wage !== null && (!Number.isFinite(wage) || wage < 0)) return { ok: false, error: "Invalid wage." };
   const { error } = await supabase.from("user_pay").upsert({
     user_id: userId,
     branch_id: branchId,

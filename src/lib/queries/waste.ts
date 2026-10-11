@@ -1,7 +1,11 @@
 "use server";
+import { readAll } from "@/lib/supabase/readAll";
 
+
+import { validInventoryItem } from "@/lib/inventory/identity";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { inventoryKey } from "@/lib/inventory/identity";
 import { berlinToday } from "@/lib/time/berlinDate";
 
 function isOwner(r?: string | null) {
@@ -29,17 +33,18 @@ function isManager(r?: string | null) {
 }
 
 // unit price per product from recent purchases (for valuing waste), weighted average
-async function unitPrices(supabase: any, branchId: string | null) {
+async function unitPrices(supabase: Awaited<ReturnType<typeof createClient>>, branchId: string | null) {
   const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
   const from = new Date(anchor - 90 * 86400000).toISOString().slice(0, 10);
-  const { data, error } = await supabase
-    .from("inventory_purchases").select("product, qty, cost")
-    .eq("branch_id", branchId).gte("purchase_date", from);
+  const { data, error } = await readAll(supabase
+    .from("inventory_purchases").select("product, qty, cost, category, unit")
+    .eq("branch_id", branchId).gte("purchase_date", from).order("id"));
   const qty: Record<string, number> = {};
   const cost: Record<string, number> = {};
-  if (!error) for (const p of data || []) {
-    qty[p.product] = (qty[p.product] || 0) + (Number(p.qty) || 0);
-    cost[p.product] = (cost[p.product] || 0) + (Number(p.cost) || 0);
+  if (error) throw new Error("Purchase price lookup failed: " + error.message);
+  for (const p of data || []) {
+    qty[inventoryKey(p)] = (qty[inventoryKey(p)] || 0) + (Number(p.qty) || 0);
+    cost[inventoryKey(p)] = (cost[inventoryKey(p)] || 0) + (Number(p.cost) || 0);
   }
   const price: Record<string, number> = {};
   for (const prod of Object.keys(qty)) if (qty[prod] > 0) price[prod] = cost[prod] / qty[prod];
@@ -50,17 +55,17 @@ async function unitPrices(supabase: any, branchId: string | null) {
 export async function getWasteProducts() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", products: [] };
-  const { data } = await supabase
+  const { data } = await readAll(supabase
     .from("inventory_master").select("product, category, unit, is_active")
-    .eq("branch_id", branchId).eq("is_active", true).order("product");
+    .eq("branch_id", branchId).eq("is_active", true).order("product").order("id"));
   return { ok: true, products: data || [] };
 }
 
 export async function logWaste(product: string, category: string, qty: number, unit: string, reason: string, note: string) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  if (!product) return { ok: false, error: "Pick a product." };
-  if (!(qty > 0)) return { ok: false, error: "Enter a quantity." };
+  if (!branchId || !validInventoryItem({ product, category, unit })) return { ok: false, error: "Pick a product." };
+  if (!Number.isFinite(qty) || !(qty > 0)) return { ok: false, error: "Enter a quantity." };
   const { error } = await supabase.from("waste_log").insert({
     branch_id: branchId, product, category: category || null, qty, unit: unit || null,
     reason: reason || "other", note: note || null,
@@ -84,12 +89,13 @@ export async function getWasteLog(days = 14) {
   if (!user) return { ok: false, error: "Not logged in.", entries: [] };
   const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
   const from = new Date(anchor - days * 86400000).toISOString().slice(0, 10);
-  const [{ data }, price] = await Promise.all([
+  const [{ data, error: wasteError }, price] = await Promise.all([
     supabase.from("waste_log").select("*").eq("branch_id", branchId).gte("work_date", from).order("created_at", { ascending: false }).limit(200),
     unitPrices(supabase, branchId),
   ]);
+  if (wasteError) return { ok: false, error: wasteError.message, entries: [] };
   const entries = (data || []).map((e: any) => ({
-    ...e, value: price[e.product] != null ? Math.round(price[e.product] * Number(e.qty) * 100) / 100 : null,
+    ...e, value: price[inventoryKey(e)] != null ? Math.round(price[inventoryKey(e)] * Number(e.qty) * 100) / 100 : null,
   }));
   return { ok: true, entries };
 }
@@ -109,12 +115,13 @@ export async function getWasteByBranch(days = 30) {
   const from = new Date(anchor - days * 86400000).toISOString().slice(0, 10);
   const priceFrom = new Date(anchor - 90 * 86400000).toISOString().slice(0, 10);
 
-  const [{ data: branches }, { data: waste }, { data: purch }, { data: sales }] = await Promise.all([
-    a.from("branches").select("id, name, is_active").eq("is_active", true).order("name"),
-    a.from("waste_log").select("branch_id, product, qty").gte("work_date", from),
-    a.from("inventory_purchases").select("branch_id, product, qty, cost").gte("purchase_date", priceFrom),
-    a.from("daily_sales").select("branch_id, amount").gte("sale_date", from),
+  const [{ data: branches, error: branchError }, { data: waste, error: wasteError }, { data: purch, error: purchaseError }, { data: sales, error: salesError }] = await Promise.all([
+    readAll(a.from("branches").select("id, name, is_active").eq("is_active", true).order("name").order("id")),
+    readAll(a.from("waste_log").select("branch_id, product, qty, category, unit").gte("work_date", from).order("id")),
+    readAll(a.from("inventory_purchases").select("branch_id, product, qty, cost, category, unit").gte("purchase_date", priceFrom).order("id")),
+    readAll(a.from("daily_sales").select("branch_id, amount").gte("sale_date", from).order("id")),
   ]);
+  if (branchError || wasteError || purchaseError || salesError) return { ok: false, error: branchError?.message || wasteError?.message || purchaseError?.message || salesError?.message };
 
   // Per-branch weighted-average unit price: price[branchId][product].
   const price: Record<string, Record<string, number>> = {};
@@ -123,8 +130,8 @@ export async function getWasteByBranch(days = 30) {
   for (const p of purch || []) {
     const b = p.branch_id; if (!b) continue;
     (q[b] ||= {}); (c[b] ||= {});
-    q[b][p.product] = (q[b][p.product] || 0) + (Number(p.qty) || 0);
-    c[b][p.product] = (c[b][p.product] || 0) + (Number(p.cost) || 0);
+    q[b][inventoryKey(p)] = (q[b][inventoryKey(p)] || 0) + (Number(p.qty) || 0);
+    c[b][inventoryKey(p)] = (c[b][inventoryKey(p)] || 0) + (Number(p.cost) || 0);
   }
   for (const b of Object.keys(q)) {
     price[b] = {};
@@ -135,7 +142,7 @@ export async function getWasteByBranch(days = 30) {
   const wasteCnt: Record<string, number> = {};
   for (const w of waste || []) {
     const b = w.branch_id; if (!b) continue;
-    const unit = price[b]?.[w.product] || 0;
+    const unit = price[b]?.[inventoryKey(w)] || 0;
     wasteVal[b] = (wasteVal[b] || 0) + unit * (Number(w.qty) || 0);
     wasteCnt[b] = (wasteCnt[b] || 0) + 1;
   }
@@ -172,11 +179,12 @@ export async function getWasteTrends(weeks = 6) {
   const fromStr = firstMonday.toISOString().slice(0, 10);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [{ data: waste }, { data: sales }, price] = await Promise.all([
-    supabase.from("waste_log").select("product, qty, work_date").eq("branch_id", branchId).gte("work_date", fromStr),
-    supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", fromStr),
+  const [{ data: waste, error: wasteError }, { data: sales, error: salesError }, price] = await Promise.all([
+    readAll(supabase.from("waste_log").select("product, qty, work_date, category, unit").eq("branch_id", branchId).gte("work_date", fromStr).order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", fromStr).order("id")),
     unitPrices(supabase, branchId),
   ]);
+  if (wasteError || salesError) return { ok: false, error: wasteError?.message || salesError?.message };
 
   // Bucket index by which week a date falls in.
   const weekIndex = (dateStr: string) => {
@@ -191,7 +199,7 @@ export async function getWasteTrends(weeks = 6) {
 
   for (const w of waste || []) {
     const i = weekIndex(w.work_date);
-    if (i >= 0 && i < weeks) buckets[i].wasteValue += (price[w.product] || 0) * Number(w.qty || 0);
+    if (i >= 0 && i < weeks) buckets[i].wasteValue += (price[inventoryKey(w)] || 0) * Number(w.qty || 0);
   }
   for (const s of sales || []) {
     const i = weekIndex(s.sale_date);
@@ -215,22 +223,23 @@ export async function getWasteSummary(days = 7) {
   if (!user) return { ok: false, error: "Not logged in." };
   const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
   const from = new Date(anchor - days * 86400000).toISOString().slice(0, 10);
-  const [{ data }, price] = await Promise.all([
-    supabase.from("waste_log").select("product, qty, reason").eq("branch_id", branchId).gte("work_date", from),
+  const [{ data, error: wasteError }, price] = await Promise.all([
+    readAll(supabase.from("waste_log").select("product, qty, reason, category, unit").eq("branch_id", branchId).gte("work_date", from).order("id")),
     unitPrices(supabase, branchId),
   ]);
+  if (wasteError) return { ok: false, error: wasteError.message, entries: [] };
   const rows = data || [];
   let totalValue = 0;
   const byReason: Record<string, { value: number; count: number }> = {};
   const byProduct: Record<string, number> = {};
   for (const r of rows) {
-    const v = price[r.product] != null ? price[r.product] * Number(r.qty) : 0;
+    const v = price[inventoryKey(r)] != null ? price[inventoryKey(r)] * Number(r.qty) : 0;
     totalValue += v;
     byReason[r.reason] = byReason[r.reason] || { value: 0, count: 0 };
     byReason[r.reason].value += v; byReason[r.reason].count += 1;
-    byProduct[r.product] = (byProduct[r.product] || 0) + v;
+    byProduct[inventoryKey(r)] = (byProduct[inventoryKey(r)] || 0) + v;
   }
   const reasons = Object.keys(byReason).map((k) => ({ reason: k, value: Math.round(byReason[k].value * 100) / 100, count: byReason[k].count })).sort((a, b) => b.value - a.value);
-  const top = Object.keys(byProduct).map((p) => ({ product: p, value: Math.round(byProduct[p] * 100) / 100 })).sort((a, b) => b.value - a.value).slice(0, 5);
+  const top = Object.keys(byProduct).map((p) => ({ product: JSON.parse(p)[1], category: JSON.parse(p)[0], value: Math.round(byProduct[p] * 100) / 100 })).sort((a, b) => b.value - a.value).slice(0, 5);
   return { ok: true, totalValue: Math.round(totalValue * 100) / 100, count: rows.length, reasons, top, days, hasPrices: Object.keys(price).length > 0 };
 }

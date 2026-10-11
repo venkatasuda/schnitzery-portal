@@ -150,7 +150,7 @@ function Row({ label, value, last }: { label: string; value: any; last?: boolean
 
 function Stat({ value, label, color }: { value: string | number; label: string; color?: string }) {
   return (
-    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
+    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
       <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
       <div style={{ fontSize: 9, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
     </div>

@@ -23,7 +23,7 @@
 // after confirming it renders nothing user-specific.
 // ────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = "schnitzery-v3";
+const CACHE_VERSION = "schnitzery-v4";
 
 // Routes safe to serve to any user of a shared device.
 // "/" is deliberately ABSENT — it is the authenticated home page.
@@ -93,6 +93,9 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api") || url.pathname.startsWith("/auth")) return;
 
   // Immutable static assets + icons + manifest → cache-first.
+  // Only production filenames have content hashes. Dev layout.css / webpack
+  // URLs are reused after edits and must always come from the running server.
+  if (url.pathname.startsWith("/_next/static") && !/[a-f0-9]{8,}/i.test(url.pathname.split("/").pop())) return;
   if (url.pathname.startsWith("/_next/static") || url.pathname.startsWith("/icons") || url.pathname === "/manifest.webmanifest") {
     event.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => putInCache(req, res)))

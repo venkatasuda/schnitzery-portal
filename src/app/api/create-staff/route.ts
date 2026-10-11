@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { canCreateRole } from "@/lib/auth/rank";
 
 // ============================================================
 // SECURE SERVER ROUTE — creates a staff login + users row.
@@ -15,8 +16,6 @@ import { NextResponse } from "next/server";
 // no role label — broken in a way that is hard to spot. Keep in sync with the
 // CHECK constraint on users.role.
 const VALID_ROLES = ["staff", "manager", "branch_owner", "brand_owner", "super_admin", "kiosk"];
-const ELEVATED_ROLES = ["manager", "branch_owner", "brand_owner", "super_admin"];
-const OWNER_ROLES = ["branch_owner", "brand_owner", "super_admin"];
 const MIN_PASSWORD = 10;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -45,7 +44,13 @@ export async function POST(request: Request) {
   // 2. Parse and validate the form data
   let body: any;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 }); }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 });
   const { password, full_name, team, role, employee_code, contract_type, contract_hours, phone } = body;
+
+  for (const key of ["full_name", "team", "employee_code", "contract_type", "phone"]) {
+    if (body[key] != null && (typeof body[key] !== "string" || body[key].length > 256)) return NextResponse.json({ ok: false, error: "Invalid staff details." }, { status: 400 });
+  }
+  if (contract_hours != null && contract_hours !== "" && (!Number.isFinite(Number(contract_hours)) || Number(contract_hours) < 0 || Number(contract_hours) > 744)) return NextResponse.json({ ok: false, error: "Invalid contract hours." }, { status: 400 });
 
   // Normalise the address the same way loginThrottle does, so the throttle
   // records actually match the account they are meant to protect.
@@ -65,9 +70,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Unknown role." }, { status: 400 });
   }
   // Only owners may create other managers/owners
-  if (ELEVATED_ROLES.includes(newRole) && !OWNER_ROLES.includes(me.role)) {
-    return NextResponse.json({ ok: false, error: "Only owners can create managers." }, { status: 403 });
+  if (!canCreateRole(me.role, newRole)) {
+    return NextResponse.json({ ok: false, error: "You're not allowed to create that role." }, { status: 403 });
   }
+  if (!me.branch_id) return NextResponse.json({ ok: false, error: "A branch must be assigned before creating staff." }, { status: 400 });
 
   // 3. Admin client (service-role key — server only)
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -127,7 +133,8 @@ export async function POST(request: Request) {
   });
   if (rowErr) {
     // best-effort cleanup so we don't leave an orphan auth user
-    await admin.auth.admin.deleteUser(newId).catch((e) => console.error("create-staff: orphan auth-user cleanup failed for", newId, e));
+    const cleanup = await admin.auth.admin.deleteUser(newId).catch(() => ({ error: { message: "Cleanup request failed" } }));
+    if (cleanup.error) console.error("create-staff: orphan auth-user cleanup failed for", newId);
     return NextResponse.json({ ok: false, error: rowErr.message }, { status: 400 });
   }
 

@@ -49,14 +49,14 @@ export default function NoShowPage() {
     setMissLoading(false);
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto" }}>
+    <div className="workspace-page">
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>{t("ns.subtitle")}</p>
+      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("ns.subtitle")}</p>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 4 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, padding: 4 }}>
         <TabBtn active={tab === "noshow"} onClick={() => setTab("noshow")}>{t("ns.tabNoShows")}</TabBtn>
         <TabBtn active={tab === "missing"} onClick={() => { setTab("missing"); loadMissing(); }}>{t("ns.tabMissing")}</TabBtn>
       </div>
@@ -64,14 +64,14 @@ export default function NoShowPage() {
       {tab === "noshow" && (
         <div style={card}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{t("ns.checkTitle")}</div>
-          <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 12 }}>{t("ns.checkSub")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("ns.checkSub")}</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...input, flex: 1 }} />
             <button onClick={checkNoShows} disabled={nsLoading} style={{ ...primaryBtn, width: "auto", padding: "0 20px" }}>{nsLoading ? "…" : t("ns.check")}</button>
           </div>
           {nsChecked && (
             rosteredCount === 0 ? (
-              <div style={{ color: "#9a8f8f", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.noneRostered")}</div>
+              <div style={{ color: "var(--gray)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.noneRostered")}</div>
             ) : noShows.length === 0 ? (
               <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allClockedIn")}</div>
             ) : (
@@ -80,7 +80,7 @@ export default function NoShowPage() {
                 {noShows.map((n, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <span style={{ fontSize: 14, fontWeight: 600 }}>{n.name}</span>
-                    <span style={{ fontSize: 12, color: "#9a8f8f" }}>{teamLabel(n.team)} · {shiftLabel(n.shift)}</span>
+                    <span style={{ fontSize: 12, color: "var(--gray)" }}>{teamLabel(n.team)} · {shiftLabel(n.shift)}</span>
                   </div>
                 ))}
               </div>
@@ -92,9 +92,9 @@ export default function NoShowPage() {
       {tab === "missing" && (
         <div style={card}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("ns.missingTitle")}</div>
-          <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 14 }}>{t("ns.missingSub")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("ns.missingSub")}</div>
           {missLoading ? (
-            <div style={{ color: "#9a8f8f", fontSize: 13, textAlign: "center", padding: 16 }}>{t("common.loading")}</div>
+            <div style={{ color: "var(--gray)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("common.loading")}</div>
           ) : (
             <>
               {missing.length === 0 ? (
@@ -108,7 +108,7 @@ export default function NoShowPage() {
                 </>
               )}
               {submitted.length > 0 && (
-                <div style={{ marginTop: 14, fontSize: 12, color: "#9a8f8f" }}>
+                <div style={{ marginTop: 14, fontSize: 12, color: "var(--gray)" }}>
                   {t("ns.submittedList", { names: submitted.map((s) => s.full_name).join(", ") })}
                 </div>
               )}
@@ -121,8 +121,8 @@ export default function NoShowPage() {
 }
 
 function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "#9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20 };
-const input: React.CSSProperties = { padding: "11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { padding: "12px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 };
+const input: React.CSSProperties = { padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
+const primaryBtn: React.CSSProperties = { padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
