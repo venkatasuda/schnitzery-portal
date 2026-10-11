@@ -1,1 +1,0 @@
-{"nodes": [{"id": "$graphify-root$_supabase_cleanup_demo_data_sql", "label": "cleanup-demo-data.sql", "file_type": "code", "source_file": "supabase/cleanup-demo-data.sql", "source_location": null}], "edges": []}
