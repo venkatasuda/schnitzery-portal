@@ -18,8 +18,8 @@ export default function LanguageToggle() {
         border: "none",
         borderRadius: 6,
         cursor: l === locale ? "default" : "pointer",
-        background: locale === l ? "var(--gold)" : "transparent",
-        color: locale === l ? "#1a0e0e" : "var(--gray)",
+        background: locale === l ? "var(--action)" : "transparent",
+        color: locale === l ? "var(--on-action)" : "var(--gray)",
       }}
     >
       {label}

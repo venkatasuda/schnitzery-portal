@@ -97,7 +97,7 @@ export default function LaborPage() {
             <div style={lbl}>{t("lab.revenue")}</div>
             <input type="number" inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} style={input} />
           </div>
-          <button onClick={saveSale} disabled={savingSale} style={{ padding: "11px 16px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: savingSale ? "default" : "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={saveSale} disabled={savingSale} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: savingSale ? "default" : "pointer", whiteSpace: "nowrap" }}>
             {savingSale ? "…" : t("common.save")}
           </button>
         </div>
@@ -133,7 +133,7 @@ export default function LaborPage() {
                 onChange={(e) => setWageEdits((c) => ({ ...c, [p.id]: e.target.value }))}
                 style={{ ...input, width: 72, padding: "8px 10px", textAlign: "right" }}
               />
-              <button onClick={() => saveWage(p.id)} disabled={wageEdits[p.id] === undefined} style={{ padding: "8px 12px", background: wageEdits[p.id] === undefined ? "var(--dark3)" : "var(--gold)", color: wageEdits[p.id] === undefined ? "var(--gray)" : "#1a0e0e", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: wageEdits[p.id] === undefined ? "default" : "pointer" }}>
+              <button onClick={() => saveWage(p.id)} disabled={wageEdits[p.id] === undefined} style={{ padding: "8px 12px", background: wageEdits[p.id] === undefined ? "var(--dark3)" : "var(--action)", color: wageEdits[p.id] === undefined ? "var(--gray)" : "#1a0e0e", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: wageEdits[p.id] === undefined ? "default" : "pointer" }}>
                 {t("lab.set")}
               </button>
             </div>
@@ -146,7 +146,7 @@ export default function LaborPage() {
         </div>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }

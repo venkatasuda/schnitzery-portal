@@ -72,7 +72,7 @@ export default function ProfilePage() {
               {profile.full_name || "—"}
               {isManager && <span className="mgr-badge">{t("roles." + profile.role)}</span>}
             </div>
-            <div style={{ fontSize: 13, color: "var(--gold)", marginTop: 2 }}>
+            <div style={{ fontSize: 13, color: "var(--action)", marginTop: 2 }}>
               {!isManager && `${t("roles." + profile.role)} · `}{profile.team || "—"}
             </div>
           </div>
@@ -169,4 +169,4 @@ function Field({ label, children }: any) {
   return <label style={{ display: "block", marginBottom: 14 }}><span style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</span>{children}</label>;
 }
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { flex: 1, width: "100%", padding: "13px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { flex: 1, width: "100%", padding: "13px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

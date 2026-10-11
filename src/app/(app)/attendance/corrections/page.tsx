@@ -108,7 +108,7 @@ export default function CorrectionsPage() {
           <button key={ty.key} onClick={() => pickType(ty.key)} style={{
             display: "flex", alignItems: "center", gap: 8, padding: "12px 10px", borderRadius: 12, cursor: "pointer",
             background: type === ty.key ? "rgba(212,168,71,0.15)" : "var(--dark2)",
-            border: `1px solid ${type === ty.key ? "var(--gold)" : "rgba(128,128,128,0.18)"}`,
+            border: `1px solid ${type === ty.key ? "var(--action)" : "rgba(128,128,128,0.18)"}`,
             color: "var(--white)", fontSize: 12.5, fontWeight: 600, textAlign: "left",
           }}>
             <Icon e={ty.icon} size={16} />{typeLabel(ty.key)}
@@ -158,7 +158,7 @@ export default function CorrectionsPage() {
           </label>
 
           <button onClick={submit} disabled={busy} style={{
-            width: "100%", padding: 13, background: "var(--gold)", color: "#1a0e0e", border: "none",
+            width: "100%", padding: 13, background: "var(--action)", color: "var(--on-action)", border: "none",
             borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: busy ? 0.6 : 1,
           }}>{t("corr.submit")}</button>
         </div>
@@ -202,7 +202,7 @@ export default function CorrectionsPage() {
         </div>
       )}
 
-      <Link href="/attendance" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>← {t("att.title")}</Link>
+      <Link href="/attendance" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>← {t("att.title")}</Link>
     </div>
   );
 }

@@ -32,8 +32,8 @@ export default function ViewToggle({ mode }: { mode: "hq" | "branch" }) {
         cursor: busy ? "default" : "pointer",
         fontSize: 12,
         fontWeight: 700,
-        background: mode === m ? "var(--gold)" : "transparent",
-        color: mode === m ? "#1a0e0e" : "var(--gray)",
+        background: mode === m ? "var(--action)" : "transparent",
+        color: mode === m ? "var(--on-action)" : "var(--gray)",
         transition: "background .15s",
       }}
     >

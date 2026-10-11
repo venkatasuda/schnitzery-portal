@@ -442,7 +442,7 @@ export const messages = {
       gpsTitle: "GPS location check", gpsSub: "Verify staff are at the restaurant when clocking in.",
       gpsOff: "Off — no location check", gpsWarn: "Warn — flag if far away", gpsRequired: "Required — block if not on-site",
       save: "💾 Save Settings", saved: "✅ Settings saved!", failed: "Failed.",
-      note: "Note: GPS enforcement on clock-in is wired into settings here; the location check itself activates with the geo feature in a later phase.",
+      note: "Review the branch location and kiosk settings below before changing clock-in requirements.",
       devicesLocation: "Devices & Location",
     },
     sh: {
@@ -1216,7 +1216,7 @@ export const messages = {
       gpsTitle: "GPS-Standortprüfung", gpsSub: "Prüfen, ob Mitarbeiter beim Einstempeln im Restaurant sind.",
       gpsOff: "Aus — keine Standortprüfung", gpsWarn: "Warnen — markieren, wenn weit entfernt", gpsRequired: "Erforderlich — blockieren, wenn nicht vor Ort",
       save: "💾 Einstellungen speichern", saved: "✅ Einstellungen gespeichert!", failed: "Fehlgeschlagen.",
-      note: "Hinweis: Die GPS-Durchsetzung beim Einstempeln ist hier in den Einstellungen verankert; die Standortprüfung selbst wird mit der Geo-Funktion in einer späteren Phase aktiviert.",
+      note: "Prüfe unten den Filialstandort und die Kiosk-Einstellungen, bevor du die Anforderungen zum Einstempeln änderst.",
       devicesLocation: "Geräte & Standort",
     },
     sh: {

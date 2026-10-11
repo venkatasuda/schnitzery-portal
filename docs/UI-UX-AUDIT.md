@@ -99,3 +99,12 @@ Legacy small route labels were raised to 12px and repeated green/red/amber statu
 Approvals has a structured request list with named Approve/Reject controls, global in-flight disabling, explicit failed-load and retry states, and a native rejection dialog with keyboard containment, Escape and focus return. The runnable approvals-ui check verifies failed reads cannot display a caught-up state.
 
 These are UI improvements, not implementation of immutable payroll, movement accounting or unrelated backend architecture. Source changes cover operational routes; signed-in browser checks below must record the actual routes and viewports tested, not imply every permission or workflow was exercised.
+
+
+## Live verification and contrast follow-up — 2026-10-12
+
+UI release 402a1393ad2ea904faf10bb8009890eb81e1d4be is deployed on the public domain. Signed-in manager checks confirmed direct staff navigation, schedule primary action placement, attendance summaries/filters, the approvals empty queue and tablet branch settings. Checked widths include 390, 768, 1280 and 1920px; checks are recorded per route, not every route at every width. No approval, staff, stock or branch-setting records were changed.
+
+The live review found legacy dark text paired with teal primary fills in several controls. Those controls now use the existing action/on-action token pair in both themes. The runnable action-contrast check calculates WCAG text contrast from the actual CSS tokens and requires at least 4.5:1. Removed the staff footer claiming account creation was still upcoming; replaced the obsolete GPS phase notice with current branch-configuration guidance in English and German.
+
+The signed-in employee experience, owner-specific branch flows, populated approval decisions and every route/dialog have not all received live end-to-end verification. Immutable payroll snapshots and inventory movement accounting remain separate backend work. AI work remains deferred.

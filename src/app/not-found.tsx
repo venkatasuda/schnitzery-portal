@@ -16,7 +16,7 @@ export default function NotFound() {
         </div>
         <Link
           href="/"
-          style={{ display: "inline-block", marginTop: 22, padding: "12px 22px", background: "var(--gold, #d4a847)", color: "#1a0e0e", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none" }}
+          style={{ display: "inline-block", marginTop: 22, padding: "12px 22px", background: "var(--gold, #d4a847)", color: "var(--on-action)", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none" }}
         >
           Back to home · Zur Startseite
         </Link>

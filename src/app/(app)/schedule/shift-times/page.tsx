@@ -60,7 +60,7 @@ export default function ShiftTimesPage() {
                   <div key={r.shift} className="card" style={{ padding: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                       <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.shift}</div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: isBranch ? "var(--gold)" : "var(--gray)", background: isBranch ? "rgba(212,168,71,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: isBranch ? "var(--action)" : "var(--gray)", background: isBranch ? "rgba(212,168,71,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
                         {isBranch ? t("shiftcfg.scopeBranch") : t("shiftcfg.scopeDefault")}
                       </span>
                     </div>
@@ -77,7 +77,7 @@ export default function ShiftTimesPage() {
                         <div style={lbl}>{t("shiftcfg.breakLabel")}</div>
                         <input type="number" min={0} value={r.breakMins} onChange={(e) => edit(r.team, r.shift, "breakMins", e.target.value)} style={input} />
                       </label>
-                      <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
+                      <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
                     </div>
                     {crosses && <div style={{ fontSize: 12, color: "var(--warn)", marginTop: 8 }}><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
                   </div>
@@ -88,7 +88,7 @@ export default function ShiftTimesPage() {
         ))
       )}
 
-      <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 8, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
+      <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 8, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
     </div>
   );
 }

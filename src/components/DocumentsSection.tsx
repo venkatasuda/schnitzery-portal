@@ -154,7 +154,7 @@ export default function DocumentsSection() {
                   <button onClick={() => view(cur.file_path)} style={viewBtn}>{t("documents.view")}</button>
                   <button onClick={() => archive(cur.id)} style={archiveBtn}>{t("docw.archive")}</button>
                   {older.length > 0 && (
-                    <button onClick={() => toggleHist(type)} style={{ ...archiveBtn, marginLeft: "auto", color: "var(--gold)" }}>
+                    <button onClick={() => toggleHist(type)} style={{ ...archiveBtn, marginLeft: "auto", color: "var(--action)" }}>
                       {t("docw.versionHistory")} ({older.length}) {histOpen ? "▲" : "▼"}
                     </button>
                   )}
@@ -214,7 +214,7 @@ export default function DocumentsSection() {
                     <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={input} />
                   </div>
                 </div>
-                <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 13, background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 13, background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                   {t("documents.chooseUpload")}
                 </button>
                 <button onClick={() => setStage("type")} style={cancelBtn}>‹ {t("common.back")}</button>
@@ -227,7 +227,7 @@ export default function DocumentsSection() {
   );
 }
 
-const uploadBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark3)", border: "1px solid rgba(212,168,71,0.3)", borderRadius: 20, color: "var(--gold)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const uploadBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark3)", border: "1px solid rgba(212,168,71,0.3)", borderRadius: 20, color: "var(--action)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
 const viewBtn: React.CSSProperties = { padding: "6px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
 const archiveBtn: React.CSSProperties = { padding: "6px 12px", background: "none", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--gray)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
 const typeRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 12px", marginBottom: 8, background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.15)", borderRadius: 12, cursor: "pointer" };

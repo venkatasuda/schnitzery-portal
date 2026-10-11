@@ -78,7 +78,7 @@ export default function NotesPage() {
       : shown.map((n) => (
         <div key={n.id} style={{ ...card, marginBottom: 8, borderColor: n.isRecognition ? "rgba(212,168,71,0.3)" : "rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 14, fontWeight: 600 }}>{n.isRecognition && <Icon e="🌟" size={13} color="var(--gold)" style={{ verticalAlign: "-2px", marginRight: 4 }} />}{n.subject?.full_name || t("lc.staffFallback")}</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{n.isRecognition && <Icon e="🌟" size={13} color="var(--action)" style={{ verticalAlign: "-2px", marginRight: 4 }} />}{n.subject?.full_name || t("lc.staffFallback")}</span>
             <span style={{ fontSize: 12, color: "var(--gray)" }}>{fmt(n.created_at)}</span>
           </div>
           <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5 }}>{n.cleanNote}</div>
@@ -89,7 +89,7 @@ export default function NotesPage() {
 }
 
 function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
 function Field({ label, children }: any) {
   return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</label>{children}</div>;

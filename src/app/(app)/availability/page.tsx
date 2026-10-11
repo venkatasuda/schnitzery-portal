@@ -76,9 +76,9 @@ export default function AvailabilityPage() {
                   return (
                     <button key={sh.key} onClick={() => toggleShift(day, sh.key)}
                       style={{ flex: "1 1 100px", padding: "10px", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 600,
-                        background: on ? "#d4a847" : "rgba(255,255,255,0.04)",
-                        color: on ? "#1a0e0e" : "var(--gray)",
-                        border: on ? "1px solid #d4a847" : "1px solid rgba(255,255,255,0.12)" }}>
+                        background: on ? "var(--action)" : "rgba(255,255,255,0.04)",
+                        color: on ? "var(--on-action)" : "var(--gray)",
+                        border: on ? "1px solid var(--action)" : "1px solid rgba(255,255,255,0.12)" }}>
                       {shiftLabel(sh.key)}<div style={{ fontSize: 12, fontWeight: 400, marginTop: 2 }}>{sh.time}</div>
                     </button>
                   );

@@ -29,7 +29,7 @@ export default function CookieNotice() {
         </span>
         <button
           onClick={dismiss}
-          style={{ padding: "9px 18px", background: "var(--gold, #d4a847)", color: "#1a0e0e", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+          style={{ padding: "9px 18px", background: "var(--gold, #d4a847)", color: "var(--on-action)", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
         >
           Got it
         </button>
