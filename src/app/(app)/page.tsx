@@ -56,7 +56,7 @@ export default async function HomePage() {
   let mLive: { workingNow: number; completed: number; late: number; totalMins: number } | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
-  let mCost: { laborPct: number | null; foodCostPct: number | null } | null = null;
+  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number } | null = null;
   let mWaste: { label: string; value: number }[] = [];
   let hqWaste: { label: string; value: number }[] = [];
 
@@ -189,7 +189,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
   live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null } | null; waste?: { label: string; value: number }[]; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number } | null; waste?: { label: string; value: number }[]; t: Tf;
 }) {
   const missing = sched ? Math.max(0, sched.staffCount - sched.submissionCount) : 0;
   const alerts = [
@@ -223,16 +223,16 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     </div>
     <div className="dashboard-detail-grid">
       <section className="dashboard-panel">
-        <div className="dashboard-panel-heading"><h2>{t("home.costThisMonth")}</h2><Link href="/labor">{t("homeDashboard.details")} ›</Link></div>
+        <div className="dashboard-panel-heading"><h2>{t("business.overview")}</h2><Link href="/analytics">{t("homeDashboard.details")} ›</Link></div>
         <div className="dashboard-costs">
+          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null ? "—" : `€${cost.monthSales.toLocaleString()}`}</strong></div>
+          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null ? "—" : `€${cost.invSpend.toLocaleString()}`}</strong></div>
+        </div>
+        <div className="dashboard-facts">
           <div><span>{t("home.laborPct")}</span><strong>{cost?.laborPct == null ? "—" : `${cost.laborPct}%`}</strong></div>
           <div><span>{t("home.foodCostPct")}</span><strong>{cost?.foodCostPct == null ? "—" : `${cost.foodCostPct}%`}</strong></div>
         </div>
-        <div className="dashboard-facts">
-          <div><span>{t("home.hoursWorked")}</span><strong>{ot ? fmtH(ot.totalWorkedMins) : "—"}</strong></div>
-          <div><span>{t("home.overtime")}</span><strong>{ot ? fmtH(ot.totalOvertimeMins) : "—"}</strong></div>
-          <div><span>{t("home.overContract")}</span><strong>{ot?.peopleOver ?? "—"}</strong></div>
-        </div>
+        <p className="dashboard-muted">{cost?.missingWageStaff ? t("business.missingWages", { n: cost.missingWageStaff }) : t("business.purchaseNote")}</p>
       </section>
       <section className="dashboard-panel">
         <div className="dashboard-panel-heading"><h2>{t("home.wasteTrend")}</h2><Link href="/waste">{t("homeDashboard.details")} ›</Link></div>

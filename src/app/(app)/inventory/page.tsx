@@ -209,7 +209,9 @@ export default function InventoryPage() {
           <p className="page-sub">{t("inv.subtitle")}</p>
         </div>
         <div className="inventory-heading-actions">
-        <Link href="/inventory/order" className="btn-gold"><Icon e="🧾" size={16} />{t("inv.buildOrder")}</Link>
+        {tab === "count" && <button className="btn-gold" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button>}
+        {tab === "catalog" && <button className="btn-gold" onClick={() => setShowAdd(!showAdd)} aria-expanded={showAdd}>{showAdd ? t("common.close") : t("inv.addToCatalog")}</button>}
+        {(tab === "forecast" || tab === "analytics") && <Link href="/inventory/order" className="btn-gold"><Icon e="🧾" size={16} />{t("inv.buildOrder")}</Link>}
       <details className="inventory-operation-menu">
         <summary><Icon e="🔄" size={16} /> {t("inventoryWorkflow.movements")}</summary>
         <nav className="inventory-links" aria-label={t("inventoryWorkflow.movements")}>
@@ -283,11 +285,9 @@ export default function InventoryPage() {
                   <button className={countView === "list" ? "active" : ""} aria-pressed={countView === "list"} onClick={() => setCountView("list")}>{t("inv.viewList")}</button>
                   <button className={countView === "grid" ? "active" : ""} aria-pressed={countView === "grid"} onClick={() => setCountView("grid")}>{t("inv.viewGrid")}</button>
                 </div>
-                <button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button>
                 </>}
                 {tab === "catalog" && <>
                     <Link href="/labels" className="btn-secondary">{t("scan.labels")}</Link>
-                    <button className="btn-secondary" onClick={() => setShowAdd(!showAdd)} aria-expanded={showAdd}>{showAdd ? t("common.close") : t("inv.addToCatalog")}</button>
                 </>}
               </div>
               <div className="inventory-result-bar">

@@ -46,6 +46,7 @@ export async function getLaborSummary() {
   const paidByUser: Record<string, number> = {};
   for (const l of logs || []) paidByUser[l.user_id] = (paidByUser[l.user_id] || 0) + shiftMinutes(l).paidMin;
   const laborCost = Object.entries(paidByUser).reduce((sum, [id, minutes]) => sum + payForMinutes(minutes, wageOf[id] || 0), 0);
+  const missingWageStaff = Object.keys(paidByUser).filter(id => wages[id] == null).length;
 
   // sales this month
   const { data: sales, error: salesError } = await readAll(supabase
@@ -54,7 +55,7 @@ export async function getLaborSummary() {
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
 
-  const laborPct = monthSales > 0 ? Math.round((laborCost / monthSales) * 1000) / 10 : null;
+  const laborPct = monthSales > 0 && !missingWageStaff ? Math.round((laborCost / monthSales) * 1000) / 10 : null;
 
   // inventory spend this month → food cost % (safe if the deliveries table doesn't exist yet)
   const { data: purch, error: purchErr } = await readAll(supabase
@@ -73,6 +74,7 @@ export async function getLaborSummary() {
     foodCostPct,
     staffCount: staffCount || 0,
     withWage,
+    missingWageStaff,
   };
 }
 
