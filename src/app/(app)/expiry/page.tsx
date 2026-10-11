@@ -1,4 +1,5 @@
 "use client";
+import { inventoryKey } from "@/lib/inventory/identity";
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -68,9 +69,9 @@ export default function ExpiryPage() {
   const groups = (() => {
     const map: Record<string, any> = {};
     for (const b of batches) {
-      if (!map[b.product]) map[b.product] = { product: b.product, unit: b.unit, items: [], total: 0 };
-      map[b.product].items.push(b);
-      map[b.product].total += Number(b.qty) || 0;
+      if (!map[inventoryKey(b)]) map[inventoryKey(b)] = { product: b.product, unit: b.unit, items: [], total: 0 };
+      map[inventoryKey(b)].items.push(b);
+      map[inventoryKey(b)].total += Number(b.qty) || 0;
     }
     return Object.values(map).sort((a: any, z: any) => a.items[0].expiry_date.localeCompare(z.items[0].expiry_date));
   })();
@@ -100,9 +101,9 @@ export default function ExpiryPage() {
           {!sel ? (
             <>
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("expiry.searchProduct")}
-                style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14, marginBottom: 8 }} />
+                style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
               {search && (filtered.length === 0 ? <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("expiry.noProduct")}</div> : filtered.map((p) => (
-                <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+                <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
                   {p.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>({p.category})</span>
                 </button>
               )))}
@@ -114,14 +115,14 @@ export default function ExpiryPage() {
                 <button onClick={() => setSel(null)} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("expiry.change")}</button>
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
-                <input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 15, fontWeight: 600 }} />
+                <input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
                 <span style={{ fontSize: 13, color: "var(--gray)" }}>{sel.unit || ""}</span>
               </div>
               <label style={{ fontSize: 12, color: "var(--gray)", display: "block", marginBottom: 4 }}>{t("expiry.expiryDate")}</label>
               <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)}
-                style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14, marginBottom: 10 }} />
+                style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 10 }} />
               <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("expiry.notePh")}
-                style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, marginBottom: 12 }} />
+                style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
               <button onClick={submit} disabled={busy === "add"} style={{ width: "100%", padding: 13, borderRadius: 10, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy === "add" ? "…" : t("expiry.addBatch")}</button>
             </>
           )}
@@ -151,7 +152,7 @@ export default function ExpiryPage() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontSize: 13, color: "var(--white)" }}>{b.qty}{b.unit ? " " + b.unit : ""} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {t("expiry.expires")} {fmtDate(b.expiry_date)}</span></div>
-                      {b.note && <div style={{ fontSize: 11, color: "#9a8f8f", fontStyle: "italic" }}>{b.note}</div>}
+                      {b.note && <div style={{ fontSize: 11, color: "var(--gray)", fontStyle: "italic" }}>{b.note}</div>}
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: bg.c, whiteSpace: "nowrap" }}>{bg.label}</span>
                   </div>

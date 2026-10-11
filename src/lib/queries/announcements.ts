@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { sendPushToUser } from "@/lib/push/actions";
+import { sendPushToUser } from "@/lib/push/delivery";
 
 // ============================================================
 // ANNOUNCEMENTS — manager posts, everyone reads.

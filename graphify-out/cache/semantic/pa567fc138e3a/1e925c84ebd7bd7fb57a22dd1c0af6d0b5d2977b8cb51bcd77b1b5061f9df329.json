@@ -1,0 +1,1 @@
+{"nodes": [{"id": "agents_framework_docs", "label": "Read installed Next.js guides", "file_type": "rationale", "source_file": "AGENTS.md", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null, "rationale": "Installed version has breaking conventions; bundled documentation precedes framework edits."}], "edges": [], "hyperedges": []}

@@ -49,7 +49,7 @@ export default function BranchDetailPage() {
 
       <div className="section-label">Team ({staffList.length})</div>
       {staffList.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "#9a8f8f", padding: 30 }}>No staff assigned to this branch yet.</div>
+        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>No staff assigned to this branch yet.</div>
       ) : (
         staffList.map((s: any) => (
           <div key={s.id} className="card" style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 14, padding: 14 }}>
@@ -58,7 +58,7 @@ export default function BranchDetailPage() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{s.full_name}</div>
-              <div style={{ fontSize: 12, color: "#9a8f8f" }}>{s.team || "No team"} · {s.role}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)" }}>{s.team || "No team"} · {s.role}</div>
             </div>
           </div>
         ))
@@ -71,7 +71,7 @@ function Stat({ label, value, color }: any) {
   return (
     <div className="card" style={{ textAlign: "center", marginBottom: 0, padding: 16 }}>
       <div style={{ fontSize: 24, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "#9a8f8f", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{label}</div>
     </div>
   );
 }

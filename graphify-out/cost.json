@@ -1,0 +1,15 @@
+{
+  "runs": [
+    {
+      "date": "2026-10-10",
+      "code_files": 218,
+      "document_files": 28,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "host_agent_usage_measured": false
+    }
+  ],
+  "total_input_tokens": 0,
+  "total_output_tokens": 0,
+  "note": "AST uses no model tokens; host-agent semantic usage unavailable. Zero counters are placeholders, not measured total cost."
+}

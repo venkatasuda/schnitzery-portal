@@ -1,8 +1,11 @@
 "use server";
+import { readAll } from "@/lib/supabase/readAll";
+
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
+import { shiftMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches } from "@/lib/pay/wages";
 
 // ============================================================================
@@ -58,19 +61,14 @@ function daysBetween(from: string, to: string) {
   while (d <= end) { out.push(ymd(d)); d.setUTCDate(d.getUTCDate() + 1); }
   return out;
 }
-function breakMins(breaks: any): number {
-  if (!Array.isArray(breaks)) return 0;
-  let m = 0;
-  for (const b of breaks) if (b?.start && b?.end) { const s = new Date(b.start), e = new Date(b.end); if (!isNaN(s.getTime()) && !isNaN(e.getTime()) && e > s) m += Math.round((e.getTime() - s.getTime()) / 60000); }
-  return m;
-}
 const h1 = (min: number) => Math.round(min / 6) / 10;
 
 async function getMe() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null as string | null, branchId: null as string | null };
-  const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
+  const { data: p, error: pError } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
+  if (pError) return { ok: false as const, error: pError.message };
   return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
 }
 
@@ -79,7 +77,8 @@ export async function getAnalyticsScope() {
   if (!user || !MGR.includes(role ?? "")) return { ok: false as const, canPickBranch: false, branches: [] as any[] };
   const supabase = (await createClient());
   const isOwner = OWNER.includes(role ?? "");
-  const { data: branches } = await supabase.from("branches").select("id, name").order("name");
+  const { data: branches, error: branchesError } = await readAll(supabase.from("branches").select("id, name").order("name").order("id"));
+  if (branchesError) return { ok: false as const, error: branchesError.message };
   return { ok: true as const, canPickBranch: isOwner, defaultBranch: branchId, branches: isOwner ? (branches || []) : (branches || []).filter((b) => b.id === branchId) };
 }
 
@@ -92,7 +91,8 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   if (!MGR.includes(role ?? "")) return { ...blank, error: "Managers only." };
 
   const isOwner = OWNER.includes(role ?? "");
-  const { data: accBranches } = await supabase.from("branches").select("id, name");
+  const { data: accBranches, error: accBranchesError } = await readAll(supabase.from("branches").select("id, name").order("id"));
+  if (accBranchesError) return { ...blank, ok: false as const, error: accBranchesError.message };
   const accMap: Record<string, string> = {}; (accBranches || []).forEach((b) => { accMap[b.id] = b.name; });
 
   let targets: string[]; let scope: string;
@@ -106,7 +106,8 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   const weeks = [...new Set(days.map(mondayOfDate))];
 
   // shift-time resolution (model < global < per-branch)
-  const { data: stRows } = await supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true);
+  const { data: stRows, error: stRowsError } = await readAll(supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true).order("id"));
+  if (stRowsError) return { ...blank, ok: false as const, error: stRowsError.message };
   const tm: Record<string, { start: string; end: string }> = {};
   for (const t of Object.keys(SHIFT_MODEL)) for (const s of (SHIFT_MODEL as any)[t]) { const d = parseModel(s.time); tm[`g|${t}|${s.shift}`] = { start: d.start, end: d.end }; }
   for (const r of stRows || []) if (r.branch_id == null) tm[`g|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
@@ -114,11 +115,16 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   const resolveTimes = (br: string, team: string, shift: string) => tm[`${br}|${team}|${shift}`] || tm[`g|${team}|${shift}`] || null;
 
   // data loads (scoped to target branches + window)
-  const { data: rosters } = await supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks);
-  const { data: logs } = await supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks, status").in("branch_id", targets).gte("work_date", from).lte("work_date", to);
-  const { data: users } = await supabase.from("users").select("id, team").in("branch_id", targets);
-  const { data: sales } = await supabase.from("daily_sales").select("amount").in("branch_id", targets).gte("sale_date", from).lte("sale_date", to);
-  const { data: psettings } = await supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets);
+  const { data: rosters, error: rostersError } = await readAll(supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks).order("id"));
+  if (rostersError) return { ...blank, ok: false as const, error: rostersError.message };
+  const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks, status").in("branch_id", targets).gte("work_date", from).lte("work_date", to).order("id"));
+  if (logsError) return { ...blank, ok: false as const, error: logsError.message };
+  const { data: users, error: usersError } = await readAll(supabase.from("users").select("id, team").in("branch_id", targets).order("id"));
+  if (usersError) return { ...blank, ok: false as const, error: usersError.message };
+  const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales").select("amount").in("branch_id", targets).gte("sale_date", from).lte("sale_date", to).order("id"));
+  if (salesError) return { ...blank, ok: false as const, error: salesError.message };
+  const { data: psettings, error: psettingsError } = await readAll(supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets).order("branch_id"));
+  if (psettingsError) return { ...blank, ok: false as const, error: psettingsError.message };
 
   // Wages from user_pay, not users — see src/lib/pay/wages.ts (item 18).
   const wage = await wageMapForBranches(supabase, targets);
@@ -179,7 +185,7 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   const teamMins: Record<string, number> = {};
   for (const l of logs || []) {
     const gross = l.duration_mins || 0; if (gross <= 0) continue;
-    const paid = Math.max(0, gross - breakMins(l.breaks));
+    const paid = shiftMinutes(l).paidMin;
     laborMins += paid;
     perDay[l.work_date] && (perDay[l.work_date].labor += paid);
     perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] = (perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] || 0) + paid;
@@ -225,7 +231,8 @@ export async function getOvertimeTrend(opts: { branchId?: string | null; months?
   if (!MGR.includes(role ?? "")) return { ok: false as const, error: "Managers only.", trend: [] as any[] };
 
   const isOwner = OWNER.includes(role ?? "");
-  const { data: accBranches } = await supabase.from("branches").select("id, name");
+  const { data: accBranches, error: accBranchesError } = await readAll(supabase.from("branches").select("id, name").order("id"));
+  if (accBranchesError) return { ok: false as const, error: accBranchesError.message };
   const accMap: Record<string, string> = {}; (accBranches || []).forEach((b) => { accMap[b.id] = b.name; });
   let targets: string[];
   if (isOwner && (!opts.branchId || opts.branchId === "all")) targets = (accBranches || []).map((b) => b.id);
@@ -233,17 +240,18 @@ export async function getOvertimeTrend(opts: { branchId?: string | null; months?
   else targets = myBranch ? [myBranch] : [];
   if (!targets.length) return { ok: false as const, error: "No branch.", trend: [] };
 
-  const now = new Date();
-  const startMonth = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+  const now = new Date(berlinToday() + "T12:00:00Z");
+  const startMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1, 12));
   const from = startMonth.toISOString().slice(0, 10);
   const to = now.toISOString().slice(0, 10);
   const monthsList: string[] = [];
-  for (let i = 0; i < months; i++) { const d = new Date(startMonth.getFullYear(), startMonth.getMonth() + i, 1); monthsList.push(d.toISOString().slice(0, 7)); }
+  for (let i = 0; i < months; i++) { const d = new Date(Date.UTC(startMonth.getUTCFullYear(), startMonth.getUTCMonth() + i, 1, 12)); monthsList.push(d.toISOString().slice(0, 7)); }
 
-  const [{ data: psettings }, { data: logs }] = await Promise.all([
-    supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets),
-    supabase.from("attendance_logs").select("user_id, branch_id, work_date, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to),
+  const [{ data: psettings, error: settingsError }, { data: logs, error: logsError }] = await Promise.all([
+    readAll(supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets).order("branch_id")),
+    readAll(supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to).order("id")),
   ]);
+  if (settingsError || logsError) return { ok: false as const, error: settingsError?.message || logsError?.message, trend: [] };
   const otThresh: Record<string, number> = {}; targets.forEach((b) => { otThresh[b] = 8 * 60; });
   (psettings || []).forEach((p) => { otThresh[p.branch_id] = Number(p.ot_daily_hours ?? 8) * 60; });
 
@@ -251,7 +259,7 @@ export async function getOvertimeTrend(opts: { branchId?: string | null; months?
   const perDay: Record<string, number> = {};
   for (const l of logs || []) {
     const gross = l.duration_mins || 0; if (gross <= 0) continue;
-    const paid = Math.max(0, gross - breakMins(l.breaks));
+    const paid = shiftMinutes(l).paidMin;
     const mon = String(l.work_date).slice(0, 7);
     paidByMonth[mon] = (paidByMonth[mon] || 0) + paid;
     perDay[`${l.user_id}|${l.work_date}|${l.branch_id}`] = (perDay[`${l.user_id}|${l.work_date}|${l.branch_id}`] || 0) + paid;
@@ -276,7 +284,8 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
   if (!MGR.includes(role ?? "")) return { ...blank, error: "Managers only." };
 
   const isOwner = OWNER.includes(role ?? "");
-  const { data: accBranches } = await supabase.from("branches").select("id, name");
+  const { data: accBranches, error: accBranchesError } = await readAll(supabase.from("branches").select("id, name").order("id"));
+  if (accBranchesError) return { ...blank, ok: false as const, error: accBranchesError.message };
   const accMap: Record<string, string> = {}; (accBranches || []).forEach((b) => { accMap[b.id] = b.name; });
 
   let targets: string[]; let scope: string;
@@ -290,17 +299,22 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
   const weeks = [...new Set(days.map(mondayOfDate))];
 
   // shift-time resolution (model < global < per-branch)
-  const { data: stRows } = await supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true);
+  const { data: stRows, error: stRowsError } = await readAll(supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true).order("id"));
+  if (stRowsError) return { ...blank, ok: false as const, error: stRowsError.message };
   const tm: Record<string, { start: string; end: string }> = {};
   for (const t of Object.keys(SHIFT_MODEL)) for (const s of (SHIFT_MODEL as any)[t]) { const d = parseModel(s.time); tm[`g|${t}|${s.shift}`] = { start: d.start, end: d.end }; }
   for (const r of stRows || []) if (r.branch_id == null) tm[`g|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
   for (const r of stRows || []) if (r.branch_id) tm[`${r.branch_id}|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
   const resolveTimes = (br: string, team: string, shift: string) => tm[`${br}|${team}|${shift}`] || tm[`g|${team}|${shift}`] || null;
 
-  const { data: rosters } = await supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks);
-  const { data: logs } = await supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to);
-  const { data: users } = await supabase.from("users").select("id, full_name, team, status").in("branch_id", targets);
-  const { data: psettings } = await supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets);
+  const { data: rosters, error: rostersError } = await readAll(supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks).order("id"));
+  if (rostersError) return { ...blank, ok: false as const, error: rostersError.message };
+  const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to).order("id"));
+  if (logsError) return { ...blank, ok: false as const, error: logsError.message };
+  const { data: users, error: usersError } = await readAll(supabase.from("users").select("id, full_name, team, status").in("branch_id", targets).order("id"));
+  if (usersError) return { ...blank, ok: false as const, error: usersError.message };
+  const { data: psettings, error: psettingsError } = await readAll(supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets).order("branch_id"));
+  if (psettingsError) return { ...blank, ok: false as const, error: psettingsError.message };
   const otThresh: Record<string, number> = {}; targets.forEach((b) => { otThresh[b] = 8 * 60; });
   (psettings || []).forEach((p) => { otThresh[p.branch_id] = Number(p.ot_daily_hours ?? 8) * 60; });
   const wage = await wageMapForBranches(supabase, targets);
@@ -344,7 +358,7 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
   for (const l of logs || []) {
     const s = stat[l.user_id]; if (!s) continue;
     const gross = l.duration_mins || 0; if (gross <= 0) continue;
-    const paid = Math.max(0, gross - breakMins(l.breaks));
+    const paid = shiftMinutes(l).paidMin;
     s.workedMins += paid; s.shifts++;
     const w = wage[l.user_id]; if (w != null) s.cost += (paid / 60) * w;
     perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] = (perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] || 0) + paid;
@@ -391,7 +405,8 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
   if (!user) return { ...blank, error: "Not logged in." };
   if (!OWNER.includes(role ?? "")) return { ...blank, error: "Owners only." };
 
-  const { data: branches } = await supabase.from("branches").select("id, name").order("name");
+  const { data: branches, error: branchesError } = await readAll(supabase.from("branches").select("id, name").order("name").order("id"));
+  if (branchesError) return { ...blank, ok: false as const, error: branchesError.message };
   const targets = (branches || []).map((b) => b.id);
   if (!targets.length) return { ...blank, error: "No branches." };
 
@@ -399,12 +414,13 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
   const days = daysBetween(from, to);
   const weeks = [...new Set(days.map(mondayOfDate))];
 
-  const [{ data: rosters }, { data: logs }, wage] = await Promise.all([
-    supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks),
-    supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to),
+  const [{ data: rosters, error: rosterError }, { data: logs, error: logsError }, wage] = await Promise.all([
+    readAll(supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks).order("id")),
+    readAll(supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks").in("branch_id", targets).gte("work_date", from).lte("work_date", to).order("id")),
     // Wages from user_pay, not users — see src/lib/pay/wages.ts (item 18).
     wageMapForBranches(supabase, targets),
   ]);
+  if (rosterError || logsError) return { ...blank, error: rosterError?.message || logsError?.message };
 
   // roster index: branch|date -> entries[]
   const sched: Record<string, any[]> = {};
@@ -430,7 +446,7 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
   for (const l of logs || []) {
     const b = map[l.branch_id]; if (!b) continue;
     const gross = l.duration_mins || 0; if (gross <= 0) continue;
-    const paid = Math.max(0, gross - breakMins(l.breaks));
+    const paid = shiftMinutes(l).paidMin;
     b.laborMins += paid;
     const w = wage[l.user_id]; if (w != null) b.laborCost += (paid / 60) * w;
   }

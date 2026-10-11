@@ -134,8 +134,8 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.trend} margin={{ top: 6, right: 6, bottom: 0, left: -22 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                   <Tooltip {...tooltip} />
                   <Bar dataKey="labor" fill={GOLD} radius={[5, 5, 0, 0]} maxBarSize={30} />
                 </BarChart>
@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
             <ChartCard title={t("bana.teamTitle")}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.teams} layout="vertical" margin={{ top: 4, right: 12, bottom: 0, left: 10 }}>
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="team" tick={{ fontSize: 12, fill: "#cfc7c7" }} tickLine={false} axisLine={false} width={80} />
                   <Tooltip {...tooltip} cursor={{ fill: "rgba(128,128,128,0.08)" }} />
                   <Bar dataKey="hours" radius={[0, 5, 5, 0]} maxBarSize={26}>
@@ -165,8 +165,8 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={otTrend} margin={{ top: 8, right: 10, bottom: 0, left: -22 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#9a8f8f" }} tickLine={false} axisLine={false} unit="%" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} unit="%" />
                   <Tooltip {...tooltip} formatter={(v: any) => [`${v}%`, t("bana.kOvertime")]} />
                   <Line type="monotone" dataKey="overtimePct" stroke={AMBER} strokeWidth={2.5} dot={{ r: 3, fill: AMBER }} />
                 </LineChart>
@@ -267,8 +267,8 @@ export default function AnalyticsPage() {
 }
 
 const tooltip = {
-  contentStyle: { background: "#1c1414", border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12 },
-  labelStyle: { color: "#fff" }, itemStyle: { color: "#d4a847" }, cursor: { fill: "rgba(212,168,71,0.08)" },
+  contentStyle: { background: "var(--dark)", border: "1px solid rgba(212,168,71,0.3)", borderRadius: 8, fontSize: 12 },
+  labelStyle: { color: "var(--white)" }, itemStyle: { color: "var(--gold-ink)" }, cursor: { fill: "var(--accent-soft)" },
 } as const;
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -276,10 +276,10 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 }
 function Kpi({ value, label, color, sub }: { value: string | number; label: string; color?: string; sub?: string }) {
   return (
-    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "13px 10px", textAlign: "center" }}>
-      <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
-      <div style={{ fontSize: 9.5, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
-      {sub && <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 2, opacity: 0.7 }}>{sub}</div>}
+    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid var(--border)", borderRadius: 12, padding: "13px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", color: color || "var(--white)", lineHeight: 1.2 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{label}</div>
+      {sub && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>{sub}</div>}
     </div>
   );
 }

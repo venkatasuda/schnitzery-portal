@@ -1,5 +1,6 @@
 "use server";
 
+import { validInventoryItem } from "@/lib/inventory/identity";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
@@ -52,8 +53,8 @@ export async function requestTransfer(sourceBranchId: string, product: string, c
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
   if (!sourceBranchId || sourceBranchId === branchId) return { ok: false, error: "Pick another branch." };
-  if (!product) return { ok: false, error: "Pick a product." };
-  if (!(qty > 0)) return { ok: false, error: "Enter a quantity." };
+  if (!branchId || !validInventoryItem({ product, category, unit })) return { ok: false, error: "Pick a product." };
+  if (!Number.isFinite(qty) || !(qty > 0)) return { ok: false, error: "Enter a quantity." };
 
   const names = await branchNames([sourceBranchId, branchId!]);
   const { error } = await supabase.from("stock_transfers").insert({
@@ -93,8 +94,12 @@ async function transition(id: string, side: "from" | "to", allowedFrom: string[]
   const mySide = side === "from" ? row.from_branch_id : row.to_branch_id;
   if (mySide !== branchId) return { ok: false, error: "Not your transfer." };
   if (!allowedFrom.includes(row.status)) return { ok: false, error: "Already actioned." };
-  const { error } = await supabase.from("stock_transfers").update({ status: next, updated_at: new Date().toISOString() }).eq("id", id);
+  const { data: changed, error } = await supabase.from("stock_transfers")
+    .update({ status: next, updated_at: new Date().toISOString() })
+    .eq("id", id).eq(side === "from" ? "from_branch_id" : "to_branch_id", branchId)
+    .eq("status", row.status).select("id").maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!changed) return { ok: false, error: "Already actioned. Refresh the transfer." };
   return { ok: true };
 }
 

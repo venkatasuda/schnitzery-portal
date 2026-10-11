@@ -97,7 +97,7 @@ export default function SummaryPage() {
       </Link>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, margin: "12px 0 14px", flexWrap: "wrap" }}>
-        <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 14 }}>
+        <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14 }}>
           {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
         <button onClick={downloadCsv} disabled={!data} style={{ padding: "9px 14px", borderRadius: 8, background: "rgba(212,168,71,0.12)", color: "var(--gold-ink)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: data ? "pointer" : "default" }}>{t("summary.downloadCsv")}</button>

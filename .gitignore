@@ -68,3 +68,10 @@ infra/terraform/*.tfstate
 infra/terraform/*.tfstate.*
 infra/terraform/.terraform/
 infra/terraform/.terraform.lock.hcl
+
+# Local graph extraction dependencies and caches; retain graph/report outputs.
+graphify-out/python-deps/
+.graphify_cache/
+
+# Isolated PostgreSQL test runtime
+.audit-db/

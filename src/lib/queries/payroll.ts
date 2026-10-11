@@ -1,8 +1,11 @@
 "use server";
+import { readAll } from "@/lib/supabase/readAll";
+
 
 import { createClient } from "@/lib/supabase/server";
-import { berlinMonth } from "@/lib/time/berlinDate";
+import { berlinMonth, monthRange } from "@/lib/time/berlinDate";
 import { wageMapForBranches } from "@/lib/pay/wages";
+import { classifyShift, shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 
 // ============================================================================
 // PAYROLL ENGINE — per-employee monthly hour breakdown for a branch.
@@ -37,59 +40,8 @@ function bwHolidays(year: number): string[] {
 }
 
 // ── Berlin wall-clock components for a UTC instant ──────────────────────────
-function berlinParts(d: Date) {
-  const f = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit",
-    day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
-  const p: any = {}; for (const part of f.formatToParts(d)) p[part.type] = part.value;
-  return { y: +p.year, mo: +p.month, da: +p.day, h: +(p.hour === "24" ? "0" : p.hour), mi: +p.minute, s: +p.second };
-}
-
-function nightOverlap(a: number, b: number, nStart: number, nEnd: number) {
-  const ov = (s: number, e: number) => Math.max(0, Math.min(b, e) - Math.max(a, s));
-  if (nStart < nEnd) return ov(nStart, nEnd);          // non-wrapping (e.g. 00:00–06:00)
-  return ov(0, nEnd) + ov(nStart, 1440);               // wraps midnight (e.g. 22:00–06:00)
-}
-
-// Split one shift into weekend / holiday / night minutes (on the worked interval).
-function classifyShift(inISO: string, outISO: string, holidays: Set<string>, nStart: number, nEnd: number) {
-  const empty = { totalMin: 0, weekendMin: 0, holidayMin: 0, nightMin: 0 };
-  if (!inISO || !outISO) return empty;
-  const inUTC = new Date(inISO), outUTC = new Date(outISO);
-  if (isNaN(inUTC.getTime()) || isNaN(outUTC.getTime()) || outUTC <= inUTC) return empty;
-  const p = berlinParts(inUTC);
-  const localStart = Date.UTC(p.y, p.mo - 1, p.da, p.h, p.mi, p.s);  // pseudo-UTC = Berlin wall clock
-  const elapsed = outUTC.getTime() - inUTC.getTime();
-  const end = localStart + elapsed;
-  let cur = localStart, weekend = 0, holiday = 0, night = 0;
-  while (cur < end) {
-    const dd = new Date(cur);
-    const dayStart = Date.UTC(dd.getUTCFullYear(), dd.getUTCMonth(), dd.getUTCDate());
-    const segEnd = Math.min(end, dayStart + 86400000);
-    const segMin = Math.round((segEnd - cur) / 60000);
-    const iso = new Date(dayStart).toISOString().slice(0, 10);
-    const dow = new Date(dayStart).getUTCDay();
-    if (dow === 0 || dow === 6) weekend += segMin;
-    if (holidays.has(iso)) holiday += segMin;
-    night += Math.round(nightOverlap((cur - dayStart) / 60000, (segEnd - dayStart) / 60000, nStart, nEnd));
-    cur = segEnd;
-  }
-  return { totalMin: Math.round(elapsed / 60000), weekendMin: weekend, holidayMin: holiday, nightMin: night };
-}
-
-function breakMins(breaks: any): number {
-  if (!Array.isArray(breaks)) return 0;
-  let m = 0;
-  for (const b of breaks) {
-    if (b?.start && b?.end) {
-      const s = new Date(b.start), e = new Date(b.end);
-      if (!isNaN(s.getTime()) && !isNaN(e.getTime()) && e > s) m += Math.round((e.getTime() - s.getTime()) / 60000);
-    }
-  }
-  return m;
-}
-
 const h1 = (min: number) => Math.round(min / 6) / 10;   // minutes → hours, 1 decimal
-function hhmmToMin(t: string) { const [h, m] = (t || "00:00").split(":").map(Number); return (h || 0) * 60 + (m || 0); }
+function hhmmToMin(t: string) { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) throw new Error("Invalid payroll time."); const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 
 async function getMgr() {
   const supabase = await createClient();
@@ -99,16 +51,11 @@ async function getMgr() {
   return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null, name: p?.full_name ?? null };
 }
 function thisMonth() { return berlinMonth(); }
-function monthBounds(ym: string) {
-  const [y, m] = ym.split("-").map(Number);
-  return { start: `${ym}-01`, next: new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10) };
-}
-
-// ── Settings ────────────────────────────────────────────────────────────────
 export async function getPayrollSettings() {
   const { supabase, branchId } = await getMgr();
   if (!branchId) return { ok: false as const, error: "No branch.", otDailyHours: 8, nightStart: "22:00", nightEnd: "06:00" };
-  const { data } = await supabase.from("payroll_settings").select("ot_daily_hours, night_start, night_end").eq("branch_id", branchId).single();
+  const { data, error } = await supabase.from("payroll_settings").select("ot_daily_hours, night_start, night_end").eq("branch_id", branchId).maybeSingle();
+  if (error) return { ok: false as const, error: error.message, otDailyHours: 8, nightStart: "22:00", nightEnd: "06:00" };
   return {
     ok: true as const,
     otDailyHours: Number(data?.ot_daily_hours ?? 8),
@@ -120,9 +67,10 @@ export async function getPayrollSettings() {
 export async function setPayrollSettings(input: { otDailyHours: number; nightStart: string; nightEnd: string }) {
   const { supabase, role, branchId, name } = await getMgr();
   if (!branchId || !MGR.includes(role ?? "")) return { ok: false as const, error: "Managers only." };
+  if (!input || !Number.isFinite(input.otDailyHours) || input.otDailyHours < 0 || input.otDailyHours > 24 || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.nightStart) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.nightEnd)) return { ok: false as const, error: "Invalid payroll settings." };
   const { error } = await supabase.from("payroll_settings").upsert({
     branch_id: branchId,
-    ot_daily_hours: Math.max(0, Math.min(24, input.otDailyHours || 8)),
+    ot_daily_hours: input.otDailyHours,
     night_start: input.nightStart || "22:00",
     night_end: input.nightEnd || "06:00",
     updated_by: name ?? "manager", updated_at: new Date().toISOString(),
@@ -135,7 +83,8 @@ export async function setPayrollSettings(input: { otDailyHours: number; nightSta
 export async function getPayrollRun(month: string) {
   const { supabase, branchId } = await getMgr();
   if (!branchId) return { ok: false as const, status: "draft" as const };
-  const { data } = await supabase.from("payroll_runs").select("status, approved_by, approved_at").eq("branch_id", branchId).eq("month", month).single();
+  const { data, error } = await supabase.from("payroll_runs").select("status, approved_by, approved_at").eq("branch_id", branchId).eq("month", month).maybeSingle();
+  if (error) return { ok: false as const, status: "draft" as const, error: error.message };
   return { ok: true as const, status: (data?.status ?? "draft") as "draft" | "approved", approvedBy: data?.approved_by ?? null, approvedAt: data?.approved_at ?? null };
 }
 
@@ -161,20 +110,22 @@ export async function getPayrollSummary(month?: string) {
   if (!user) return { ...blank, error: "Not logged in." };
   if (!MGR.includes(role ?? "")) return { ...blank, error: "Managers only." };
 
-  const { start, next } = monthBounds(ym);
+  const { from: start, next } = monthRange(ym);
   const settings = await getPayrollSettings();
-  const otThreshold = (settings.otDailyHours || 8) * 60;
+  if (!settings.ok) return { ...blank, error: settings.error || "Payroll settings unavailable." };
+  const otThreshold = settings.otDailyHours * 60;
   const nStart = hhmmToMin(settings.nightStart), nEnd = hhmmToMin(settings.nightEnd);
   const years = new Set([Number(ym.slice(0, 4)), Number(ym.slice(0, 4)) + 1]);
   const holidays = new Set<string>(); years.forEach((y) => bwHolidays(y).forEach((h) => holidays.add(h)));
 
-  const { data: logs } = await supabase.from("attendance_logs")
+  const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs")
     .select("user_id, work_date, clock_in, clock_out, duration_mins, breaks, status")
     .eq("branch_id", branchId).eq("status", "complete")
-    .gte("work_date", start).lt("work_date", next);
+    .gte("work_date", start).lt("work_date", next).order("id"));
 
-  const { data: staffRows } = await supabase.from("users")
-    .select("id, employee_code, full_name, team").eq("branch_id", branchId).order("full_name");
+  const { data: staffRows, error: staffError } = await readAll(supabase.from("users")
+    .select("id, employee_code, full_name, team").eq("branch_id", branchId).order("full_name").order("id"));
+  if (logsError || staffError) return { ...blank, error: (logsError || staffError)!.message };
   // Wages live in user_pay, not users — see src/lib/pay/wages.ts (item 18).
   const payWages = await wageMapForBranches(supabase, [branchId]);
   const staff = (staffRows || []).map((s) => ({ ...s, hourly_wage: payWages[s.id] ?? null }));
@@ -182,10 +133,8 @@ export async function getPayrollSummary(month?: string) {
   type Acc = { gross: number; brk: number; weekend: number; holiday: number; night: number; shifts: number; perDayPaid: Record<string, number> };
   const acc: Record<string, Acc> = {};
   for (const l of logs || []) {
-    const gross = l.duration_mins || 0;
+    const { grossMin: gross, breakMin: brk, paidMin: paid } = shiftMinutes(l);
     if (gross <= 0) continue;
-    const brk = breakMins(l.breaks);
-    const paid = Math.max(0, gross - brk);
     const c = classifyShift(l.clock_in, l.clock_out, holidays, nStart, nEnd);
     if (!acc[l.user_id]) acc[l.user_id] = { gross: 0, brk: 0, weekend: 0, holiday: 0, night: 0, shifts: 0, perDayPaid: {} };
     const a = acc[l.user_id];
@@ -193,6 +142,7 @@ export async function getPayrollSummary(month?: string) {
     a.perDayPaid[l.work_date] = (a.perDayPaid[l.work_date] || 0) + paid;
   }
 
+  const minuteTotals = emptyTotals();
   const rows = (staff || []).map((s) => {
     const a = acc[s.id];
     if (!a || a.shifts === 0) return null;
@@ -203,8 +153,11 @@ export async function getPayrollSummary(month?: string) {
       overtime += ot; regular += p - ot;
     }
     const paidMin = regular + overtime;
+    minuteTotals.regularH += regular; minuteTotals.overtimeH += overtime;
+    minuteTotals.weekendH += a.weekend; minuteTotals.holidayH += a.holiday; minuteTotals.nightH += a.night;
+    minuteTotals.breakH += a.brk; minuteTotals.paidH += paidMin; minuteTotals.unpaidH += a.brk;
     const wage = s.hourly_wage ?? null;
-    const gross = wage != null ? Math.round(h1(paidMin) * wage * 100) / 100 : null;
+    const gross = wage != null ? payForMinutes(paidMin, wage) : null;
     return {
       code: s.employee_code || "", name: s.full_name, team: s.team || "", shifts: a.shifts,
       regularH: h1(regular), overtimeH: h1(overtime),
@@ -214,15 +167,11 @@ export async function getPayrollSummary(month?: string) {
     };
   }).filter(Boolean) as any[];
 
-  const totals = rows.reduce((t, r) => ({
-    regularH: t.regularH + r.regularH, overtimeH: t.overtimeH + r.overtimeH,
-    weekendH: t.weekendH + r.weekendH, holidayH: t.holidayH + r.holidayH, nightH: t.nightH + r.nightH,
-    breakH: t.breakH + r.breakH, paidH: t.paidH + r.paidH, unpaidH: t.unpaidH + r.unpaidH,
-    gross: t.gross + (r.gross || 0),
-  }), emptyTotals());
-  for (const k of Object.keys(totals) as (keyof typeof totals)[]) totals[k] = Math.round(totals[k] * 100) / 100;
+  const totals = { ...minuteTotals, gross: Math.round(rows.reduce((sum, row) => sum + (row.gross || 0), 0) * 100) / 100 };
+  for (const key of Object.keys(minuteTotals) as (keyof typeof totals)[]) if (key !== "gross") totals[key] = h1(minuteTotals[key]);
 
   const run = await getPayrollRun(ym);
+  if (!run.ok) return { ...blank, error: run.error || "Payroll approval unavailable." };
   return { ok: true as const, month: ym, rows, totals, settings: { otDailyHours: settings.otDailyHours, nightStart: settings.nightStart, nightEnd: settings.nightEnd }, run: { status: run.status, approvedBy: run.approvedBy, approvedAt: run.approvedAt } };
 }
 

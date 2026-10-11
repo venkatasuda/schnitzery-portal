@@ -31,7 +31,7 @@ export default function HoursPage() {
   return (
     <div style={{ maxWidth: 520, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⏱" size={22} /> My Hours</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>Your worked hours this month.</p>
+      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>Your worked hours this month.</p>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <button onClick={() => shiftMonth(-1)} style={navBtn}>‹ Prev</button>
@@ -42,12 +42,12 @@ export default function HoursPage() {
       {loading ? (
         <CardSkeleton rows={3} />
       ) : !data ? (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f" }}>No data.</div>
+        <div style={{ ...card, textAlign: "center", color: "var(--gray)" }}>No data.</div>
       ) : (
         <>
           <div style={{ ...card, textAlign: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 44, fontWeight: 700, color: "#d4a847", fontFamily: "Georgia, serif" }}>{data.totalHours}h</div>
-            <div style={{ fontSize: 12, color: "#9a8f8f", letterSpacing: 1, marginTop: 4 }}>WORKED THIS MONTH</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", letterSpacing: 1, marginTop: 4 }}>WORKED THIS MONTH</div>
           </div>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
@@ -58,7 +58,7 @@ export default function HoursPage() {
 
           {data.targetHours != null && (
             <div style={card}>
-              <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 8 }}>Progress to {data.targetHours}h target</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>Progress to {data.targetHours}h target</div>
               <div style={{ height: 10, background: "rgba(255,255,255,0.08)", borderRadius: 5, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: pct >= 100 ? "#27ae60" : "#d4a847", transition: "width 0.4s" }} />
               </div>
@@ -75,9 +75,9 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
   return (
     <div style={{ ...card, flex: 1, textAlign: "center", padding: 16 }}>
       <div style={{ fontSize: 22, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "#9a8f8f", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{label}</div>
     </div>
   );
 }
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20 };
-const navBtn: React.CSSProperties = { padding: "8px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 13, cursor: "pointer" };
+const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 };
+const navBtn: React.CSSProperties = { padding: "8px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, color: "#fff", fontSize: 13, cursor: "pointer" };

@@ -88,7 +88,7 @@ export default function GeofencePage() {
     </div>
   );
 
-  const input: React.CSSProperties = { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", background: "var(--dark2)", color: "var(--white)", fontSize: 14 };
+  const input: React.CSSProperties = { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--dark2)", color: "var(--white)", fontSize: 14 };
 
   return (
     <div className="fade-up">

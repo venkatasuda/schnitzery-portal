@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
-import { sendPushToUser } from "@/lib/push/actions";
+import { sendPushToUser } from "@/lib/push/delivery";
 
 // Fire a push without ever blocking or breaking the caller. If push isn't set
 // up (no VAPID keys, no subscriptions), sendPushToUser simply sends nothing.

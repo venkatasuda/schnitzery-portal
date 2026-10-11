@@ -162,13 +162,13 @@ export default function TempPage() {
             <div>
               <div className="card" style={{ marginBottom: 12, padding: 14 }}>
                 <div className="card-title">{t("temp.addUnit")}</div>
-                <input value={nu.name} onChange={(e) => setNu({ ...nu, name: e.target.value })} placeholder={t("temp.unitName")} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, marginBottom: 8 }} />
-                <select value={nu.kind} onChange={(e) => setNu({ ...nu, kind: e.target.value })} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, marginBottom: 8 }}>
+                <input value={nu.name} onChange={(e) => setNu({ ...nu, name: e.target.value })} placeholder={t("temp.unitName")} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 8 }} />
+                <select value={nu.kind} onChange={(e) => setNu({ ...nu, kind: e.target.value })} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 8 }}>
                   {KINDS.map((k) => <option key={k} value={k}>{t("temp.kind_" + k)}</option>)}
                 </select>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                  <input type="number" value={nu.min} onChange={(e) => setNu({ ...nu, min: e.target.value })} placeholder={t("temp.minC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13 }} />
-                  <input type="number" value={nu.max} onChange={(e) => setNu({ ...nu, max: e.target.value })} placeholder={t("temp.maxC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13 }} />
+                  <input type="number" value={nu.min} onChange={(e) => setNu({ ...nu, min: e.target.value })} placeholder={t("temp.minC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13 }} />
+                  <input type="number" value={nu.max} onChange={(e) => setNu({ ...nu, max: e.target.value })} placeholder={t("temp.maxC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13 }} />
                 </div>
                 <button onClick={doAddUnit} disabled={busy === "add"} style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === "add" ? "…" : t("temp.addUnit")}</button>
               </div>
@@ -178,7 +178,7 @@ export default function TempPage() {
                     <div style={{ fontSize: 13, color: "var(--white)" }}>{u.name}</div>
                     <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
                   </div>
-                  <button onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")} style={{ background: "none", border: "none", color: "#9a8f8f", cursor: "pointer", fontSize: 16 }}>🗑</button>
+                  <button onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")} style={{ background: "none", border: "none", color: "var(--gray)", cursor: "pointer", fontSize: 16 }}>🗑</button>
                 </div>
               ))}
             </div>

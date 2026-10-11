@@ -25,6 +25,18 @@ export function berlinMonth(): string {
   return berlinToday().slice(0, 7);
 }
 
+export function isCalendarDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const time = Date.parse(value + "T12:00:00Z");
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value;
+}
+
+export function monthRange(month = berlinMonth()) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || Number(month.slice(0, 4)) < 2000) throw new Error("Invalid month.");
+  const [y, m] = month.split("-").map(Number);
+  return { ym: month, from: `${month}-01`, to: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10), next: new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10) };
+}
+
 // Monday (YYYY-MM-DD) of the week containing a specific date string, TZ-stable.
 // Anchored at noon UTC so it never lands on the wrong week near midnight or DST.
 // Optionally shift by whole weeks (e.g. offsetWeeks = 1 → next week).

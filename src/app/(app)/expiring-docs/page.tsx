@@ -17,7 +17,7 @@ function statusInfo(eff: string, t: Tf): { label: string; color: string } {
     case "rejected":  return { label: t("docw.statusRejected"), color: "#ec7063" };
     case "expiring":  return { label: t("docw.statusExpiring"), color: "#e8a35a" };
     case "expired":   return { label: t("docw.statusExpired"),  color: "#ec7063" };
-    default:          return { label: t("docw.statusArchived"), color: "#9a8f8f" };
+    default:          return { label: t("docw.statusArchived"), color: "var(--gray)" };
   }
 }
 const fmtDate = (d?: string | null) =>

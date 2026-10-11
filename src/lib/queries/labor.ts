@@ -1,6 +1,10 @@
 "use server";
+import { readAll } from "@/lib/supabase/readAll";
+
 
 import { createClient } from "@/lib/supabase/server";
+import { monthRange, isCalendarDate } from "@/lib/time/berlinDate";
+import { shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches, setWage } from "@/lib/pay/wages";
 
 // Labor cost = Σ(hours worked × hourly wage). Labor cost % = labor ÷ sales.
@@ -22,8 +26,7 @@ export async function getLaborSummary() {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
 
-  const now = new Date();
-  const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  const { from: first, next } = monthRange();
 
   // wages — from user_pay, not users. See src/lib/pay/wages.ts (item 18).
   const wages = await wageMapForBranches(supabase, [branchId]);
@@ -36,23 +39,27 @@ export async function getLaborSummary() {
     .from("users").select("id", { count: "exact", head: true }).eq("branch_id", branchId);
 
   // labor cost from completed attendance this month
-  const { data: logs } = await supabase
-    .from("attendance_logs").select("user_id, duration_mins, status")
-    .eq("branch_id", branchId).gte("work_date", first).eq("status", "complete");
-  let laborCost = 0;
-  for (const l of logs || []) laborCost += ((l.duration_mins || 0) / 60) * (wageOf[l.user_id] || 0);
+  const { data: logs, error: logsError } = await readAll(supabase
+    .from("attendance_logs").select("user_id, duration_mins, breaks, clock_in, clock_out, status")
+    .eq("branch_id", branchId).gte("work_date", first).lt("work_date", next).eq("status", "complete").order("id"));
+  if (logsError) return { ok: false, error: logsError.message };
+  const paidByUser: Record<string, number> = {};
+  for (const l of logs || []) paidByUser[l.user_id] = (paidByUser[l.user_id] || 0) + shiftMinutes(l).paidMin;
+  const laborCost = Object.entries(paidByUser).reduce((sum, [id, minutes]) => sum + payForMinutes(minutes, wageOf[id] || 0), 0);
 
   // sales this month
-  const { data: sales } = await supabase
-    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", first);
+  const { data: sales, error: salesError } = await readAll(supabase
+    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).order("id"));
+  if (salesError) return { ok: false, error: salesError.message };
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
 
   const laborPct = monthSales > 0 ? Math.round((laborCost / monthSales) * 1000) / 10 : null;
 
   // inventory spend this month → food cost % (safe if the deliveries table doesn't exist yet)
-  const { data: purch, error: purchErr } = await supabase
-    .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first);
+  const { data: purch, error: purchErr } = await readAll(supabase
+    .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first).lt("purchase_date", next).order("id"));
+  if (purchErr) return { ok: false, error: purchErr.message };
   let monthInvSpend = 0;
   for (const p of purch || []) monthInvSpend += Number(p.cost) || 0;
   const foodCostPct = (!purchErr && monthSales > 0) ? Math.round((monthInvSpend / monthSales) * 1000) / 10 : null;
@@ -73,6 +80,7 @@ export async function setDailySales(saleDate: string, amount: number) {
   const { supabase, user, role, branchId } = await getMgr();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
+  if (!isCalendarDate(saleDate) || !Number.isFinite(amount) || amount < 0) return { ok: false, error: "Invalid sales amount." };
   const { error } = await supabase
     .from("daily_sales")
     .upsert({ branch_id: branchId, sale_date: saleDate, amount }, { onConflict: "branch_id,sale_date" });
@@ -95,8 +103,8 @@ export async function getStaffWages() {
   const { supabase, user, role, branchId } = await getMgr();
   if (!user) return { ok: false, error: "Not logged in.", staff: [] };
   if (!isManager(role)) return { ok: false, error: "Managers only.", staff: [] };
-  const { data, error } = await supabase
-    .from("users").select("id, full_name, team").eq("branch_id", branchId).order("full_name");
+  const { data, error } = await readAll(supabase
+    .from("users").select("id, full_name, team").eq("branch_id", branchId).order("full_name").order("id"));
   if (error) return { ok: false, error: error.message, staff: [] };
 
   // Wages come from user_pay (item 18) and are stitched on here, so the shape
@@ -124,42 +132,42 @@ export async function getMonthlySummary(month?: string) {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
 
-  const now = new Date();
-  const ym = month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const [Y, M] = ym.split("-").map(Number);
-  const from = `${ym}-01`;
-  const to = new Date(Date.UTC(Y, M, 0)).toISOString().slice(0, 10); // last day of the month
+  const { ym, from, to } = monthRange(month);
 
-  const { data: staff } = await supabase.from("users")
+  const { data: staff, error: staffError } = await readAll(supabase.from("users")
     .select("id, full_name, team, contract_hours")
-    .eq("branch_id", branchId);
+    .eq("branch_id", branchId).order("id"));
+  if (staffError) return { ok: false, error: staffError.message };
   const monthWages = await wageMapForBranches(supabase, [branchId]);
   const info: Record<string, any> = {};
   for (const s of staff || []) info[s.id] = { ...s, hourly_wage: monthWages[s.id] ?? null };
 
-  const { data: logs } = await supabase.from("attendance_logs")
-    .select("user_id, duration_mins, late_mins, status")
-    .eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).eq("status", "complete");
+  const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs")
+    .select("user_id, duration_mins, breaks, clock_in, clock_out, late_mins, status")
+    .eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).eq("status", "complete").order("id"));
+  if (logsError) return { ok: false, error: logsError.message };
 
   const per: Record<string, { mins: number; shifts: number; late: number }> = {};
   let totalMins = 0, shifts = 0, lateShifts = 0;
   for (const l of logs || []) {
     const u = l.user_id;
     per[u] = per[u] || { mins: 0, shifts: 0, late: 0 };
-    per[u].mins += l.duration_mins || 0;
+    per[u].mins += shiftMinutes(l).paidMin;
     per[u].shifts += 1;
     if ((l.late_mins || 0) > 0) { per[u].late += 1; lateShifts++; }
-    totalMins += l.duration_mins || 0;
+    totalMins += shiftMinutes(l).paidMin;
     shifts += 1;
   }
 
-  const { data: sales } = await supabase.from("daily_sales")
-    .select("amount").eq("branch_id", branchId).gte("sale_date", from).lte("sale_date", to);
+  const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales")
+    .select("amount").eq("branch_id", branchId).gte("sale_date", from).lte("sale_date", to).order("id"));
+  if (salesError) return { ok: false, error: salesError.message };
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
 
-  const { data: purch, error: purchErr } = await supabase.from("inventory_purchases")
-    .select("cost").eq("branch_id", branchId).gte("purchase_date", from).lte("purchase_date", to);
+  const { data: purch, error: purchErr } = await readAll(supabase.from("inventory_purchases")
+    .select("cost").eq("branch_id", branchId).gte("purchase_date", from).lte("purchase_date", to).order("id"));
+  if (purchErr) return { ok: false, error: purchErr.message };
   let foodSpend = 0;
   if (!purchErr) for (const p of purch || []) foodSpend += Number(p.cost) || 0;
 
@@ -168,14 +176,14 @@ export async function getMonthlySummary(month?: string) {
     const s = info[uid] || {};
     const hrs = Math.round((per[uid].mins / 60) * 10) / 10;
     const wage = s.hourly_wage || 0;
-    laborCost += hrs * wage;
+    laborCost += payForMinutes(per[uid].mins, wage);
     const contract = s.contract_hours || 0;
     const ot = contract > 0 ? Math.max(0, Math.round((hrs - contract) * 10) / 10) : 0;
     overtimeHrs += ot;
     return {
       name: s.full_name || "—", team: s.team || "—",
       hours: hrs, shifts: per[uid].shifts, late: per[uid].late,
-      overtime: ot, laborCost: Math.round(hrs * wage),
+      overtime: ot, laborCost: payForMinutes(per[uid].mins, wage),
     };
   }).sort((a, b) => b.hours - a.hours);
 

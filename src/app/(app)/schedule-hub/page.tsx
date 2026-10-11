@@ -192,7 +192,7 @@ export default function ScheduleHubPage() {
                 <span className="feature-chev">›</span>
               </Link>
 
-              <button onClick={copyForward} disabled={copyBusy} className="feature-card" style={{ width: "100%", textAlign: "left", cursor: copyBusy ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <button onClick={copyForward} disabled={copyBusy} className="feature-card" style={{ width: "100%", textAlign: "left", cursor: copyBusy ? "default" : "pointer", border: "1px solid var(--border)" }}>
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}><Icon e="📑" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? t("schedhub.copying") : t("schedhub.copyWeek")}</div><div className="feature-sub">{t("schedhub.copyWeekSub")}</div></div>
                 <span className="feature-chev">›</span>
@@ -214,8 +214,8 @@ export default function ScheduleHubPage() {
 function Mini({ label, value, color, small }: { label: string; value: string | number; color: string; small?: boolean }) {
   return (
     <div style={{ background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.12)", borderRadius: 10, padding: "12px 8px", textAlign: "center" }}>
-      <div style={{ fontSize: small ? 14 : 22, fontWeight: 700, fontFamily: "var(--font-display)", color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 9, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: small ? 14 : 24, fontWeight: 700, fontFamily: "var(--font-body)", color, lineHeight: 1.2 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{label}</div>
     </div>
   );
 }

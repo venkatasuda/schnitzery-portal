@@ -147,12 +147,12 @@ export default function StaffPage() {
   const formerStaff = staff.filter((p) => (p.status || "active") !== "active");
   const visible = filter === "active" ? activeStaff : formerStaff;
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "#9a8f8f", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   return (
-    <div style={{ maxWidth: 680, margin: "0 auto" }}>
+    <div className="workspace-page">
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
-      <p style={{ color: "#9a8f8f", fontSize: 13, marginBottom: 16 }}>
+      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>
         {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
 
@@ -166,7 +166,7 @@ export default function StaffPage() {
             <button onClick={() => { navigator.clipboard?.writeText(resetInfo.temp).catch(() => {}); }} style={editBtn}>⧉ Copy</button>
             <button onClick={() => setResetInfo(null)} style={editBtn}>{t("common.cancel")}</button>
           </div>
-          <div style={{ fontSize: 11, color: "#9a8f8f", marginTop: 8 }}>{t("staff.resetPwHint")}</div>
+          <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("staff.resetPwHint")}</div>
         </div>
       )}
 
@@ -176,7 +176,7 @@ export default function StaffPage() {
         <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 100, padding: 20, overflowY: "auto" }}>
           <div onClick={(e) => e.stopPropagation()} style={{ ...card, maxWidth: 460, width: "100%", marginTop: 30 }}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</div>
-            <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <Field label={t("staff.emailReq")}><input value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} style={input} placeholder="name@email.com" /></Field>
               <Field label={t("staff.tempPw")}><input value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} style={input} placeholder={t("staff.minChars")} /></Field>
@@ -202,7 +202,7 @@ export default function StaffPage() {
             <Field label={t("profile.phone")}><input value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} style={input} /></Field>
             {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "#58d68d" : "#ec7063", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}>{t("common.cancel")}</button>
+              <button onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
               <button onClick={createStaff} disabled={adding} style={primaryBtn}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function StaffPage() {
       {loading && <CardSkeleton rows={5} />}
 
       {!loading && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 4 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 14, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, padding: 4 }}>
           <FilterBtn active={filter === "active"} onClick={() => { setFilter("active"); setConfirmRemoveId(null); }}>{t("staff.filterActive")} ({activeStaff.length})</FilterBtn>
           <FilterBtn active={filter === "former"} onClick={() => { setFilter("former"); setConfirmRemoveId(null); }}>{t("staff.filterFormer")} ({formerStaff.length})</FilterBtn>
         </div>
@@ -227,8 +227,8 @@ export default function StaffPage() {
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "#9a8f8f" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "#9a8f8f" }}> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 10, fontWeight: 700, color: "#ec7063", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
-                  <div style={{ fontSize: 12, color: "#9a8f8f" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "var(--gray)" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "var(--gray)" }}> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 10, fontWeight: 700, color: "#ec7063", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
+                  <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
 
@@ -282,7 +282,7 @@ export default function StaffPage() {
               </div>
               <Field label={t("profile.skillsLabel")}><input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} style={input} placeholder="Grill, Cashier, Opening" /></Field>
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                <button onClick={() => setEditId(null)} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}>{t("common.cancel")}</button>
+                <button onClick={() => setEditId(null)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
                 <button onClick={save} disabled={saving} style={primaryBtn}>{saving ? t("common.saving") : t("common.save")}</button>
               </div>
             </div>
@@ -291,12 +291,12 @@ export default function StaffPage() {
       ))}
 
       {!loading && visible.length === 0 && (
-        <div style={{ ...card, textAlign: "center", color: "#9a8f8f", fontSize: 13 }}>
+        <div style={{ ...card, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>
           {filter === "active" ? t("staff.noActive") : t("staff.noFormer")}
         </div>
       )}
 
-      <div style={{ ...card, marginTop: 10, textAlign: "center", fontSize: 12, color: "#6f6565" }}>
+      <div style={{ ...card, marginTop: 10, textAlign: "center", fontSize: 12, color: "var(--gray)" }}>
         {t("staff.footerNote")}
       </div>
     </div>
@@ -304,12 +304,12 @@ export default function StaffPage() {
 }
 
 function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 10 }}><label style={{ display: "block", fontSize: 11, color: "#9a8f8f", marginBottom: 4 }}>{label}</label>{children}</div>;
+  return <div style={{ marginBottom: 10 }}><label style={{ display: "block", fontSize: 11, color: "var(--gray)", marginBottom: 4 }}>{label}</label>{children}</div>;
 }
 function FilterBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "#d4a847" : "transparent", color: active ? "#1a0e0e" : "#9a8f8f", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
-const card: React.CSSProperties = { background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 14 };
-const editBtn: React.CSSProperties = { padding: "8px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 13, cursor: "pointer" };
-const input: React.CSSProperties = { width: "100%", padding: "9px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#fff", fontSize: 13, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { flex: 1, padding: "12px", background: "#d4a847", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 14 };
+const editBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer" };
+const input: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };
+const primaryBtn: React.CSSProperties = { flex: 1, padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };

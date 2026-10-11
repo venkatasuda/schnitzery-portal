@@ -33,9 +33,9 @@ function useTheme() {
       const g = (n: string, f: string) => s.getPropertyValue(n).trim() || f;
       const light = document.documentElement.classList.contains("light");
       setC({
-        gold: g("--gold", "#d4a847"), goldLight: g("--gold-light", "#f0c860"),
+        gold: g("--gold-ink", "#d4a847"), goldLight: g("--gold-light", "#f0c860"),
         red: g("--red-light", "#e74c3c"), green: g("--success", "#27ae60"),
-        warn: g("--warn", "#e67e22"), blue: "#3498db",
+        warn: g("--warn", "#e67e22"), blue: g("--info", "#3498db"),
         gray: g("--gray", "#888"), text: g("--white", "#ffffff"),
         grid: light ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.08)",
         card: g("--dark3", "#2a2a2a"),
