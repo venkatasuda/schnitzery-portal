@@ -6,6 +6,13 @@
 
 export const messages = {
   en: {
+    business: {
+      performance: "Business performance", noSource: "No live records were retrieved for this reply.", get_business_performance: "Business report", get_stock_levels: "Stock counts", get_expiry_risk: "Expiry records", get_waste_trend: "Waste log",
+      overview: "Business overview", business: "Business overview", workforce: "Workforce", reportView: "Report view", retry: "Try again",
+      sales: "Recorded sales", labor: "Estimated labour cost", purchases: "Purchase spending", productivity: "Sales per labour hour", perPaidHour: "Per paid hour worked", baseWages: "Base wages · excludes premiums and employer costs", purchaseNote: "Received purchases, not food consumption cost",
+      recordedDays: "{n} of {total} elapsed branch-days recorded", missingWages: "{n} working employees have no wage set", salesTrend: "Sales across the period", salesGapNote: "A gap means no sales record; it does not mean zero sales.", nextActions: "Data quality & next steps", salesCoverage: "Sales coverage", wageCoverage: "Wage coverage", wagesComplete: "Wages are set for all employees with recorded paid time.", recordSales: "Review sales records", reviewWages: "Review hourly wages", waste: "Waste prevention", wasteEntries: "{n} waste entries in this period", reviewWaste: "Review waste causes", interpretation: "Read these numbers correctly", limitations: "Sales are manually recorded. Labour is an estimate based on worked hours and current base wages. Purchase spending is not consumption cost. Profit needs stock valuations, overheads, taxes and other costs.",
+      askBusiness: "How is the business performing this week?", askStock: "Which stock needs attention?", askWaste: "What caused waste in the last 7 days?", assistantNote: "Read-only · live data within your permissions · recommendations require your review", question: "Your business question",
+    },
     inventoryWorkflow: {
       catalogTab: "Catalog", catalogHelp: "Manage products, stock targets and labels. Product removal is available here, separate from daily counting.",
       recount: "Count again before ordering", observed: "{n} days observed", dailyUsage: "Estimated daily usage", coverage: "Estimated coverage",
@@ -773,6 +780,13 @@ export const messages = {
   },
 
   de: {
+    business: {
+      performance: "Geschäftsentwicklung", noSource: "Für diese Antwort wurden keine aktuellen Datensätze abgerufen.", get_business_performance: "Geschäftsbericht", get_stock_levels: "Bestandszählungen", get_expiry_risk: "Haltbarkeitsdaten", get_waste_trend: "Abfallprotokoll",
+      overview: "Geschäftsübersicht", business: "Geschäftsübersicht", workforce: "Personal", reportView: "Berichtsansicht", retry: "Erneut versuchen",
+      sales: "Erfasster Umsatz", labor: "Geschätzte Personalkosten", purchases: "Einkaufsausgaben", productivity: "Umsatz pro Arbeitsstunde", perPaidHour: "Pro bezahlter Arbeitsstunde", baseWages: "Grundlohn · ohne Zuschläge und Arbeitgeberkosten", purchaseNote: "Einkäufe, kein tatsächlicher Warenverbrauch",
+      recordedDays: "{n} von {total} vergangenen Filialtagen erfasst", missingWages: "Bei {n} arbeitenden Beschäftigten fehlt der Stundenlohn", salesTrend: "Umsatz im Zeitraum", salesGapNote: "Eine Lücke bedeutet fehlende Erfassung, nicht null Umsatz.", nextActions: "Datenqualität & nächste Schritte", salesCoverage: "Umsatzerfassung", wageCoverage: "Lohnerfassung", wagesComplete: "Für alle Beschäftigten mit erfasster Arbeitszeit ist ein Lohn hinterlegt.", recordSales: "Umsatzerfassung prüfen", reviewWages: "Stundenlöhne prüfen", waste: "Abfall vermeiden", wasteEntries: "{n} Abfalleinträge im Zeitraum", reviewWaste: "Abfallursachen prüfen", interpretation: "Zahlen richtig einordnen", limitations: "Umsätze werden manuell erfasst. Personalkosten basieren auf Arbeitszeit und aktuellen Grundlöhnen. Einkaufsausgaben sind kein Warenverbrauch. Für den Gewinn fehlen Bestandsbewertungen, Gemeinkosten, Steuern und weitere Kosten.",
+      askBusiness: "Wie läuft das Geschäft diese Woche?", askStock: "Welche Bestände brauchen Aufmerksamkeit?", askWaste: "Was verursachte Abfall in den letzten 7 Tagen?", assistantNote: "Nur lesend · aktuelle Daten nach Berechtigung · Empfehlungen bitte prüfen", question: "Ihre Geschäftsfrage",
+    },
     inventoryWorkflow: {
       catalogTab: "Katalog", catalogHelp: "Produkte, Zielbestände und Etiketten verwalten. Produkte hier entfernen, getrennt von der täglichen Zählung.",
       recount: "Vor Bestellung erneut zählen", observed: "{n} Tage beobachtet", dailyUsage: "Geschätzter Tagesverbrauch", coverage: "Geschätzte Reichweite",

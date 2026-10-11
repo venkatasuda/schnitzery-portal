@@ -3,7 +3,7 @@ import { readAll } from "@/lib/supabase/readAll";
 
 
 import { createClient } from "@/lib/supabase/server";
-import { berlinToday } from "@/lib/time/berlinDate";
+import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches } from "@/lib/pay/wages";
@@ -85,6 +85,7 @@ export async function getAnalyticsScope() {
 export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "monthly"; date?: string; branchId?: string | null } = {}) {
   const period = opts.period || "weekly";
   const date = opts.date || todayStr();
+  if (!["daily", "weekly", "monthly"].includes(period) || !isCalendarDate(date)) throw new Error("Invalid analytics period.");
   const { supabase, user, role, branchId: myBranch } = await getMe();
   const blank = { ok: false as const, period, ...windowFor(period, date), scope: "", metrics: emptyMetrics(), trend: [] as any[], teams: [] as any[] };
   if (!user) return { ...blank, error: "Not logged in." };
@@ -121,8 +122,12 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   if (logsError) return { ...blank, ok: false as const, error: logsError.message };
   const { data: users, error: usersError } = await readAll(supabase.from("users").select("id, team").in("branch_id", targets).order("id"));
   if (usersError) return { ...blank, ok: false as const, error: usersError.message };
-  const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales").select("amount").in("branch_id", targets).gte("sale_date", from).lte("sale_date", to).order("id"));
+  const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales").select("branch_id, sale_date, amount").in("branch_id", targets).gte("sale_date", from).lte("sale_date", to).order("id"));
   if (salesError) return { ...blank, ok: false as const, error: salesError.message };
+  const { data: purchases, error: purchaseError } = await readAll(supabase.from("inventory_purchases").select("cost").in("branch_id", targets).gte("purchase_date", from).lte("purchase_date", to).order("id"));
+  if (purchaseError) return { ...blank, error: purchaseError.message };
+  const { data: waste, error: wasteError } = await readAll(supabase.from("waste_log").select("branch_id, product, category, qty, unit").in("branch_id", targets).gte("work_date", from).lte("work_date", to).order("id"));
+  if (wasteError) return { ...blank, error: wasteError.message };
   const { data: psettings, error: psettingsError } = await readAll(supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets).order("branch_id"));
   if (psettingsError) return { ...blank, ok: false as const, error: psettingsError.message };
 
@@ -184,8 +189,8 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   let laborMins = 0, laborCost = 0;
   const teamMins: Record<string, number> = {};
   for (const l of logs || []) {
-    const gross = l.duration_mins || 0; if (gross <= 0) continue;
     const paid = shiftMinutes(l).paidMin;
+    if (paid <= 0) continue;
     laborMins += paid;
     perDay[l.work_date] && (perDay[l.work_date].labor += paid);
     perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] = (perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] || 0) + paid;
@@ -208,15 +213,22 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
     laborCost: Math.round(laborCost * 100) / 100,
     shiftCompliancePct: pct(compliant, scheduled),
     utilizationPct: scheduledMins > 0 ? pct(laborMins, scheduledMins) : (laborMins > 0 ? 100 : 0),
-    salesPerLaborHour: laborHours > 0 && totalSales > 0 ? Math.round((totalSales / laborHours) * 100) / 100 : null,
+    salesPerLaborHour: laborMins > 0 && totalSales > 0 ? Math.round((totalSales / (laborMins / 60)) * 100) / 100 : null,
     laborCostPct: totalSales > 0 ? Math.round((laborCost / totalSales) * 1000) / 10 : null,
     scheduled, attended, totalSales: Math.round(totalSales * 100) / 100,
   };
 
   const trend = days.map((d) => ({ day: d.slice(5), labor: h1(perDay[d].labor), attendance: pct(perDay[d].att, perDay[d].sched) }));
   const teams = Object.entries(teamMins).map(([team, m]) => ({ team, hours: h1(m) })).sort((a, b) => b.hours - a.hours);
-
-  return { ok: true as const, period, from, to, scope, branchCount: targets.length, metrics, trend, teams };
+  const purchaseSpend = (purchases || []).reduce((sum, p) => sum + Number(p.cost), 0);
+  const missingWageStaff = new Set((logs || []).filter(l => shiftMinutes(l).paidMin > 0 && wage[l.user_id] == null).map(l => l.user_id)).size;
+  if (missingWageStaff) metrics.laborCostPct = null;
+  const salesDays = new Set((sales || []).filter(s => s.sale_date <= todayStr()).map(s => `${s.branch_id}|${s.sale_date}`)).size;
+  const elapsedDays = days.filter(d => d <= todayStr()).length * targets.length;
+  const salesTrend = days.map(day => ({ day, sales: (sales || []).filter(s => s.sale_date === day).reduce((sum, s) => sum + Number(s.amount), 0), recorded: (sales || []).some(s => s.sale_date === day) }));
+  return { ok: true as const, period, from, to, scope, branchCount: targets.length, metrics, trend, teams,
+    business: { purchaseSpend, wasteEntries: (waste || []).length, missingWageStaff, salesDays, elapsedDays, salesTrend,
+      purchasePct: totalSales > 0 ? Math.round(purchaseSpend / totalSales * 1000) / 10 : null } };
 }
 
 function emptyMetrics() {

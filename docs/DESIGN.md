@@ -8,13 +8,13 @@ _Last updated: 2026-10-10. Source of truth is `src/app/globals.css`; this summar
 - **One hand, few taps.** Common actions (clock, count, log waste) are quick-tap.
 - **Bilingual by default.** Every user-facing string resolves through `useLang()` /
   `messages.ts` (EN + DE); a missing key falls back to English, never breaks.
-- **Dark-first, light supported.** Light default with white surfaces, slate text, and blue navigation/actions; saved dark preferences remain supported; a light theme
+- **Light default.** White surfaces, slate text and teal navigation/actions; saved dark preferences remain supported; a light theme
   via `html.light`.
 
 ## 2. Theme tokens (`:root` in globals.css)
 - **Brand:** `--red:#a63c40`, `--red-dark:#7e2c33`, `--red-light:#ed8b8f`;
   `--gold:#d4a847`, `--gold-light:#f0c860`; `--gold-ink` (text-contrast gold, flips in
-  light mode to `#1d4ed8`).
+  light mode to `#18675e`).
 - **Neutrals (dark):** `--black:#111318`, `--dark/dark2/dark3`, `--white`, `--off-white`.
   Light mode overrides these under `html.light`.
 - **Status:** `--success:#71d0a0`, `--warn:#edbc69`, `--danger:#f19b9e`; light mode uses darker text variants.

@@ -19,13 +19,13 @@
 
 /* ── LIGHT MODE (toggled via .light on <html>) ── */
 html.light {
-  --action:#2563eb; --on-action:#fff;
+  --action:#18675e; --on-action:#fff; --gold:#18675e; --gold-light:#d8eeea;
   --black:#f8fafc; --dark:#ffffff; --dark2:#f1f5f9; --dark3:#e9eff8;
   --white:#1e293b; --off-white:#334155;
   --gray:#475569; --gray-light:#334155;
-  --gold-ink:#1d4ed8;
+  --gold-ink:#18675e;
   --red-light:#a63c40; --success:#176443; --warn:#825300; --danger:#a52b3b; --info:#245f99;
-  --border:#e2e8f0; --accent-soft:#eff6ff; --success-soft:#e9f5ee; --danger-soft:#fbecee;
+  --border:#dce3e8; --accent-soft:#e7f2ef; --success-soft:#e9f5ee; --danger-soft:#fbecee;
   --shadow:0 2px 8px rgba(24,34,50,0.04);
 }
 html.light body { background: var(--black); color: var(--white); }
@@ -216,6 +216,41 @@ html.light .btn-gold { color: #fff; }
 .status-badge.low { background: var(--danger-soft); color: var(--danger); }
 .status-badge.good { background: var(--success-soft); color: var(--success); }
 .inventory-page { width: 100%; }
+.business-overview { margin-top: 24px; }
+.business-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.business-kpi { padding: 24px; background: var(--dark); border: 1px solid var(--border); border-radius: 10px; min-width: 0; }
+.business-kpi > span { color: var(--gray); font-size: 13px; }
+.business-kpi strong { display: block; font-size: clamp(24px, 2.5vw, 36px); line-height: 1.3; margin: 12px 0; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.business-kpi small { display: block; color: var(--gray); line-height: 1.6; }
+.business-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(300px, 1fr); gap: 24px; }
+.business-action { padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.business-action:last-child { border-bottom: 0; }
+.business-action p { color: var(--gray); line-height: 1.6; margin: 6px 0 12px; }
+.business-note { margin-top: 20px; border: 1px solid var(--border); background: var(--dark2); border-radius: 8px; padding: 16px 20px; font-size: 13px; line-height: 1.7; }
+.business-note p { color: var(--gray); margin: 6px 0 0; }
+.business-note button { margin-left: 16px; }
+.assistant-start { padding: 24px; text-align: left; }
+.assistant-launcher { position: fixed; z-index: 999; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 10px; padding: 12px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--action); color: var(--on-action); box-shadow: var(--shadow); font-weight: 600; }
+.assistant-popover { position: fixed; z-index: 999; right: 24px; bottom: 88px; width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 110px); overflow-y: auto; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--dark); box-shadow: 0 12px 48px rgb(0 0 0 / 16%); }
+.assistant-start h2 { font-size: 22px; }
+.assistant-start p { color: var(--gray); line-height: 1.7; }
+.assistant-prompts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.assistant-source { display: block; color: var(--gray); line-height: 1.6; font-size: 11px; margin: 6px 4px; }
+.assistant-popover .card { border: 0; padding: 0; margin: 12px 0 0; overflow-wrap: anywhere; }
+.assistant-popover input { min-width: 0; }
+.management-shell .analytics-workspace > .card { box-shadow: none; }
+.management-shell .management-brand { font-size: 22px; }
+.management-shell .management-nav-link.active { box-shadow: inset 3px 0 var(--gold-ink); }
+.management-shell .dashboard-panel, .management-shell .card { box-shadow: none; }
+.management-shell .data-table th { background: var(--dark2); padding-top: 12px; padding-bottom: 12px; }
+.management-shell .form-input, .management-shell .form-select { background: var(--dark); border-color: var(--border); }
+@media (min-width: 1100px) {
+  .workforce-report { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; margin-top: 20px; }
+  .workforce-report[hidden] { display: none; }
+  .workforce-report > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 1000px) { .business-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .business-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 500px) { .business-kpis { gap: 10px; } .business-kpi { padding: 16px; } .business-kpi strong { font-size: 24px; } }
 .inventory-heading-actions { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
 .inventory-heading-actions > a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; }
 .inventory-heading-actions .inventory-operation-menu { margin: 0; }

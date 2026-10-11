@@ -11,6 +11,8 @@ export function validateToolInput(name: string, input: unknown) {
   if (name === "get_stock_levels") {
     if (Object.keys(value).some(k => k !== "belowReorderOnly") ||
       (value.belowReorderOnly !== undefined && typeof value.belowReorderOnly !== "boolean")) throw new Error("Invalid stock filter.");
+  } else if (name === "get_business_performance") {
+    if (Object.keys(value).some(k => k !== "period") || !["daily", "weekly", "monthly"].includes(String(value.period))) throw new Error("Invalid business period.");
   } else {
     const key = name === "get_expiry_risk" ? "withinDays" : name === "get_waste_trend" ? "days" : null;
     if (!key || Object.keys(value).some(k => k !== key) || !Number.isInteger(value[key]) ||
