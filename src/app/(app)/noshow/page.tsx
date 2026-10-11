@@ -1,5 +1,7 @@
 "use client";
 
+import { berlinToday } from "@/lib/time/berlinDate";
+
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -25,7 +27,7 @@ export default function NoShowPage() {
   const [missLoading, setMissLoading] = useState(false);
 
   useEffect(() => {
-    const d = new Date().toISOString().slice(0, 10);
+    const d = berlinToday();
     setDate(d);
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "missing") {
       setTab("missing");
