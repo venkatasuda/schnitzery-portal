@@ -110,7 +110,7 @@ export default function PayrollExportPage() {
   if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const cell: React.CSSProperties = { padding: "7px 9px", borderRadius: 7, background: "var(--dark2)", textAlign: "center" };
-  const lbl: React.CSSProperties = { fontSize: 10, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 };
+  const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 };
   const inp: React.CSSProperties = { padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 14, width: 90 };
 
   return (
@@ -141,7 +141,7 @@ export default function PayrollExportPage() {
       {!loading && rows.length > 0 && (
         run.status === "approved" ? (
           <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid #1e8449" }}>
-            <Icon e="✅" size={18} color="#58d68d" />
+            <Icon e="✅" size={18} color="var(--success)" />
             <div style={{ flex: 1, fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}</div>
             <button onClick={() => toggleApproval(false)} disabled={busy} style={{ padding: "7px 12px", background: "var(--dark3)", color: "var(--gray)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>{t("pay.reopenBtn")}</button>
           </div>
@@ -173,7 +173,7 @@ export default function PayrollExportPage() {
               <div key={i} className="card" style={{ padding: 13 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
                   <div style={{ fontWeight: 600 }}>{r.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--gray)" }}>{r.team} · {r.shifts} {t("pay.shiftsShort")}</div>
+                  <div style={{ fontSize: 12, color: "var(--gray)" }}>{r.team} · {r.shifts} {t("pay.shiftsShort")}</div>
                   <div style={{ flex: 1 }} />
                   <div style={{ fontSize: 15, fontWeight: 700, color: "var(--gold)" }}>{eur(r.gross)}</div>
                 </div>
@@ -185,7 +185,7 @@ export default function PayrollExportPage() {
                   <div style={cell}><div style={lbl}>{t("pay.colWeekend")}</div><div>{r.weekendH}h</div></div>
                   <div style={cell}><div style={lbl}>{t("pay.colHoliday")}</div><div>{r.holidayH}h</div></div>
                   <div style={cell}><div style={lbl}>{t("pay.colNight")}</div><div>{r.nightH}h</div></div>
-                  <div style={cell}><div style={lbl}>{t("pay.cWage")}</div><div style={{ color: r.wage == null ? "#e8a35a" : "var(--white)" }}>{r.wage == null ? t("pay.setWage") : eur(r.wage)}</div></div>
+                  <div style={cell}><div style={lbl}>{t("pay.cWage")}</div><div style={{ color: r.wage == null ? "var(--warn)" : "var(--white)" }}>{r.wage == null ? t("pay.setWage") : eur(r.wage)}</div></div>
                 </div>
               </div>
             ))}
@@ -197,7 +197,7 @@ export default function PayrollExportPage() {
             <button onClick={downloadExcel} style={{ flex: 1, minWidth: 100, padding: "11px", background: "linear-gradient(135deg,#1e8449,#27ae60)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.exportExcel")}</button>
             <button onClick={payrollReport} style={{ flex: 1, minWidth: 100, padding: "11px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{t("pay.exportReport")}</button>
           </div>
-          <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("pay.overlapNote")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("pay.overlapNote")}</div>
         </>
       )}
 

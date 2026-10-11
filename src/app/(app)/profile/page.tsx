@@ -108,7 +108,7 @@ export default function ProfilePage() {
             <Field label={t("profile.fullName")}><input value={fullName} onChange={(e) => setFullName(e.target.value)} style={input} /></Field>
             <Field label={t("profile.phone")}><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+49 …" style={input} /></Field>
             <Field label={t("profile.skillsLabel")}><input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder={t("profile.skillsPlaceholder")} style={input} /></Field>
-            <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>{t("profile.managerNote")}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("profile.managerNote")}</div>
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => { setEditing(false); load(); }} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(128,128,128,0.3)", color: "var(--white)" }}>{t("common.cancel")}</button>
               <button onClick={save} disabled={saving} style={{ ...primaryBtn, opacity: saving ? 0.6 : 1 }}>{saving ? t("common.saving") : t("common.save")}</button>
@@ -124,6 +124,7 @@ export default function ProfilePage() {
       {isManager && (
         <>
           <div className="section-label">{t("profile.settingsAdmin")}</div>
+          <div className="workspace-grid profile-admin">
           <Link href="/settings" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#555,#777)" }}><Icon e="⚙️" size={22} color="#fff" /></div>
             <div style={{ flex: 1 }}><div className="feature-title">{t("profile.branchSettings")}</div><div className="feature-sub">{t("profile.branchSettingsSub")}</div></div>
@@ -144,6 +145,7 @@ export default function ProfilePage() {
             <div style={{ flex: 1 }}><div className="feature-title">{t("sh.clockDisplay")}</div><div className="feature-sub">{t("sh.clockDisplaySub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
+          </div>
         </>
       )}
 
@@ -164,7 +166,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</label>{children}</div>;
+  return <label style={{ display: "block", marginBottom: 14 }}><span style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</span>{children}</label>;
 }
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
 const primaryBtn: React.CSSProperties = { flex: 1, width: "100%", padding: "13px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

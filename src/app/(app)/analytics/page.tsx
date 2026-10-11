@@ -152,8 +152,8 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.trend} margin={{ top: 6, right: 6, bottom: 0, left: -22 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                   <Tooltip {...tooltip} />
                   <Bar dataKey="labor" fill={GOLD} radius={[5, 5, 0, 0]} maxBarSize={30} />
                 </BarChart>
@@ -166,7 +166,7 @@ export default function AnalyticsPage() {
             <ChartCard title={t("bana.teamTitle")}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.teams} layout="vertical" margin={{ top: 4, right: 12, bottom: 0, left: 10 }}>
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                  <XAxis type="number" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="team" tick={{ fontSize: 12, fill: "#cfc7c7" }} tickLine={false} axisLine={false} width={80} />
                   <Tooltip {...tooltip} cursor={{ fill: "rgba(128,128,128,0.08)" }} />
                   <Bar dataKey="hours" radius={[0, 5, 5, 0]} maxBarSize={26}>
@@ -183,8 +183,8 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={otTrend} margin={{ top: 8, right: 10, bottom: 0, left: -22 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "var(--gray)" }} tickLine={false} axisLine={false} unit="%" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} unit="%" />
                   <Tooltip {...tooltip} formatter={(v: any) => [`${v}%`, t("bana.kOvertime")]} />
                   <Line type="monotone" dataKey="overtimePct" stroke={AMBER} strokeWidth={2.5} dot={{ r: 3, fill: AMBER }} />
                 </LineChart>
@@ -220,20 +220,20 @@ export default function AnalyticsPage() {
                       <tr key={s.id} style={{ borderTop: "1px solid var(--border)" }}>
                         <td>
                           <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.name}</div>
-                          <div style={{ fontSize: 10, color: "var(--gray)", textTransform: "capitalize" }}>{s.team}</div>
+                          <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "capitalize" }}>{s.team}</div>
                         </td>
                         <td style={{ textAlign: "center", color: attColor, fontWeight: 700 }}>{att == null ? "—" : `${att}%`}</td>
                         <td style={{ textAlign: "center" }}>
                           <span style={{ color: s.late > 0 ? "var(--warn)" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
-                          {s.absent > 0 && <span style={{ fontSize: 10, color: "var(--danger)", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
+                          {s.absent > 0 && <span style={{ fontSize: 12, color: "var(--danger)", marginLeft: 5 }}>{s.absent} {t("bana.absShort")}</span>}
                         </td>
                         <td style={{ textAlign: "right" }}>
                           <div style={{ color: "var(--white)", fontWeight: 600 }}>{s.totalHours}h</div>
-                          {s.avgShiftHours > 0 && <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("bana.avgShort")} {s.avgShiftHours}h</div>}
+                          {s.avgShiftHours > 0 && <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("bana.avgShort")} {s.avgShiftHours}h</div>}
                         </td>
                         <td style={{ textAlign: "right" }}>
                           <div style={{ color: "var(--gold-ink)", fontWeight: 600 }}>{s.cost ? `€${s.cost.toFixed(0)}` : "—"}</div>
-                          {s.otHours > 0 && <div style={{ fontSize: 10, color: "var(--warn)" }}>+{s.otHours}h OT</div>}
+                          {s.otHours > 0 && <div style={{ fontSize: 12, color: "var(--warn)" }}>+{s.otHours}h OT</div>}
                         </td>
                       </tr>
                     );

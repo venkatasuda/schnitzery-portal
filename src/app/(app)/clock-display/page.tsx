@@ -52,7 +52,7 @@ export default function ClockDisplayPage() {
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", textAlign: "center" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 4 }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 4 }}>
         <Icon e="📲" size={24} style={{ verticalAlign: "-3px", marginRight: 8 }} /> {t("cd.title")}
       </h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 24 }}>
@@ -61,7 +61,7 @@ export default function ClockDisplayPage() {
 
       <div style={{ background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 20, padding: 32 }}>
         {error ? (
-          <div style={{ color: "#ec7063", padding: 30 }}>{error}</div>
+          <div style={{ color: "var(--danger)", padding: 30 }}>{error}</div>
         ) : (
           <>
             {/* QR */}
@@ -75,7 +75,7 @@ export default function ClockDisplayPage() {
 
             {/* CODE */}
             <div style={{ fontSize: 13, letterSpacing: 2, color: "var(--gray)", marginBottom: 6 }}>{t("cd.orEnterCode")}</div>
-            <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: 8, color: "#d4a847", fontFamily: "Georgia, serif" }}>
+            <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: 8, color: "#d4a847", fontFamily: "var(--font-body)" }}>
               {code}
             </div>
 
@@ -92,7 +92,7 @@ export default function ClockDisplayPage() {
         )}
       </div>
 
-      <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 16 }}>
+      <p style={{ fontSize: 12, color: "var(--gray)", marginTop: 16 }}>
         {t("cd.codeChanges", { n: rotateSeconds })}
       </p>
     </div>

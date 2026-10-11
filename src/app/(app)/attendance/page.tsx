@@ -234,18 +234,18 @@ export default function AttendancePage() {
 
   // Build the day's timeline events
   const timeline: { label: string; time: string; extra?: string; color: string }[] = [];
-  if (session?.clock_in) timeline.push({ label: t("att.tlClockIn"), time: fmtTime(session.clock_in), color: "#58d68d" });
+  if (session?.clock_in) timeline.push({ label: t("att.tlClockIn"), time: fmtTime(session.clock_in), color: "var(--success)" });
   breaks.forEach((b: any, i: number) => {
-    timeline.push({ label: t("att.tlBreakStart", { n: i + 1 }), time: fmtTime(b.start), color: "#e8a35a" });
+    timeline.push({ label: t("att.tlBreakStart", { n: i + 1 }), time: fmtTime(b.start), color: "var(--warn)" });
     if (b.end) {
       const mins = Math.max(0, Math.round((new Date(b.end).getTime() - new Date(b.start).getTime()) / 60000));
-      timeline.push({ label: t("att.tlBreakEnd", { n: i + 1 }), time: fmtTime(b.end), extra: `${mins} ${t("att.minutesShort")}`, color: "#e8a35a" });
+      timeline.push({ label: t("att.tlBreakEnd", { n: i + 1 }), time: fmtTime(b.end), extra: `${mins} ${t("att.minutesShort")}`, color: "var(--warn)" });
     }
   });
-  if (session?.clock_out) timeline.push({ label: t("att.tlClockOut"), time: fmtTime(session.clock_out), color: "#ec7063" });
+  if (session?.clock_out) timeline.push({ label: t("att.tlClockOut"), time: fmtTime(session.clock_out), color: "var(--danger)" });
 
   const statusLabel = onBreak ? t("att.statusOnBreak") : clockedIn ? t("att.statusWorking") : t("att.statusNotIn");
-  const statusColor = onBreak ? "#e8a35a" : clockedIn ? "#58d68d" : "var(--gray)";
+  const statusColor = onBreak ? "var(--warn)" : clockedIn ? "var(--success)" : "var(--gray)";
   const statusEmoji = onBreak ? "☕" : clockedIn ? "🟢" : "⚪";
 
   return (
@@ -282,14 +282,14 @@ export default function AttendancePage() {
                 {String(tt.m).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>m </span>
                 {String(tt.s).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>s</span>
               </div>
-              <div style={{ fontSize: 10, letterSpacing: 2.5, color: "var(--gray)", marginTop: 8, textTransform: "uppercase" }}>{t("att.totalTimeToday")}</div>
+              <div style={{ fontSize: 12, letterSpacing: 2.5, color: "var(--gray)", marginTop: 8, textTransform: "uppercase" }}>{t("att.totalTimeToday")}</div>
             </div>
 
             {/* STATUS ROW: In / Break / Out / Total */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 18 }}>
-              <StatCell label={t("att.in")} value={fmtTime(session?.clock_in)} color="#58d68d" />
-              <StatCell label={t("att.break")} value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="#e8a35a" />
-              <StatCell label={t("att.out")} value={fmtTime(session?.clock_out)} color="#ec7063" />
+              <StatCell label={t("att.in")} value={fmtTime(session?.clock_in)} color="var(--success)" />
+              <StatCell label={t("att.break")} value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="var(--warn)" />
+              <StatCell label={t("att.out")} value={fmtTime(session?.clock_out)} color="var(--danger)" />
               <StatCell label={t("att.total")} value={session?.clock_out ? fmtDur(session.duration_mins) : (clockedIn ? `${tt.h}h ${String(tt.m).padStart(2, "0")}m` : "—")} color="var(--gold)" />
             </div>
 
@@ -316,7 +316,7 @@ export default function AttendancePage() {
                     <button onClick={() => openCode("out")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
                   </div>
                 )}
-                {onBreak && <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center" }}>{t("att.endBreakFirst")}</div>}
+                {onBreak && <div style={{ fontSize: 12, color: "var(--gray)", textAlign: "center" }}>{t("att.endBreakFirst")}</div>}
               </div>
             )}
 
@@ -333,13 +333,13 @@ export default function AttendancePage() {
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
               <span style={{ flex: 1, fontSize: 14, color: "var(--white)" }}>{e.label}</span>
-              {e.extra && <span style={{ fontSize: 12, color: "#e8a35a" }}>{e.extra}</span>}
+              {e.extra && <span style={{ fontSize: 12, color: "var(--warn)" }}>{e.extra}</span>}
               <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gold)" }}>{e.time}</span>
             </div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 13 }}>
             <span style={{ color: "var(--gray)" }}>{t("att.totalBreakTime")}</span>
-            <span style={{ color: "#e8a35a", fontWeight: 600 }}>{totalBreakMin} {t("att.minutesShort")}</span>
+            <span style={{ color: "var(--warn)", fontWeight: 600 }}>{totalBreakMin} {t("att.minutesShort")}</span>
           </div>
           {session?.clock_out && (
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 13 }}>
@@ -371,7 +371,7 @@ export default function AttendancePage() {
               inputMode="numeric"
               style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", boxSizing: "border-box" }}
             />
-            {codeErr && <div style={{ color: "#ec7063", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
+            {codeErr && <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>{t("common.cancel")}</button>
               <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : t("att.confirm")}</button>
@@ -394,12 +394,12 @@ export default function AttendancePage() {
           <div className="card" style={{ display: "flex", padding: "16px 0", marginBottom: 12 }}>
             <div style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histDaysWorked}</div>
-              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{t("att.daysWorked")}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{t("att.daysWorked")}</div>
             </div>
             <div style={{ width: 1, background: "rgba(128,128,128,0.15)" }} />
             <div style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histHours}</div>
-              <div style={{ fontSize: 10, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? t("att.weekLabel") : t("att.monthLabel")}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? t("att.weekLabel") : t("att.monthLabel")}</div>
             </div>
           </div>
 
@@ -417,7 +417,7 @@ export default function AttendancePage() {
               return (
                 <div key={s.id} className="card" style={{ padding: 14, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 9, fontWeight: 700, color: "#e8a35a", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--warn)", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>
                       {s.status === "active" || s.status === "on-break" ? t("att.inProgress") : fmtDur(s.duration_mins)}
                     </div>
@@ -440,7 +440,7 @@ function StatCell({ label, value, color }: { label: string; value: string; color
   return (
     <div style={{ background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.12)", borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
       <div style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 9, color: "var(--gray)", marginTop: 4, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
     </div>
   );
 }

@@ -95,7 +95,7 @@ export default function NotificationsPage() {
       {loading ? (
         <CardSkeleton rows={4} />
       ) : filtered.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon e="🎉" size={16} color="#58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
+        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon e="🎉" size={16} color="var(--success)" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
       ) : (
         groups.map((g) => (
           <div key={g.label} style={{ marginBottom: 12 }}>
@@ -110,7 +110,7 @@ export default function NotificationsPage() {
                       <div style={{ fontSize: 13, fontWeight: n.is_read ? 500 : 700, color: "var(--white)" }}>{t(meta.key)}</div>
                       {n.message && <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 2 }}>{n.message}</div>}
                     </div>
-                    <span style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", marginTop: 2 }}>{relTime(n.created_at)}</span>
+                    <span style={{ fontSize: 12, color: "var(--gray)", whiteSpace: "nowrap", marginTop: 2 }}>{relTime(n.created_at)}</span>
                     {!n.is_read && <span style={{ width: 8, height: 8, borderRadius: 4, background: "var(--gold)", marginTop: 4, flexShrink: 0 }} />}
                   </Link>
                 );

@@ -26,7 +26,7 @@ export default function BranchDetailPage() {
   if (error) return (
     <div>
       <Link href="/branches" style={{ color: "#d4a847", fontSize: 13, textDecoration: "none" }}>‹ Back to branches</Link>
-      <div className="card" style={{ textAlign: "center", color: "#ec7063", marginTop: 16 }}>{error}</div>
+      <div className="card" style={{ textAlign: "center", color: "var(--danger)", marginTop: 16 }}>{error}</div>
     </div>
   );
 
@@ -41,10 +41,10 @@ export default function BranchDetailPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10, marginBottom: 18 }}>
         <Stat label="Staff" value={stats.staff} color="#3498db" />
-        <Stat label="Working now" value={stats.workingNow} color="#58d68d" />
-        <Stat label="Pending leave" value={stats.pendingLeave} color={stats.pendingLeave ? "#d4a847" : "#58d68d"} />
-        <Stat label="Open incidents" value={stats.openIncidents} color={stats.openIncidents ? "#ec7063" : "#58d68d"} />
-        <Stat label="Low stock" value={stats.lowStock} color={stats.lowStock ? "#e8a35a" : "#58d68d"} />
+        <Stat label="Working now" value={stats.workingNow} color="var(--success)" />
+        <Stat label="Pending leave" value={stats.pendingLeave} color={stats.pendingLeave ? "#d4a847" : "var(--success)"} />
+        <Stat label="Open incidents" value={stats.openIncidents} color={stats.openIncidents ? "var(--danger)" : "var(--success)"} />
+        <Stat label="Low stock" value={stats.lowStock} color={stats.lowStock ? "var(--warn)" : "var(--success)"} />
       </div>
 
       <div className="section-label">Team ({staffList.length})</div>
@@ -71,7 +71,7 @@ function Stat({ label, value, color }: any) {
   return (
     <div className="card" style={{ textAlign: "center", marginBottom: 0, padding: 16 }}>
       <div style={{ fontSize: 24, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{label}</div>
     </div>
   );
 }

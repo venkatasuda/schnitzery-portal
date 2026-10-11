@@ -173,7 +173,7 @@ export default function RosterPage() {
             </button>
             {showHours && (
               <div style={{ marginTop: 10 }}>
-                <div style={{ fontSize: 11, color: "var(--gray)", marginBottom: 12 }}>{t("roster.teamHoursSub")}</div>
+                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("roster.teamHoursSub")}</div>
                 {[...staff]
                   .filter((p) => p.contractHours != null || (p.workedH || 0) > 0)
                   .map((p) => ({ ...p, pct: p.contractHours ? Math.round(((p.workedH || 0) / p.contractHours) * 100) : null }))
@@ -187,7 +187,7 @@ export default function RosterPage() {
                       <div key={p.id} style={{ marginBottom: 10 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
                           <span style={{ color: "var(--white)" }}>{p.full_name}</span>
-                          <span style={{ color: over ? "#ec7063" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
+                          <span style={{ color: over ? "var(--danger)" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
                             {p.contractHours != null ? `${p.workedH || 0}/${p.contractHours}h` : `${p.workedH || 0}h`}
                             {left != null && (over ? ` · ${t("roster.over")}` : ` · ${left}${t("roster.leftShort")}`)}
                           </span>
@@ -212,7 +212,7 @@ export default function RosterPage() {
                   <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>
                     {dayLabel(day)}
                     {entries.length > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--gold)", marginLeft: 8 }}>{t("roster.assigned", { n: entries.length })}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gold)", marginLeft: 8 }}>{t("roster.assigned", { n: entries.length })}</span>
                     )}
                   </div>
                   <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--gold)" : "var(--dark3)", color: isActive ? "#1a0e0e" : "var(--white)", fontWeight: 600 }}>
@@ -228,9 +228,9 @@ export default function RosterPage() {
                       <b>{e.name}</b> <span style={{ color: "var(--gray)" }}>· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
                     {submitted(e.user_id) && !availableDay(e.user_id, day) && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: "#e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
                     )}
-                    <button onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "#ec7063", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
+                    <button onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
                   </div>
                 ))}
 
@@ -294,5 +294,5 @@ export default function RosterPage() {
 
 const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
 const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
-const miniLbl: React.CSSProperties = { display: "block", fontSize: 10, color: "var(--gray)", marginBottom: 4 };
+const miniLbl: React.CSSProperties = { display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 4 };
 const miniSelect: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

@@ -60,7 +60,7 @@ export default function ShiftTimesPage() {
                   <div key={r.shift} className="card" style={{ padding: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                       <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.shift}</div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: isBranch ? "var(--gold)" : "var(--gray)", background: isBranch ? "rgba(212,168,71,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: isBranch ? "var(--gold)" : "var(--gray)", background: isBranch ? "rgba(212,168,71,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
                         {isBranch ? t("shiftcfg.scopeBranch") : t("shiftcfg.scopeDefault")}
                       </span>
                     </div>
@@ -79,7 +79,7 @@ export default function ShiftTimesPage() {
                       </label>
                       <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
                     </div>
-                    {crosses && <div style={{ fontSize: 11, color: "#e8a35a", marginTop: 8 }}><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
+                    {crosses && <div style={{ fontSize: 12, color: "var(--warn)", marginTop: 8 }}><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
                   </div>
                 );
               })}
@@ -93,5 +93,5 @@ export default function ShiftTimesPage() {
   );
 }
 
-const lbl: React.CSSProperties = { fontSize: 10, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
+const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
 const input: React.CSSProperties = { width: "100%", padding: "9px 10px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

@@ -72,7 +72,7 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📣" size={22} /> {t("announcements.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📣" size={22} /> {t("announcements.title")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("announcements.subtitle")}</p>
 
       {canPost && (
@@ -112,18 +112,18 @@ export default function AnnouncementsPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 {a.pinned && <Icon e="📌" size={13} color="var(--gold)" />}
-                {a.category && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, padding: "2px 8px", borderRadius: 10, background: (CAT_COLORS[a.category] || "#666") + "26", color: CAT_COLORS[a.category] || "#aaa" }}>{catLabel(a.category).toUpperCase()}</span>}
+                {a.category && <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.5, padding: "2px 8px", borderRadius: 10, background: (CAT_COLORS[a.category] || "#666") + "26", color: CAT_COLORS[a.category] || "#aaa" }}>{catLabel(a.category).toUpperCase()}</span>}
                 {a.title && <span style={{ fontSize: 15, fontWeight: 700 }}>{a.title}</span>}
               </div>
-              <span style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmtWhen(a.created_at)}</span>
+              <span style={{ fontSize: 12, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmtWhen(a.created_at)}</span>
             </div>
             <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{a.message}</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
-              <span style={{ fontSize: 11, color: "var(--gray)" }}>— {a.author || "Manager"}</span>
+              <span style={{ fontSize: 12, color: "var(--gray)" }}>— {a.author || "Manager"}</span>
               {canPost && (
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => pin(a)} disabled={busyId === a.id} style={miniBtn}>{a.pinned ? t("announcements.unpin") : t("announcements.pin")}</button>
-                  <button onClick={() => del(a.id)} disabled={busyId === a.id} style={{ ...miniBtn, color: "#ec7063" }}>{t("common.delete")}</button>
+                  <button onClick={() => del(a.id)} disabled={busyId === a.id} style={{ ...miniBtn, color: "var(--danger)" }}>{t("common.delete")}</button>
                 </div>
               )}
             </div>

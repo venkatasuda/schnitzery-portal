@@ -27,7 +27,7 @@ export default function AuditPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("audit.subtitle")}</p>
 
       {loading ? (
@@ -40,9 +40,9 @@ export default function AuditPage() {
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{(l.action || "").replace(/_/g, " ")}</div>
               {l.details && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{l.details}</div>}
-              <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{t("audit.by", { actor: l.actor || "—" })}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("audit.by", { actor: l.actor || "—" })}</div>
             </div>
-            <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
           </div>
         ))
       )}

@@ -66,13 +66,13 @@ export default function WastePage() {
         <div className="card" style={{ margin: "12px 0", padding: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.thisWeek")}</span>
-            {summary.hasPrices && <span style={{ fontSize: 18, fontWeight: 700, color: "#ec7063" }}>{eur(summary.totalValue)}</span>}
+            {summary.hasPrices && <span style={{ fontSize: 18, fontWeight: 700, color: "var(--danger)" }}>{eur(summary.totalValue)}</span>}
           </div>
           <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("waste.entries", { n: summary.count })}</div>
           {summary.reasons.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
               {summary.reasons.map((r: any) => (
-                <span key={r.reason} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,0.05)", color: "var(--gray)" }}>
+                <span key={r.reason} style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,0.05)", color: "var(--gray)" }}>
                   {REASON_EMOJI[r.reason] || "•"} {t("waste.r_" + r.reason)} {summary.hasPrices ? eur(r.value) : `×${r.count}`}
                 </span>
               ))}
@@ -87,7 +87,7 @@ export default function WastePage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
             <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.trend6w")}</span>
             {trends.overallPct != null && (
-              <span style={{ fontSize: 13, fontWeight: 700, color: trends.overallPct > 5 ? "#ec7063" : "#58d68d" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: trends.overallPct > 5 ? "var(--danger)" : "var(--success)" }}>
                 {t("waste.pctOfSales", { p: trends.overallPct })}
               </span>
             )}
@@ -98,13 +98,13 @@ export default function WastePage() {
               return trends.weeks.map((w: any, i: number) => (
                 <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                   <div title={eur(w.wasteValue)} style={{ width: "100%", height: `${Math.round((w.wasteValue / max) * 52)}px`, minHeight: 3, borderRadius: 4, background: "linear-gradient(180deg,#e67e22,#c0392b)" }} />
-                  <span style={{ fontSize: 9, color: "var(--gray)" }}>{w.weekStart.slice(5)}</span>
+                  <span style={{ fontSize: 12, color: "var(--gray)" }}>{w.weekStart.slice(5)}</span>
                 </div>
               ));
             })()}
           </div>
           {trends.hasPrices && (
-            <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8, textAlign: "right" }}>{t("waste.trendTotal", { v: eur(trends.totalWaste) })}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8, textAlign: "right" }}>{t("waste.trendTotal", { v: eur(trends.totalWaste) })}</div>
           )}
         </div>
       )}
@@ -121,7 +121,7 @@ export default function WastePage() {
             ) : filtered.map((p) => (
               <button key={p.product} onClick={() => { setSel(p); setSearch(""); }}
                 style={{ display: "block", width: "100%", textAlign: "left", padding: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
-                {p.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>({p.category})</span>
+                {p.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>({p.category})</span>
               </button>
             )))}
           </>
@@ -130,14 +130,14 @@ export default function WastePage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{sel.product}</div>
-                <div style={{ fontSize: 11, color: "var(--gray)" }}>{sel.category}</div>
+                <div style={{ fontSize: 12, color: "var(--gray)" }}>{sel.category}</div>
               </div>
               <button onClick={() => setSel(null)} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("waste.change")}</button>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
               {REASONS.map((r) => (
                 <button key={r} onClick={() => setReason(r)}
-                  style={{ fontSize: 12, padding: "7px 11px", borderRadius: 8, cursor: "pointer", background: reason === r ? "rgba(231,76,60,0.15)" : "rgba(255,255,255,0.05)", color: reason === r ? "#ec7063" : "var(--gray)", border: `1px solid ${reason === r ? "rgba(231,76,60,0.35)" : "rgba(255,255,255,0.1)"}` }}>
+                  style={{ fontSize: 12, padding: "7px 11px", borderRadius: 8, cursor: "pointer", background: reason === r ? "rgba(231,76,60,0.15)" : "rgba(255,255,255,0.05)", color: reason === r ? "var(--danger)" : "var(--gray)", border: `1px solid ${reason === r ? "rgba(231,76,60,0.35)" : "rgba(255,255,255,0.1)"}` }}>
                   {REASON_EMOJI[r]} {t("waste.r_" + r)}
                 </button>
               ))}
@@ -161,12 +161,12 @@ export default function WastePage() {
       ) : entries.map((e) => (
         <div key={e.id} className="card" style={{ marginBottom: 8, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, color: "var(--white)" }}>{REASON_EMOJI[e.reason] || "•"} {e.product} <span style={{ color: "var(--gray)", fontSize: 11 }}>· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
-            <div style={{ fontSize: 11, color: "var(--gray)" }}>{t("waste.r_" + e.reason)} · {fmtWhen(e.created_at)}{e.logged_by_name ? ` · ${e.logged_by_name}` : ""}</div>
-            {e.note && <div style={{ fontSize: 11, color: "var(--gray)", fontStyle: "italic" }}>“{e.note}”</div>}
+            <div style={{ fontSize: 13, color: "var(--white)" }}>{REASON_EMOJI[e.reason] || "•"} {e.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
+            <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.r_" + e.reason)} · {fmtWhen(e.created_at)}{e.logged_by_name ? ` · ${e.logged_by_name}` : ""}</div>
+            {e.note && <div style={{ fontSize: 12, color: "var(--gray)", fontStyle: "italic" }}>“{e.note}”</div>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
-            {e.value != null && <span style={{ fontSize: 13, color: "#ec7063", fontWeight: 600 }}>{eur(e.value)}</span>}
+            {e.value != null && <span style={{ fontSize: 13, color: "var(--danger)", fontWeight: 600 }}>{eur(e.value)}</span>}
             <button onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
           </div>
         </div>

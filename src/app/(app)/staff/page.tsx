@@ -151,7 +151,7 @@ export default function StaffPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "Georgia, serif", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>
         {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
@@ -166,18 +166,22 @@ export default function StaffPage() {
             <button onClick={() => { navigator.clipboard?.writeText(resetInfo.temp).catch(() => {}); }} style={editBtn}>⧉ Copy</button>
             <button onClick={() => setResetInfo(null)} style={editBtn}>{t("common.cancel")}</button>
           </div>
-          <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("staff.resetPwHint")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("staff.resetPwHint")}</div>
         </div>
       )}
 
-      <button onClick={() => { setShowAdd(true); setAddMsg(null); }} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>{t("staff.addNew")}</button>
+      <div className="workspace-toolbar">
+        <button className="workspace-button primary" onClick={() => { setShowAdd(true); setAddMsg(null); }}>{t("staff.addNew")}</button>
+        <Link className="workspace-button" href="/directory">{t("directory.title")}</Link>
+        <Link className="workspace-button" href="/notes">{t("schedhub.notes")}</Link>
+      </div>
 
       {showAdd && (
         <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 100, padding: 20, overflowY: "auto" }}>
           <div onClick={(e) => e.stopPropagation()} style={{ ...card, maxWidth: 460, width: "100%", marginTop: 30 }}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</div>
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div className="workspace-form-grid">
               <Field label={t("staff.emailReq")}><input value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} style={input} placeholder="name@email.com" /></Field>
               <Field label={t("staff.tempPw")}><input value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} style={input} placeholder={t("staff.minChars")} /></Field>
               <Field label={t("profile.fullName")}><input value={addForm.full_name} onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })} style={input} /></Field>
@@ -200,7 +204,7 @@ export default function StaffPage() {
               <Field label={t("profile.contractHours")}><input type="number" value={addForm.contract_hours} onChange={(e) => setAddForm({ ...addForm, contract_hours: e.target.value })} style={input} /></Field>
             </div>
             <Field label={t("profile.phone")}><input value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} style={input} /></Field>
-            {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "#58d68d" : "#ec7063", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
+            {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "var(--success)" : "var(--danger)", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
               <button onClick={createStaff} disabled={adding} style={primaryBtn}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
@@ -227,7 +231,7 @@ export default function StaffPage() {
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 11, color: "var(--gray)" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 11, color: "var(--gray)" }}> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 10, fontWeight: 700, color: "#ec7063", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 12, color: "var(--gray)" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 12, color: "var(--gray)" }}> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
                   <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
@@ -241,17 +245,17 @@ export default function StaffPage() {
                   </div>
                 </div>
               ) : (
-                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <div className="workspace-toolbar" style={{ marginTop: 16 }}>
                   <Link href={`/staff/${p.id}`} style={{ ...editBtn, textDecoration: "none" }}>{t("staff.view")}</Link>
                   {filter === "active" ? (
                     <>
                       <button onClick={() => startEdit(p)} style={editBtn}>{t("common.edit")}</button>
                       <button onClick={() => resetPassword(p.id)} style={editBtn}>🔑 {t("staff.resetPw")}</button>
-                      {p.login_locked && <button onClick={() => unlock(p.id)} style={{ ...editBtn, color: "#58d68d" }}>🔓 {t("staff.unlock")}</button>}
-                      <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "#e08283" }}>{t("staff.remove")}</button>
+                      {p.login_locked && <button onClick={() => unlock(p.id)} style={{ ...editBtn, color: "var(--success)" }}>🔓 {t("staff.unlock")}</button>}
+                      <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "var(--danger)" }}>{t("staff.remove")}</button>
                     </>
                   ) : (
-                    <button onClick={() => reactivate(p.id)} style={{ ...editBtn, color: "#58d68d" }}>{t("staff.reactivate")}</button>
+                    <button onClick={() => reactivate(p.id)} style={{ ...editBtn, color: "var(--success)" }}>{t("staff.reactivate")}</button>
                   )}
                 </div>
               )}
@@ -259,7 +263,7 @@ export default function StaffPage() {
           ) : (
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>{t("staff.editName", { name: p.full_name })}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div className="workspace-form-grid">
                 <Field label={t("profile.fullName")}><input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={input} /></Field>
                 <Field label={t("profile.employeeCode")}><input value={form.employee_code} onChange={(e) => setForm({ ...form, employee_code: e.target.value })} style={input} placeholder="KIT-020" /></Field>
                 <Field label={t("staff.team")}>
@@ -304,7 +308,7 @@ export default function StaffPage() {
 }
 
 function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 10 }}><label style={{ display: "block", fontSize: 11, color: "var(--gray)", marginBottom: 4 }}>{label}</label>{children}</div>;
+  return <label style={{ display: "block", marginBottom: 10 }}><span style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{label}</span>{children}</label>;
 }
 function FilterBtn({ active, onClick, children }: any) {
   return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
