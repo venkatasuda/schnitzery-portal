@@ -62,7 +62,7 @@ export default function StockAlertsPage() {
 
       <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "12px 0", padding: 14 }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: lowCount > 0 ? "#ec7063" : "#58d68d" }}>{lowCount}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: lowCount > 0 ? "var(--danger)" : "var(--success)" }}>{lowCount}</div>
           <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("salert.lowNow")}</div>
         </div>
         <button onClick={alertMe} disabled={notifying}
@@ -71,7 +71,7 @@ export default function StockAlertsPage() {
         </button>
       </div>
 
-      <div style={{ fontSize: 11, color: "var(--gray)", margin: "0 2px 10px" }}>{t("salert.hint")}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", margin: "0 2px 10px" }}>{t("salert.hint")}</div>
 
       {loading ? <CardSkeleton /> : items.length === 0 ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("salert.noItems")}</div>
@@ -81,14 +81,14 @@ export default function StockAlertsPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
-                  {it.low && <span style={{ color: "#ec7063", marginRight: 5 }}>●</span>}{it.product}
+                  {it.low && <span style={{ color: "var(--danger)", marginRight: 5 }}>●</span>}{it.product}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--gray)" }}>
+                <div style={{ fontSize: 12, color: "var(--gray)" }}>
                   {it.category}{it.unit ? ` · ${it.unit}` : ""} · {it.counted ? t("salert.now", { n: it.ist }) : t("salert.notCounted")}
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 10, color: "var(--gray)", marginBottom: 3 }}>{t("salert.alertBelow")}</div>
+                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 3 }}>{t("salert.alertBelow")}</div>
                 <input
                   type="number" inputMode="decimal" style={input}
                   value={edits[it.id] ?? String(it.level)}

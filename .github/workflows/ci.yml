@@ -57,6 +57,7 @@ jobs:
           node scripts/checks/inventory-data.cjs
           node scripts/checks/business.cjs
           node scripts/checks/business-ui.cjs
+          node scripts/checks/approvals-ui.cjs
           node scripts/checks/layout.cjs
           node scripts/checks/dashboard.cjs
           node scripts/checks/service-worker.cjs

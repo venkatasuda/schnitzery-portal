@@ -53,7 +53,7 @@ export default function HoursPage() {
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
             <Stat label="Shifts" value={String(data.shifts)} />
             <Stat label="Target" value={data.targetHours != null ? `${data.targetHours}h` : "—"} />
-            <Stat label={data.debt != null && data.debt > 0 ? "Remaining" : "Over"} value={data.debt != null ? `${Math.abs(data.debt)}h` : "—"} color={data.debt != null && data.debt > 0 ? "#e8a35a" : "#58d68d"} />
+            <Stat label={data.debt != null && data.debt > 0 ? "Remaining" : "Over"} value={data.debt != null ? `${Math.abs(data.debt)}h` : "—"} color={data.debt != null && data.debt > 0 ? "var(--warn)" : "var(--success)"} />
           </div>
 
           {data.targetHours != null && (
@@ -75,7 +75,7 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
   return (
     <div style={{ ...card, flex: 1, textAlign: "center", padding: 16 }}>
       <div style={{ fontSize: 22, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{label}</div>
     </div>
   );
 }

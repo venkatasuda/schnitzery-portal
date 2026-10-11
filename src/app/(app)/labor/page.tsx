@@ -60,7 +60,7 @@ export default function LaborPage() {
   if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
   const pct = sum?.laborPct;
-  const pctColor = pct == null ? "var(--white)" : pct <= 30 ? "#58d68d" : pct <= 35 ? "#e8a35a" : "#ec7063";
+  const pctColor = pct == null ? "var(--white)" : pct <= 30 ? "var(--success)" : pct <= 35 ? "var(--warn)" : "var(--danger)";
 
   return (
     <div className="fade-up">
@@ -72,7 +72,7 @@ export default function LaborPage() {
         <Skeleton height={120} radius={14} style={{ marginBottom: 14 }} />
       ) : (
         <div className="card" style={{ textAlign: "center", marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: "var(--gray)", letterSpacing: 1, textTransform: "uppercase" }}>{t("lab.laborPct")}</div>
+          <div style={{ fontSize: 12, color: "var(--gray)", letterSpacing: 1, textTransform: "uppercase" }}>{t("lab.laborPct")}</div>
           <div style={{ fontSize: 46, fontWeight: 800, fontFamily: "var(--font-display)", color: pctColor, lineHeight: 1.1 }}>
             {pct == null ? "—" : `${pct}%`}
           </div>
@@ -80,8 +80,8 @@ export default function LaborPage() {
             <span>{t("lab.labor")} <b style={{ color: "var(--white)" }}>{eur(sum?.laborCost || 0)}</b></span>
             <span>{t("lab.sales")} <b style={{ color: "var(--white)" }}>{eur(sum?.monthSales || 0)}</b></span>
           </div>
-          {pct == null && <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("lab.enterToCalc")}</div>}
-          {pct != null && <div style={{ fontSize: 11, color: pctColor, marginTop: 8 }}>{pct <= 30 ? t("lab.healthy") : pct <= 35 ? t("lab.watchIt") : t("lab.high")} · {t("lab.typicalTarget")}</div>}
+          {pct == null && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("lab.enterToCalc")}</div>}
+          {pct != null && <div style={{ fontSize: 12, color: pctColor, marginTop: 8 }}>{pct <= 30 ? t("lab.healthy") : pct <= 35 ? t("lab.watchIt") : t("lab.high")} · {t("lab.typicalTarget")}</div>}
         </div>
       )}
 
@@ -124,7 +124,7 @@ export default function LaborPage() {
             <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 6px", borderBottom: i < staff.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.full_name}</div>
-                <div style={{ fontSize: 11, color: "var(--gray)" }}>{p.team || "—"}</div>
+                <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team || "—"}</div>
               </div>
               <input
                 type="number" inputMode="decimal"
@@ -139,7 +139,7 @@ export default function LaborPage() {
             </div>
           ))}
           {sum && sum.withWage < sum.staffCount && (
-            <div style={{ fontSize: 11, color: "var(--gray)", textAlign: "center", padding: "8px 0 2px" }}>
+            <div style={{ fontSize: 12, color: "var(--gray)", textAlign: "center", padding: "8px 0 2px" }}>
               {t("lab.wagesSet", { a: sum.withWage, b: sum.staffCount })}
             </div>
           )}
@@ -151,5 +151,5 @@ export default function LaborPage() {
   );
 }
 
-const lbl: React.CSSProperties = { fontSize: 10, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
+const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
 const input: React.CSSProperties = { width: "100%", padding: "11px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14 };

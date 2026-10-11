@@ -88,3 +88,14 @@ Verify signed-in views at 390px, 768px, 1280px and 1920px in both themes. Check 
 | `/login` | Source reviewed | Shared styles applied; verify live interaction and empty/error states |
 | `/privacy` | Source reviewed | Review list width; preserve focused forms/dialogs |
 | `/terms` | Source reviewed | Review list width; preserve focused forms/dialogs |
+
+
+## Workspace refinement — 2026-10-11
+
+The shared rule that put every active hub panel into a grid has been removed. Attendance filters, summaries and records now retain their intended reading order; only peer panels in the schedule and people hubs use explicit responsive grids. Attendance summaries use readable body typography and responsive metric cards. Staff forms stack on phones and employee actions wrap. Profile administration links are grouped separately from account details. Branch settings use a left-aligned management workspace and body typography.
+
+Legacy small route labels were raised to 12px and repeated green/red/amber status text now uses theme tokens. Dynamic translucent status backgrounds use color-mix so token colors remain valid CSS. Hub filter buttons expose their selected state with aria-pressed. Staff/profile fields wrap their controls in labels; attendance filters and GPS selection have accessible names.
+
+Approvals has a structured request list with named Approve/Reject controls, global in-flight disabling, explicit failed-load and retry states, and a native rejection dialog with keyboard containment, Escape and focus return. The runnable approvals-ui check verifies failed reads cannot display a caught-up state.
+
+These are UI improvements, not implementation of immutable payroll, movement accounting or unrelated backend architecture. Source changes cover operational routes; signed-in browser checks below must record the actual routes and viewports tested, not imply every permission or workflow was exercised.

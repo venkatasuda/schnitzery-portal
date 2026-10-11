@@ -79,7 +79,7 @@ export default function AvailabilityPage() {
                         background: on ? "#d4a847" : "rgba(255,255,255,0.04)",
                         color: on ? "#1a0e0e" : "var(--gray)",
                         border: on ? "1px solid #d4a847" : "1px solid rgba(255,255,255,0.12)" }}>
-                      {shiftLabel(sh.key)}<div style={{ fontSize: 10, fontWeight: 400, marginTop: 2 }}>{sh.time}</div>
+                      {shiftLabel(sh.key)}<div style={{ fontSize: 12, fontWeight: 400, marginTop: 2 }}>{sh.time}</div>
                     </button>
                   );
                 })}

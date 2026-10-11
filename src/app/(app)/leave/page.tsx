@@ -40,9 +40,9 @@ export default function LeavePage() {
 
   const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) : "—";
   const statusStyle = (s: string) => ({
-    fontSize: 11, padding: "3px 10px", borderRadius: 12,
+    fontSize: 12, padding: "3px 10px", borderRadius: 12,
     background: s === "approved" ? "rgba(39,174,96,0.15)" : s === "denied" ? "rgba(231,76,60,0.15)" : "rgba(212,168,71,0.15)",
-    color: s === "approved" ? "#58d68d" : s === "denied" ? "#ec7063" : "#d4a847",
+    color: s === "approved" ? "var(--success)" : s === "denied" ? "var(--danger)" : "#d4a847",
   });
 
   return (
@@ -83,7 +83,7 @@ export default function LeavePage() {
               </div>
               {r.reason && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6 }}>{r.reason}</div>}
               {r.decided_by && r.status !== "pending" && (
-                <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 6 }}>{t("leave.decidedBy", { name: r.decided_by })}</div>
+                <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6 }}>{t("leave.decidedBy", { name: r.decided_by })}</div>
               )}
             </div>
           ))}

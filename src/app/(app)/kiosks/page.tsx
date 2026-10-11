@@ -77,13 +77,13 @@ export default function KiosksPage() {
                     <div onClick={() => { setEditId(k.id); setEditLabel(k.label); }} style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", cursor: "pointer" }}>{k.label}</div>
                   )}
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: k.is_active ? "#58d68d" : "var(--gray)", background: k.is_active ? "rgba(88,214,141,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 9px", borderRadius: 20 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: k.is_active ? "var(--success)" : "var(--gray)", background: k.is_active ? "rgba(88,214,141,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 9px", borderRadius: 20 }}>
                   {k.is_active ? t("kioskadm.active") : t("kioskadm.inactive")}
                 </span>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <a href={`/kiosk?k=${k.id}`} target="_blank" rel="noreferrer" style={btn}>{t("kioskadm.openDisplay")}</a>
-                <button onClick={() => toggle(k)} style={{ ...btn, color: k.is_active ? "#ec7063" : "#58d68d", borderColor: k.is_active ? "rgba(236,112,99,0.3)" : "rgba(88,214,141,0.3)" }}>
+                <button onClick={() => toggle(k)} style={{ ...btn, color: k.is_active ? "var(--danger)" : "var(--success)", borderColor: k.is_active ? "rgba(236,112,99,0.3)" : "rgba(88,214,141,0.3)" }}>
                   {k.is_active ? t("kioskadm.deactivate") : t("kioskadm.activate")}
                 </button>
               </div>

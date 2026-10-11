@@ -16,6 +16,7 @@ export default function ScheduleHubPage() {
   const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const dayLabel = (k: string) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(String(k).toLowerCase()) ? t("days." + String(k).toLowerCase()) : k);
   const [tab, setTab] = useState<Tab>("roster");
+  const [error, setError] = useState<string | null>(null);
   const [ov, setOv] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
@@ -24,10 +25,14 @@ export default function ScheduleHubPage() {
 
   async function loadOverview() {
     setLoading(true);
+    setError(null);
+    try {
     const res = await getScheduleOverview();
     if (res.ok) setOv(res);
     else if (res.error?.includes("Managers")) setDenied(true);
-    setLoading(false);
+    else setError(res.error || t("common.error"));
+    } catch { setError(t("common.error")); }
+    finally { setLoading(false); }
   }
   useEffect(() => { loadOverview(); }, []);
 
@@ -68,26 +73,26 @@ export default function ScheduleHubPage() {
       <div className="page-sub">{t("schedhub.subtitle")}</div>
 
       {/* quick actions */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+      <div className="workspace-toolbar">
         <Link href="/announcements" style={quickBtn}>{t("schedhub.broadcast")}</Link>
         <Link href="/cover" style={quickBtn}>{t("schedhub.covers")}</Link>
         <Link href="/noshow" style={quickBtn}>{t("schedhub.reminders")}</Link>
       </div>
 
-      <div className="hub-tabs">
-        <button className={`hub-tab${tab === "roster" ? " active" : ""}`} onClick={() => setTab("roster")}>{t("schedhub.tabRoster")}</button>
-        <button className={`hub-tab${tab === "insights" ? " active" : ""}`} onClick={() => setTab("insights")}>{t("schedhub.tabInsights")}</button>
-        <button className={`hub-tab${tab === "conflicts" ? " active" : ""}`} onClick={() => setTab("conflicts")}>{t("schedhub.tabConflicts")}</button>
-        <button className={`hub-tab${tab === "tools" ? " active" : ""}`} onClick={() => setTab("tools")}>{t("schedhub.tabTools")}</button>
+      <div className="hub-tabs" role="group" aria-label={t("schedhub.title")}>
+        <button aria-pressed={tab === "roster"} className={`hub-tab${tab === "roster" ? " active" : ""}`} onClick={() => setTab("roster")}>{t("schedhub.tabRoster")}</button>
+        <button aria-pressed={tab === "insights"} className={`hub-tab${tab === "insights" ? " active" : ""}`} onClick={() => setTab("insights")}>{t("schedhub.tabInsights")}</button>
+        <button aria-pressed={tab === "conflicts"} className={`hub-tab${tab === "conflicts" ? " active" : ""}`} onClick={() => setTab("conflicts")}>{t("schedhub.tabConflicts")}</button>
+        <button aria-pressed={tab === "tools"} className={`hub-tab${tab === "tools" ? " active" : ""}`} onClick={() => setTab("tools")}>{t("schedhub.tabTools")}</button>
       </div>
 
-      {loading ? (
+      {error ? (<div className="workspace-error" role="alert"><p>{error}</p><button className="workspace-button" onClick={loadOverview}>{t("analytics.retry")}</button></div>) : loading ? (
         <CardSkeleton rows={4} />
       ) : (
         <>
           {/* ───────── ROSTER ───────── */}
           {tab === "roster" && (
-            <div className="hub-tab-panel active">
+            <div className="hub-tab-panel active workspace-grid">
               <Link href="/roster" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📋" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.openEditor")}</div><div className="feature-sub">{t("schedhub.openEditorSub")}</div></div>
@@ -97,10 +102,10 @@ export default function ScheduleHubPage() {
               {/* This Week panel */}
               <div className="card">
                 <div className="card-title">{t("schedhub.upcomingWeek")}</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                <div className="workspace-stats">
                   <Mini label={t("schedhub.week")} value={weekLabel} small color="var(--white)" />
-                  <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color={(ov?.submissionCount ?? 0) > 0 ? "#58d68d" : "#ec7063"} />
-                  <Mini label={t("schedhub.statusLabel")} value={ov?.rosterExists ? t("schedhub.built") : t("schedhub.open")} color={ov?.rosterExists ? "#58d68d" : "#e8a35a"} />
+                  <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color={(ov?.submissionCount ?? 0) > 0 ? "var(--success)" : "var(--danger)"} />
+                  <Mini label={t("schedhub.statusLabel")} value={ov?.rosterExists ? t("schedhub.built") : t("schedhub.open")} color={ov?.rosterExists ? "var(--success)" : "var(--warn)"} />
                 </div>
               </div>
 
@@ -114,10 +119,10 @@ export default function ScheduleHubPage() {
 
           {/* ───────── INSIGHTS ───────── */}
           {tab === "insights" && (
-            <div className="hub-tab-panel active">
+            <div className="hub-tab-panel active workspace-grid">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
                 <Mini label={t("schedhub.totalShifts")} value={ov?.totalShifts ?? 0} color="var(--gold)" />
-                <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="#58d68d" />
+                <Mini label={t("schedhub.submissions")} value={`${ov?.submissionCount ?? 0}/${ov?.staffCount ?? 0}`} color="var(--success)" />
               </div>
 
               {(ov?.totalShifts ?? 0) === 0 ? (
@@ -127,7 +132,7 @@ export default function ScheduleHubPage() {
                   <div className="card">
                     <div className="card-title">{t("schedhub.shiftsByTeam")}</div>
                     {(ov?.byTeamArr || []).map((tm: any) => (
-                      <BarRow key={tm.team} label={teamLabel(tm.team)} count={tm.count} max={ov.totalShifts} color="#3498db" />
+                      <BarRow key={tm.team} label={teamLabel(tm.team)} count={tm.count} max={ov.totalShifts} color="var(--gold)" />
                     ))}
                   </div>
                   <div className="card">
@@ -142,7 +147,7 @@ export default function ScheduleHubPage() {
                   <div className="card">
                     <div className="card-title">{t("schedhub.byDay")}</div>
                     {(ov?.byDayArr || []).map((d: any) => (
-                      <BarRow key={d.day} label={dayLabel(d.day)} count={d.count} max={Math.max(1, ...(ov.byDayArr || []).map((x: any) => x.count))} color="#d4a847" />
+                      <BarRow key={d.day} label={dayLabel(d.day)} count={d.count} max={Math.max(1, ...(ov.byDayArr || []).map((x: any) => x.count))} color="var(--gold)" />
                     ))}
                   </div>
                 </>
@@ -152,11 +157,11 @@ export default function ScheduleHubPage() {
 
           {/* ───────── CONFLICTS ───────── */}
           {tab === "conflicts" && (
-            <div className="hub-tab-panel active">
+            <div className="hub-tab-panel active workspace-grid">
               {(ov?.conflicts || []).length === 0 ? (
                 <div className="card" style={{ textAlign: "center", padding: 28 }}>
-                  <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="#58d68d" /></div>
-                  <div style={{ color: "#58d68d", fontSize: 14, fontWeight: 600 }}>{t("schedhub.noConflicts")}</div>
+                  <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="var(--success)" /></div>
+                  <div style={{ color: "var(--success)", fontSize: 14, fontWeight: 600 }}>{t("schedhub.noConflicts")}</div>
                   <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 4 }}>{t("schedhub.noConflictsSub")}</div>
                 </div>
               ) : (
@@ -167,7 +172,7 @@ export default function ScheduleHubPage() {
                       <span style={{ fontSize: 16 }}><Icon e={c.type === "Double-booked" ? "🔁" : "⚠️"} size={15} /></span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{c.name} <span style={{ color: "var(--gray)", fontWeight: 400, fontSize: 12 }}>· {dayLabel(c.day)}</span></div>
-                        <div style={{ fontSize: 11, color: "#e8a35a" }}>{c.type} — {c.detail}</div>
+                        <div style={{ fontSize: 12, color: "var(--warn)" }}>{c.type} — {c.detail}</div>
                       </div>
                     </div>
                   ))}
@@ -179,7 +184,7 @@ export default function ScheduleHubPage() {
 
           {/* ───────── TOOLS ───────── */}
           {tab === "tools" && (
-            <div className="hub-tab-panel active">
+            <div className="hub-tab-panel active workspace-grid">
               <Link href="/schedule/compare" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#7d3c98,#af7ac5)" }}><Icon e="📊" size={22} color="#fff" /></div>
                 <div style={{ flex: 1 }}><div className="feature-title">{t("cmp.title")}</div><div className="feature-sub">{t("cmp.subtitle")}</div></div>

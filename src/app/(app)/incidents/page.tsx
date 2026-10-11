@@ -85,15 +85,15 @@ export default function IncidentsPage() {
           <div key={inc.id} style={{ ...card, marginBottom: 10, borderColor: inc.status === "open" ? "rgba(231,76,60,0.25)" : "rgba(255,255,255,0.08)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, background: (SEV_COLOR[inc.severity] || "#666") + "26", color: SEV_COLOR[inc.severity] || "#aaa" }}>{sevLabel(inc.severity || "").toUpperCase()}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 10, background: (SEV_COLOR[inc.severity] || "#666") + "26", color: SEV_COLOR[inc.severity] || "#aaa" }}>{sevLabel(inc.severity || "").toUpperCase()}</span>
                 <span style={{ fontSize: 13, fontWeight: 600 }}>{catLabel(inc.category)}</span>
               </div>
-              <span style={{ fontSize: 11, padding: "2px 10px", borderRadius: 10, background: inc.status === "open" ? "rgba(231,76,60,0.15)" : "rgba(39,174,96,0.15)", color: inc.status === "open" ? "#ec7063" : "#58d68d" }}>{statusLabel(inc.status)}</span>
+              <span style={{ fontSize: 12, padding: "2px 10px", borderRadius: 10, background: inc.status === "open" ? "rgba(231,76,60,0.15)" : "rgba(39,174,96,0.15)", color: inc.status === "open" ? "var(--danger)" : "var(--success)" }}>{statusLabel(inc.status)}</span>
             </div>
             <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{inc.description}</div>
-            <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>
               {inc.reporter?.full_name || t("incidents.reporterFallback")} · {fmt(inc.created_at)}
-              {inc.manager_note && <div style={{ color: "#58d68d", marginTop: 4 }}><Icon e="✓" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {inc.reviewed_by}: {inc.manager_note}</div>}
+              {inc.manager_note && <div style={{ color: "var(--success)", marginTop: 4 }}><Icon e="✓" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {inc.reviewed_by}: {inc.manager_note}</div>}
             </div>
 
             {canManage && inc.status === "open" && (

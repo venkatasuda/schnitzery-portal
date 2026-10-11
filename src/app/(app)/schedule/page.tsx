@@ -120,7 +120,7 @@ export default function SchedulePage() {
                 );
               })}
             </div>
-            <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8, textAlign: "center" }}>
+            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8, textAlign: "center" }}>
               {t("shifts.shiftsAssigned", { n: shifts.length })}
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function SchedulePage() {
               <div key={sw.id} className="card" style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ fontSize: 14, color: "var(--white)" }}>{t("shifts.give")} <b>{dayLabel(sw.my_day)}</b> → {t("shifts.get")} <b>{dayLabel(sw.their_day)}</b></div>
-                  <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 12, background: sw.status === "approved" ? "rgba(39,174,96,0.15)" : sw.status === "denied" ? "rgba(231,76,60,0.15)" : "rgba(212,168,71,0.15)", color: sw.status === "approved" ? "#58d68d" : sw.status === "denied" ? "#ec7063" : "var(--gold)" }}>
+                  <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 12, background: sw.status === "approved" ? "rgba(39,174,96,0.15)" : sw.status === "denied" ? "rgba(231,76,60,0.15)" : "rgba(212,168,71,0.15)", color: sw.status === "approved" ? "var(--success)" : sw.status === "denied" ? "var(--danger)" : "var(--gold)" }}>
                     {t("shifts.status_" + sw.status)}
                   </span>
                 </div>

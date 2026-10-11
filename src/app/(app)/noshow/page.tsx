@@ -73,10 +73,10 @@ export default function NoShowPage() {
             rosteredCount === 0 ? (
               <div style={{ color: "var(--gray)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.noneRostered")}</div>
             ) : noShows.length === 0 ? (
-              <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allClockedIn")}</div>
+              <div style={{ color: "var(--success)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allClockedIn")}</div>
             ) : (
               <div>
-                <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
+                <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
                 {noShows.map((n, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <span style={{ fontSize: 14, fontWeight: 600 }}>{n.name}</span>
@@ -98,10 +98,10 @@ export default function NoShowPage() {
           ) : (
             <>
               {missing.length === 0 ? (
-                <div style={{ color: "#58d68d", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allSubmitted")}</div>
+                <div style={{ color: "var(--success)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allSubmitted")}</div>
               ) : (
                 <>
-                  <div style={{ fontSize: 12, color: "#ec7063", marginBottom: 8 }}>{t("ns.notSubmittedN", { n: missing.length })}</div>
+                  <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.notSubmittedN", { n: missing.length })}</div>
                   {missing.map((m) => (
                     <div key={m.id} style={{ padding: "8px 0", fontSize: 14, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{m.full_name}</div>
                   ))}

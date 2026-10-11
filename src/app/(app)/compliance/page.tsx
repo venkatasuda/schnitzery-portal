@@ -42,15 +42,15 @@ export default function CompliancePage() {
         <>
           {/* summary */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
-            <Stat value={data.counts.breakCount} label={t("comp.breakIssues")} color={data.counts.breakCount > 0 ? "#ec7063" : "#58d68d"} />
-            <Stat value={data.counts.restCount} label={t("comp.restIssues")} color={data.counts.restCount > 0 ? "#ec7063" : "#58d68d"} />
-            <Stat value={data.counts.longCount} label={t("comp.over10h")} color={data.counts.longCount > 0 ? "#e8a35a" : "#58d68d"} />
+            <Stat value={data.counts.breakCount} label={t("comp.breakIssues")} color={data.counts.breakCount > 0 ? "var(--danger)" : "var(--success)"} />
+            <Stat value={data.counts.restCount} label={t("comp.restIssues")} color={data.counts.restCount > 0 ? "var(--danger)" : "var(--success)"} />
+            <Stat value={data.counts.longCount} label={t("comp.over10h")} color={data.counts.longCount > 0 ? "var(--warn)" : "var(--success)"} />
           </div>
 
           {v.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: 32 }}>
-              <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="#58d68d" /></div>
-              <div style={{ color: "#58d68d", fontSize: 15, fontWeight: 700 }}>{t("comp.allCompliant")}</div>
+              <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="var(--success)" /></div>
+              <div style={{ color: "var(--success)", fontSize: 15, fontWeight: 700 }}>{t("comp.allCompliant")}</div>
               <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>
                 {t("comp.checkedNote", { n: data.checked })}
               </div>
@@ -66,7 +66,7 @@ export default function CompliancePage() {
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
                         {item.name} <span style={{ fontWeight: 400, fontSize: 12, color: "var(--gray)" }}>· {item.date}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: item.severity === "high" ? "#ec7063" : "#e8a35a" }}>{compType(item.type)} — {item.detail}</div>
+                      <div style={{ fontSize: 12, color: item.severity === "high" ? "var(--danger)" : "var(--warn)" }}>{compType(item.type)} — {item.detail}</div>
                     </div>
                   </div>
                 ))}
@@ -80,7 +80,7 @@ export default function CompliancePage() {
             {t("comp.ruleBreak")}<br />
             {t("comp.ruleRest")}<br />
             {t("comp.ruleMax")}<br />
-            <span style={{ fontSize: 11, opacity: 0.8 }}>{t("comp.ruleNote")}</span>
+            <span style={{ fontSize: 12, opacity: 0.8 }}>{t("comp.ruleNote")}</span>
           </div>
         </>
       )}
@@ -94,7 +94,7 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
   return (
     <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
       <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
-      <div style={{ fontSize: 9, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export default function ManagementNav({ role }: { role: string }) {
       { href: "/ops", label: "home.dailyOps", icon: ClipboardCheck, routes: ["/ops", "/temp", "/checklist-status", "/incidents", "/announcements"] },
     ] },
     { label: "workspace.workforce", items: [
-      { href: "/schedule-hub", label: "nav.schedule", icon: CalendarDays, routes: ["/schedule-hub", "/schedule", "/roster", "/availability", "/leave", "/cover", "/conflicts"] },
+      { href: "/schedule-hub", label: "nav.schedule", icon: CalendarDays, routes: ["/schedule-hub", "/schedule", "/roster", "/availability", "/leave", "/leave-calendar", "/cover", "/conflicts"] },
       { href: "/attendance-hub", label: "nav.attendance", icon: Clock, routes: ["/attendance-hub", "/attendance", "/noshow", "/clock-display"] },
       { href: "/people-hub", label: "home.peopleTeam", icon: Users, routes: ["/people-hub", "/staff", "/directory", "/notes", "/expiring-docs"] },
       { href: "/approvals", label: "home.approvals", icon: ClipboardCheck, routes: ["/approvals"] },
@@ -25,7 +25,7 @@ export default function ManagementNav({ role }: { role: string }) {
     { label: "workspace.business", items: [
       { href: "/analytics", label: "workspace.reports", icon: ChartNoAxesCombined, routes: ["/analytics", "/labor", "/summary", "/export", "/waste-branches"] },
       { href: "/compliance", label: "home.compliance", icon: ShieldCheck, routes: ["/compliance", "/audit"] },
-      { href: "/profile", label: "home.settings", icon: Settings, routes: ["/profile", "/settings", "/geofence", "/kiosks"] },
+      { href: "/profile", label: "home.settings", icon: Settings, routes: ["/profile", "/settings", "/settings-hub", "/geofence", "/kiosks"] },
     ] },
   ];
   const navigation = <nav aria-label={t("workspace.navigation")}>

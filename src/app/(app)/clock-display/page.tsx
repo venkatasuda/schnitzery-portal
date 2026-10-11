@@ -61,7 +61,7 @@ export default function ClockDisplayPage() {
 
       <div style={{ background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 20, padding: 32 }}>
         {error ? (
-          <div style={{ color: "#ec7063", padding: 30 }}>{error}</div>
+          <div style={{ color: "var(--danger)", padding: 30 }}>{error}</div>
         ) : (
           <>
             {/* QR */}
@@ -92,7 +92,7 @@ export default function ClockDisplayPage() {
         )}
       </div>
 
-      <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 16 }}>
+      <p style={{ fontSize: 12, color: "var(--gray)", marginTop: 16 }}>
         {t("cd.codeChanges", { n: rotateSeconds })}
       </p>
     </div>

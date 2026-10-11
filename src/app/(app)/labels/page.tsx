@@ -70,9 +70,9 @@ export default function LabelsPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {products.map((p) => (
             <div key={p.id} className="card" style={{ textAlign: "center", padding: 12 }}>
-              {qr[p.id] ? <img src={qr[p.id]} alt="" style={{ width: "70%", maxWidth: 120 }} /> : <div style={{ height: 100, color: "var(--gray)", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{t("labels.qrPending")}</div>}
+              {qr[p.id] ? <img src={qr[p.id]} alt="" style={{ width: "70%", maxWidth: 120 }} /> : <div style={{ height: 100, color: "var(--gray)", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>{t("labels.qrPending")}</div>}
               <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)", marginTop: 6 }}>{p.product}</div>
-              <div style={{ fontSize: 11, color: "var(--gray)" }}>{p.category}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.category}</div>
             </div>
           ))}
         </div>

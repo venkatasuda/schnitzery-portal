@@ -49,7 +49,7 @@ export default function DirectoryPage() {
               {(p.full_name || "?")[0].toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"}{p.status === "inactive" && <span style={{ fontSize: 11, color: "var(--gray)" }}> ({t("directory.inactive")})</span>}</div>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"}{p.status === "inactive" && <span style={{ fontSize: 12, color: "var(--gray)" }}> ({t("directory.inactive")})</span>}</div>
               <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")}</div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>

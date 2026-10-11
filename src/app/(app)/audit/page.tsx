@@ -40,9 +40,9 @@ export default function AuditPage() {
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{(l.action || "").replace(/_/g, " ")}</div>
               {l.details && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{l.details}</div>}
-              <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 2 }}>{t("audit.by", { actor: l.actor || "—" })}</div>
+              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("audit.by", { actor: l.actor || "—" })}</div>
             </div>
-            <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
+            <div style={{ fontSize: 12, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
           </div>
         ))
       )}

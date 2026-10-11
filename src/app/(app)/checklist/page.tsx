@@ -49,7 +49,7 @@ export default function ChecklistStatusPage() {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, color: "#fff" }}>{it.task}</div>
-            <div style={{ fontSize: 11, color: it.done ? "var(--gray)" : "#ec7063", marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: it.done ? "var(--gray)" : "var(--danger)", marginTop: 2 }}>
               {it.done
                 ? `${it.completed_by_name ? `${t("checklist.by")} ${it.completed_by_name}` : ""}${it.completed_at ? ` · ${fmtTime(it.completed_at)}` : ""}`.trim()
                 : t("checklist.notDone")}
@@ -74,14 +74,14 @@ export default function ChecklistStatusPage() {
         <label style={{ fontSize: 13, color: "var(--gray)", flexShrink: 0 }}>{t("checklist.pickDate")}</label>
         <input type="date" value={date} max={berlinTodayStr()} onChange={(e) => setDate(e.target.value || berlinTodayStr())} style={{ ...input, flex: 1 }} />
         {!loading && summary.total > 0 && (
-          <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0, color: summary.done === summary.total ? "#58d68d" : "#d4a847" }}>
+          <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0, color: summary.done === summary.total ? "var(--success)" : "#d4a847" }}>
             {summary.done}/{summary.total}
           </span>
         )}
       </div>
 
       {loading && <CardSkeleton rows={4} />}
-      {!loading && err && <div style={{ ...card, color: "#ec7063", fontSize: 13 }}>{err}</div>}
+      {!loading && err && <div style={{ ...card, color: "var(--danger)", fontSize: 13 }}>{err}</div>}
       {!loading && !err && tasks.length === 0 && <div style={{ ...card, color: "var(--gray)", fontSize: 13 }}>{t("checklist.noTasksDate")}</div>}
       {!loading && !err && tasks.length > 0 && (
         <>
