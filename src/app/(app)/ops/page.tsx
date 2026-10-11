@@ -94,8 +94,8 @@ export default function OpsPage() {
             <Metric icon="⏰" value={m.late} label={t("ops.late")} color={m.late ? "var(--warn)" : "var(--white)"} />
             <Metric icon="🚫" value={m.absent} label={t("ops.absent")} color={m.absent ? "var(--danger)" : "var(--white)"} />
             <Metric icon="⏳" value={m.notCheckedIn} label={t("ops.notCheckedIn")} color={m.notCheckedIn ? "var(--warn)" : "var(--white)"} />
-            <Metric icon="👥" value={`${m.workingNow}/${m.scheduledNow}`} label={t("ops.staffing")} color="#3498db" />
-            <Metric icon="⏱️" value={fmtLabor(m.laborMins)} label={t("ops.laborHours")} color="#d4a847" />
+            <Metric icon="👥" value={`${m.workingNow}/${m.scheduledNow}`} label={t("ops.staffing")} color="var(--white)" />
+            <Metric icon="⏱️" value={fmtLabor(m.laborMins)} label={t("ops.laborHours")} color="var(--white)" />
           </div>
 
           {/* UTILIZATION */}
