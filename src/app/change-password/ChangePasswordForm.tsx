@@ -155,7 +155,7 @@ export default function ChangePasswordForm() {
             marginTop: 20,
             padding: "13px",
             background: loading ? "#7a5e2a" : "#d4a847",
-            color: "#1a0e0e",
+            color: "var(--on-action)",
             border: "none",
             borderRadius: 10,
             fontSize: 15,

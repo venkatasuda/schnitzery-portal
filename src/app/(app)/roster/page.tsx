@@ -130,7 +130,7 @@ export default function RosterPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
-          <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--gold)", fontWeight: 600, padding: "0 4px" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--action)", fontWeight: 600, padding: "0 4px" }}>
             {weekOffset === 0 ? t("roster.thisWeek") : weekOffset > 0 ? t("roster.weeksPlus", { n: weekOffset }) : t("roster.weeksMinus", { n: weekOffset })}
           </span>
           <button onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
@@ -157,7 +157,7 @@ export default function RosterPage() {
                     onClick={() => setActiveDay(isActive ? null : d)}
                     style={{ flex: 1, textAlign: "center", padding: "8px 2px", borderRadius: 8, border: "none", cursor: "pointer", background: isActive ? "rgba(212,168,71,0.18)" : count > 0 ? "var(--dark3)" : "transparent" }}
                   >
-                    <div style={{ fontSize: 12, color: isActive ? "var(--gold)" : "var(--gray)", fontWeight: isActive ? 700 : 500 }}>{dayLabel(d)[0]}</div>
+                    <div style={{ fontSize: 12, color: isActive ? "var(--action)" : "var(--gray)", fontWeight: isActive ? 700 : 500 }}>{dayLabel(d)[0]}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, marginTop: 3, color: count > 0 ? "var(--white)" : "rgba(128,128,128,0.4)" }}>{count}</div>
                   </button>
                 );
@@ -181,7 +181,7 @@ export default function RosterPage() {
                   .map((p) => {
                     const over = p.pct != null && p.pct > 100;
                     const near = p.pct != null && p.pct >= 85 && p.pct <= 100;
-                    const barColor = over ? "#e74c3c" : near ? "#d4a847" : "#27ae60";
+                    const barColor = over ? "#e74c3c" : near ? "var(--action)" : "#27ae60";
                     const left = p.contractHours != null ? Math.round((p.contractHours - (p.workedH || 0)) * 10) / 10 : null;
                     return (
                       <div key={p.id} style={{ marginBottom: 10 }}>
@@ -212,10 +212,10 @@ export default function RosterPage() {
                   <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>
                     {dayLabel(day)}
                     {entries.length > 0 && (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gold)", marginLeft: 8 }}>{t("roster.assigned", { n: entries.length })}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--action)", marginLeft: 8 }}>{t("roster.assigned", { n: entries.length })}</span>
                     )}
                   </div>
-                  <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--gold)" : "var(--dark3)", color: isActive ? "#1a0e0e" : "var(--white)", fontWeight: 600 }}>
+                  <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--action)" : "var(--dark3)", color: isActive ? "var(--on-action)" : "var(--white)", fontWeight: 600 }}>
                     {isActive ? t("common.close") : t("roster.add")}
                   </button>
                 </div>
@@ -293,6 +293,6 @@ export default function RosterPage() {
 }
 
 const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--gold)", color: "#1a0e0e", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
 const miniLbl: React.CSSProperties = { display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 4 };
 const miniSelect: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

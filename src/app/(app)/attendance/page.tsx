@@ -1,5 +1,7 @@
 "use client";
 
+import { berlinToday, mondayOfDate, monthRange } from "@/lib/time/berlinDate";
+
 import { useEffect, useState, useRef } from "react";
 import {
   getMyStatus, clockIn, clockOut, getMyHistory, startBreak, endBreak,
@@ -460,17 +462,9 @@ function computeBreakMs(raw: any): number {
 }
 
 // date ranges for the history tabs (Monday-start week, calendar month)
-function isoDate(d: Date) { return d.toISOString().slice(0, 10); }
 function rangeFor(tab: "week" | "month"): { from: string; to: string } {
-  const now = new Date();
-  if (tab === "week") {
-    const dow = now.getDay(); // 0 Sun .. 6 Sat
-    const back = dow === 0 ? 6 : dow - 1; // days since Monday
-    const mon = new Date(now); mon.setDate(now.getDate() - back);
-    return { from: isoDate(mon), to: isoDate(now) };
-  }
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  return { from: isoDate(first), to: isoDate(now) };
+  const to = berlinToday();
+  return { from: tab === "week" ? mondayOfDate(to) : monthRange(to.slice(0, 7)).from, to };
 }
 
 // styles (CSS-variable based so light mode works)

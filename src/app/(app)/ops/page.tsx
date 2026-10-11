@@ -1,5 +1,7 @@
 "use client";
 
+import { berlinToday } from "@/lib/time/berlinDate";
+
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -7,7 +9,7 @@ import Icon from "@/components/Icon";
 import { getOpsDashboard, getOpsFilters } from "@/lib/queries/ops-dashboard";
 import { CardSkeleton } from "@/components/Skeleton";
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => berlinToday();
 const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
 const fmtFromMs = (ms?: number | null) => (ms ? new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
 const fmtLabor = (m: number) => { m = Math.max(0, Math.round(m)); return `${Math.floor(m / 60)}h ${m % 60}m`; };
@@ -94,8 +96,8 @@ export default function OpsPage() {
             <Metric icon="⏰" value={m.late} label={t("ops.late")} color={m.late ? "var(--warn)" : "var(--white)"} />
             <Metric icon="🚫" value={m.absent} label={t("ops.absent")} color={m.absent ? "var(--danger)" : "var(--white)"} />
             <Metric icon="⏳" value={m.notCheckedIn} label={t("ops.notCheckedIn")} color={m.notCheckedIn ? "var(--warn)" : "var(--white)"} />
-            <Metric icon="👥" value={`${m.workingNow}/${m.scheduledNow}`} label={t("ops.staffing")} color="#3498db" />
-            <Metric icon="⏱️" value={fmtLabor(m.laborMins)} label={t("ops.laborHours")} color="#d4a847" />
+            <Metric icon="👥" value={`${m.workingNow}/${m.scheduledNow}`} label={t("ops.staffing")} color="var(--white)" />
+            <Metric icon="⏱️" value={fmtLabor(m.laborMins)} label={t("ops.laborHours")} color="var(--white)" />
           </div>
 
           {/* UTILIZATION */}

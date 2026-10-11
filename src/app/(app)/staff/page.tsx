@@ -300,9 +300,7 @@ export default function StaffPage() {
         </div>
       )}
 
-      <div style={{ ...card, marginTop: 10, textAlign: "center", fontSize: 12, color: "var(--gray)" }}>
-        {t("staff.footerNote")}
-      </div>
+
     </div>
   );
 }
