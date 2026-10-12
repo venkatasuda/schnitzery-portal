@@ -1,5 +1,8 @@
 # Continue here — session handoff
 
+**Current state:** read [AUDIT-STATUS.md](AUDIT-STATUS.md) first. The notes below
+are historical and do not describe the current build or deployment state.
+
 Short state note so a fresh chat can pick up exactly where we left off.
 Read this file first, then check `git status` for anything uncommitted.
 

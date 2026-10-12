@@ -79,7 +79,9 @@ export async function getBranchSettings() {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
 
-  const { data } = await supabase.from("branch_settings").select("*").eq("branch_id", branchId).maybeSingle();
+  if (!branchId) return { ok: false, error: "No branch." };
+  const { data, error } = await supabase.from("branch_settings").select("*").eq("branch_id", branchId).maybeSingle();
+  if (error) return { ok: false, error: error.message };
   return {
     ok: true,
     settings: data || { branch_id: branchId, qr_required: false, gps_mode: "off", settings: {} },
@@ -91,6 +93,8 @@ export async function saveBranchSettings(qrRequired: boolean, gpsMode: string) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  if (!branchId) return { ok: false, error: "No branch." };
+  if (typeof qrRequired !== "boolean" || !["off", "warn", "required"].includes(gpsMode)) return { ok: false, error: "Invalid attendance settings." };
 
   const { error } = await supabase.from("branch_settings").upsert({
     branch_id: branchId, qr_required: qrRequired, gps_mode: gpsMode,

@@ -93,17 +93,17 @@ export default function AnalyticsPage() {
       {/* period toggle */}
       <div className="hub-tabs">
         {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
-          <button key={p} className={`hub-tab${period === p ? " active" : ""}`} onClick={() => setPeriod(p)}>{t(`bana.${p}`)}</button>
+          <button key={p} aria-pressed={period === p} className={`hub-tab${period === p ? " active" : ""}`} onClick={() => setPeriod(p)}>{t(`bana.${p}`)}</button>
         ))}
       </div>
 
       {/* controls */}
       <div className="card" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         {period === "monthly"
-          ? <input type="month" value={anchor.slice(0, 7)} onChange={(e) => setAnchor(`${e.target.value}-01`)} style={sel} />
-          : <input type="date" value={anchor} onChange={(e) => setAnchor(e.target.value)} style={sel} />}
+          ? <input type="month" aria-label={t("business.reportDate")} value={anchor.slice(0, 7)} onChange={(e) => setAnchor(`${e.target.value}-01`)} style={sel} />
+          : <input type="date" aria-label={t("business.reportDate")} value={anchor} onChange={(e) => setAnchor(e.target.value)} style={sel} />}
         {scope?.canPickBranch && (
-          <select value={branch} onChange={(e) => setBranch(e.target.value)} style={sel}>
+          <select aria-label={t("business.reportBranch")} value={branch} onChange={(e) => setBranch(e.target.value)} style={sel}>
             <option value="all">{t("bana.allBranches")}</option>
             {scope.branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
