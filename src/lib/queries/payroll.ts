@@ -152,6 +152,7 @@ export async function getPayrollSummary(month?: string, approvalId?: string) {
   const workedIds = new Set(logs.map(l => l.user_id));
   const missingWages = [...workedIds].filter(id => !staff.some(s => s.id === id) || payWages[id] == null || !Number.isFinite(payWages[id]) || payWages[id]! < 0).length;
   for (const id of workedIds) if (!staff.some(s => s.id === id)) staff.push({ id, full_name: "Unassigned employee", employee_code: "", team: "", hourly_wage: null });
+  staff.sort((a, b) => String(a.full_name || "").localeCompare(String(b.full_name || ""), "en"));
   const invalidLogs = logs.filter(l => !l.clock_in || !l.clock_out || !(Date.parse(l.clock_out) > Date.parse(l.clock_in)) || shiftMinutes(l).grossMin <= 0);
   const invalidShifts = invalidLogs.length;
   const monthClosed = ym < berlinMonth();

@@ -102,14 +102,34 @@
       "sha256": "0c9f0d6cbe6ecf47b27dc120acb855e947699a791fbe343001e0cf88aad8e7b1"
     },
     {
+      "path": "scripts/checks/action-contrast.cjs",
+      "lines": 24,
+      "sha256": "d207f23f47503eddc17b1e4e52d0b3d5c81f11fdd3aa7a4b848c03a0baf4db95"
+    },
+    {
+      "path": "scripts/checks/approvals-ui.cjs",
+      "lines": 56,
+      "sha256": "23cca5d3700777d1b36b9cc63d8a5959b5984069f147fcc9d67222378fe015ff"
+    },
+    {
       "path": "scripts/checks/atomic-workflows.cjs",
       "lines": 93,
       "sha256": "3b3f36730b02e0934ac6198c68528a030bcca643adb489b6bc8f4b28f7a0c00d"
     },
     {
+      "path": "scripts/checks/attendance-review.cjs",
+      "lines": 32,
+      "sha256": "5b36c7dc4a2771dc3afef15ddbcbf9ad51da2a9a5f0514ac7abdaa1a885d7f34"
+    },
+    {
       "path": "scripts/checks/build-code-graph.py",
       "lines": 84,
       "sha256": "68b05eecb9597b85f23e4c0c100d7557c7c3898d97b8b9570c7543b1e8fda3bb"
+    },
+    {
+      "path": "scripts/checks/business-date.cjs",
+      "lines": 32,
+      "sha256": "5a8d8b3fd127839dfc21f79588b977a88578751d76862356c7d81a96ab377352"
     },
     {
       "path": "scripts/checks/business-ui.cjs",
@@ -120,6 +140,11 @@
       "path": "scripts/checks/business.cjs",
       "lines": 59,
       "sha256": "c266187e77dfcdafb8c15bb04d1b29fd085c99be627106059a2a50d6975ee6a2"
+    },
+    {
+      "path": "scripts/checks/correction-integrity.cjs",
+      "lines": 46,
+      "sha256": "e1172c6146ac54b5057e2f66a38e8253faecd95b2390cb1dae2e6518fa14ead0"
     },
     {
       "path": "scripts/checks/dashboard.cjs",
@@ -145,6 +170,26 @@
       "path": "scripts/checks/layout.cjs",
       "lines": 41,
       "sha256": "cfb4aaf7493acc2fc1eff1095fc81952c558eab3a6f19f6147c2cffa27fc07d8"
+    },
+    {
+      "path": "scripts/checks/payroll-access.cjs",
+      "lines": 36,
+      "sha256": "00a1b63ceb9d5accbdbca8640b056d3d4b3cd83e4118ad17209bb804a2f30934"
+    },
+    {
+      "path": "scripts/checks/payroll-query.cjs",
+      "lines": 46,
+      "sha256": "eda791336a59623ce834b178d1fe924f9928bc23d7801d1f940c48201174785f"
+    },
+    {
+      "path": "scripts/checks/payroll-snapshots.cjs",
+      "lines": 73,
+      "sha256": "6b3dbffc95d6101fef8ebf084acbc029be9359ae6d728d2e16138fe0b275c66c"
+    },
+    {
+      "path": "scripts/checks/payroll-ui.cjs",
+      "lines": 34,
+      "sha256": "37d54b137d3ab90928023af44d85632eac80710174388d2fa3cd9327935576ef"
     },
     {
       "path": "scripts/checks/service-worker.cjs",
@@ -204,22 +249,22 @@
     {
       "path": "src/app/(app)/action/page.tsx",
       "lines": 102,
-      "sha256": "e33e0737c04419d2b52e29f4f89955fa0578a3a65ba1f32b5ee5d991e39fd802"
+      "sha256": "656851005ce8b9ee416a6982ae9889f56d014d5af5386d82c97e1244af3856f5"
     },
     {
       "path": "src/app/(app)/analytics/page.tsx",
       "lines": 304,
-      "sha256": "da08b5a86294d6e962b496c35a7b011855f37ee9e2da057daf9e9184c9d79c64"
+      "sha256": "54103130e0cf3f1a5012c2bb43c69580e1727060addee8b55777337546d7eefa"
     },
     {
       "path": "src/app/(app)/announcements/page.tsx",
       "lines": 143,
-      "sha256": "520972411b6e07385f47a1c6dbb19878c89bb9d0544505b9af9608073736c91e"
+      "sha256": "306852ddb85fc7219624abd6bcb8ccc48ea1c72ba672ee8e82e24e9f7354ffea"
     },
     {
       "path": "src/app/(app)/approvals/page.tsx",
-      "lines": 154,
-      "sha256": "bbd8e5ce589d9eca4c739719367e0016da99a01e18bf2ed479fb76adbb2c89f9"
+      "lines": 159,
+      "sha256": "f0025a2f250be25eb3c46133002bd4a101d0557edc0991ef0515915327d25add"
     },
     {
       "path": "src/app/(app)/assistant/page.tsx",
@@ -228,8 +273,8 @@
     },
     {
       "path": "src/app/(app)/attendance-hub/page.tsx",
-      "lines": 289,
-      "sha256": "3238f8d4600c6b95db71ad4df66e2989feef5fbe41c42cc6e65f6167f6ae2f44"
+      "lines": 291,
+      "sha256": "095933d87cd8c00e287d2feed44b83b411994b2671ededfeb8e70d494e45be31"
     },
     {
       "path": "src/app/(app)/attendance/QrScanner.tsx",
@@ -239,62 +284,62 @@
     {
       "path": "src/app/(app)/attendance/corrections/page.tsx",
       "lines": 211,
-      "sha256": "53c3bce946503abca80048156bfdab5fbec524cd79a0bc19e62f49d1c04023f9"
+      "sha256": "b2a44e149c236726d5292a57d9edf9e4e56b6e49ff2a108044f7ae3e06f873a1"
     },
     {
       "path": "src/app/(app)/attendance/page.tsx",
-      "lines": 484,
-      "sha256": "7cb8b0bc64093c9457727423ce902914f6536899e1a1b7a5f9c79260b95a3f14"
+      "lines": 478,
+      "sha256": "638c621f98a24eaedf7d1def1df64842dec16f2916f94447501c187263bbeae8"
     },
     {
       "path": "src/app/(app)/audit/page.tsx",
       "lines": 52,
-      "sha256": "d0d960867c7baf1a9b4995c7315e463045a53e5afd45f6764bed1820920fb3c0"
+      "sha256": "d43d0efded16dbe097dacdd4dd7ddd55cc2ef185179499507dc7c7d120e88003"
     },
     {
       "path": "src/app/(app)/availability/page.tsx",
       "lines": 99,
-      "sha256": "239ea87e88964444a9d1b11deaf4c608b844edc4998af8885906091cba56451e"
+      "sha256": "f277a1b451e8dcf8fda490e2015cfd083740daee19dc775a0916b30eeae1d0a1"
     },
     {
       "path": "src/app/(app)/branches/[id]/page.tsx",
       "lines": 77,
-      "sha256": "3a361e57a0ad3b03e2fdc62e4045867c9a248a8a86d72af29af04cb784c1ded4"
+      "sha256": "4c21166be4dc91ab4e17861138cc0149f610a781025bcb54831058e0a4fff44a"
     },
     {
       "path": "src/app/(app)/branches/page.tsx",
       "lines": 86,
-      "sha256": "43da273e27df25782a3d5d7103a38bc08417c9df211bbe728f4b05488da141e8"
+      "sha256": "7e30be131c311ca22c64c1e655f8e14d5d0b3e62cda694983bc546ef7dd6f799"
     },
     {
       "path": "src/app/(app)/checklist-status/page.tsx",
       "lines": 134,
-      "sha256": "9ef16932f72d2e9518efa9879985829f82c0dccceeb3dd97a20c8173dd838a1a"
+      "sha256": "b2500e30514240a35db218770b0727767d6eb62f9a5960edf3902a8416664a98"
     },
     {
       "path": "src/app/(app)/checklist/page.tsx",
       "lines": 97,
-      "sha256": "628a9e5fd6d37df130f4609859f2b8d0ed13d5637878048844ed68019c6b2a96"
+      "sha256": "2dc4a70e6bb931a3cc1c118ab8bf7b35ca186f85e6c40189221c2e9432f765f6"
     },
     {
       "path": "src/app/(app)/clock-display/page.tsx",
       "lines": 100,
-      "sha256": "4fdbb05c1cc5a7ba8f23f86fb488978cfa99213c582790f456a694c8d06efee5"
+      "sha256": "e8f34c12bdef6001a48ae3f758ebda14912b8ab10a270097289027d4a270aeb8"
     },
     {
       "path": "src/app/(app)/compliance/page.tsx",
       "lines": 100,
-      "sha256": "3ebca26775aeba6797b980f65044e4c10b0c64715a45659de9023d7c5544aef1"
+      "sha256": "b29b664b1117fd7f28eb7b7fe141034408337734a14ed8c754f69a8f4e04ff39"
     },
     {
       "path": "src/app/(app)/conflicts/page.tsx",
       "lines": 68,
-      "sha256": "444c9b4966bd68abe72e058c39df1c7c2ef2ff3da015f044b8c54fd87eeaeaff"
+      "sha256": "9783ec44d5cb72a807a9b6694ef419a32358eb4c5f4082d112a3742fde5545d1"
     },
     {
       "path": "src/app/(app)/cover/page.tsx",
       "lines": 203,
-      "sha256": "e9da9c8d1c217ab383f8d0779dc4c01b4e00a64c67c4536849c30151d11464ef"
+      "sha256": "7d28df4e1c793334de4f75b2d16ee40a51d8cabc150ea5d7df7b684b13ddd937"
     },
     {
       "path": "src/app/(app)/dashboard/page.tsx",
@@ -304,37 +349,37 @@
     {
       "path": "src/app/(app)/directory/page.tsx",
       "lines": 68,
-      "sha256": "8401ac609024f890951ab6f9986db2880e86f878e9979047a3a7bc1d588aa67f"
+      "sha256": "7438fe3fe8cf81fdd570667aaa43da969ed3da3c19d85ec3fe06330794828900"
     },
     {
       "path": "src/app/(app)/expiring-docs/page.tsx",
       "lines": 179,
-      "sha256": "85d139d1ca0553b377d542f2be4735effdd914f9b8e540d5c3473c9215a0af8e"
+      "sha256": "6ecdc7749566eb50ad9076db749d04c375566978fe1b0da66e4b405b44ad3c66"
     },
     {
       "path": "src/app/(app)/expiry/page.tsx",
       "lines": 171,
-      "sha256": "a3997f618532fd2697b8992fb6f46666fa220c909cf3a4cda246393ca02f0ee1"
+      "sha256": "f8454a39d620b9636a1104e04fb34fdd5051001144991b9f73c5cd6d944a35f3"
     },
     {
       "path": "src/app/(app)/export/page.tsx",
-      "lines": 213,
-      "sha256": "0c1ba6be4d9cb18f0551355b21c856ef3c56d5629de127ebf34f9c139d0f2a2e"
+      "lines": 227,
+      "sha256": "6131a7b9febfb54e9a69293bdab2afdca36db86a0e598c29d5e8adba40abc8cf"
     },
     {
       "path": "src/app/(app)/geofence/page.tsx",
       "lines": 186,
-      "sha256": "e8b57a9e97b0ea3f8d379540f9cec594bd40c52648377a0dbbc18d4c42774b6e"
+      "sha256": "023156b1b0ef8d5bf25c34d890f9649ccf4fdc11359014b4020e456487b6902a"
     },
     {
       "path": "src/app/(app)/hours/page.tsx",
       "lines": 83,
-      "sha256": "fb3375dd7da1b33c1d1ec7908091f0aafc256af11559441014176108c6c7d81d"
+      "sha256": "2d9100e8b6df54727109fd25de09615ce639bd9ba379a6c1ba72c798ab057d8a"
     },
     {
       "path": "src/app/(app)/incidents/page.tsx",
       "lines": 122,
-      "sha256": "7f73e2b20a59047f711a2cde696ffa0025ecbdaeb70ed7dcf35152ba42af0a31"
+      "sha256": "f668300aaeb257641b26e8662e647df64feeea60c0e075a25e81147cba50cb8c"
     },
     {
       "path": "src/app/(app)/inventory/ScanToCount.tsx",
@@ -344,27 +389,27 @@
     {
       "path": "src/app/(app)/inventory/order/page.tsx",
       "lines": 146,
-      "sha256": "6e08e1e93258dbb1352055cee5abc511f5a26aad2400bb398b7271e74e943a4f"
+      "sha256": "42a0b0b39ac5e4c5399c4a056ffb065e87928ae684e402e97a1431a81a78291a"
     },
     {
       "path": "src/app/(app)/inventory/page.tsx",
-      "lines": 635,
-      "sha256": "5e61f3f59b8be8a20282d1d9afc3750d4af0c73090bf9f1ec538aa4cc14c32b9"
+      "lines": 637,
+      "sha256": "53c478570a6b231acc2147931e8ff59ad6aeb57cc31aafa1a4a25a0380d8583f"
     },
     {
       "path": "src/app/(app)/kiosks/page.tsx",
       "lines": 101,
-      "sha256": "5bf3a7ae8471ea82d3cb54eb55af88f3f4f55bf72a32ec8b0452cff7486b45e6"
+      "sha256": "c0b9fb3033155f4bb30a95c8336fa8edce00e76dbdf5c57c8ff7aca2c0609f6b"
     },
     {
       "path": "src/app/(app)/labels/page.tsx",
       "lines": 86,
-      "sha256": "404462b95b0727085d39dc25a8ff1c6e0cc31562df123e0acbc7da92bc5111f1"
+      "sha256": "2e5e4ed25fd6ded0a27baff80b26db8ff34b66797a28f21df4ba3cfb6963d58b"
     },
     {
       "path": "src/app/(app)/labor/page.tsx",
-      "lines": 155,
-      "sha256": "ac3ef8a4437890c848cd48d0367ab53b4a49df2225a5e8807a31056bda3bad48"
+      "lines": 157,
+      "sha256": "71edc799ee5466b69a7939f01fd602b87f9ca6ec5ca2821538446d59076b3cdd"
     },
     {
       "path": "src/app/(app)/layout.tsx",
@@ -374,42 +419,42 @@
     {
       "path": "src/app/(app)/leave-calendar/page.tsx",
       "lines": 63,
-      "sha256": "864533461e8f35e77b9bfe6ca5904580bc62d84ac436fa34f8e8c9d859b03985"
+      "sha256": "b1ff5eed651f81cb09d208b998160b9f96e1ecadd1176bb0c1385e445b04c45a"
     },
     {
       "path": "src/app/(app)/leave/page.tsx",
       "lines": 104,
-      "sha256": "1d10a1803cb2463d93c2a62a235b524d18d4ab93f1cf8bbe86bf24ff092f1474"
+      "sha256": "933f14e252460249f318c4915a0286c63cd83ba32ac662a2ad9b0b139b7cf10b"
     },
     {
       "path": "src/app/(app)/my-day/page.tsx",
       "lines": 135,
-      "sha256": "4e57b08429d8d4c8652cac07076d60195f7e06553da60125d5a3ac9efa6614f0"
+      "sha256": "95d2d157dde91ec322beff0ec700b7893a0bb7b8d15be7911704d4c86c11c9e6"
     },
     {
       "path": "src/app/(app)/noshow/page.tsx",
-      "lines": 128,
-      "sha256": "ab601241fe08e959334761dac4abb4457237e148e818844fbdeed43c8737121d"
+      "lines": 130,
+      "sha256": "31d6b9df060c1162ee9aa1c014149916acaf7e7a706fb0be4776372b0be4974e"
     },
     {
       "path": "src/app/(app)/notes/page.tsx",
       "lines": 99,
-      "sha256": "51ac24861f6774f579448b7008a748c69034c063f3cd080eed6ff36d326d3258"
+      "sha256": "3e870e4cd809d4bc6b6a8b8794706249c912f07ad7734de7eedd75789a824991"
     },
     {
       "path": "src/app/(app)/notifications/page.tsx",
       "lines": 124,
-      "sha256": "baff3aed146f60ff51aa996d556c627202d7d927b866412e2a0107bb8b9e660c"
+      "sha256": "2e287ec74f8f658d8ebca4d9c98923e6262a1c82be5bb04b445b58be0c4eff47"
     },
     {
       "path": "src/app/(app)/ops/page.tsx",
-      "lines": 156,
-      "sha256": "1a3cdd7fc3c2d2e129f199b46692d7c4e1b7fea1865e33ce39e72742570c9406"
+      "lines": 157,
+      "sha256": "a7fb37a9bb86df77877a9d360392469f7203c104e2d796797586455221504520"
     },
     {
       "path": "src/app/(app)/overview/page.tsx",
       "lines": 140,
-      "sha256": "db682f110ca9794806bf3126a558aab871265c2e5920cc515c75b04f8543ec28"
+      "sha256": "296302826ac11f7544176eaf5d1fd38f8fb2bea08d45a382c2ff63daaf2617a7"
     },
     {
       "path": "src/app/(app)/page.tsx",
@@ -419,42 +464,42 @@
     {
       "path": "src/app/(app)/people-hub/page.tsx",
       "lines": 77,
-      "sha256": "47e59848d8d23b6629fe8f9c1aeb9774bdf15587eee59c10e44a5d4bb4632ade"
+      "sha256": "fde8622eb80cc453870f74d59873a32884880a3540c967b67535e718dc7d7595"
     },
     {
       "path": "src/app/(app)/profile/page.tsx",
-      "lines": 170,
-      "sha256": "2073b29742d1fc858f4ce99c34729b9ae7ba6a185cce0dce73170cbee567a28b"
+      "lines": 172,
+      "sha256": "8e0e6e6158756667f894edad9dc69ea5f92d24b171bf1e196a56b62ccddd8b6a"
     },
     {
       "path": "src/app/(app)/roster/page.tsx",
       "lines": 298,
-      "sha256": "7165b2eb76d3893816437eaaf32fe4670e6716c12d12217ec129558b9a5ecc33"
+      "sha256": "0a084db353695209cc8eb246feb51f8d2aa5bb49ad4fa75bf917c65f9f215c12"
     },
     {
       "path": "src/app/(app)/schedule-hub/page.tsx",
-      "lines": 238,
-      "sha256": "782035d74d4bc75685ea2e0316a581a8a331d1e76c5e885b495af3cc60c86ab7"
+      "lines": 229,
+      "sha256": "9809589f607297e3d1515111dff76c3d8ae1f909ff0fcc64c801c56f9e18081d"
     },
     {
       "path": "src/app/(app)/schedule/compare/page.tsx",
       "lines": 184,
-      "sha256": "f777efc02127e4c6c273121ab0536be14f1bc996473187ab8739c9ec920706df"
+      "sha256": "0312f0fb8f268c77f75cca1ae900816df7549a0658b3597b2b51b1cf08b055fe"
     },
     {
       "path": "src/app/(app)/schedule/page.tsx",
       "lines": 217,
-      "sha256": "77e7755b05db8ef4a487bb8a17bb0e04a5479a7ac4835426797171d33f361977"
+      "sha256": "ccda61c594bce05f899ea519a8f0620e81d4480f66b68004c3c56146dd39b235"
     },
     {
       "path": "src/app/(app)/schedule/shift-times/page.tsx",
       "lines": 97,
-      "sha256": "0a70717858c891a9fc7f3ec21011a6151adcf31e438ca62bbfb58c100427f608"
+      "sha256": "35ba806b65b4a403e03ef233b401003655c34db611d4aac91272769fe984aad6"
     },
     {
       "path": "src/app/(app)/search/page.tsx",
       "lines": 112,
-      "sha256": "61837b0c32c3f220394bfcabf5a3a6a13adda0b3951e8b96d1549f1bdaff7214"
+      "sha256": "7b1268a3f67099fb0900b37e341e5ad46db7495ecf7257d16fcec91410b5980a"
     },
     {
       "path": "src/app/(app)/settings-hub/page.tsx",
@@ -464,57 +509,57 @@
     {
       "path": "src/app/(app)/settings/page.tsx",
       "lines": 91,
-      "sha256": "e929b7a71b7cbb4eeeb55f8debdb05041f417979b6199bd589574cba4b62011e"
+      "sha256": "a6c60b9510bd9e17a60f2d0b65dcdb265c7a5388828983b9b729e3ba4ce1fb7c"
     },
     {
       "path": "src/app/(app)/simulator/page.tsx",
       "lines": 102,
-      "sha256": "f7ee234a3b6a29bf3316cdb51d300b7cd810c65a6b7cf7d39e96ed4d6d9b732d"
+      "sha256": "30f2377b70100532fd24df87d3cb024db50b3437ace5fc07e7328bfe6b16ebf8"
     },
     {
       "path": "src/app/(app)/staff/[id]/page.tsx",
       "lines": 160,
-      "sha256": "5e8b7bece371d5a01e69ffbd5694eea3bf422ddc0c4b8bc88296d9763f7fc925"
+      "sha256": "5c9d7e413767f16413fbecf2320b5174d9da0d74043f01082680adc089baeaf3"
     },
     {
       "path": "src/app/(app)/staff/page.tsx",
-      "lines": 315,
-      "sha256": "851524aaa1a25e48aa07a1d647a1cebc4e294a71a315294fe1859ff5e82cf700"
+      "lines": 317,
+      "sha256": "477b567a894a1c10ea78d3131651103e8836db722f8e9e1b82b0e56b4888448c"
     },
     {
       "path": "src/app/(app)/stock-alerts/page.tsx",
       "lines": 110,
-      "sha256": "ffb1716001362104e978bcd8f155ed0bfe4393d4940251cc81e984c9389f42ac"
+      "sha256": "cfbd7524e329840cf85f8e7a7fda54af432cf970dd64bf1caf68e650ff55a2d7"
     },
     {
       "path": "src/app/(app)/summary/page.tsx",
       "lines": 160,
-      "sha256": "7ececdb4128017edef8f8592b681dc9d5afbf3be92103e5d01b0534b19e449b5"
+      "sha256": "5bac15bc4ebfc8fbc293bc78083aa59ff44240e0946191496ec0a8259026b471"
     },
     {
       "path": "src/app/(app)/temp/page.tsx",
       "lines": 190,
-      "sha256": "f42f5c9228cfef6314346336436d791ed5df3e6e6dac6d3dba16770680dc4a36"
+      "sha256": "b67368bbc5cd5779d2fbd215cae6b7584a2bd2bef2bc290532224f17a5f6b8d0"
     },
     {
       "path": "src/app/(app)/timesheet/page.tsx",
       "lines": 104,
-      "sha256": "1d10a1803cb2463d93c2a62a235b524d18d4ab93f1cf8bbe86bf24ff092f1474"
+      "sha256": "933f14e252460249f318c4915a0286c63cd83ba32ac662a2ad9b0b139b7cf10b"
     },
     {
       "path": "src/app/(app)/transfers/page.tsx",
       "lines": 174,
-      "sha256": "9e529b1e1da442fea0b66e97c2cfda6c9fd575de4b4d0a4e82bbd7cf116651f0"
+      "sha256": "afbe3289acf59580a4042ce6b8441fd66f34601b03bfac80b5c9de1f88f28374"
     },
     {
       "path": "src/app/(app)/waste-branches/page.tsx",
       "lines": 77,
-      "sha256": "7f00893eb9548c444a8917daf2fefe9dacb1377c67c598c56cd0207721512141"
+      "sha256": "41db491cad8e6fa40715a0d561f59082f16597237132d6a582ef901dc83fee47"
     },
     {
       "path": "src/app/(app)/waste/page.tsx",
       "lines": 176,
-      "sha256": "9fea8cc997bbc673864550497a38706fbd295d0d66769ced5a303305c38b5c48"
+      "sha256": "c788e98b7198b91ce8602027fd541b68e7fe6019c8a39aee388c7e700a12e565"
     },
     {
       "path": "src/app/api/agent/chat/route.ts",
@@ -544,7 +589,7 @@
     {
       "path": "src/app/change-password/ChangePasswordForm.tsx",
       "lines": 182,
-      "sha256": "ffd3c56ab7f127b49ab4659eceb23d6cd9a87e732877d0c2c359877d56eb1cae"
+      "sha256": "14c10d2bd9ac2f1151e9c86e0e8234037ba974903b84e552b159b532f17d9695"
     },
     {
       "path": "src/app/change-password/page.tsx",
@@ -574,7 +619,7 @@
     {
       "path": "src/app/login/loginForm.tsx",
       "lines": 182,
-      "sha256": "57add9e75f4b3e131eacf5d97ca7aa1364537433207d5aa8a0da162ca0cd733d"
+      "sha256": "e5dc637ddd95b8edf91dff09c9ced9f8c5414c2f3e49f9c9e01df3b68e4703aa"
     },
     {
       "path": "src/app/login/page.tsx",
@@ -584,7 +629,7 @@
     {
       "path": "src/app/not-found.tsx",
       "lines": 26,
-      "sha256": "cb2f0d3275389916c7c48d263183c83f47d58aa253eb994c26277fc4a58e835b"
+      "sha256": "7544a2c172491e73ffc5cac5beccab91844bc6958bca565dee1b1471a565f57d"
     },
     {
       "path": "src/app/privacy/page.tsx",
@@ -619,7 +664,7 @@
     {
       "path": "src/components/AvatarUpload.tsx",
       "lines": 61,
-      "sha256": "3285a2ec0b954e6eb75db4fed430a8eb00b089fb8f19f932043f9534fc1b45b8"
+      "sha256": "f5a6dd2acb7c0a8ab65c22f7014f28c9736c200cd02f5b9bf8722c3bb6edba48"
     },
     {
       "path": "src/components/BottomNav.tsx",
@@ -634,12 +679,12 @@
     {
       "path": "src/components/CookieNotice.tsx",
       "lines": 39,
-      "sha256": "b6c979f0ecf80484c11a3da4c8a9e495ef638262f83443cebb53054df45673a3"
+      "sha256": "0715515c3b4ca937f3335665181e5b57989406bd414c24e55dba40342203c923"
     },
     {
       "path": "src/components/DocumentsSection.tsx",
       "lines": 236,
-      "sha256": "9db2f12eaac335af615576c931384c4d9d57a3b661670337446a9db0a9059504"
+      "sha256": "faa34154255b00ae74870f5495a4182f112b98dc3afb49191a58b75acd14d952"
     },
     {
       "path": "src/components/EmployeeDocuments.tsx",
@@ -659,7 +704,7 @@
     {
       "path": "src/components/LanguageToggle.tsx",
       "lines": 34,
-      "sha256": "75b8a64d78a0caec44d37824933c44533c2a1be756fed154fc9cbac4b6ecaa3b"
+      "sha256": "d7dae7298d8974bf1cc1e18022766426158d5d34e61500ac869c1db543b1ede6"
     },
     {
       "path": "src/components/LogoutButton.tsx",
@@ -669,7 +714,7 @@
     {
       "path": "src/components/ManagementNav.tsx",
       "lines": 52,
-      "sha256": "4d90a5c0e546a7955dc25f1cf4d71123c142a4640c854eb437da20c106214c1c"
+      "sha256": "b332e927078ca9c0f542bd6442b59be0534a2f8e24e958fd584671fb7c090bcd"
     },
     {
       "path": "src/components/NotificationBell.tsx",
@@ -684,7 +729,7 @@
     {
       "path": "src/components/ProfileSettings.tsx",
       "lines": 152,
-      "sha256": "63e7112a56164d4535220cd72dc088da8ad611e00dd7402e560310e1d8c7d31f"
+      "sha256": "5e857abbea3132c8f6eccd8fb77aa385ec8ebedc1573261a6415c7f7619fdaed"
     },
     {
       "path": "src/components/Skeleton.tsx",
@@ -699,7 +744,7 @@
     {
       "path": "src/components/SyncStatus.tsx",
       "lines": 104,
-      "sha256": "427e38b92aaad4d2736ff90f990843588a93eddf039bceca20052ec34027a1a4"
+      "sha256": "ce2b7307bc61836a4211ae27f7aa658ad3dde3a0be3c0ace326b356914d60c25"
     },
     {
       "path": "src/components/ThemeToggle.tsx",
@@ -714,7 +759,7 @@
     {
       "path": "src/components/ViewToggle.tsx",
       "lines": 61,
-      "sha256": "9a243771a101669a648e551afefb52b3c4867b3e9d6b2dd3998e7dff3eb9bc4c"
+      "sha256": "0d2645c25118b0862529238e99a4b808c246a6e498289fb951b3237e447bce26"
     },
     {
       "path": "src/components/dash/Charts.tsx",
@@ -758,8 +803,8 @@
     },
     {
       "path": "src/lib/i18n/messages.ts",
-      "lines": 1555,
-      "sha256": "95092c5e5c731ef8ee5c44ef56d9c24b6a46a57066ffd982acc2d880c7af63b6"
+      "lines": 1571,
+      "sha256": "29ca8035fd04ed64c106a1d5c287174818a0b41165d7ca112873938dc200d0bc"
     },
     {
       "path": "src/lib/i18n/server.ts",
@@ -883,8 +928,8 @@
     },
     {
       "path": "src/lib/queries/corrections.ts",
-      "lines": 101,
-      "sha256": "7d38ab54b53ea13abbce48c4e113e0b51e2ab69f3d5ecb37686541931d8ae907"
+      "lines": 118,
+      "sha256": "a105a9fa61c766d2cd260cd28815cb1a36ca292892ef96f4aa4d084e770ea885"
     },
     {
       "path": "src/lib/queries/cover.ts",
@@ -943,8 +988,8 @@
     },
     {
       "path": "src/lib/queries/live-attendance.ts",
-      "lines": 186,
-      "sha256": "1d8dfb8cc168a8d2e11ad9e90749ba3065d13356787849dc0ccd9bf280985d73"
+      "lines": 192,
+      "sha256": "4d4c8dfb9aa51223d253b86bfe63b0fc82baafab4209dff69a25df50208f3084"
     },
     {
       "path": "src/lib/queries/loginThrottle.ts",
@@ -978,8 +1023,8 @@
     },
     {
       "path": "src/lib/queries/payroll.ts",
-      "lines": 180,
-      "sha256": "383faa3307a49f627356d9d7cb2cd9adaff2cd768aaa9bf9717cd97ec64f4ff0"
+      "lines": 208,
+      "sha256": "0d365d49fdcabd1b0125a41a9a89132ff897edada5d8cf75f7f4280cdd913ae0"
     },
     {
       "path": "src/lib/queries/people.ts",
@@ -1105,6 +1150,16 @@
       "path": "supabase/migrations/20261011035503_audit_atomic_workflows.sql",
       "lines": 121,
       "sha256": "05610364ac1a92d817a55bdcc71d633a22867d68c04d550b359af0d17c8f0528"
+    },
+    {
+      "path": "supabase/migrations/20261012001000_payroll_approval_snapshots.sql",
+      "lines": 116,
+      "sha256": "98c18cf0cdb84ea34ee8b58fe595a2eeafadae2985bc8b23f4511919c06b2b48"
+    },
+    {
+      "path": "supabase/migrations/20261012110618_attendance_correction_integrity.sql",
+      "lines": 43,
+      "sha256": "c14e4a7f462c0da5dc465a7ceda6c5b320b7c872e80a90154b940f9082177abd"
     },
     {
       "path": "supabase/pending/01_safe_fixes.sql",
