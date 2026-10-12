@@ -14,22 +14,27 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [denied, setDenied] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
+  async function load() {
+    setLoading(true); setLoadError(null); setDenied(false);
+    try {
       const res = await getBranchSettings();
-      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); setLoading(false); return; }
+      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(res.error || t("set.failed")); return; }
       setQrRequired(!!res.settings.qr_required);
       setGpsMode(res.settings.gps_mode || "off");
-      setLoading(false);
-    })();
-  }, []);
+    } catch { setLoadError(t("staff.networkErr")); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { load(); }, []);
 
   async function save() {
     setSaving(true); setMsg(null);
-    const res = await saveBranchSettings(qrRequired, gpsMode);
-    setSaving(false);
-    setMsg(res.ok ? t("set.saved") : res.error || t("set.failed"));
+    try {
+      const res = await saveBranchSettings(qrRequired, gpsMode);
+      setMsg(res.ok ? t("set.saved") : res.error || t("set.failed"));
+    } catch { setMsg(t("staff.networkErr")); }
+    finally { setSaving(false); }
   }
 
   if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
@@ -41,6 +46,8 @@ export default function SettingsPage() {
 
       {loading ? (
         <div style={{ color: "var(--gray)", padding: 30, textAlign: "center" }}>{t("common.loading")}</div>
+      ) : loadError ? (
+        <div className="card" role="alert"><p>{loadError}</p><button className="workspace-button" onClick={load}>{t("business.retry")}</button></div>
       ) : (
         <>
           <div style={{ ...card, marginBottom: 12 }}>
@@ -64,7 +71,7 @@ export default function SettingsPage() {
           </div>
 
           <button onClick={save} disabled={saving} style={primaryBtn}>{saving ? t("common.saving") : t("set.save")}</button>
-          {msg && <div style={{ marginTop: 12, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
+          {msg && <div role="status" style={{ marginTop: 12, fontSize: 14, color: "var(--white)" }}>{msg}</div>}
 
           <div style={{ ...card, marginTop: 16, fontSize: 12, color: "var(--gray)" }}>
             {t("set.note")}
