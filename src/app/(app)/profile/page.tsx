@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // editable fields
   const [fullName, setFullName] = useState("");
@@ -25,25 +26,29 @@ export default function ProfilePage() {
   const [skillsText, setSkillsText] = useState("");
 
   async function load() {
-    setLoading(true);
+    setLoading(true); setLoadError(null);
+    try {
     const res = await getMyProfile();
     if (res.ok && res.profile) {
       setProfile(res.profile);
       setFullName(res.profile.full_name || "");
       setPhone(res.profile.phone || "");
       setSkillsText((res.profile.skills || []).join(", "));
-    }
-    setLoading(false);
+    } else { setLoadError(t("profile.couldNotLoad")); }
+    } catch { setLoadError(t("staff.networkErr")); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
   async function save() {
     setSaving(true);
+    try {
     const skills = skillsText.split(",").map((s) => s.trim()).filter(Boolean);
     const res = await updateMyProfile({ full_name: fullName, phone, skills });
-    setSaving(false);
     if (res.ok) { toast("Profile updated", "success"); setEditing(false); load(); }
     else toast(res.error || "Failed to update.", "error");
+    } catch { toast(t("staff.networkErr"), "error"); }
+    finally { setSaving(false); }
   }
 
   if (loading) return (
@@ -53,7 +58,7 @@ export default function ProfilePage() {
       <CardSkeleton rows={5} />
     </div>
   );
-  if (!profile) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("profile.couldNotLoad")}</div>;
+  if (loadError || !profile) return <div className="card" role="alert"><p>{loadError || t("profile.couldNotLoad")}</p><button className="workspace-button" onClick={load}>{t("business.retry")}</button></div>;
 
   const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(profile.role);
   const skillsArr: string[] = profile.skills || [];

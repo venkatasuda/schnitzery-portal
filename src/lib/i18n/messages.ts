@@ -229,6 +229,7 @@ export const messages = {
     contracts: { "Working Student": "Working Student", "Part Time": "Part Time", "Full Time": "Full Time", "Mini Job": "Mini Job" },
     status: { active: "active", inactive: "inactive" },
     staff: {
+      filters: "Staff filters", search: "Search name, employee code or team", noMatches: "No staff match your search.",
       title: "Staff Management", memberCount: "{n} team members", saved: "✅ Saved!", failed: "Failed.",
       addNew: "➕ Add New Staff", addNewTitle: "Add New Staff",
       addNewSub: "They'll log in with this email + temporary password.",
@@ -1011,6 +1012,7 @@ export const messages = {
     contracts: { "Working Student": "Werkstudent", "Part Time": "Teilzeit", "Full Time": "Vollzeit", "Mini Job": "Minijob" },
     status: { active: "aktiv", inactive: "inaktiv" },
     staff: {
+      filters: "Mitarbeiterfilter", search: "Name, Mitarbeitercode oder Team suchen", noMatches: "Keine Mitarbeiter für diese Suche gefunden.",
       title: "Personalverwaltung", memberCount: "{n} Teammitglieder", saved: "✅ Gespeichert!", failed: "Fehlgeschlagen.",
       addNew: "➕ Neuen Mitarbeiter hinzufügen", addNewTitle: "Neuen Mitarbeiter hinzufügen",
       addNewSub: "Sie melden sich mit dieser E-Mail + temporärem Passwort an.",

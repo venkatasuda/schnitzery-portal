@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getStaffList, updateStaff } from "@/lib/queries/people";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -21,6 +21,8 @@ export default function StaffPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
@@ -32,16 +34,20 @@ export default function StaffPage() {
 
   // add new staff
   const [showAdd, setShowAdd] = useState(false);
+  const addDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => { if (showAdd) addDialog.current?.showModal(); }, [showAdd]);
   const [addForm, setAddForm] = useState<any>({ email: "", password: "", full_name: "", team: "", role: "staff", employee_code: "", contract_type: "", contract_hours: "", phone: "" });
   const [adding, setAdding] = useState(false);
   const [addMsg, setAddMsg] = useState<string | null>(null);
 
   async function load() {
-    setLoading(true);
-    const res = await getStaffList();
-    if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); setLoading(false); return; }
-    setStaff(res.staff);
-    setLoading(false);
+    setLoading(true); setLoadError(null); setDenied(false);
+    try {
+      const res = await getStaffList();
+      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(res.error || t("staff.failed")); return; }
+      setStaff(res.staff);
+    } catch { setLoadError(t("staff.networkErr")); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
@@ -59,6 +65,7 @@ export default function StaffPage() {
 
   async function save() {
     setSaving(true); setMsg(null);
+    try {
     const res = await updateStaff(editId!, {
       full_name: form.full_name, employee_code: form.employee_code,
       team: form.team, contract_type: form.contract_type,
@@ -66,19 +73,22 @@ export default function StaffPage() {
       phone: form.phone, role: form.role,
       skills: form.skills.split(",").map((s: string) => s.trim()).filter(Boolean),
     });
-    setSaving(false);
     if (res.ok) { setMsg(t("staff.saved")); setEditId(null); load(); }
     else setMsg(res.error || t("staff.failed"));
+    } catch { setMsg(t("staff.networkErr")); }
+    finally { setSaving(false); }
   }
 
   // Remove = deactivate + disable login; Reactivate = restore both. Data is always kept.
   async function setActive(id: string, active: boolean) {
+    try {
     const res = await fetch("/api/set-staff-active", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: id, active }),
     });
     return res.json().catch(() => ({ ok: false, error: t("staff.networkErr") }));
+    } catch { return { ok: false, error: t("staff.networkErr") }; }
   }
 
   async function remove(id: string) {
@@ -145,7 +155,9 @@ export default function StaffPage() {
 
   const activeStaff = staff.filter((p) => (p.status || "active") === "active");
   const formerStaff = staff.filter((p) => (p.status || "active") !== "active");
-  const visible = filter === "active" ? activeStaff : formerStaff;
+  const query = search.trim().toLocaleLowerCase();
+  const visible = loading || loadError ? [] : (filter === "active" ? activeStaff : formerStaff).filter(p =>
+    [p.full_name, p.employee_code, p.team, teamLabel(p.team || "")].some(value => String(value || "").toLocaleLowerCase().includes(query)));
 
   if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
 
@@ -156,7 +168,7 @@ export default function StaffPage() {
         {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
+      {msg && <div role="status" style={{ marginBottom: 14, fontSize: 14, color: "var(--white)" }}>{msg}</div>}
 
       {resetInfo && (
         <div style={{ ...card, marginBottom: 14, borderColor: "rgba(212,168,71,0.5)", background: "rgba(212,168,71,0.08)" }}>
@@ -177,13 +189,13 @@ export default function StaffPage() {
       </div>
 
       {showAdd && (
-        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 100, padding: 20, overflowY: "auto" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ ...card, maxWidth: 460, width: "100%", marginTop: 30 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</div>
+        <dialog ref={addDialog} className="workspace-dialog" aria-labelledby="add-staff-title" onCancel={(e) => { if (adding) e.preventDefault(); else setShowAdd(false); }} onClose={() => setShowAdd(false)}>
+          <div>
+            <h2 id="add-staff-title" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</h2>
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
             <div className="workspace-form-grid">
-              <Field label={t("staff.emailReq")}><input value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} style={input} placeholder="name@email.com" /></Field>
-              <Field label={t("staff.tempPw")}><input value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} style={input} placeholder={t("staff.minChars")} /></Field>
+              <Field label={t("staff.emailReq")}><input autoFocus type="email" autoComplete="off" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} style={input} placeholder="name@email.com" /></Field>
+              <Field label={t("staff.tempPw")}><input type="password" autoComplete="new-password" value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} style={input} placeholder={t("staff.minChars")} /></Field>
               <Field label={t("profile.fullName")}><input value={addForm.full_name} onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })} style={input} /></Field>
               <Field label={t("profile.employeeCode")}><input value={addForm.employee_code} onChange={(e) => setAddForm({ ...addForm, employee_code: e.target.value })} style={input} placeholder={t("staff.codeAuto")} /></Field>
               <Field label={t("staff.team")}>
@@ -206,17 +218,19 @@ export default function StaffPage() {
             <Field label={t("profile.phone")}><input value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} style={input} /></Field>
             {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "var(--success)" : "var(--danger)", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
+              <button disabled={adding} onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
               <button onClick={createStaff} disabled={adding} style={primaryBtn}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
 
       {loading && <CardSkeleton rows={5} />}
+      {loadError && <div className="card" role="alert"><p>{loadError}</p><button className="workspace-button" onClick={load}>{t("business.retry")}</button></div>}
 
-      {!loading && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 14, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, padding: 4 }}>
+      {!loading && !loadError && (
+        <div className="workspace-toolbar" role="group" aria-label={t("staff.filters")}>
+          <input type="search" aria-label={t("staff.search")} style={{ ...input, flex: "1 1 260px", width: "auto" }} placeholder={t("staff.search")} value={search} onChange={e => { setSearch(e.target.value); setConfirmRemoveId(null); }} />
           <FilterBtn active={filter === "active"} onClick={() => { setFilter("active"); setConfirmRemoveId(null); }}>{t("staff.filterActive")} ({activeStaff.length})</FilterBtn>
           <FilterBtn active={filter === "former"} onClick={() => { setFilter("former"); setConfirmRemoveId(null); }}>{t("staff.filterFormer")} ({formerStaff.length})</FilterBtn>
         </div>
@@ -294,9 +308,9 @@ export default function StaffPage() {
         </div>
       ))}
 
-      {!loading && visible.length === 0 && (
+      {!loading && !loadError && visible.length === 0 && (
         <div style={{ ...card, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>
-          {filter === "active" ? t("staff.noActive") : t("staff.noFormer")}
+          {query ? t("staff.noMatches") : filter === "active" ? t("staff.noActive") : t("staff.noFormer")}
         </div>
       )}
 
@@ -309,7 +323,7 @@ function Field({ label, children }: any) {
   return <label style={{ display: "block", marginBottom: 10 }}><span style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{label}</span>{children}</label>;
 }
 function FilterBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button aria-pressed={active} onClick={onClick} style={{ minHeight: 44, padding: "9px 16px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 14 };
 const editBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer" };
