@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { isCalendarDate } from "@/lib/time/berlinDate";
+import { readAll } from "@/lib/supabase/readAll";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
@@ -19,18 +21,30 @@ export async function submitCorrection(input: {
 }) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  if (!input.reason || !input.reason.trim()) return { ok: false, error: "A reason is required." };
+  if (!branchId) return { ok: false, error: "No branch." };
+  if (!input || !["missing", "incorrect", "forgot_in", "forgot_out"].includes(input.type) || !isCalendarDate(input.targetDate)) return { ok: false, error: "Invalid correction type or date." };
+  if (typeof input.reason !== "string" || !input.reason.trim() || input.reason.length > 2000) return { ok: false, error: "Provide a reason of up to 2000 characters." };
+  for (const instant of [input.requestedClockIn, input.requestedClockOut]) if (instant != null && (typeof instant !== "string" || instant.length > 40 || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(instant) || !Number.isFinite(Date.parse(instant)))) return { ok: false, error: "Invalid correction clock time." };
+  if ((["missing", "forgot_in"].includes(input.type) && !input.requestedClockIn) || (input.type === "forgot_out" && !input.requestedClockOut) || (input.type === "incorrect" && !input.requestedClockIn && !input.requestedClockOut)) return { ok: false, error: "Enter the requested clock time." };
+  if (input.type === "missing" ? !!input.attendanceLogId : !input.attendanceLogId) return { ok: false, error: "Choose a recorded shift, or use the missing-shift request." };
+  if (input.evidenceUrl != null && input.evidenceUrl !== "") {
+    try {
+      if (typeof input.evidenceUrl !== "string" || input.evidenceUrl.length > 2048) throw Error();
+      const url = new URL(input.evidenceUrl);
+      if (url.protocol !== "https:" || url.username || url.password) throw Error();
+    } catch { return { ok: false, error: "Evidence must use an HTTPS URL." }; }
+  }
 
   const { error } = await supabase.from("attendance_corrections").insert({
     user_id: user.id,
-    branch_id: branchId ?? null,
+    branch_id: branchId,
     type: input.type,
     target_date: input.targetDate,
     attendance_log_id: input.attendanceLogId ?? null,
     requested_clock_in: input.requestedClockIn ?? null,
     requested_clock_out: input.requestedClockOut ?? null,
     reason: input.reason.trim(),
-    evidence_url: input.evidenceUrl ?? null,
+    evidence_url: input.evidenceUrl || null,
     status: "pending",
   });
   if (error) return { ok: false, error: error.message };
@@ -40,11 +54,11 @@ export async function submitCorrection(input: {
 export async function listMyCorrections() {
   const { supabase, user } = await getMe();
   if (!user) return { ok: false, items: [] as any[] };
-  const { data, error } = await supabase
+  const { data, error } = await readAll(supabase
     .from("attendance_corrections")
     .select("id, type, target_date, requested_clock_in, requested_clock_out, reason, status, manager_note, decided_by, decided_at, created_at")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }).order("id"));
   if (error) return { ok: false, error: error.message, items: [] };
   return { ok: true, items: data || [] };
 }
@@ -52,10 +66,11 @@ export async function listMyCorrections() {
 export async function cancelCorrection(id: string) {
   const { supabase, user } = await getMe();
   if (!user) return { ok: false };
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("attendance_corrections").delete()
-    .eq("id", id).eq("user_id", user.id).eq("status", "pending");
+    .eq("id", id).eq("user_id", user.id).eq("status", "pending").select("id").maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "Request is unavailable or already decided." };
   return { ok: true };
 }
 
@@ -65,17 +80,18 @@ export async function getCorrectionApprovals() {
   if (!user) return { ok: false, items: [] as any[] };
   if (!MGR.includes(role || "")) return { ok: false, items: [] };
 
-  const { data, error } = await supabase
+  const { data, error } = await readAll(supabase
     .from("attendance_corrections")
     .select("id, user_id, type, target_date, requested_clock_in, requested_clock_out, reason, evidence_url, created_at, original:attendance_logs(clock_in, clock_out)")
     .eq("status", "pending")
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true }).order("id"));
   if (error) return { ok: false, error: error.message, items: [] };
 
   const ids = [...new Set((data || []).map((d) => d.user_id))];
   const names: Record<string, string> = {};
   if (ids.length) {
-    const { data: us } = await supabase.from("users").select("id, full_name").in("id", ids);
+    const { data: us, error: namesError } = await readAll(supabase.from("users").select("id, full_name").in("id", ids).order("id"));
+    if (namesError) return { ok: false, error: namesError.message, items: [] };
     for (const u of us || []) names[u.id] = u.full_name;
   }
 
@@ -94,6 +110,7 @@ export async function getCorrectionApprovals() {
 }
 
 export async function decideCorrection(id: string, approve: boolean, note?: string) {
+  if (typeof id !== "string" || !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id) || typeof approve !== "boolean" || (note !== undefined && (typeof note !== "string" || note.length > 2000))) return { ok: false, error: "Invalid correction decision." };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("decide_attendance_correction", { p_id: id, p_approve: approve, p_note: note ?? null });
   if (error) return { ok: false, error: error.message };

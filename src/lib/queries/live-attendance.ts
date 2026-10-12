@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { readAll } from "@/lib/supabase/readAll";
 import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
 
 // ============================================================
@@ -143,22 +144,23 @@ export async function getAttendanceApprovals() {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
 
-  const { data: logs, error } = await supabase
+  if (!branchId) return { ok: false, error: "No branch." };
+  const { data: logs, error } = await readAll(supabase
     .from("attendance_logs")
     .select("id, user_id, work_date, clock_in, clock_out, duration_mins, late_mins, approval_status")
     .eq("branch_id", branchId)
     .eq("status", "complete")
-    .order("work_date", { ascending: false })
-    .limit(80);
+    .or("approval_status.is.null,approval_status.eq.pending")
+    .order("work_date", { ascending: true }).order("id"));
   if (error) return { ok: false, error: error.message };
 
-  // pending = not yet approved/rejected (null or "pending")
-  const pending = (logs || []).filter((l) => l.approval_status == null || l.approval_status === "pending");
+  const pending = logs || [];
 
   const ids = Array.from(new Set(pending.map((l) => l.user_id)));
   const names: Record<string, { full_name: string; team: string }> = {};
   if (ids.length) {
-    const { data: us } = await supabase.from("users").select("id, full_name, team").in("id", ids);
+    const { data: us, error: namesError } = await readAll(supabase.from("users").select("id, full_name, team").in("id", ids).order("id"));
+    if (namesError) return { ok: false, error: namesError.message };
     for (const u of us || []) names[u.id] = { full_name: u.full_name, team: u.team };
   }
 
@@ -175,12 +177,16 @@ export async function getAttendanceApprovals() {
 }
 
 export async function setAttendanceApproval(logId: string, status: "approved" | "rejected") {
-  const { supabase, user, role } = await getMe();
+  const { supabase, user, role, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
+  if (!branchId) return { ok: false, error: "No branch." };
+  if (typeof logId !== "string" || !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(logId) || !["approved", "rejected"].includes(status)) return { ok: false, error: "Invalid attendance decision." };
 
-  const { error } = await supabase
-    .from("attendance_logs").update({ approval_status: status }).eq("id", logId);
+  const { data, error } = await supabase
+    .from("attendance_logs").update({ approval_status: status }).eq("id", logId).eq("branch_id", branchId).eq("status", "complete")
+    .or("approval_status.is.null,approval_status.eq.pending").select("id").maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "Shift is unavailable or already reviewed. Reload the queue." };
   return { ok: true };
 }
