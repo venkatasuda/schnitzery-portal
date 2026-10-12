@@ -196,7 +196,7 @@ export default function PayrollExportPage() {
             <table className="data-table">
               <thead><tr><th scope="col">{t("pay.cName")}</th>{["cShifts", "cPaid", "cRegular", "cOvertime", "cBreak", "cWeekend", "cHoliday", "cNight", "cWage", "cGross"].map(key => <th key={key} scope="col" className="numeric">{t(`pay.${key}`)}</th>)}</tr></thead>
               <tbody>{rows.map(r => <tr key={r.userId || r.code || r.name}>
-                <th scope="row" style={{ whiteSpace: "nowrap" }}>{r.name}<div className="muted">{r.code} · {r.team}</div></th>
+                <th scope="row" style={{ whiteSpace: "nowrap" }}>{r.name}<div className="muted">{r.code} · {r.team}</div>{r.invalidShifts > 0 && <div><Link href="/attendance-hub">{t("pay.invalidShifts", { count: r.invalidShifts })}</Link></div>}</th>
                 {[r.shifts, r.paidH, r.regularH, r.overtimeH, r.breakH, r.weekendH, r.holidayH, r.nightH].map((value, i) => <td key={i} className="numeric">{value}</td>)}
                 <td className="numeric">{r.wage == null ? <Link href="/labor">{t("pay.setWage")}</Link> : eur(r.wage)}</td>
                 <td className="numeric" style={{ fontWeight: 700 }}>{eur(r.gross)}</td>

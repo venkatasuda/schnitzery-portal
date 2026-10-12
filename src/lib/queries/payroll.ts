@@ -152,19 +152,21 @@ export async function getPayrollSummary(month?: string, approvalId?: string) {
   const workedIds = new Set(logs.map(l => l.user_id));
   const missingWages = [...workedIds].filter(id => !staff.some(s => s.id === id) || payWages[id] == null || !Number.isFinite(payWages[id]) || payWages[id]! < 0).length;
   for (const id of workedIds) if (!staff.some(s => s.id === id)) staff.push({ id, full_name: "Unassigned employee", employee_code: "", team: "", hourly_wage: null });
-  const invalidShifts = logs.filter(l => !l.clock_in || !l.clock_out || !(Date.parse(l.clock_out) > Date.parse(l.clock_in)) || shiftMinutes(l).grossMin <= 0).length;
+  const invalidLogs = logs.filter(l => !l.clock_in || !l.clock_out || !(Date.parse(l.clock_out) > Date.parse(l.clock_in)) || shiftMinutes(l).grossMin <= 0);
+  const invalidShifts = invalidLogs.length;
   const monthClosed = ym < berlinMonth();
   const readiness = { canApprove: run.status === "draft" && logs.length > 0 && monthClosed && !unapprovedShifts && !missingWages && !invalidShifts, unapprovedShifts, missingWages, invalidShifts, monthClosed };
 
   type Acc = { gross: number; brk: number; weekend: number; holiday: number; night: number; shifts: number; perDayPaid: Record<string, number> };
   const acc: Record<string, Acc> = {};
   for (const l of logs || []) {
+    if (!acc[l.user_id]) acc[l.user_id] = { gross: 0, brk: 0, weekend: 0, holiday: 0, night: 0, shifts: 0, perDayPaid: {} };
+    acc[l.user_id].shifts += 1;
     const { grossMin: gross, breakMin: brk, paidMin: paid } = shiftMinutes(l);
     if (gross <= 0) continue;
     const c = classifyShift(l.clock_in, l.clock_out, holidays, nStart, nEnd);
-    if (!acc[l.user_id]) acc[l.user_id] = { gross: 0, brk: 0, weekend: 0, holiday: 0, night: 0, shifts: 0, perDayPaid: {} };
     const a = acc[l.user_id];
-    a.gross += gross; a.brk += brk; a.weekend += c.weekendMin; a.holiday += c.holidayMin; a.night += c.nightMin; a.shifts += 1;
+    a.gross += gross; a.brk += brk; a.weekend += c.weekendMin; a.holiday += c.holidayMin; a.night += c.nightMin;
     a.perDayPaid[l.work_date] = (a.perDayPaid[l.work_date] || 0) + paid;
   }
 
@@ -183,17 +185,18 @@ export async function getPayrollSummary(month?: string, approvalId?: string) {
     minuteTotals.weekendH += a.weekend; minuteTotals.holidayH += a.holiday; minuteTotals.nightH += a.night;
     minuteTotals.breakH += a.brk; minuteTotals.paidH += paidMin; minuteTotals.unpaidH += a.brk;
     const wage = s.hourly_wage ?? null;
-    const gross = wage != null ? payForMinutes(paidMin, wage) : null;
+    const invalidForEmployee = invalidLogs.filter(l => l.user_id === s.id).length;
+    const gross = wage != null && !invalidForEmployee ? payForMinutes(paidMin, wage) : null;
     return {
       userId: s.id, code: s.employee_code || "", name: s.full_name, team: s.team || "", shifts: a.shifts,
       regularH: h1(regular), overtimeH: h1(overtime),
       weekendH: h1(a.weekend), holidayH: h1(a.holiday), nightH: h1(a.night),
       breakH: h1(a.brk), paidH: h1(paidMin), unpaidH: h1(a.brk),
-      wage, gross,
+      wage, gross, invalidShifts: invalidForEmployee,
     };
   }).filter(Boolean) as any[];
 
-  const totals = { ...minuteTotals, gross: missingWages ? null : Math.round(rows.reduce((sum, row) => sum + (row.gross || 0), 0) * 100) / 100 };
+  const totals = { ...minuteTotals, gross: missingWages || invalidShifts ? null : Math.round(rows.reduce((sum, row) => sum + (row.gross || 0), 0) * 100) / 100 };
   for (const key of Object.keys(minuteTotals) as (keyof typeof totals)[]) if (key !== "gross") totals[key] = h1(minuteTotals[key]);
 
   return { ok: true as const, month: ym, history: history || [], rows, totals, settings, revision: inputs.revision as string, readiness, run: { status: run.status, approvedBy: run.approvedBy, approvedAt: run.approvedAt, frozen: false, archived: false } };

@@ -30,6 +30,9 @@ const api=load('src/lib/queries/payroll.ts',{
   source.wages[0].hourly_wage=null;
   result=await api.getPayrollSummary('2026-09');assert.equal(result.totals.gross,null);assert.equal(result.readiness.missingWages,1);
   source.wages[0].hourly_wage=20;
+  source.logs.push({...source.logs[0],id:'invalid',clock_in:null,clock_out:null,duration_mins:0});
+  result=await api.getPayrollSummary('2026-09');assert.equal(result.rows[0].shifts,2);assert.equal(result.rows[0].invalidShifts,1);assert.equal(result.rows[0].gross,null);assert.equal(result.totals.gross,null);
+  source.logs.pop();
   result=await api.getPayrollSummary('2026-09');assert.equal(result.readiness.canApprove,true);
   assert.equal((await api.setPayrollApproval('2026-09',true,undefined,'b'.repeat(32))).ok,false);assert.equal(approvalCalls,0);
   assert.equal((await api.setPayrollApproval('2026-09',true,undefined,revision)).ok,true);assert.equal(approvalCalls,1);
