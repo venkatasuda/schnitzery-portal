@@ -106,10 +106,10 @@ export default function PayrollExportPage() {
     const rowHtml = (cells: any[], b = false) => `<tr>${cells.map((c, i) => td(c, b, i >= 3)).join("")}</tr>`;
     const w = window.open("", "_blank");
     if (!w) return;
-    w.document.write(`<html><head><meta charset="utf-8"><title>Payroll ${month}</title></head>
+    w.document.write(`<html><head><meta charset="utf-8"><title>Payroll ${htmlText(month)}</title></head>
       <body style="font-family:Arial,sans-serif;padding:28px;color:#222;">
         <h2 style="margin:0;">Schnitzery — ${t("pay.reportTitle")}</h2>
-        <div style="color:#666;margin:4px 0 2px;">${month}</div>
+        <div style="color:#666;margin:4px 0 2px;">${htmlText(month)}</div>
         <div style="margin-bottom:16px;">${status}</div>
         <table style="border-collapse:collapse;width:100%;">${rowHtml(header, true)}${body.map((r) => rowHtml(r)).join("")}${rowHtml(totalRow, true)}</table>
         <p style="margin-top:34px;font-size:12px;color:#666;">${t("pay.signature")}</p>
