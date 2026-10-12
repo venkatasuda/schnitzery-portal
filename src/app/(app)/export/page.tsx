@@ -158,15 +158,15 @@ export default function PayrollExportPage() {
       {/* APPROVAL BANNER */}
       {!loading && !error && (rows.length > 0 || run.status === "approved") && (
         run.status === "approved" ? (
-          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid #1e8449" }}>
+          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", borderLeft: "3px solid var(--success)" }}>
             <Icon e="✅" size={18} color="var(--success)" />
-            <div style={{ flex: 1, fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}<div style={{ marginTop: 6, color: "var(--gray)" }}>{t(run.frozen ? "pay.frozen" : "pay.legacy")}</div></div>
+            <div style={{ flex: "1 1 260px", fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}<div style={{ marginTop: 6, color: "var(--gray)" }}>{t(run.frozen ? "pay.frozen" : "pay.legacy")}</div></div>
             {!run.archived && <button onClick={() => toggleApproval(false)} disabled={busy} style={{ padding: "7px 12px", background: "var(--dark3)", color: "var(--gray)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>{t("pay.reopenBtn")}</button>}
           </div>
         ) : (
-          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: "3px solid #b9770e" }}>
+          <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", borderLeft: "3px solid var(--warn)" }}>
             <Icon e="📝" size={18} color="var(--gold)" />
-            <div style={{ flex: 1, fontSize: 13 }}>{t("pay.notApproved")}
+            <div style={{ flex: "1 1 260px", fontSize: 13 }}>{t("pay.notApproved")}
               {!readiness.monthClosed && <div>{t("pay.closeMonth")}</div>}
               {readiness.unapprovedShifts > 0 && <div><Link href="/approvals">{t("pay.reviewShifts", { count: readiness.unapprovedShifts })}</Link></div>}
               {readiness.missingWages > 0 && <div><Link href="/labor">{t("pay.missingRates", { count: readiness.missingWages })}</Link></div>}
@@ -194,9 +194,9 @@ export default function PayrollExportPage() {
 
           <div className="table-scroll" role="region" aria-label={t("pay.reportTitle")} tabIndex={0}>
             <table className="data-table">
-              <thead><tr><th scope="col">{t("pay.cName")}</th>{["cShifts", "cPaid", "cRegular", "cOvertime", "cBreak", "cWeekend", "cHoliday", "cNight", "cWage", "cGross"].map(key => <th key={key} scope="col" className="numeric">{t(`pay.${key}`)}</th>)}</tr></thead>
+              <thead><tr><th scope="col" style={{ position: "sticky", left: 0, zIndex: 2 }}>{t("pay.cName")}</th>{["cShifts", "cPaid", "cRegular", "cOvertime", "cBreak", "cWeekend", "cHoliday", "cNight", "cWage", "cGross"].map(key => <th key={key} scope="col" className="numeric">{t(`pay.${key}`)}</th>)}</tr></thead>
               <tbody>{rows.map(r => <tr key={r.userId || r.code || r.name}>
-                <th scope="row" style={{ whiteSpace: "nowrap" }}>{r.name}<div className="muted">{r.code} · {r.team}</div>{r.invalidShifts > 0 && <div><Link href="/attendance-hub">{t("pay.invalidShifts", { count: r.invalidShifts })}</Link></div>}</th>
+                <th scope="row" style={{ whiteSpace: "nowrap", position: "sticky", left: 0, zIndex: 1, background: "var(--dark)", color: "var(--white)", fontSize: 14 }}>{r.name}<div className="muted">{r.code} · {r.team}</div>{r.invalidShifts > 0 && <div><Link href="/attendance-hub">{t("pay.invalidShifts", { count: r.invalidShifts })}</Link></div>}</th>
                 {[r.shifts, r.paidH, r.regularH, r.overtimeH, r.breakH, r.weekendH, r.holidayH, r.nightH].map((value, i) => <td key={i} className="numeric">{value}</td>)}
                 <td className="numeric">{r.wage == null ? <Link href="/labor">{t("pay.setWage")}</Link> : eur(r.wage)}</td>
                 <td className="numeric" style={{ fontWeight: 700 }}>{eur(r.gross)}</td>
