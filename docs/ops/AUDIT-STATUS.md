@@ -5,8 +5,8 @@ treating local changes as live. AI billing and further AI work are deferred.
 
 ## Verified production baseline — 2026-10-12
 
-- Main `4c1fe5dd8a6bf07e76217ab4072a4e169bb4fc62`; production deployment
-  `dpl_FMchDWXN4kJcsdLarYXokkfoXgTR` is Ready at schnitzery-portal.vercel.app.
+- Main `79fbd58e7c28ae64079db5706b9148bb56c4a08d`; production deployment
+  `dpl_5eorgwCcFV4fmivH95G8cTWMLQsF` is Ready at schnitzery-portal.vercel.app.
 - Desktop management shell and focused employee navigation; light theme and
   responsive inventory, operations, attendance, approvals and payroll layouts.
 - Approved payroll reads immutable snapshots. Reopening retains old approvals.
@@ -20,7 +20,17 @@ treating local changes as live. AI billing and further AI work are deferred.
 ## Current work
 
 Staff search, native add-staff dialog, recoverable staff/profile/settings errors,
-and settings role/input boundaries. See Git/PR state for release status.
+settings role/input boundaries and labelled report filters are deployed (#32/#33).
+Live staff search, dialog focus/Escape/password masking, German labels and phone
+fit passed. Roster/reports fit desktop and phone widths. Settings loaded with
+labelled controls, no error and no horizontal overflow on 2026-10-13.
+The Git integration failed to retrieve source twice; CLI upload of source matching
+tested main succeeded. No staff, wage, payroll or attendance settings were changed
+as part of live verification.
+
+Current change: labour-page read failures must show retry rather than false zero
+costs; missing wages and absent sales records must stay unknown. Wage edits need
+labels, finite values, contrast and request protection. See Git/PR for release state.
 The code graph represents the preceding release; refresh at a phase boundary,
 rather than rebuilding for every small edit.
 

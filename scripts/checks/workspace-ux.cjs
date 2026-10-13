@@ -15,11 +15,12 @@ async function ui(page, result) {
   const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(){return {current:null};}};
   const component=moduleAt(`src/app/(app)/${page}/page.tsx`, name=>{
     if(name==='react')return hooks;
+    if(name==='@/lib/time/berlinDate')return {berlinToday:()=> '2026-10-13'};
     if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:()=>async()=>{if(result instanceof Error)throw result; return result;}});
     if(name==='@/components/LanguageProvider')return {useLang:()=>({t:k=>k})};
     if(name==='next/link')return {__esModule:true,default:({href,children,...rest})=>React.createElement('a',{href,...rest},children)};
     if(name==='@/components/Toast')return {toast(){}};
-    if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null};
+    if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null,Skeleton:()=>null};
     return require(name);
   }).default;
   component(); for(const effect of effects) effect(); await new Promise(r=>setImmediate(r)); initial=false;
@@ -27,13 +28,16 @@ async function ui(page, result) {
 }
 function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray(tree.props?.children)){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
-  for(const page of ['staff','settings','profile']){
+  for(const page of ['staff','settings','profile','labor']){
     for(const fail of [{ok:false,error:'Database unavailable'},new Error('Disconnected')]){
       const rendered=(await ui(page,fail)).render();
       assert.match(rendered,/role="alert"/); assert.match(rendered,/business.retry/);
       assert.doesNotMatch(rendered,/staff.noActive|set.save|type="checkbox"/);
     }
   }
+  const labor=(await ui('labor',{ok:true,laborCost:25,monthSales:0,recordedSalesDays:0,missingWageStaff:1,staff:[],sales:[]})).render();
+  assert.match(labor,/lab.missingWageCost/); assert.match(labor,/lab.wageBasis/);
+  assert.doesNotMatch(labor,/€25|€0/); assert.match(labor,/aria-label="lab.date"/); assert.match(labor,/aria-label="lab.revenue"/);
   const staff=await ui('staff',{ok:true,staff:[{id:'a',full_name:'Anna',employee_code:'STG-001',team:'Kitchen',status:'active'},{id:'b',full_name:'Ben',employee_code:'STG-002',team:'Cashier',status:'active'}]});
   assert.match(staff.render(),/aria-pressed="true"/);
   find(staff.tree(),e=>e.type==='input'&&e.props.type==='search').props.onChange({target:{value:'STG-002'}});
@@ -56,5 +60,16 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     assert.equal((await admin.saveBranchSettings(true,'required')).ok,true);
   }
   assert.equal(writes,4);branch=null;assert.equal((await admin.getBranchSettings()).ok,false);assert.equal((await admin.saveBranchSettings(true,'required')).ok,false);assert.equal(writes,4);
-  console.log('Staff search/dialog, recoverable page failures, settings role/input/branch boundaries pass.');
+  const laborClient={auth:{getUser:async()=>({data:{user:{id:'caller'}}})},from(table){const q={table,count:1,select:()=>q,eq:()=>q,gte:()=>q,lt:()=>q,order:()=>q,single:async()=>({data:{role:'manager',branch_id:'branch-a'}})};return q;}};
+  const calc=moduleAt('src/lib/pay/calculations.ts',require);
+  const laborQueries=moduleAt('src/lib/queries/labor.ts',name=>({
+    '@/lib/supabase/server':{createClient:async()=>laborClient},
+    '@/lib/time/berlinDate':{monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
+    '@/lib/pay/calculations':calc,
+    '@/lib/pay/wages':{wageMapForBranches:async()=>({a:0})},
+    '@/lib/supabase/readAll':{readAll:async q=>({data:q.table==='attendance_logs'?[{user_id:'a',clock_in:'2026-10-01T08:00:00Z',clock_out:'2026-10-01T09:00:00Z'}]:[],error:null})},
+  })[name]);
+  const zeroRate=await laborQueries.getLaborSummary();
+  assert.equal(zeroRate.ok,true);assert.equal(zeroRate.withWage,1);assert.equal(zeroRate.missingWageStaff,0);assert.equal(zeroRate.recordedSalesDays,0);
+  console.log('Workspace failure/search/dialog checks, labour coverage and role/input boundaries pass.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
