@@ -60,5 +60,16 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     assert.equal((await admin.saveBranchSettings(true,'required')).ok,true);
   }
   assert.equal(writes,4);branch=null;assert.equal((await admin.getBranchSettings()).ok,false);assert.equal((await admin.saveBranchSettings(true,'required')).ok,false);assert.equal(writes,4);
-  console.log('Staff search/dialog, recoverable page failures, settings role/input/branch boundaries pass.');
+  const laborClient={auth:{getUser:async()=>({data:{user:{id:'caller'}}})},from(table){const q={table,count:1,select:()=>q,eq:()=>q,gte:()=>q,lt:()=>q,order:()=>q,single:async()=>({data:{role:'manager',branch_id:'branch-a'}})};return q;}};
+  const calc=moduleAt('src/lib/pay/calculations.ts',require);
+  const laborQueries=moduleAt('src/lib/queries/labor.ts',name=>({
+    '@/lib/supabase/server':{createClient:async()=>laborClient},
+    '@/lib/time/berlinDate':{monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
+    '@/lib/pay/calculations':calc,
+    '@/lib/pay/wages':{wageMapForBranches:async()=>({a:0})},
+    '@/lib/supabase/readAll':{readAll:async q=>({data:q.table==='attendance_logs'?[{user_id:'a',clock_in:'2026-10-01T08:00:00Z',clock_out:'2026-10-01T09:00:00Z'}]:[],error:null})},
+  })[name]);
+  const zeroRate=await laborQueries.getLaborSummary();
+  assert.equal(zeroRate.ok,true);assert.equal(zeroRate.withWage,1);assert.equal(zeroRate.missingWageStaff,0);assert.equal(zeroRate.recordedSalesDays,0);
+  console.log('Workspace failure/search/dialog checks, labour coverage and role/input boundaries pass.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
