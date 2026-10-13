@@ -139,7 +139,7 @@ export default function LaborPage() {
         <div className="card" style={{ padding: 8 }}>
           {staff.map((p, i) => (
             <div key={p.id} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "9px 6px", borderBottom: i < staff.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.full_name}</div>
                 <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team || "—"}</div>
                 {!p.history?.some((h: any) => h.effective_from) && <div style={{ color: "var(--warn)", fontSize: 12 }}>{t("lab.unconfirmedDate")}</div>}
@@ -152,7 +152,7 @@ export default function LaborPage() {
                 onChange={(e) => setWageEdits((c) => ({ ...c, [p.id]: e.target.value }))}
                 style={{ ...input, width: 72, padding: "8px 10px", textAlign: "right" }}
               />
-              <label style={{ fontSize: 12, color: "var(--gray)" }}>{t("lab.effectiveFrom")}<input type="date" min="2000-01-01" max={today()} disabled={!!savingWage} value={wageDates[p.id] || ""} onChange={e => setWageDates(cur => ({ ...cur, [p.id]: e.target.value }))} style={{ ...input, display: "block", width: 160 }} /></label>
+              <label style={{ fontSize: 12, color: "var(--gray)" }}>{t("lab.effectiveFrom")}<input type="date" aria-label={`${t("lab.effectiveFrom")} · ${p.full_name}`} min="2000-01-01" max={today()} disabled={!!savingWage} value={wageDates[p.id] || ""} onChange={e => setWageDates(cur => ({ ...cur, [p.id]: e.target.value }))} style={{ ...input, display: "block", width: 160 }} /></label>
               <button onClick={() => saveWage(p.id)} disabled={!wageDates[p.id] || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: !wageDates[p.id] ? "var(--dark3)" : "var(--action)", color: !wageDates[p.id] ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: !wageDates[p.id] ? "default" : "pointer" }}>
                 {savingWage === p.id ? t("common.saving") : t("lab.set")}
               </button>
