@@ -20,6 +20,8 @@ export default function LaborPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [savingWage, setSavingWage] = useState<string | null>(null);
 
   const [date, setDate] = useState(today());
   const [amount, setAmount] = useState("");
@@ -27,39 +29,48 @@ export default function LaborPage() {
   const [wageEdits, setWageEdits] = useState<Record<string, string>>({});
 
   async function loadAll() {
+    setLoading(true); setLoadError(null); setDenied(false);
+    try {
     const [s, rs, sw] = await Promise.all([getLaborSummary(), getRecentSales(), getStaffWages()]);
-    if (s.ok) setSum(s);
-    else if (s.error?.includes("Managers")) { setDenied(true); setLoading(false); return; }
-    if (rs.ok) setSales(rs.sales || []);
-    if (sw.ok) setStaff(sw.staff || []);
-    setLoading(false);
+    const failed = [s, rs, sw].find(result => !result.ok);
+    if (failed) { if (failed.error?.includes("Managers")) setDenied(true); else setLoadError(failed.error || t("lab.couldNotSave")); return; }
+    setSum(s); setSales(rs.sales || []); setStaff(sw.staff || []);
+    } catch { setLoadError(t("staff.networkErr")); }
+    finally { setLoading(false); }
   }
   useEffect(() => { loadAll(); }, []);
 
   async function saveSale() {
     const amt = parseFloat(amount);
-    if (!date || isNaN(amt) || amt < 0) { toast(t("lab.validDateAmount"), "error"); return; }
+    if (!date || !Number.isFinite(amt) || amt < 0) { toast(t("lab.validDateAmount"), "error"); return; }
     setSavingSale(true);
+    try {
     const res = await setDailySales(date, amt);
-    setSavingSale(false);
     if (res.ok) { toast(t("lab.salesSaved"), "success"); setAmount(""); loadAll(); }
     else toast(res.error || t("lab.couldNotSave"), "error");
+    } catch { toast(t("staff.networkErr"), "error"); }
+    finally { setSavingSale(false); }
   }
 
   async function saveWage(userId: string) {
     const raw = wageEdits[userId];
     const w = parseFloat(raw);
-    if (isNaN(w) || w < 0) { toast(t("lab.validWage"), "error"); return; }
+    if (!Number.isFinite(w) || w < 0 || savingWage) { toast(t("lab.validWage"), "error"); return; }
+    setSavingWage(userId);
+    try {
     const res = await setStaffWage(userId, w);
     if (res.ok) {
       toast(t("lab.wageSaved"), "success");
       setStaff((cur) => cur.map((p) => (p.id === userId ? { ...p, hourly_wage: w } : p)));
       setWageEdits((cur) => { const c = { ...cur }; delete c[userId]; return c; });
-      getLaborSummary().then((s) => { if (s.ok) setSum(s); });
+      loadAll();
     } else toast(res.error || t("lab.couldNotSave"), "error");
+    } catch { toast(t("staff.networkErr"), "error"); }
+    finally { setSavingWage(null); }
   }
 
   if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (loadError) return <div className="card" role="alert"><p>{loadError}</p><button className="workspace-button" onClick={loadAll}>{t("business.retry")}</button></div>;
 
   const pct = sum?.laborPct;
   const pctColor = pct == null ? "var(--white)" : pct <= 30 ? "var(--success)" : pct <= 35 ? "var(--warn)" : "var(--danger)";
@@ -79,10 +90,11 @@ export default function LaborPage() {
             {pct == null ? "—" : `${pct}%`}
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: 22, marginTop: 8, fontSize: 13, color: "var(--gray)" }}>
-            <span>{t("lab.labor")} <b style={{ color: "var(--white)" }}>{eur(sum?.laborCost || 0)}</b></span>
-            <span>{t("lab.sales")} <b style={{ color: "var(--white)" }}>{eur(sum?.monthSales || 0)}</b></span>
+            <span>{t("lab.labor")} <b style={{ color: "var(--white)" }}>{sum?.missingWageStaff ? "—" : eur(sum?.laborCost || 0)}</b></span>
+            <span>{t("lab.sales")} <b style={{ color: "var(--white)" }}>{sum?.recordedSalesDays ? eur(sum.monthSales) : "—"}</b></span>
           </div>
           {pct == null && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("lab.enterToCalc")}</div>}
+          {!!sum?.missingWageStaff && <p role="status" style={{ color: "var(--warn)" }}>{t("lab.missingWageCost")}</p>}
           {pct != null && <div style={{ fontSize: 12, color: pctColor, marginTop: 8 }}>{pct <= 30 ? t("lab.healthy") : pct <= 35 ? t("lab.watchIt") : t("lab.high")} · {t("lab.typicalTarget")}</div>}
         </div>
       )}
@@ -90,16 +102,16 @@ export default function LaborPage() {
       {/* enter sales */}
       <div className="section-label">{t("lab.enterDailySales")}</div>
       <div className="card" style={{ marginBottom: 6 }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
           <div style={{ flex: 1 }}>
             <div style={lbl}>{t("lab.date")}</div>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={input} />
+            <input type="date" aria-label={t("lab.date")} value={date} onChange={(e) => setDate(e.target.value)} style={input} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={lbl}>{t("lab.revenue")}</div>
-            <input type="number" inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} style={input} />
+            <input type="number" min="0" step="0.01" aria-label={t("lab.revenue")} inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} style={input} />
           </div>
-          <button onClick={saveSale} disabled={savingSale} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: savingSale ? "default" : "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={saveSale} disabled={savingSale || loading} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: savingSale ? "default" : "pointer", whiteSpace: "nowrap" }}>
             {savingSale ? "…" : t("common.save")}
           </button>
         </div>
@@ -118,6 +130,7 @@ export default function LaborPage() {
 
       {/* staff wages */}
       <div className="section-label">{t("lab.staffWages")}</div>
+      <p style={{ color: "var(--gray)", fontSize: 14 }}>{t("lab.wageBasis")}</p>
       {loading ? (
         <Skeleton height={120} radius={14} />
       ) : (
@@ -129,14 +142,15 @@ export default function LaborPage() {
                 <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team || "—"}</div>
               </div>
               <input
-                type="number" inputMode="decimal"
+                type="number" inputMode="decimal" min="0" step="0.01" disabled={!!savingWage}
+                aria-label={`${t("lab.staffWages")} · ${p.full_name}`}
                 placeholder={p.hourly_wage != null ? String(p.hourly_wage) : "—"}
                 value={wageEdits[p.id] ?? ""}
                 onChange={(e) => setWageEdits((c) => ({ ...c, [p.id]: e.target.value }))}
                 style={{ ...input, width: 72, padding: "8px 10px", textAlign: "right" }}
               />
-              <button onClick={() => saveWage(p.id)} disabled={wageEdits[p.id] === undefined} style={{ padding: "8px 12px", background: wageEdits[p.id] === undefined ? "var(--dark3)" : "var(--action)", color: wageEdits[p.id] === undefined ? "var(--gray)" : "#1a0e0e", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: wageEdits[p.id] === undefined ? "default" : "pointer" }}>
-                {t("lab.set")}
+              <button onClick={() => saveWage(p.id)} disabled={wageEdits[p.id] === undefined || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: wageEdits[p.id] === undefined ? "var(--dark3)" : "var(--action)", color: wageEdits[p.id] === undefined ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: wageEdits[p.id] === undefined ? "default" : "pointer" }}>
+                {savingWage === p.id ? t("common.saving") : t("lab.set")}
               </button>
             </div>
           ))}
@@ -154,4 +168,4 @@ export default function LaborPage() {
 }
 
 const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
-const input: React.CSSProperties = { width: "100%", padding: "11px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14 };
+const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "11px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14 };
