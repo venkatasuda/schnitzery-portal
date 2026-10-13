@@ -3,10 +3,10 @@
 Read this file before older handoff notes. Check Git and deployment state before
 treating local changes as live. AI billing and further AI work are deferred.
 
-## Verified production baseline — 2026-10-12
+## Verified production baseline — 2026-10-13
 
-- Main `79fbd58e7c28ae64079db5706b9148bb56c4a08d`; production deployment
-  `dpl_5eorgwCcFV4fmivH95G8cTWMLQsF` is Ready at schnitzery-portal.vercel.app.
+- Main `c42430e71fcc5eb7581e0e6c8925d1dee79e7b99`; production deployment
+  `dpl_FJBR515GAdsMCmwvuJB3hU4m5EiP` is Ready at schnitzery-portal.vercel.app.
 - Desktop management shell and focused employee navigation; light theme and
   responsive inventory, operations, attendance, approvals and payroll layouts.
 - Approved payroll reads immutable snapshots. Reopening retains old approvals.
@@ -28,9 +28,19 @@ The Git integration failed to retrieve source twice; CLI upload of source matchi
 tested main succeeded. No staff, wage, payroll or attendance settings were changed
 as part of live verification.
 
-Current change: labour-page read failures must show retry rather than false zero
-costs; missing wages and absent sales records must stay unknown. Wage edits need
-labels, finite values, contrast and request protection. See Git/PR for release state.
+Labour read failures now show retry, not false zero costs. Missing wages and
+absent sales records stay unknown; wage writes restore busy state after errors.
+Effective-dated wage history is deployed (#36/#37): append-only versions, atomic
+current-rate updates, per-work-date payroll rates, mixed-rate exports, and unknown
+period approval gates. The user confirmed existing dates are unknown, so all 26
+date inputs remain blank. Existing wage values are retained as unconfirmed
+baselines. Live September payroll retains nine employee rows and blocks approval
+for unconfirmed rates. Production permissions prevent direct browser wage writes;
+history has RLS, and security advisors found no error-level issues.
+
+Current change: phone wage controls squeezed employee names. Give names a minimum
+flex basis so fields wrap into readable rows; name each effective-date field for
+its employee. See Git/PR for release state.
 The code graph represents the preceding release; refresh at a phase boundary,
 rather than rebuilding for every small edit.
 
@@ -40,7 +50,7 @@ rather than rebuilding for every small edit.
 | --- | --- |
 | Page UX | Finish roster, staff, reports, settings and dialog checks at desktop/phone widths; German and keyboard checks. Changes alone are not a completed accessibility audit. |
 | Role flows | Unit/isolated database boundaries pass for covered operations. Full employee/manager/branch-owner/brand-owner staging flows and cross-branch recovery remain unverified. Never use real payroll/attendance decisions as tests. |
-| Payroll | Snapshot protection is complete. Effective-dated wages and historical branch assignments remain open. Drafts currently use current wage rates; base pay excludes premiums, taxes and employer costs. |
+| Payroll | Snapshot protection and effective-dated wage history are implemented. Managers must confirm actual dates before affected payroll can be approved. Historical branch assignments remain open. Business estimates use current rates; base pay excludes premiums, taxes and employer costs. |
 | Stock | Canonical movements, reconciliation, consumption and valuation remain open. Existing deliveries/transfers/waste/counts must feed one idempotent history without fabricating historical stock. |
 | Business inputs | Sales and purchase coverage are exposed; missing data remains unknown. Purchase spending is not food consumption cost or profit. Reliable prices/valuation must precede those figures. |
 | Offline/privacy | Existing service-worker checks are not an end-to-end offline attendance or account-isolation proof. One Schnitzery brand with all branches/roles; no unrelated multi-tenant claims. |
