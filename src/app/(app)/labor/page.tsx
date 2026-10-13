@@ -27,6 +27,7 @@ export default function LaborPage() {
   const [amount, setAmount] = useState("");
   const [savingSale, setSavingSale] = useState(false);
   const [wageEdits, setWageEdits] = useState<Record<string, string>>({});
+  const [wageDates, setWageDates] = useState<Record<string, string>>({});
 
   async function loadAll() {
     setLoading(true); setLoadError(null); setDenied(false);
@@ -53,16 +54,17 @@ export default function LaborPage() {
   }
 
   async function saveWage(userId: string) {
-    const raw = wageEdits[userId];
+    const raw = wageEdits[userId] ?? String(staff.find(p => p.id === userId)?.hourly_wage ?? "");
     const w = parseFloat(raw);
-    if (!Number.isFinite(w) || w < 0 || savingWage) { toast(t("lab.validWage"), "error"); return; }
+    if (!Number.isFinite(w) || w < 0 || !wageDates[userId] || savingWage) { toast(t("lab.validWage"), "error"); return; }
     setSavingWage(userId);
     try {
-    const res = await setStaffWage(userId, w);
+    const res = await setStaffWage(userId, w, wageDates[userId]);
     if (res.ok) {
       toast(t("lab.wageSaved"), "success");
       setStaff((cur) => cur.map((p) => (p.id === userId ? { ...p, hourly_wage: w } : p)));
       setWageEdits((cur) => { const c = { ...cur }; delete c[userId]; return c; });
+      setWageDates((cur) => { const c = { ...cur }; delete c[userId]; return c; });
       loadAll();
     } else toast(res.error || t("lab.couldNotSave"), "error");
     } catch { toast(t("staff.networkErr"), "error"); }
@@ -136,10 +138,11 @@ export default function LaborPage() {
       ) : (
         <div className="card" style={{ padding: 8 }}>
           {staff.map((p, i) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 6px", borderBottom: i < staff.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none" }}>
+            <div key={p.id} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "9px 6px", borderBottom: i < staff.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.full_name}</div>
                 <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team || "—"}</div>
+                {!p.history?.some((h: any) => h.effective_from) && <div style={{ color: "var(--warn)", fontSize: 12 }}>{t("lab.unconfirmedDate")}</div>}
               </div>
               <input
                 type="number" inputMode="decimal" min="0" step="0.01" disabled={!!savingWage}
@@ -149,9 +152,11 @@ export default function LaborPage() {
                 onChange={(e) => setWageEdits((c) => ({ ...c, [p.id]: e.target.value }))}
                 style={{ ...input, width: 72, padding: "8px 10px", textAlign: "right" }}
               />
-              <button onClick={() => saveWage(p.id)} disabled={wageEdits[p.id] === undefined || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: wageEdits[p.id] === undefined ? "var(--dark3)" : "var(--action)", color: wageEdits[p.id] === undefined ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: wageEdits[p.id] === undefined ? "default" : "pointer" }}>
+              <label style={{ fontSize: 12, color: "var(--gray)" }}>{t("lab.effectiveFrom")}<input type="date" min="2000-01-01" max={today()} disabled={!!savingWage} value={wageDates[p.id] || ""} onChange={e => setWageDates(cur => ({ ...cur, [p.id]: e.target.value }))} style={{ ...input, display: "block", width: 160 }} /></label>
+              <button onClick={() => saveWage(p.id)} disabled={!wageDates[p.id] || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: !wageDates[p.id] ? "var(--dark3)" : "var(--action)", color: !wageDates[p.id] ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: !wageDates[p.id] ? "default" : "pointer" }}>
                 {savingWage === p.id ? t("common.saving") : t("lab.set")}
               </button>
+              {!!p.history?.length && <details style={{ flexBasis: "100%", fontSize: 14 }}><summary>{t("lab.history")}</summary><ul>{p.history.map((h: any) => <li key={h.id}>{h.effective_from || t("lab.unconfirmedDate")} · {h.hourly_wage == null ? "—" : eur(Number(h.hourly_wage))} · {t("lab.recorded")} {new Date(h.recorded_at).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" })}</li>)}</ul></details>}
             </div>
           ))}
           {sum && sum.withWage < sum.staffCount && (

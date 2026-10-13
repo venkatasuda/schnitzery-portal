@@ -3,7 +3,8 @@ import { readAll } from "@/lib/supabase/readAll";
 
 
 import { createClient } from "@/lib/supabase/server";
-import { monthRange, isCalendarDate } from "@/lib/time/berlinDate";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { monthRange, isCalendarDate, berlinToday } from "@/lib/time/berlinDate";
 import { shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches, setWage } from "@/lib/pay/wages";
 
@@ -113,18 +114,27 @@ export async function getStaffWages() {
   // Wages come from user_pay (item 18) and are stitched on here, so the shape
   // the page receives is unchanged.
   const wages = await wageMapForBranches(supabase, [branchId]);
-  const staff = (data || []).map((s) => ({ ...s, hourly_wage: wages[s.id] ?? null }));
+  const { data: history, error: historyError } = await readAll(supabase.from("wage_history")
+    .select("id,user_id,hourly_wage,effective_from,recorded_at").eq("branch_id", branchId)
+    .order("effective_from", { ascending: false, nullsFirst: false }).order("id", { ascending: false }));
+  if (historyError) return { ok: false, error: historyError.message, staff: [] };
+  const staff = (data || []).map((s) => ({ ...s, hourly_wage: wages[s.id] ?? null,
+    history: (history || []).filter(h => h.user_id === s.id) }));
   return { ok: true, staff };
 }
 
-export async function setStaffWage(userId: string, wage: number) {
+export async function setStaffWage(userId: string, wage: number, effectiveFrom: string) {
   const { supabase, user, role, branchId } = await getMgr();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
+  if (!isCalendarDate(effectiveFrom) || effectiveFrom < "2000-01-01" || effectiveFrom > berlinToday() || !Number.isFinite(wage) || wage < 0) return { ok: false, error: "Enter a valid wage and its actual effective date." };
   const { data: tgt } = await supabase.from("users").select("branch_id").eq("id", userId).single();
   if (!tgt || tgt.branch_id !== branchId) return { ok: false, error: "Not in your branch." };
 
-  const res = await setWage(supabase, userId, tgt.branch_id, wage, user.id);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return { ok: false, error: "Wage history is not configured." };
+  const admin = createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const res = await setWage(admin, userId, tgt.branch_id, wage, user.id, effectiveFrom);
   if (!res.ok) return { ok: false, error: res.error };
   return { ok: true };
 }
