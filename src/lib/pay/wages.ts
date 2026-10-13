@@ -72,15 +72,11 @@ export async function setWage(
   branchId: string | null,
   wage: number | null,
   actor: string | null,
+  effectiveFrom: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (wage !== null && (!Number.isFinite(wage) || wage < 0)) return { ok: false, error: "Invalid wage." };
-  const { error } = await supabase.from("user_pay").upsert({
-    user_id: userId,
-    branch_id: branchId,
-    hourly_wage: wage,
-    updated_by: actor,
-    updated_at: new Date().toISOString(),
-  });
+  if (!branchId || !actor || !effectiveFrom) return { ok: false, error: "Confirm the wage effective date." };
+  const { error } = await supabase.rpc("set_wage_effective", { p_actor: actor, p_user: userId, p_wage: wage, p_date: effectiveFrom });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }

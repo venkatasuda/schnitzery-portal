@@ -72,7 +72,7 @@ export default function PayrollExportPage() {
   function matrix() {
     const header = [t("pay.cCode"), t("pay.cName"), t("pay.cTeam"), t("pay.cShifts"), t("pay.cRegular"), t("pay.cOvertime"),
       t("pay.cWeekend"), t("pay.cHoliday"), t("pay.cNight"), t("pay.cBreak"), t("pay.cPaid"), t("pay.cWage"), t("pay.cGross")];
-    const body = rows.map((r) => [r.code, r.name, r.team, r.shifts, r.regularH, r.overtimeH, r.weekendH, r.holidayH, r.nightH, r.breakH, r.paidH, r.wage ?? "", r.gross ?? ""]);
+    const body = rows.map((r) => [r.code, r.name, r.team, r.shifts, r.regularH, r.overtimeH, r.weekendH, r.holidayH, r.nightH, r.breakH, r.paidH, r.wage ?? (r.rates?.length > 1 ? r.rates.map((v: any) => `${v.wage} EUR/h: ${v.paidMin} min`).join("; ") : ""), r.gross ?? ""]);
     const totalRow = ["", t("pay.cTotal"), "", "", totals.regularH, totals.overtimeH, totals.weekendH, totals.holidayH, totals.nightH, totals.breakH, totals.paidH, "", totals.gross];
     return { header, body, totalRow };
   }
@@ -198,7 +198,7 @@ export default function PayrollExportPage() {
               <tbody>{rows.map(r => <tr key={r.userId || r.code || r.name}>
                 <th scope="row" style={{ whiteSpace: "nowrap", position: "sticky", left: 0, zIndex: 1, background: "var(--dark)", color: "var(--white)", fontSize: 14 }}>{r.name}<div className="muted">{r.code} · {r.team}</div>{r.invalidShifts > 0 && <div><Link href="/attendance-hub">{t("pay.invalidShifts", { count: r.invalidShifts })}</Link></div>}</th>
                 {[r.shifts, r.paidH, r.regularH, r.overtimeH, r.breakH, r.weekendH, r.holidayH, r.nightH].map((value, i) => <td key={i} className="numeric">{value}</td>)}
-                <td className="numeric">{r.wage == null ? <Link href="/labor">{t("pay.setWage")}</Link> : eur(r.wage)}</td>
+                <td className="numeric">{r.wage == null ? r.gross != null && r.rates?.length > 1 ? r.rates.map((v: any) => eur(v.wage)).join(" / ") : <Link href="/labor">{t("pay.setWage")}</Link> : eur(r.wage)}</td>
                 <td className="numeric" style={{ fontWeight: 700 }}>{eur(r.gross)}</td>
               </tr>)}</tbody>
             </table>
@@ -215,7 +215,7 @@ export default function PayrollExportPage() {
         </>
       )}
 
-      {rows.some((r) => r.wage == null) && (
+      {rows.some((r) => r.gross == null) && (
         <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 10 }}>
           {t("pay.wageNoteA")} <Link href="/labor" style={{ color: "var(--gold)", textDecoration: "none" }}>{t("pay.laborLink")}</Link> {t("pay.wageNoteB")}
         </div>

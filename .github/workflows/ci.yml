@@ -73,6 +73,7 @@ jobs:
           npm install --prefix .audit-db --no-save --package-lock=false @electric-sql/pglite@0.5.8
           node scripts/checks/atomic-workflows.cjs
           node scripts/checks/payroll-snapshots.cjs
+          node scripts/checks/wage-history.cjs
           node scripts/checks/correction-integrity.cjs
       - name: Upload coverage artifact
         if: always()
