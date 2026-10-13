@@ -32,7 +32,7 @@ export async function getLaborSummary() {
   const wages = await wageMapForBranches(supabase, [branchId]);
   const wageOf: Record<string, number> = {};
   let withWage = 0;
-  for (const [id, w] of Object.entries(wages)) { wageOf[id] = w || 0; if (w) withWage++; }
+  for (const [id, w] of Object.entries(wages)) { wageOf[id] = w ?? 0; if (w != null) withWage++; }
 
   // Headcount still comes from users — only the wage column moved.
   const { count: staffCount } = await supabase
@@ -69,6 +69,7 @@ export async function getLaborSummary() {
     ok: true,
     laborCost: Math.round(laborCost),
     monthSales: Math.round(monthSales),
+    recordedSalesDays: sales?.length || 0,
     laborPct,
     invSpend: Math.round(monthInvSpend),
     foodCostPct,

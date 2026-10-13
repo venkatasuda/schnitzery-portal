@@ -15,11 +15,12 @@ async function ui(page, result) {
   const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(){return {current:null};}};
   const component=moduleAt(`src/app/(app)/${page}/page.tsx`, name=>{
     if(name==='react')return hooks;
+    if(name==='@/lib/time/berlinDate')return {berlinToday:()=> '2026-10-13'};
     if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:()=>async()=>{if(result instanceof Error)throw result; return result;}});
     if(name==='@/components/LanguageProvider')return {useLang:()=>({t:k=>k})};
     if(name==='next/link')return {__esModule:true,default:({href,children,...rest})=>React.createElement('a',{href,...rest},children)};
     if(name==='@/components/Toast')return {toast(){}};
-    if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null};
+    if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null,Skeleton:()=>null};
     return require(name);
   }).default;
   component(); for(const effect of effects) effect(); await new Promise(r=>setImmediate(r)); initial=false;
@@ -27,13 +28,16 @@ async function ui(page, result) {
 }
 function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray(tree.props?.children)){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
-  for(const page of ['staff','settings','profile']){
+  for(const page of ['staff','settings','profile','labor']){
     for(const fail of [{ok:false,error:'Database unavailable'},new Error('Disconnected')]){
       const rendered=(await ui(page,fail)).render();
       assert.match(rendered,/role="alert"/); assert.match(rendered,/business.retry/);
       assert.doesNotMatch(rendered,/staff.noActive|set.save|type="checkbox"/);
     }
   }
+  const labor=(await ui('labor',{ok:true,laborCost:25,monthSales:0,recordedSalesDays:0,missingWageStaff:1,staff:[],sales:[]})).render();
+  assert.match(labor,/lab.missingWageCost/); assert.match(labor,/lab.wageBasis/);
+  assert.doesNotMatch(labor,/€25|€0/); assert.match(labor,/aria-label="lab.date"/); assert.match(labor,/aria-label="lab.revenue"/);
   const staff=await ui('staff',{ok:true,staff:[{id:'a',full_name:'Anna',employee_code:'STG-001',team:'Kitchen',status:'active'},{id:'b',full_name:'Ben',employee_code:'STG-002',team:'Cashier',status:'active'}]});
   assert.match(staff.render(),/aria-pressed="true"/);
   find(staff.tree(),e=>e.type==='input'&&e.props.type==='search').props.onChange({target:{value:'STG-002'}});

@@ -688,6 +688,8 @@ export const messages = {
       hoursPerWeek: "Hours per Week", hoursByDay: "Hours by Day of Week", hoursByTeam: "Hours by Team (8 weeks)",
     },
     lab: {
+      missingWageCost: "Labour cost is incomplete: add a wage rate for every worked employee.",
+      wageBasis: "Estimates use current wage rates. Approved payroll stays frozen; effective-dated wage history is not available yet.",
       title: "Labor Cost", subtitle: "This month · your branch", laborPct: "Labor Cost %",
       labor: "Labor", sales: "Sales", enterToCalc: "Enter sales below to calculate.",
       healthy: "Healthy", watchIt: "Watch it", high: "High — review staffing", typicalTarget: "typical target 25–35%",
@@ -1472,6 +1474,8 @@ export const messages = {
       hoursPerWeek: "Stunden pro Woche", hoursByDay: "Stunden nach Wochentag", hoursByTeam: "Stunden nach Team (8 Wochen)",
     },
     lab: {
+      missingWageCost: "Die Personalkosten sind unvollständig: Für alle Mitarbeiter mit Arbeitsstunden muss ein Stundenlohn erfasst werden.",
+      wageBasis: "Schätzungen verwenden aktuelle Stundenlöhne. Freigegebene Abrechnungen bleiben unverändert; eine Historie mit Gültigkeitsdatum ist noch nicht verfügbar.",
       title: "Personalkosten", subtitle: "Diesen Monat · deine Filiale", laborPct: "Personalkosten %",
       labor: "Personal", sales: "Umsatz", enterToCalc: "Gib unten den Umsatz ein, um zu berechnen.",
       healthy: "Gesund", watchIt: "Aufpassen", high: "Hoch — Personal prüfen", typicalTarget: "typisches Ziel 25–35 %",
