@@ -15,6 +15,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // columns were touched, and returns whatever data we prime it with.
 function mockClient(rows: any[] = [], captured: any = {}) {
   const client = {
+    rpc(name: string, args: any) { captured.rpc = name; captured.args = args; return Promise.resolve({ error: captured.upsertError ?? null }); },
     from(table: string) {
       captured.table = table;
       return {
@@ -89,26 +90,26 @@ describe("wageMapForUsers", () => {
 });
 
 describe("setWage", () => {
-  it("writes to user_pay with the caller as updated_by", async () => {
+  it("records the effective date through the service-only wage RPC", async () => {
     const cap: any = {};
-    const res = await setWage(mockClient([], cap), "u1", "b1", 14, "mgr-id");
+    const res = await setWage(mockClient([], cap), "u1", "b1", 14, "mgr-id", "2026-09-01");
     expect(res.ok).toBe(true);
-    expect(cap.table).toBe("user_pay");
-    expect(cap.upsert).toMatchObject({ user_id: "u1", branch_id: "b1", hourly_wage: 14, updated_by: "mgr-id" });
+    expect(cap.rpc).toBe("set_wage_effective");
+    expect(cap.args).toMatchObject({ p_user: "u1", p_wage: 14, p_actor: "mgr-id", p_date: "2026-09-01" });
   });
 
   it("surfaces a DB error instead of silently succeeding", async () => {
     const cap: any = { upsertError: { message: "denied by RLS" } };
-    const res = await setWage(mockClient([], cap), "u1", "b1", 14, "mgr-id");
+    const res = await setWage(mockClient([], cap), "u1", "b1", 14, "mgr-id", "2026-09-01");
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toBe("denied by RLS");
   });
 
   it("allows clearing a wage to null", async () => {
     const cap: any = {};
-    const res = await setWage(mockClient([], cap), "u1", "b1", null, "mgr-id");
+    const res = await setWage(mockClient([], cap), "u1", "b1", null, "mgr-id", "2026-09-01");
     expect(res.ok).toBe(true);
-    expect(cap.upsert.hourly_wage).toBeNull();
+    expect(cap.args.p_wage).toBeNull();
   });
 });
 
