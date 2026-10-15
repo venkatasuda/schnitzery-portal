@@ -6,6 +6,7 @@
 
 export const messages = {
   en: {
+    inventoryReview: { recount: "Needs review · check counts and movements", explanation: "Some estimates are withheld: count pairs, purchase prices or movement records need review. Unexplained stock increases are not zero usage. Transfers need reconciliation. Check Stock history before relying on these estimates." },
     stockHistory: {
       title: "Stock history", help: "Trace deliveries, counts, waste and transfer changes in your branch.",
       note: "Read-only evidence, not a stock balance. Counts are observations. Baselines show records present when tracking began; earlier deletions and changes are unknown. Recorded time is the audit time in Berlin, not the delivery or count date.",
@@ -222,8 +223,8 @@ export const messages = {
       saveDelivery: "Save delivery", deliverySaved: "Delivery recorded", recentDeliveries: "Recent deliveries", noDeliveries: "No deliveries yet.",
       addProductsFirst: "Add products to the catalog first (Stock Count tab).",
       lastNDays: "{n} days", noAnalytics: "Record some deliveries and counts to see analytics.",
-      kSpend: "Spent on stock", kUsed: "Value used", kStockValue: "Stock on hand",
-      spendVsUse: "Spend vs. usage", spendVsUseSub: "Money spent on deliveries vs. estimated value consumed, by date.",
+      kSpend: "Spent on stock", kUsed: "Estimated depletion value", kStockValue: "Value of counted stock",
+      spendVsUse: "Spend vs. estimated depletion", spendVsUseSub: "Count depletion includes consumption, waste and recording differences. Daily records do not establish exact movement order. Gaps mean the estimate is unavailable.",
       noTrend: "Not enough data yet.", legendSpend: "Spent (€)", legendUse: "Used (€)",
       topSpend: "Top spend by product", topUse: "Most used by value", topUseSub: "Estimated from counts + deliveries.",
       noData: "No spend yet.", noUseData: "No usage computed yet — needs at least two counts.",
@@ -801,6 +802,7 @@ export const messages = {
   },
 
   de: {
+    inventoryReview: { recount: "Prüfung nötig · Zählungen und Bewegungen prüfen", explanation: "Einige Schätzungen fehlen: Zählpaare, Einkaufspreise oder Bewegungen müssen geprüft werden. Unerklärte Bestandszunahmen sind kein Nullverbrauch. Transfers müssen abgestimmt werden. Prüfen Sie den Bestandsverlauf, bevor Sie diese Schätzungen verwenden." },
     stockHistory: {
       title: "Bestandsverlauf", help: "Lieferungen, Zählungen, Abfall und Transferänderungen Ihrer Filiale nachvollziehen.",
       note: "Schreibgeschützte Nachweise, kein berechneter Lagerbestand. Zählungen sind Beobachtungen. Ausgangsschnappschüsse zeigen vorhandene Datensätze bei Beginn der Protokollierung; frühere Löschungen und Änderungen sind unbekannt. Die Protokollzeit gilt für Berlin und ist nicht das Liefer- oder Zähldatum.",
@@ -1017,8 +1019,8 @@ export const messages = {
       saveDelivery: "Lieferung speichern", deliverySaved: "Lieferung erfasst", recentDeliveries: "Letzte Lieferungen", noDeliveries: "Noch keine Lieferungen.",
       addProductsFirst: "Zuerst Produkte im Katalog anlegen (Tab Bestand).",
       lastNDays: "{n} Tage", noAnalytics: "Erfasse Lieferungen und Zählungen, um Analysen zu sehen.",
-      kSpend: "Ausgaben Ware", kUsed: "Verbrauchter Wert", kStockValue: "Lagerwert",
-      spendVsUse: "Ausgaben vs. Verbrauch", spendVsUseSub: "Ausgaben für Lieferungen vs. geschätzter Verbrauchswert, nach Datum.",
+      kSpend: "Ausgaben Ware", kUsed: "Geschätzter Bestandsabbau", kStockValue: "Wert gezählter Bestände",
+      spendVsUse: "Ausgaben vs. Bestandsabbau", spendVsUseSub: "Bestandsabbau umfasst Verbrauch, Abfall und Erfassungsdifferenzen. Tagesdaten belegen keine genaue Bewegungsreihenfolge. Lücken bedeuten: Schätzung nicht verfügbar.",
       noTrend: "Noch nicht genug Daten.", legendSpend: "Ausgaben (€)", legendUse: "Verbrauch (€)",
       topSpend: "Top-Ausgaben nach Produkt", topUse: "Höchster Verbrauchswert", topUseSub: "Geschätzt aus Zählungen + Lieferungen.",
       noData: "Noch keine Ausgaben.", noUseData: "Noch kein Verbrauch berechnet — mind. zwei Zählungen nötig.",

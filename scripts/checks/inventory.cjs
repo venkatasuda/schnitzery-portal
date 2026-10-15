@@ -48,4 +48,8 @@ assert.ok(render({ search: "missing", countView: "grid" }).includes("inventoryWo
 assert.ok(render({ tab: "deliveries" }).includes("inventory-delivery-grid"));
 const forecast = render({ tab: "forecast", forecast: { items: [{ product: "Butter", current: 2, usageRate: 1, daysLeft: 2, suggested: 5 }] } });
 assert.ok(forecast.includes("<table") && forecast.includes("inventoryWorkflow.coverage"));
+assert.ok(render({tab:"forecast",forecast:{items:[{product:"Butter",needsReview:true,current:2,usageRate:null,daysLeft:null,suggested:0}]}}).includes("inventoryReview.recount"));
+const incomplete=render({tab:"analytics",analytics:{hasPurchases:true,hasCounts:true,needsReview:true,totalSpend:20,totalUsageEur:null,stockValue:null,trend:[],byCategory:[],topSpend:[],topUsage:[]}});
+assert.ok(incomplete.includes("inventoryReview.explanation"));
+assert.ok(!incomplete.includes("€0"),'Unavailable estimates must not render as free stock or zero depletion');
 console.log("Inventory search, combined filters, catalog actions and delivery layout pass.");
