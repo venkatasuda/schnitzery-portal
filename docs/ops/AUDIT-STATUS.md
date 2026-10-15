@@ -43,15 +43,27 @@ Phone wage controls are deployed on main `38a0997`, deployment
 no horizontal overflow, zero assumed dates. German effective-date labels also
 loaded. No wage values were changed during verification.
 
-Current phase: stock evidence history in the existing Inventory tab group.
+Stock evidence history is live on main `2ffbfe2`, production deployment
+`dpl_59RFr4S8DZwMBk6GMsKaN8zuL5rJ` (#40/#41). Live checks: 100 records on page
+one, one older record, 12 waste-filter results, German labels and 390px internal
+table scrolling without page overflow. Migration `20261015040536` is applied once;
+101 baselines and four capture triggers. Security advisor: no error-level findings.
+No business records were changed for testing; a synthetic waste probe rolled back.
 Database triggers retain before/after records for counts, deliveries, waste and
 transfers, including deletions. Authenticated source writes and journal entries
 commit together; no-op updates are skipped. Manager reads use branch RLS, and
 browser/service clients cannot forge or edit evidence. TRUNCATE is refused.
 The production-schema dry run produced 101 historical snapshots and rolled back.
-Isolated PostgreSQL and actual query/UI checks pass. See Git/PR/deployment state
-before treating this phase as live. Historical snapshots are explicitly unverified;
+Isolated PostgreSQL and actual query/UI checks pass. Historical snapshots are explicitly unverified;
 earlier deletions, opening balances and stock consumption remain unknown.
+
+Current phase: withhold estimates when counts imply unexplained stock gains,
+quantity inputs are invalid, or recorded sent/received transfers need reconciliation.
+These cases no longer become zero usage or automatic order suggestions. Missing
+purchase prices make counted-stock valuation unavailable. Estimates are explicitly
+depletion (including waste/differences), not verified consumption. This is a safety
+gate, not completed reconciliation: daily records cannot establish exact boundary
+movement order, and deleted historical transfer legs cannot be reconstructed here.
 The code graph represents the preceding release; refresh at a phase boundary,
 rather than rebuilding for every small edit.
 
@@ -62,7 +74,7 @@ rather than rebuilding for every small edit.
 | Page UX | Finish roster, staff, reports, settings and dialog checks at desktop/phone widths; German and keyboard checks. Changes alone are not a completed accessibility audit. |
 | Role flows | Unit/isolated database boundaries pass for covered operations. Full employee/manager/branch-owner/brand-owner staging flows and cross-branch recovery remain unverified. Never use real payroll/attendance decisions as tests. |
 | Payroll | Snapshot protection and effective-dated wage history are implemented. Managers must confirm actual dates before affected payroll can be approved. Historical branch assignments remain open. Business estimates use current rates; base pay excludes premiums, taxes and employer costs. |
-| Stock | Evidence history is implemented in this phase; release verification is pending. Reconciliation, consumption and valuation remain open. A physical count is an observation, not an additive movement. Source writes require an authenticated actor, including maintenance writes; never fabricate one. Existing legacy rows without a branch cannot be scoped and are excluded from baselines. |
+| Stock | Evidence history is live. Reconciliation, consumption and valuation remain open; current phase adds estimate safety gates. A physical count is an observation, not an additive movement. Source writes require an authenticated actor, including maintenance writes; never fabricate one. Existing legacy rows without a branch cannot be scoped and are excluded from baselines. |
 | Business inputs | Sales and purchase coverage are exposed; missing data remains unknown. Purchase spending is not food consumption cost or profit. Reliable prices/valuation must precede those figures. |
 | Offline/privacy | Existing service-worker checks are not an end-to-end offline attendance or account-isolation proof. One Schnitzery brand with all branches/roles; no unrelated multi-tenant claims. |
 
