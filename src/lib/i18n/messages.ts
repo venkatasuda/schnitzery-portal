@@ -6,6 +6,14 @@
 
 export const messages = {
   en: {
+    stockHistory: {
+      title: "Stock history", help: "Trace deliveries, counts, waste and transfer changes in your branch.",
+      note: "Read-only evidence, not a stock balance. Counts are observations. Baselines show records present when tracking began; earlier deletions and changes are unknown. Recorded time is the audit time in Berlin, not the delivery or count date.",
+      source: "Record type", all: "All records", inventory_counts: "Physical count", inventory_purchases: "Delivery", waste_log: "Waste", stock_transfers: "Transfer",
+      BASELINE: "Unverified historical snapshot", INSERT: "Recorded", UPDATE: "Changed", DELETE: "Deleted · evidence retained",
+      latest: "Refresh latest", older: "Older records", failed: "Stock history could not be loaded.", empty: "No history records in this view.",
+      recorded: "Recorded at · Berlin", product: "Product", event: "Event", quantity: "Before → after", details: "Evidence", reference: "Source ID", actor: "Actor ID", unknown: "Unknown · historical snapshot", before: "Before", after: "After",
+    },
     business: {
       performance: "Business performance", noSource: "No live records were retrieved for this reply.", get_business_performance: "Business report", get_stock_levels: "Stock counts", get_expiry_risk: "Expiry records", get_waste_trend: "Waste log",
       reportDate: "Report date", reportBranch: "Report branch",
@@ -793,6 +801,14 @@ export const messages = {
   },
 
   de: {
+    stockHistory: {
+      title: "Bestandsverlauf", help: "Lieferungen, Zählungen, Abfall und Transferänderungen Ihrer Filiale nachvollziehen.",
+      note: "Schreibgeschützte Nachweise, kein berechneter Lagerbestand. Zählungen sind Beobachtungen. Ausgangsschnappschüsse zeigen vorhandene Datensätze bei Beginn der Protokollierung; frühere Löschungen und Änderungen sind unbekannt. Die Protokollzeit gilt für Berlin und ist nicht das Liefer- oder Zähldatum.",
+      source: "Datensatztyp", all: "Alle Datensätze", inventory_counts: "Bestandszählung", inventory_purchases: "Lieferung", waste_log: "Abfall", stock_transfers: "Transfer",
+      BASELINE: "Unbestätigter historischer Schnappschuss", INSERT: "Erfasst", UPDATE: "Geändert", DELETE: "Gelöscht · Nachweis erhalten",
+      latest: "Aktuelle laden", older: "Ältere Datensätze", failed: "Bestandsverlauf konnte nicht geladen werden.", empty: "Keine Verlaufsdaten in dieser Ansicht.",
+      recorded: "Protokollzeit · Berlin", product: "Produkt", event: "Ereignis", quantity: "Vorher → nachher", details: "Nachweis", reference: "Quelldatensatz-ID", actor: "Benutzer-ID", unknown: "Unbekannt · historischer Schnappschuss", before: "Vorher", after: "Nachher",
+    },
     business: {
       performance: "Geschäftsentwicklung", noSource: "Für diese Antwort wurden keine aktuellen Datensätze abgerufen.", get_business_performance: "Geschäftsbericht", get_stock_levels: "Bestandszählungen", get_expiry_risk: "Haltbarkeitsdaten", get_waste_trend: "Abfallprotokoll",
       reportDate: "Berichtsdatum", reportBranch: "Berichtsfiliale",

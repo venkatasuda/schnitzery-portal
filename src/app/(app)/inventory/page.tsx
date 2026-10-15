@@ -15,13 +15,14 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import ScanToCount from "./ScanToCount";
+import StockHistory from "./StockHistory";
 
 const GOLD = "var(--gold-ink)";
 const BLUE = "var(--info)";
 
 export default function InventoryPage() {
   const { t } = useLang();
-  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast" | "catalog">("count");
+  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast" | "catalog" | "history">("count");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -237,11 +238,13 @@ export default function InventoryPage() {
         <TabBtn active={tab === "forecast"} onClick={() => setTab("forecast")}>{t("inventoryWorkflow.reorder")}</TabBtn>
         <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")}>{t("inventoryWorkflow.reports")}</TabBtn>
         <TabBtn active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabBtn>
+        <TabBtn active={tab === "history"} onClick={() => setTab("history")}>{t("stockHistory.title")}</TabBtn>
       </div>
-      <p className="inventory-task-description">{t(`inventoryWorkflow.${tab}Help`)}</p>
+      <p className="inventory-task-description">{t(tab === "history" ? "stockHistory.help" : `inventoryWorkflow.${tab}Help`)}</p>
 
       {loading ? <CardSkeleton rows={4} /> : (
         <>
+          {tab === "history" && <StockHistory />}
           {/* ============ COUNT ============ */}
           {(tab === "count" || tab === "catalog") && (
             <>
