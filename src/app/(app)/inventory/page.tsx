@@ -201,7 +201,7 @@ export default function InventoryPage() {
       && `${p.product} ${p.category}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
       && (statusFilter === "all" || statusFilter === status);
   });
-  const eur = (n: number) => `€${Math.round(n || 0).toLocaleString()}`;
+  const eur = (n: number | null | undefined) => n == null || !Number.isFinite(n) ? "—" : `€${Math.round(n).toLocaleString()}`;
 
   return (
     <div className="inventory-page">
@@ -434,6 +434,8 @@ export default function InventoryPage() {
                 ))}
               </div>
 
+              {(analytics?.needsReview || variance?.needsReview) && <p role="status" className="card">{t("inventoryReview.explanation")}</p>}
+
               {!analytics ? <CardSkeleton rows={4} /> : !analytics.hasPurchases && !analytics.hasCounts ? (
                 <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("inv.noAnalytics")}</div>
               ) : (
@@ -603,8 +605,8 @@ export default function InventoryPage() {
                 const c = dl == null ? "var(--gray)" : dl < 2 ? "var(--danger)" : dl < 4 ? "var(--gold-ink)" : "var(--success)";
                 return (
                   <tr key={i}>
-                    <td><strong>{it.product}</strong><div className="muted">{it.category}</div><div className="muted">{it.countDate} · {it.stale ? t("inventoryWorkflow.recount") : t("inventoryWorkflow.observed", { n: it.observedDays || 0 })}</div></td>
-                    <td className="numeric" data-label={t("inv.onHand")}>{it.current} {it.unit || ""}</td>
+                    <td><strong>{it.product}</strong><div className="muted">{it.category}</div><div className="muted">{it.countDate} · {it.needsReview ? t("inventoryReview.recount") : it.stale ? t("inventoryWorkflow.recount") : t("inventoryWorkflow.observed", { n: it.observedDays || 0 })}</div></td>
+                    <td className="numeric" data-label={t("inv.onHand")}>{it.current ?? "—"} {it.unit || ""}</td>
                     <td className="numeric" data-label={t("inventoryWorkflow.dailyUsage")}>{it.usageRate > 0 ? `${it.usageRate} ${it.unit || ""}` : "—"}</td>
                     <td className="numeric" data-label={t("inventoryWorkflow.coverage")} style={{ color: c }}>{dl == null ? "—" : t("inv.daysLeftVal", { n: dl })}</td>
                     <td className="numeric" data-label={t("inv.order")}>{it.suggested > 0 ? `${it.suggested} ${it.unit || ""}` : "—"}</td>

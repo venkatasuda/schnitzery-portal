@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { berlinToday, berlinMonth, isCalendarDate } from "@/lib/time/berlinDate";
 import { sendPushToUser } from "@/lib/push/delivery";
 import { inventoryKey, validInventoryItem } from "@/lib/inventory/identity";
+import { countDepletion } from "@/lib/inventory/reconciliation";
 
 // ============================================================
 // INVENTORY
@@ -28,6 +29,14 @@ function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 function todayStr() { return berlinToday(); }
+
+// Status timestamps cannot reconstruct when each transfer leg moved stock.
+// Withhold affected estimates until movement timing can be reconciled.
+async function movedStock(db: Awaited<ReturnType<typeof createClient>>, branchId: string | null, from: string) {
+  return readAll(db.from("stock_transfers").select("product,category,unit")
+    .or(`from_branch_id.eq.${branchId},to_branch_id.eq.${branchId}`)
+    .in("status", ["sent", "received"]).gte("updated_at", from).order("id"));
+}
 
 // ── Get the product catalog (master list) for my branch ──
 export async function getProducts() {
@@ -240,8 +249,8 @@ export async function getDeliveries(days = 30) {
 }
 
 // ── Inventory analytics: spend + derived usage over time, top items, stock value ──
-//   Usage = opening count + purchases in interval − closing count (clamped ≥ 0),
-//   valued in € at each product's weighted-average purchase price.
+// Depletion = opening count + purchases − closing count, including waste/errors.
+// Unreconciled intervals and missing price coverage withhold derived estimates.
 export async function getInventoryAnalytics(days = 30) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
@@ -259,6 +268,10 @@ export async function getInventoryAnalytics(days = 30) {
     .eq("branch_id", branchId).gte("count_date", sinceStr)
     .order("count_date", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).order("id"));
   if (countsError) return { ok: false, error: countsError.message };
+  const transfers = await movedStock(supabase, branchId, sinceStr);
+  if (transfers.error) return { ok: false, error: transfers.error.message };
+  const reconciliationIssues = new Set((transfers.data || []).map(inventoryKey));
+  let hasUsagePairs = false;
 
   // sales (for food cost %) + previous-window spend (for trend vs last period)
   const { data: salesRows, error: salesRowsError } = await readAll(supabase
@@ -289,6 +302,7 @@ export async function getInventoryAnalytics(days = 30) {
   let totalSpend = 0;
   for (const p of P) {
     const d = p.purchase_date, c = Number(p.cost) || 0, q = Number(p.qty) || 0;
+    if (p.qty == null || !Number.isFinite(Number(p.qty)) || q <= 0 || p.cost == null || !Number.isFinite(Number(p.cost)) || c < 0) reconciliationIssues.add(inventoryKey(p));
     spendByDate[d] = (spendByDate[d] || 0) + c;
     spendByProduct[inventoryKey(p)] = (spendByProduct[inventoryKey(p)] || 0) + c;
     spendByCategory[p.category || "—"] = (spendByCategory[p.category || "—"] || 0) + c;
@@ -299,14 +313,14 @@ export async function getInventoryAnalytics(days = 30) {
   }
   const unitCost: Record<string, number> = {};
   for (const prod of Object.keys(qtyByProduct)) {
-    unitCost[prod] = qtyByProduct[prod] > 0 ? costByProduct[prod] / qtyByProduct[prod] : 0;
+    unitCost[prod] = qtyByProduct[prod] > 0 && !reconciliationIssues.has(prod) ? costByProduct[prod] / qtyByProduct[prod] : NaN;
   }
 
   // latest count per product per date
   const countsByProduct: Record<string, { date: string; ist: number }[]> = {};
   const byProdDate: Record<string, Record<string, number>> = {};
   for (const c of C) {
-    (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = Number(c.ist) || 0; // asc → last wins (latest)
+    (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = c.ist == null ? NaN : Number(c.ist); // asc → last wins (latest)
   }
   for (const prod of Object.keys(byProdDate)) {
     countsByProduct[prod] = Object.keys(byProdDate[prod]).sort()
@@ -324,11 +338,15 @@ export async function getInventoryAnalytics(days = 30) {
   };
   for (const prod of Object.keys(countsByProduct)) {
     const series = countsByProduct[prod];
+    if (series.length < 2) reconciliationIssues.add(prod);
     for (let i = 0; i + 1 < series.length; i++) {
       const a = series[i], b = series[i + 1];
-      let used = a.ist + purchasedBetween(prod, a.date, b.date) - b.ist;
-      if (used < 0) used = 0;
-      const uc = unitCost[prod] || 0;
+      const used = countDepletion(a.ist, purchasedBetween(prod, a.date, b.date), b.ist);
+      const uc = unitCost[prod];
+      if (used === null || !Number.isFinite(uc) || uc < 0 || reconciliationIssues.has(prod)) {
+        reconciliationIssues.add(prod); continue;
+      }
+      hasUsagePairs = true;
       usageByDate[b.date] = (usageByDate[b.date] || 0) + used;
       usageEurByDate[b.date] = (usageEurByDate[b.date] || 0) + used * uc;
       usageQtyByProduct[prod] = (usageQtyByProduct[prod] || 0) + used;
@@ -338,16 +356,20 @@ export async function getInventoryAnalytics(days = 30) {
 
   // current stock value = latest count × unit cost
   let stockValue = 0;
+  let stockPriced = Object.keys(countsByProduct).length > 0;
   for (const prod of Object.keys(countsByProduct)) {
     const s = countsByProduct[prod];
-    if (s.length) stockValue += s[s.length - 1].ist * (unitCost[prod] || 0);
+    const current = s[s.length - 1].ist;
+    if (!Number.isFinite(current) || current < 0 || (current > 0 && (!Number.isFinite(unitCost[prod]) || unitCost[prod] < 0))) stockPriced = false;
+    else if (current > 0) stockValue += current * unitCost[prod];
   }
+  const needsReview = !hasUsagePairs || reconciliationIssues.size > 0;
 
   const dates = [...new Set([...Object.keys(spendByDate), ...Object.keys(usageEurByDate)])].sort();
   const trend = dates.map((d) => ({
     date: d.slice(5),
     spend: Math.round((spendByDate[d] || 0) * 100) / 100,
-    usageEur: Math.round((usageEurByDate[d] || 0) * 100) / 100,
+    usageEur: needsReview ? null : Math.round((usageEurByDate[d] || 0) * 100) / 100,
   }));
   const topSpend = Object.entries(spendByProduct)
     .map(([product, eur]) => ({ product: JSON.parse(product)[1], category: JSON.parse(product)[0], eur: Math.round(eur) }))
@@ -366,15 +388,16 @@ export async function getInventoryAnalytics(days = 30) {
   return {
     ok: true, days,
     totalSpend: Math.round(totalSpend),
-    totalUsageEur: Math.round(totalUsageEur),
-    stockValue: Math.round(stockValue),
+    totalUsageEur: needsReview ? null : Math.round(totalUsageEur),
+    stockValue: stockPriced ? Math.round(stockValue) : null,
+    needsReview,
     totalSales: Math.round(totalSales),
     foodCostPct,
     prevSpend: Math.round(prevSpend),
     spendPctChange,
     byCategory,
     topCategory: byCategory[0] || null,
-    trend, topSpend, topUsage,
+    trend, topSpend, topUsage: needsReview ? [] : topUsage,
     hasCounts: C.length > 0, hasPurchases: P.length > 0,
   };
 }
@@ -426,15 +449,18 @@ export async function getInventoryVariance(days = 30) {
   const prevStart = at(2 * days);
   const fetchFrom = at(3 * days); // lead-in so the first count pair in each window is complete
 
-  const [countsRes, purchRes, salesRes] = await Promise.all([
+  const [countsRes, purchRes, salesRes, transferRes] = await Promise.all([
     readAll(supabase.from("inventory_counts").select("product, count_date, ist, category, unit").eq("branch_id", branchId).gte("count_date", fetchFrom).order("count_date").order("created_at").order("id").order("id")),
     readAll(supabase.from("inventory_purchases").select("product, purchase_date, qty, cost, category, unit").eq("branch_id", branchId).gte("purchase_date", fetchFrom).order("id")),
     readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", prevStart).order("id")),
+    movedStock(supabase, branchId, fetchFrom),
   ]);
-  if (purchRes.error || countsRes.error || salesRes.error) return { ok: false, error: purchRes.error?.message || countsRes.error?.message || salesRes.error?.message, items: [], hasData: false };
+  if (purchRes.error || countsRes.error || salesRes.error || transferRes.error) return { ok: false, error: purchRes.error?.message || countsRes.error?.message || salesRes.error?.message || transferRes.error?.message, items: [], hasData: false };
+  let needsReview = (transferRes.data || []).length > 0;
 
   const C = countsRes.data || [];
   const P = purchRes.data || [];
+  if (P.some(p => p.qty == null || !Number.isFinite(Number(p.qty)) || Number(p.qty) <= 0 || p.cost == null || !Number.isFinite(Number(p.cost)) || Number(p.cost) < 0)) needsReview = true;
 
   const qtyByProduct: Record<string, number> = {};
   const costByProduct: Record<string, number> = {};
@@ -449,7 +475,7 @@ export async function getInventoryVariance(days = 30) {
   for (const prod of Object.keys(qtyByProduct)) unitCost[prod] = qtyByProduct[prod] > 0 ? costByProduct[prod] / qtyByProduct[prod] : 0;
 
   const byProdDate: Record<string, Record<string, number>> = {};
-  for (const c of C) (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = Number(c.ist) || 0;
+  for (const c of C) (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = c.ist == null ? NaN : Number(c.ist);
   const series: Record<string, { date: string; ist: number }[]> = {};
   for (const prod of Object.keys(byProdDate)) series[prod] = Object.keys(byProdDate[prod]).sort().map((d) => ({ date: d, ist: byProdDate[prod][d] }));
 
@@ -463,11 +489,11 @@ export async function getInventoryVariance(days = 30) {
   const prev: Record<string, number> = {};
   for (const prod of Object.keys(series)) {
     const s = series[prod];
-    const uc = unitCost[prod] || 0;
+    const uc = unitCost[prod];
     for (let i = 0; i + 1 < s.length; i++) {
       const a = s[i], b = s[i + 1];
-      let used = a.ist + purchasedBetween(prod, a.date, b.date) - b.ist;
-      if (used < 0) used = 0;
+      const used = countDepletion(a.ist, purchasedBetween(prod, a.date, b.date), b.ist);
+      if (used === null || !Number.isFinite(uc) || uc < 0) { needsReview = true; continue; }
       const eur = used * uc;
       if (b.date > curStart) cur[prod] = (cur[prod] || 0) + eur;
       else if (b.date > prevStart) prev[prod] = (prev[prod] || 0) + eur;
@@ -497,7 +523,7 @@ export async function getInventoryVariance(days = 30) {
     .filter((x) => x.curEur > 0 || x.prevEur > 0)
     .sort((a, b) => (b.changePct ?? -999) - (a.changePct ?? -999));
 
-  return { ok: true, items, normalised, hasData: items.length > 0, days };
+  return { ok: true, items: needsReview ? [] : items, normalised, hasData: !needsReview && items.length > 0, needsReview, days };
 }
 
 
@@ -517,16 +543,19 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
   const from = at(windowDays);
   const fetchFrom = at(windowDays * 2); // lead-in so the first pair in the window is complete
 
-  const [countsRes, purchRes, prodRes] = await Promise.all([
+  const [countsRes, purchRes, prodRes, transferRes] = await Promise.all([
     readAll(supabase.from("inventory_counts").select("product, category, count_date, ist, soll, unit")
       .eq("branch_id", branchId).gte("count_date", fetchFrom).lte("count_date", berlinToday()).order("count_date").order("created_at").order("id").order("id")),
     readAll(supabase.from("inventory_purchases").select("product, purchase_date, qty, category, unit")
       .eq("branch_id", branchId).gte("purchase_date", fetchFrom).lte("purchase_date", berlinToday()).order("id")),
     readAll(supabase.from("inventory_master").select("product, category, soll, unit, is_active")
       .eq("branch_id", branchId).eq("is_active", true).order("id")),
+    movedStock(supabase, branchId, fetchFrom),
   ]);
 
-  if (countsRes.error || purchRes.error || prodRes.error) return { ok: false, error: countsRes.error?.message || purchRes.error?.message || prodRes.error?.message, items: [], hasData: false };
+  if (countsRes.error || purchRes.error || prodRes.error || transferRes.error) return { ok: false, error: countsRes.error?.message || purchRes.error?.message || prodRes.error?.message || transferRes.error?.message, items: [], hasData: false };
+  const transferred = new Set((transferRes.data || []).map(inventoryKey));
+  for (const p of purchRes.data || []) if (p.qty == null || !Number.isFinite(Number(p.qty)) || Number(p.qty) <= 0) transferred.add(inventoryKey(p));
   const C = countsRes.data || [];
   const purchByProdDate: Record<string, Record<string, number>> = {};
   if (!purchRes.error) for (const p of purchRes.data || []) {
@@ -536,7 +565,7 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
   const byProdDate: Record<string, Record<string, number>> = {};
   const meta: Record<string, any> = {};
   for (const c of C) {
-    (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = Number(c.ist) || 0;
+    (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = c.ist == null ? NaN : Number(c.ist);
     meta[inventoryKey(c)] = { category: c.category, soll: Number(c.soll) || 0, unit: c.unit };
   }
   for (const m of prodRes.data || []) {
@@ -557,11 +586,12 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
     const current = series[series.length - 1].ist;
 
     let usage = 0, observedDays = 0;
+    let needsReview = transferred.has(prod) || !Number.isFinite(current) || current < 0;
     for (let i = 0; i + 1 < series.length; i++) {
       const a = series[i], b = series[i + 1];
       if (a.date < from || b.date > berlinToday()) continue; // pair closes outside the window
-      let used = a.ist + purchasedBetween(prod, a.date, b.date) - b.ist;
-      if (used < 0) used = 0;
+      const used = countDepletion(a.ist, purchasedBetween(prod, a.date, b.date), b.ist);
+      if (used === null) { needsReview = true; continue; }
       usage += used;
       observedDays += (Date.parse(b.date) - Date.parse(a.date)) / dayMs;
     }
@@ -569,16 +599,16 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
     const soll = meta[prod]?.soll || 0;
     const countDate = series[series.length - 1].date;
     const stale = (anchor - Date.parse(countDate + "T12:00:00Z")) / dayMs > 1;
-    const daysLeft = !stale && usageRate > 0 ? Math.round((current / usageRate) * 10) / 10 : null;
-    const suggested = stale ? 0 : usageRate > 0
+    const daysLeft = !needsReview && !stale && usageRate > 0 ? Math.round((current / usageRate) * 10) / 10 : null;
+    const suggested = needsReview || stale ? 0 : usageRate > 0
       ? Math.max(0, Math.ceil(usageRate * coverDays - current))
       : Math.max(0, Math.round((soll - current) * 10) / 10);
 
     items.push({
       product: JSON.parse(prod)[1], category: meta[prod]?.category || "", unit: meta[prod]?.unit || "",
-      countDate, stale, observedDays,
-      current: Math.round(current * 10) / 10, soll,
-      usageRate: Math.round(usageRate * 100) / 100, daysLeft, suggested,
+      countDate, stale, observedDays, needsReview,
+      current: Number.isFinite(current) ? Math.round(current * 10) / 10 : null, soll,
+      usageRate: needsReview ? null : Math.round(usageRate * 100) / 100, daysLeft, suggested,
     });
   }
   items.sort((a, b) => (a.daysLeft ?? 1e9) - (b.daysLeft ?? 1e9));
