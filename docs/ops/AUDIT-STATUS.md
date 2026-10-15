@@ -38,9 +38,20 @@ baselines. Live September payroll retains nine employee rows and blocks approval
 for unconfirmed rates. Production permissions prevent direct browser wage writes;
 history has RLS, and security advisors found no error-level issues.
 
-Current change: phone wage controls squeezed employee names. Give names a minimum
-flex basis so fields wrap into readable rows; name each effective-date field for
-its employee. See Git/PR for release state.
+Phone wage controls are deployed on main `38a0997`, deployment
+`dpl_C1zfobUbnUsbtva7JXGCPybmoTUz`. Live 390px check: employee name width 231px,
+no horizontal overflow, zero assumed dates. German effective-date labels also
+loaded. No wage values were changed during verification.
+
+Current phase: stock evidence history in the existing Inventory tab group.
+Database triggers retain before/after records for counts, deliveries, waste and
+transfers, including deletions. Authenticated source writes and journal entries
+commit together; no-op updates are skipped. Manager reads use branch RLS, and
+browser/service clients cannot forge or edit evidence. TRUNCATE is refused.
+The production-schema dry run produced 101 historical snapshots and rolled back.
+Isolated PostgreSQL and actual query/UI checks pass. See Git/PR/deployment state
+before treating this phase as live. Historical snapshots are explicitly unverified;
+earlier deletions, opening balances and stock consumption remain unknown.
 The code graph represents the preceding release; refresh at a phase boundary,
 rather than rebuilding for every small edit.
 
@@ -51,7 +62,7 @@ rather than rebuilding for every small edit.
 | Page UX | Finish roster, staff, reports, settings and dialog checks at desktop/phone widths; German and keyboard checks. Changes alone are not a completed accessibility audit. |
 | Role flows | Unit/isolated database boundaries pass for covered operations. Full employee/manager/branch-owner/brand-owner staging flows and cross-branch recovery remain unverified. Never use real payroll/attendance decisions as tests. |
 | Payroll | Snapshot protection and effective-dated wage history are implemented. Managers must confirm actual dates before affected payroll can be approved. Historical branch assignments remain open. Business estimates use current rates; base pay excludes premiums, taxes and employer costs. |
-| Stock | Canonical movements, reconciliation, consumption and valuation remain open. Existing deliveries/transfers/waste/counts must feed one idempotent history without fabricating historical stock. |
+| Stock | Evidence history is implemented in this phase; release verification is pending. Reconciliation, consumption and valuation remain open. A physical count is an observation, not an additive movement. Source writes require an authenticated actor, including maintenance writes; never fabricate one. Existing legacy rows without a branch cannot be scoped and are excluded from baselines. |
 | Business inputs | Sales and purchase coverage are exposed; missing data remains unknown. Purchase spending is not food consumption cost or profit. Reliable prices/valuation must precede those figures. |
 | Offline/privacy | Existing service-worker checks are not an end-to-end offline attendance or account-isolation proof. One Schnitzery brand with all branches/roles; no unrelated multi-tenant claims. |
 

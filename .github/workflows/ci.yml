@@ -65,6 +65,7 @@ jobs:
           node scripts/checks/action-contrast.cjs
           node scripts/checks/approvals-ui.cjs
           node scripts/checks/workspace-ux.cjs
+          node scripts/checks/stock-history-ui.cjs
           node scripts/checks/layout.cjs
           node scripts/checks/dashboard.cjs
           node scripts/checks/service-worker.cjs
@@ -74,6 +75,7 @@ jobs:
           node scripts/checks/atomic-workflows.cjs
           node scripts/checks/payroll-snapshots.cjs
           node scripts/checks/wage-history.cjs
+          node scripts/checks/stock-history.cjs
           node scripts/checks/correction-integrity.cjs
       - name: Upload coverage artifact
         if: always()
