@@ -1,5 +1,6 @@
 -- Evidence journal, not a calculated stock balance. Counts are observations;
 -- legacy snapshots cannot reconstruct deletions or a reliable opening balance.
+begin;
 set local lock_timeout='3s';
 create table public.stock_events (
   id bigint generated always as identity primary key,
@@ -69,3 +70,4 @@ create trigger stock_history_no_truncate before truncate on public.inventory_cou
 create trigger stock_history_no_truncate before truncate on public.inventory_purchases for each statement execute function private.stock_events_immutable();
 create trigger stock_history_no_truncate before truncate on public.waste_log for each statement execute function private.stock_events_immutable();
 create trigger stock_history_no_truncate before truncate on public.stock_transfers for each statement execute function private.stock_events_immutable();
+commit;
