@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
-import { isOnline, queueCount } from "@/lib/offline/attendanceQueue";
+import { isOnline, readQueueMine, getQueueOwner } from "@/lib/offline/attendanceQueue";
 import { getKioskHealth } from "@/lib/queries/status";
 
 // ============================================================================
@@ -20,7 +20,7 @@ export default function StatusStrip() {
   const [kiosk, setKiosk] = useState<{ online: number; offline: number; total: number } | null>(null);
 
   useEffect(() => {
-    const upd = () => { setOnline(isOnline()); setPending(queueCount()); };
+    const upd = () => { setOnline(isOnline()); setPending(readQueueMine(getQueueOwner()).length); };
     const fetchK = () => { getKioskHealth().then((r) => { if (r.ok) setKiosk({ online: r.online, offline: r.offline, total: r.total }); }).catch(() => {}); };
     upd(); fetchK();
     window.addEventListener("online", upd);

@@ -5,6 +5,7 @@ import { getRequiredChecklist, listEmployeeDocuments, approveDocument, rejectDoc
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
+import NativeDialog from "@/components/NativeDialog";
 
 const ICON: Record<string, string> = {
   id_card: "🪪", tax_id: "🧾", contract: "📄", health_certificate: "🩺",
@@ -34,6 +35,7 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
   const [items, setItems] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed,setLoadFailed]=useState(false);
   const [openHist, setOpenHist] = useState<Set<string>>(new Set());
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -41,10 +43,10 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
 
   async function load() {
     setLoading(true);
-    const [cl, dl] = await Promise.all([getRequiredChecklist(userId), listEmployeeDocuments(userId)]);
-    if (cl.ok) setItems(cl.items || []);
-    if (dl.ok) setDocs(dl.docs || []);
-    setLoading(false);
+    setLoadFailed(false);
+    try {const [cl,dl]=await Promise.all([getRequiredChecklist(userId),listEmployeeDocuments(userId)]);
+      if(!cl.ok||!dl.ok)throw Error(); setItems(cl.items||[]);setDocs(dl.docs||[]);
+    } catch {setItems([]);setDocs([]);setLoadFailed(true);}finally{setLoading(false);}
   }
   useEffect(() => { load(); }, [userId]);
 
@@ -58,24 +60,27 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
   }
   async function approve(id: string) {
     setBusy(true);
+    try {
     const r = await approveDocument(id);
-    setBusy(false);
     if (r.ok) { toast(t("docw.approved"), "success"); load(); }
     else toast(r.error || t("docw.approveFailed"), "error");
+    } catch { toast(t("docw.approveFailed"), "error"); } finally { setBusy(false); }
   }
   async function doReject() {
     if (!reason.trim()) return;
     setBusy(true);
+    try {
     const r = await rejectDocument(rejectId!, reason);
-    setBusy(false);
     if (r.ok) { toast(t("docw.rejected"), "success"); setRejectId(null); setReason(""); load(); }
     else toast(r.error || t("docw.rejectFailed"), "error");
+    } catch { toast(t("docw.rejectFailed"), "error"); } finally { setBusy(false); }
   }
 
   const groups: Record<string, any[]> = {};
   for (const d of docs) (groups[d.doc_type] ||= []).push(d);
   const groupKeys = Object.keys(groups);
 
+  if(loadFailed)return <div role="alert" className="card"><p>{t("documents.loadFailed")}</p><button className="btn-secondary" onClick={load}>{t("business.retry")}</button></div>;
   if (loading) return <><div className="section-label">{t("docw.checklist")}</div><CardSkeleton rows={3} /></>;
 
   return (
@@ -166,18 +171,16 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
 
       {/* REJECT REASON MODAL */}
       {rejectId && (
-        <div onClick={() => !busy && setRejectId(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 120, padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 420, background: "var(--dark2)", borderRadius: 16, padding: 20 }}>
+        <NativeDialog title={t("docw.rejectTitle")} busy={busy} onClose={() => setRejectId(null)}>
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{t("docw.rejectTitle")}</div>
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("docw.rejectReason")}</div>
-            <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder={t("docw.rejectReasonPlaceholder")}
+            <textarea autoFocus aria-label={t("docw.rejectReason")} value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder={t("docw.rejectReasonPlaceholder")}
               style={{ width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-              <button onClick={() => setRejectId(null)} style={{ ...btn, flex: 1 }}>{t("common.cancel")}</button>
+              <button disabled={busy} onClick={() => setRejectId(null)} style={{ ...btn, flex: 1 }}>{t("common.cancel")}</button>
               <button onClick={doReject} disabled={busy || !reason.trim()} style={{ ...btn, flex: 1, background: "#922b21", borderColor: "#922b21", color: "#fff", opacity: !reason.trim() ? 0.5 : 1 }}>{t("docw.confirmReject")}</button>
             </div>
-          </div>
-        </div>
+        </NativeDialog>
       )}
     </>
   );

@@ -2,15 +2,16 @@
 
 import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
+import OfflineReview from "@/components/OfflineReview";
 import {
   getLiveAttendance, getMonthlyOvertime, getAttendanceApprovals, setAttendanceApproval,
 } from "@/lib/queries/live-attendance";
 
-type Tab = "live" | "approval" | "overtime" | "noshow";
+type Tab = "live" | "approval" | "overtime" | "noshow" | "offline";
 
 const fmtH = (mins: number) => `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
 const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
@@ -21,6 +22,8 @@ export default function AttendanceHubPage() {
   const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const [tab, setTab] = useState<Tab>("live");
   const [denied, setDenied] = useState(false);
+  const [readError,setReadError]=useState(false);
+  const requests=useRef({live:0,overtime:0,approval:0});
 
   // ── LIVE ──
   const [date, setDate] = useState("");
@@ -35,50 +38,54 @@ export default function AttendanceHubPage() {
   const [otLong, setOtLong] = useState<any[]>([]);
   const [otStats, setOtStats] = useState({ peopleOver: 0, totalOvertimeMins: 0, totalWorkedMins: 0 });
   const [otLoading, setOtLoading] = useState(false);
-  const [otLoaded, setOtLoaded] = useState(false);
 
   // ── APPROVALS ──
   const [appRows, setAppRows] = useState<any[]>([]);
   const [appLoading, setAppLoading] = useState(false);
-  const [appLoaded, setAppLoaded] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function loadLive(d: string) {
-    setLiveLoading(true);
-    const res = await getLiveAttendance(d || undefined);
-    if (res.ok) {
-      setRows(res.rows || []);
-      setStats({ workingNow: res.workingNow || 0, completed: res.completed || 0, late: res.late || 0, totalMins: res.totalMins || 0 });
-    } else if (res.error?.includes("Managers")) setDenied(true);
-    setLiveLoading(false);
+    const serial=++requests.current.live;
+    setReadError(false); setLiveLoading(true);
+    try {
+      const res=await getLiveAttendance(d||undefined);
+      if(serial!==requests.current.live)return;
+      if(!res.ok){if(res.error?.includes("Managers"))setDenied(true);throw Error();}
+      setRows(res.rows||[]);
+      setStats({workingNow:res.workingNow||0,completed:res.completed||0,late:res.late||0,totalMins:res.totalMins||0});
+    }catch{if(serial===requests.current.live)setReadError(true);}
+    finally{if(serial===requests.current.live)setLiveLoading(false);}
   }
-
   async function loadOvertime(m: string) {
-    setOtLoading(true);
-    const res = await getMonthlyOvertime(m || undefined);
-    if (res.ok) {
-      setOtRows(res.rows || []);
-      setOtLong(res.longShifts || []);
-      setOtStats({ peopleOver: res.peopleOver || 0, totalOvertimeMins: res.totalOvertimeMins || 0, totalWorkedMins: res.totalWorkedMins || 0 });
-    } else if (res.error?.includes("Managers")) setDenied(true);
-    setOtLoading(false);
-    setOtLoaded(true);
+    const serial=++requests.current.overtime;
+    setReadError(false);setOtLoading(true);
+    try{
+      const res=await getMonthlyOvertime(m||undefined);
+      if(serial!==requests.current.overtime)return;
+      if(!res.ok){if(res.error?.includes("Managers"))setDenied(true);throw Error();}
+      setOtRows(res.rows||[]);setOtLong(res.longShifts||[]);
+      setOtStats({peopleOver:res.peopleOver||0,totalOvertimeMins:res.totalOvertimeMins||0,totalWorkedMins:res.totalWorkedMins||0});
+    }catch{if(serial===requests.current.overtime)setReadError(true);}
+    finally{if(serial===requests.current.overtime){setOtLoading(false);}}
   }
-
   async function loadApprovals() {
-    setAppLoading(true);
-    const res = await getAttendanceApprovals();
-    if (res.ok) setAppRows(res.rows || []);
-    else if (res.error?.includes("Managers")) setDenied(true);
-    setAppLoading(false);
-    setAppLoaded(true);
+    const serial=++requests.current.approval;
+    setReadError(false);setAppLoading(true);
+    try{
+      const res=await getAttendanceApprovals();
+      if(serial!==requests.current.approval)return;
+      if(!res.ok){if(res.error?.includes("Managers"))setDenied(true);throw Error();}
+      setAppRows(res.rows||[]);
+    }catch{if(serial===requests.current.approval)setReadError(true);}
+    finally{if(serial===requests.current.approval){setAppLoading(false);}}
   }
 
   async function decide(id: string, status: "approved" | "rejected") {
     setBusyId(id);
-    const res = await setAttendanceApproval(id, status);
+    try {const res = await setAttendanceApproval(id, status);
     if (res.ok) setAppRows((rs) => rs.filter((r) => r.id !== id));
-    setBusyId(null);
+    else setReadError(true);
+    }catch{setReadError(true);}finally{setBusyId(null);}
   }
 
   useEffect(() => {
@@ -86,12 +93,15 @@ export default function AttendanceHubPage() {
     setDate(today);
     setMonth(today.slice(0, 7));
     loadLive(today);
+    return()=>{requests.current.live++;requests.current.overtime++;requests.current.approval++;};
   }, []);
 
   function openTab(t: Tab) {
-    setTab(t);
-    if (t === "overtime" && !otLoaded) loadOvertime(month || berlinMonth());
-    if (t === "approval" && !appLoaded) loadApprovals();
+    requests.current.live++;requests.current.overtime++;requests.current.approval++;
+    setReadError(false);setTab(t);
+    if (t === "live") loadLive(date);
+    if (t === "overtime") loadOvertime(month || berlinMonth());
+    if (t === "approval") loadApprovals();
   }
   function changeDate(d: string) { setDate(d); loadLive(d); }
   function goToday() { const t = berlinToday(); setDate(t); loadLive(t); }
@@ -115,10 +125,13 @@ export default function AttendanceHubPage() {
         <button aria-pressed={tab === "approval"} className={`hub-tab${tab === "approval" ? " active" : ""}`} onClick={() => openTab("approval")}>{t("ahub.tabApproval")}</button>
         <button aria-pressed={tab === "overtime"} className={`hub-tab${tab === "overtime" ? " active" : ""}`} onClick={() => openTab("overtime")}>{t("ahub.tabOvertime")}</button>
         <button aria-pressed={tab === "noshow"} className={`hub-tab${tab === "noshow" ? " active" : ""}`} onClick={() => openTab("noshow")}>{t("ahub.tabNoshow")}</button>
+        <button aria-pressed={tab === "offline"} className={`hub-tab${tab === "offline" ? " active" : ""}`} onClick={() => openTab("offline")}>{t("offlineReview.title")}</button>
       </div>
+      {tab === "offline" && <OfflineReview manager />}
+      {readError&&<p role="alert">{t("offlineReview.failed")} <button className="btn-secondary" onClick={()=>{if(tab==="live")loadLive(date);else if(tab==="overtime")loadOvertime(month);else loadApprovals();}}>{t("business.retry")}</button></p>}
 
       {/* ───────── LIVE ───────── */}
-      {tab === "live" && (
+      {tab === "live" && !readError && (
         <div className="hub-tab-panel active">
           <div className="workspace-stats">
             <Stat value={stats.workingNow} label={t("home.statWorking")} color="var(--success)" />
@@ -164,11 +177,11 @@ export default function AttendanceHubPage() {
       )}
 
       {/* ───────── APPROVAL ───────── */}
-      {tab === "approval" && (
+      {tab === "approval" && !readError && (
         <div className="hub-tab-panel active">
           <div className="page-sub" style={{ marginBottom: 12 }}>{t("ahub.signOff")}</div>
           {appLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>
+            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("common.loading")}</div>
           ) : appRows.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>
               <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="var(--success)" /></div>{t("ahub.allCaughtUp")}
@@ -198,14 +211,14 @@ export default function AttendanceHubPage() {
       )}
 
       {/* ───────── OVERTIME ───────── */}
-      {tab === "overtime" && (
+      {tab === "overtime" && !readError && (
         <div className="hub-tab-panel active">
           <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
             <input aria-label={t("ahub.tabOvertime")} type="month" value={month} onChange={(e) => changeMonth(e.target.value)} style={dateInput} />
           </div>
 
           {otLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />Loading…</div>
+            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("common.loading")}</div>
           ) : (
             <>
               {/* summary */}

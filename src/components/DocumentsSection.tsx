@@ -6,6 +6,7 @@ import { uploadDocumentVersion, listMyDocuments, getDocumentUrl, archiveDocument
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
+import NativeDialog from "@/components/NativeDialog";
 
 const DOC_TYPES = [
   { key: "id_card", icon: "🪪" },
@@ -41,6 +42,7 @@ export default function DocumentsSection() {
   const docLabel = (k: string) => t("documents.type_" + (DOC_TYPES.some((x) => x.key === k) ? k : "other"));
   const [docs, setDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed,setLoadFailed]=useState(false);
   const [openHist, setOpenHist] = useState<Set<string>>(new Set());
   const [sheet, setSheet] = useState(false);
   const [stage, setStage] = useState<"type" | "details">("type");
@@ -52,9 +54,10 @@ export default function DocumentsSection() {
 
   async function load() {
     setLoading(true);
-    const res = await listMyDocuments();
-    if (res.ok) setDocs(res.docs || []);
-    setLoading(false);
+    setLoadFailed(false);
+    try { const res=await listMyDocuments(); if(!res.ok)throw Error(); setDocs(res.docs||[]); }
+    catch {setDocs([]);setLoadFailed(true);}
+    finally {setLoading(false);}
   }
   useEffect(() => { load(); }, []);
 
@@ -106,6 +109,7 @@ export default function DocumentsSection() {
   const groups: Record<string, any[]> = {};
   for (const d of docs) (groups[d.doc_type] ||= []).push(d);
   const groupKeys = Object.keys(groups);
+  if(loadFailed)return <div role="alert" className="card"><p>{t("documents.loadFailed")}</p><button className="btn-secondary" onClick={load}>{t("business.retry")}</button></div>;
 
   return (
     <>
@@ -178,12 +182,9 @@ export default function DocumentsSection() {
         </div>
       )}
 
-      <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,application/pdf,image/*" onChange={onFile} style={{ display: "none" }} />
-
       {sheet && (
-        <div onClick={() => !busy && setSheet(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 100 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 820, background: "var(--dark2)", borderRadius: "18px 18px 0 0", padding: "10px 16px calc(20px + env(safe-area-inset-bottom))", boxShadow: "0 -8px 40px rgba(0,0,0,0.5)", maxHeight: "85vh", overflowY: "auto" }}>
-            <div style={{ width: 40, height: 4, background: "rgba(128,128,128,0.4)", borderRadius: 2, margin: "6px auto 14px" }} />
+        <NativeDialog title={t("documents.uploadTitle")} busy={busy} onClose={() => setSheet(false)}>
+            <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,application/pdf,image/*" onChange={onFile} style={{ display: "none" }} />
 
             {stage === "type" ? (
               <>
@@ -205,14 +206,14 @@ export default function DocumentsSection() {
                 <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{iconOf(chosenType)} {docLabel(chosenType)}</div>
                 <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("documents.datesHint")}</div>
                 <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-                  <div style={{ flex: 1 }}>
+                  <label style={{ flex: 1 }}>
                     <div style={lbl}>{t("documents.issued")}</div>
                     <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} style={input} />
-                  </div>
-                  <div style={{ flex: 1 }}>
+                  </label>
+                  <label style={{ flex: 1 }}>
                     <div style={lbl}>{t("documents.expires")}</div>
                     <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={input} />
-                  </div>
+                  </label>
                 </div>
                 <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 13, background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                   {t("documents.chooseUpload")}
@@ -220,8 +221,7 @@ export default function DocumentsSection() {
                 <button onClick={() => setStage("type")} style={cancelBtn}>‹ {t("common.back")}</button>
               </>
             )}
-          </div>
-        </div>
+        </NativeDialog>
       )}
     </>
   );

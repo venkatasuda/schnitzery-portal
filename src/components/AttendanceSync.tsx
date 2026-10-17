@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 // 2. Drains the offline attendance queue automatically: on app load, the moment
 //    the browser comes back online, and on a short retry timer while anything is
 //    still pending (so a flaky connection eventually clears it).
-export default function AttendanceSync() {
+export default function AttendanceSync({ userId }: { userId: string }) {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -33,14 +33,14 @@ export default function AttendanceSync() {
 
     // Stamp the owner BEFORE the first drain, so anything captured from here on
     // is attributable and flushQueue knows whose events it may send.
+    setQueueOwner(userId);
+    const { data: { subscription } } = createClient().auth.onAuthStateChange((event, session) => {
+      // This rendered screen belongs to userId, even if another tab changes login.
+      if (event === "INITIAL_SESSION" && !session) return;
+      setQueueOwner(session?.user.id === userId ? userId : null);
+      if (session?.user.id !== userId) window.location.replace("/login");
+    });
     (async () => {
-      try {
-        const { data: { user } } = await createClient().auth.getUser();
-        if (cancelled) return;
-        setQueueOwner(user?.id ?? null);
-      } catch {
-        /* leave the previous owner in place rather than guessing */
-      }
       if (cancelled) return;
       await flushQueue();
       if (!cancelled && readQueue().length) startTimer();
@@ -53,11 +53,13 @@ export default function AttendanceSync() {
 
     return () => {
       cancelled = true;
+      subscription.unsubscribe();
+      setQueueOwner(null);
       window.removeEventListener("online", onOnline);
       window.removeEventListener("sz-queue-changed", onChange);
       stopTimer();
     };
-  }, []);
+  }, [userId]);
 
   return null;
 }

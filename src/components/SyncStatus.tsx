@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
-import { readQueueMine, readStranded } from "@/lib/offline/attendanceQueue";
+import { readQueueMine, readStranded, getQueueOwner, queueStorageError } from "@/lib/offline/attendanceQueue";
 import { flushQueue } from "@/lib/offline/sync";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/Toast";
 
 // Live reliability indicator. Stays hidden when online with an empty queue
@@ -17,18 +16,19 @@ export default function SyncStatus() {
   const [online, setOnline] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [storageFailed, setStorageFailed] = useState(false);
+  const [review, setReview] = useState(0);
 
   useEffect(() => {
-    let uid: string | null = null;
-    const update = () => {
+    const update = (event?: Event) => {
+      const uid = getQueueOwner();
+      setUserId(uid);
       setPending(readQueueMine(uid).length);
       setStranded(readStranded(uid).length);
       setOnline(navigator.onLine);
+      setStorageFailed(queueStorageError());
+      if (event instanceof CustomEvent && event.detail?.needsReview) setReview(n => n + event.detail.needsReview);
     };
-
-    createClient().auth.getUser()
-      .then(({ data: { user } }) => { uid = user?.id ?? null; setUserId(uid); update(); })
-      .catch(() => update());
 
     update();
     window.addEventListener("sz-queue-changed", update);
@@ -51,14 +51,18 @@ export default function SyncStatus() {
     setPending(mine);
     setStranded(readStranded(userId).length);
     if (r.offline) toast(t("sync.offlineToast"), "error");
+    else if (r.needsReview) toast(t("sync.needsReview", { n: r.needsReview }), "error");
+    else if (!r.ok) toast(t("sync.failed"), "error");
     else if (r.synced > 0) toast(t("sync.syncedN", { n: r.synced }), "success");
     else if (mine === 0) toast(t("sync.allSynced"), "success");
   }
 
-  if (online && pending === 0 && stranded === 0) return null;
+  if (online && pending === 0 && stranded === 0 && !storageFailed && !review) return null;
 
   return (
     <>
+      {storageFailed && <p role="alert" className="card">{t("att.offlineNotSaved")}</p>}
+      {review > 0 && <p role="status" className="card">{t("sync.needsReview", { n: review })}</p>}
       {(pending > 0 || !online) && (
       <div style={{
         display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 12, borderRadius: 12,

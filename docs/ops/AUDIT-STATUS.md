@@ -19,6 +19,48 @@ treating local changes as live. AI billing and further AI work are deferred.
 
 ## Current work
 
+### Local batch — 2026-10-17, not deployed
+
+Offline attendance now requires a confirmed owner and a successful durable write
+before showing a saved state. Web Locks protect concurrent browser-tab writes.
+Replay verifies the authenticated owner, acknowledgements, capture protocol,
+QR requirements, chronology, overlapping shifts and a seven-day replay window.
+Unverified evidence is retained for manager review rather than adding hours.
+Server review notes are immutable and branch scoped; reviewing does not approve
+hours or payroll. Existing captures from older versions require review.
+
+Roster saves compare the loaded snapshot before updating; copying a week refuses
+an existing plan. Failed reads hide editable stale data. Attendance/document reads
+show recoverable errors. Four overlays now share native modal focus behaviour.
+Service-worker install rejects redirected/private responses, private routes use
+a public bilingual offline fallback, and unrelated origin caches are retained.
+Future sales/purchases are excluded from current business totals; blank delivery
+costs are rejected rather than silently treated as free purchases.
+
+Verification: production build, TypeScript, 42 unit tests, existing regression
+checks and isolated PostgreSQL workflow checks pass. New checks cover queue
+ownership/storage/acknowledgements, replay/review permissions, service-worker
+privacy and roster compare-and-swap. The final focused checks were rerun after
+follow-up edits; browser testing is still pending.
+
+Migration `20261017160350_offline_attendance_integrity.sql` is local only.
+Do not deploy these screens before applying the migration in the target staging
+environment. User confirmed that staging details will be provided; website URL,
+Supabase reference and test accounts have not arrived. Keep credentials in a
+local ignored environment file. No production payroll/attendance records were
+changed for these tests. AI remains deferred.
+
+| Original audit area | Honest status |
+| --- | --- |
+| 1. Page UX | Several pages improved; native dialogs and error recovery expanded locally. Full keyboard/German/mobile sweep still pending. |
+| 2. Role workflows | Covered server/database boundaries pass isolated checks. Staging browser workflows still pending. |
+| 3. Payroll | Frozen approvals and wage history deployed. Actual effective dates remain unconfirmed by user instruction; historical branch assignments remain open. |
+| 4. Stock history | Append-only evidence deployed. Reconciliation and verified valuation/consumption are not implemented. |
+| 5. Business inputs | Coverage and estimate safety deployed; future-date/blank-cost fixes local. Reliable opening values and confirmed prices still needed. |
+| 6. Offline/privacy | Queue, replay, review and cache fixes implemented locally. Real browser disconnection/account-switch proof still pending. |
+
+The paragraphs below describe previously deployed work, not this local batch.
+
 Staff search, native add-staff dialog, recoverable staff/profile/settings errors,
 settings role/input boundaries and labelled report filters are deployed (#32/#33).
 Live staff search, dialog focus/Escape/password masking, German labels and phone
