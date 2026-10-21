@@ -3,6 +3,23 @@
 Read this file before older handoff notes. Check Git and deployment state before
 treating local changes as live. AI billing and further AI work are deferred.
 
+## Release A deployed — 2026-10-21
+
+Migration `20261017160350` applied to production (SQL editor, history row added,
+pre-apply gate re-run shows ALREADY APPLIED). PR #44 → `develop` → `main`;
+production serves release `bba3d17…` (confirmed via public page metadata).
+Rollback: Vercel "Promote" previous deployment; migration is backward-compatible;
+`scripts/ops/rollback-offline-migration.sql` + saved capture if ever needed.
+
+**Post-deploy finding A.1 (Medium, pre-existing, fixed locally — pending PR):**
+`src/proxy.ts` matcher only exempted images, so signed-out requests for `/sw.js`,
+`/offline.html` and `/manifest.webmanifest` were redirected to `/login` (verified on
+production). Effect: service-worker registration fails for signed-out visitors and
+the new offline fallback page is only precached if installed while signed in.
+Clocking with the app already open offline is unaffected (localStorage queue).
+Fix: exempt those three public assets in the matcher; regression assertion added
+to `scripts/checks/service-worker.cjs` (passes; fails on the old matcher).
+
 ## Staging browser verification — Release A — 2026-10-21 (Claude, lead)
 
 Real Chrome against local staging (`http://schnitzery.localhost:3100`, isolated

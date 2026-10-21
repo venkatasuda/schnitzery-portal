@@ -162,6 +162,17 @@ export async function getAttendanceApprovals() {
     const { data: us, error: namesError } = await readAll(supabase.from("users").select("id, full_name, team").in("id", ids).order("id"));
     if (namesError) return { ok: false, error: namesError.message };
     for (const u of us || []) names[u.id] = { full_name: u.full_name, team: u.team };
+    // Employees who moved branch are hidden by users RLS; resolve their names from
+    // the shifts they worked here (bounded, branch-scoped RPC, one call per month).
+    // ponytail: one RPC per pending month; batch if old pending months pile up.
+    const months = [...new Set(pending.filter((l) => !names[l.user_id]).map((l) => String(l.work_date).slice(0, 7)))];
+    for (const m of months) {
+      const next = new Date(`${m}-01T00:00:00Z`); next.setUTCMonth(next.getUTCMonth() + 1);
+      try {
+        const { data: past } = await supabase.rpc("branch_worker_identities", { p_branch: branchId, p_from: `${m}-01`, p_to: next.toISOString().slice(0, 10) });
+        for (const u of past || []) names[u.id] ??= { full_name: u.full_name, team: u.team };
+      } catch { /* names are cosmetic; keep "Unknown" */ }
+    }
   }
 
   const rows = pending.map((l) => ({

@@ -25,3 +25,14 @@ async function request(path,mode='navigate',method='GET') {let pending;handlers.
  await lifecycle('activate');assert.deepEqual(deleted,['schnitzery-v4']);
  console.log('Service worker: redirect/private precache blocked, private offline fallback is public, mutable/RSC/API/write requests bypass cache, unrelated caches retained.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
+// The auth proxy must not redirect the public PWA assets: a redirected /sw.js
+// fails registration and a redirected /offline.html is never precached.
+{
+ const ok=require('node:assert/strict');
+ const src=require('node:fs').readFileSync('src/proxy.ts','utf8');
+ const gate=new RegExp('^'+JSON.parse(src.match(/matcher:\s*\[[\s\S]*?("\/\(\(\?![^\n]*")/)[1])+'$');
+ for(const p of ['/sw.js','/offline.html','/manifest.webmanifest','/icons/icon-192.png'])ok(!gate.test(p),`proxy must not gate ${p}`);
+ for(const p of ['/','/attendance','/payroll','/login','/api/agent/chat','/sw.jsx','/offline.html/x'])ok(gate.test(p),`proxy must still gate ${p}`);
+ console.log('Proxy: public PWA assets bypass auth; app routes stay gated.');
+}
