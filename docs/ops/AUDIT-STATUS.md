@@ -3,6 +3,44 @@
 Read this file before older handoff notes. Check Git and deployment state before
 treating local changes as live. AI billing and further AI work are deferred.
 
+## Staging browser verification — Release A — 2026-10-21 (Claude, lead)
+
+Real Chrome against local staging (`http://schnitzery.localhost:3100`, isolated
+stack, synthetic `@example.test` accounts only, snapshot `e5b7d46` + `a9f3c28`
+changes). Production untouched. **Result: GO for Release A** production steps
+(runbook Step 0 → Step 5), with the non-blocking findings below routed to Release B.
+
+| # | Check | Result |
+|---|---|---|
+| T1 | Staff A online clock-in | PASS — Working, timer, Start Break/Clock Out, toast |
+| T1 | Offline capture (simulated via `navigator.onLine`, real queue/locks/storage) | PASS — 1 event, owner = staff A, protocol 2, valid UUID; "Offline · 1 waiting to sync"; Clock Out locked during break |
+| T1 | Reconnect → sync → DB replay | PASS — queue drained; fresh reload shows server state ON BREAK (applied, not review) |
+| T2 | Account switch with unsent record | PASS — A's event kept as A through logout; staff B signed in + forced sync: event untouched (0 attempts), invisible to B; A signs back in → synced as A, applied with **original** capture time (break end 05:37) |
+| T3 | Manager offline review | PASS — only unreviewed item listed with plain-language reason; empty note blocked (required); note saved, item moves to read-only reviewed history; employee view shows manager notes; no hours changed |
+| T3 | Manager Live view (changed page) | PASS — 1 working / 2 completed, branch A only (staff B absent) |
+| T4 | Roster | PASS — Save disabled while loading; staff picker branch-scoped; stale tab save → "Roster changed elsewhere… draft has not been saved", draft kept; second save from same tab → "✅ Roster saved" (jsonb CAS works through PostgREST, no false conflict) |
+| T5 | Keyboard dialog (NativeDialog, clock code) | PASS — true modal, focus inside, Escape closes, focus returns to trigger |
+| T5 | German | PASS for new offline-review UI (employee + manager) — see B1/B2 |
+| T5 | Phone 390px | NOT TESTED — Chrome window maximized ignores resize; app correctly refuses iframes (anti-clickjacking). Move to Release B |
+
+Non-blocking findings → Release B:
+- **B1 (Low-Med, i18n):** `schedule.ts` / `offline-review.ts` return hardcoded English
+  errors shown verbatim; German managers see English for "Roster changed elsewhere…".
+  Fix: return error codes, map with `t()` (EN fallback).
+- **B2 (Low, i18n):** attendance date line renders "Wednesday, Oct 21, 2026" in German.
+- **B3 (Low, UX):** clock card keeps "Saved offline — will sync…" after a successful
+  sync until refresh.
+
+Not exercised in browser (covered by passing check scripts): real network drop +
+offline reload fallback (`service-worker.cjs`), week-copy guard
+(`roster-integrity.cjs`). Optional 30-second manual check: DevTools → Network →
+Offline → reload `/attendance` → public offline page, no private data.
+Environment note: `next dev` on this low-RAM machine compiles each route for ~1 min
+and occasionally freezes; stale server-action IDs after rebuilds caused one
+"unexpected response" error. Dev-only — production serves a built bundle.
+Staging state left: staff A clocked in; roster week Oct 19–25 has 2 synthetic
+shifts; one synthetic review note; staging UI language cookie set to DE.
+
 ## Continuation — 2026-10-21
 
 Docker now responds with engine 29.9.1 following the Desktop update. Five local
