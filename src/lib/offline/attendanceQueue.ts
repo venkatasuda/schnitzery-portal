@@ -17,7 +17,9 @@ import { getDeviceId } from "./device";
 // ────────────────────────────────────────────────────────────────────────────
 
 const KEY = "sz_attendance_queue";
-const OWNER_KEY = "sz_queue_owner";
+let owner: string | null = null;
+let storageError = false;
+export function queueStorageError() { return storageError; }
 
 // After this many failed sync attempts an event stops being retried forever and
 // is surfaced instead. Without a cap, an event the server permanently declines
@@ -35,6 +37,7 @@ export type QueuedEvent = {
   user_id: string | null; // who captured it; null only for pre-upgrade events
   queued_at: number;    // local ms timestamp
   attempts: number;     // failed-sync attempts
+  capture_protocol?: 2; // legacy captures require review instead of automatic application
 };
 
 export function isOnline(): boolean {
@@ -46,36 +49,41 @@ export function isOnline(): boolean {
 // synchronous captureOffline() below always has an id to stamp.
 
 export function setQueueOwner(userId: string | null) {
-  if (typeof window === "undefined") return;
-  try {
-    if (userId) localStorage.setItem(OWNER_KEY, userId);
-    else localStorage.removeItem(OWNER_KEY);
-  } catch { /* quota — ignore */ }
+  owner = userId;
+  try { localStorage.removeItem("sz_queue_owner"); } catch { /* old owner hints are never trusted */ }
+  try { window.dispatchEvent(new CustomEvent("sz-queue-changed")); } catch {}
 }
 
 export function getQueueOwner(): string | null {
-  if (typeof window === "undefined") return null;
-  try { return localStorage.getItem(OWNER_KEY) || null; } catch { return null; }
+  return owner;
 }
 
 // ── QUEUE ───────────────────────────────────────────────────────────────────
 
 export function readQueue(): QueuedEvent[] {
   if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
+  try {
+    const rows = JSON.parse(localStorage.getItem(KEY) || "[]");
+    if (!Array.isArray(rows) || rows.some(e => !e || typeof e.event_uuid !== "string" || typeof e.action !== "string" || typeof e.captured_at !== "string" || !Number.isInteger(e.attempts) || e.attempts < 0)) throw new Error("Invalid queue");
+    storageError = false;
+    return rows;
+  } catch { storageError = true; return []; }
 }
 
-function writeQueue(q: QueuedEvent[]) {
-  try { localStorage.setItem(KEY, JSON.stringify(q)); } catch { /* quota — ignore */ }
+async function updateQueue(update: (rows: QueuedEvent[]) => QueuedEvent[]) {
+  if (!navigator.locks) throw new Error("Safe offline storage is unavailable");
+  await navigator.locks.request(KEY, () => {
+    const rows = readQueue();
+    if (storageError) throw new Error("Offline records cannot be read safely");
+    try { localStorage.setItem(KEY, JSON.stringify(update(rows))); }
+    catch { storageError = true; throw new Error("Offline record was not saved"); }
+  });
 }
 
-// Events this user may sync: their own, plus legacy events captured before this
-// version shipped (user_id null). Legacy events keep the old behaviour rather
-// than being discarded — dropping them would lose real recorded work — but the
-// window is only however long the device went without an app update.
+// Ownerless legacy evidence is retained for review, never assigned to a new user.
 export function readQueueMine(userId: string | null): QueuedEvent[] {
   return readQueue().filter(
-    (e) => e.attempts < MAX_ATTEMPTS && (e.user_id == null || e.user_id === userId)
+    (e) => userId != null && e.attempts < MAX_ATTEMPTS && e.user_id === userId
   );
 }
 
@@ -83,7 +91,7 @@ export function readQueueMine(userId: string | null): QueuedEvent[] {
 // in the UI rather than silently retried or silently dropped.
 export function readStranded(userId: string | null): QueuedEvent[] {
   return readQueue().filter(
-    (e) => e.attempts >= MAX_ATTEMPTS || (e.user_id != null && e.user_id !== userId)
+    (e) => userId != null && (e.user_id == null || (e.user_id === userId && e.attempts >= MAX_ATTEMPTS))
   );
 }
 
@@ -91,31 +99,46 @@ export function queueCount(): number {
   return readQueue().length;
 }
 
-export function removeFromQueue(uuids: string[]) {
+export async function removeFromQueue(uuids: string[]) {
   const set = new Set(uuids);
-  writeQueue(readQueue().filter((e) => !set.has(e.event_uuid)));
+  await updateQueue(rows => rows.filter(e => !set.has(e.event_uuid)));
 }
 
-export function bumpAttempts(uuids: string[]) {
+export async function bumpAttempts(uuids: string[]) {
   const set = new Set(uuids);
-  writeQueue(readQueue().map((e) => (set.has(e.event_uuid) ? { ...e, attempts: e.attempts + 1 } : e)));
+  await updateQueue(rows => rows.map(e => set.has(e.event_uuid) ? { ...e, attempts: e.attempts + 1 } : e));
+}
+
+// A manual retry never adopts legacy records or changes their original evidence.
+export async function retryOwnEvents() {
+  const userId = getQueueOwner();
+  if (!userId) throw new Error("Attendance identity is not confirmed");
+  await updateQueue(rows => {
+    if (getQueueOwner() !== userId) throw new Error("Attendance account changed");
+    return rows.map(e => e.user_id === userId && e.attempts >= MAX_ATTEMPTS ? { ...e, attempts: 0 } : e);
+  });
+  try { window.dispatchEvent(new CustomEvent("sz-queue-changed")); } catch {}
 }
 
 // Build + persist a captured event. Returns it so callers can update UI.
-export function captureOffline(action: ClockAction, code?: string | null): QueuedEvent {
+export async function captureOffline(action: ClockAction, code?: string | null): Promise<QueuedEvent> {
+  const userId = getQueueOwner();
+  if (!userId) throw new Error("Attendance identity is not confirmed");
   const ev: QueuedEvent = {
-    event_uuid: crypto?.randomUUID?.() ?? `evt_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+    event_uuid: crypto.randomUUID(),
     action,
     captured_at: new Date().toISOString(),
     code: code ?? null,
     device_id: getDeviceId(),
-    user_id: getQueueOwner(),
+    user_id: userId,
     queued_at: Date.now(),
     attempts: 0,
+    capture_protocol: 2,
   };
-  const q = readQueue();
-  q.push(ev);
-  writeQueue(q);
+  await updateQueue(rows => {
+    if (getQueueOwner() !== userId) throw new Error("Attendance account changed");
+    return [...rows, ev];
+  });
   // let any listeners (the sync strip / badge) know the count changed
   try { window.dispatchEvent(new CustomEvent("sz-queue-changed")); } catch {}
   return ev;

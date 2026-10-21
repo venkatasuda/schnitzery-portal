@@ -1,7 +1,14 @@
 # CI / CD
 
+> Status annotation 2026-10-21: read [audit status](AUDIT-STATUS.md) and
+> [review handoff](../CLAUDE-REVIEW-HANDOFF.md) for the pending local release.
+> Preview deployments do not guarantee database isolation. GCP instructions below
+> are future architecture guidance, not the current production release path.
+
 ## CI — GitHub Actions (`.github/workflows/`)
-Runs on every push and PR to `main`, jobs in parallel for fast feedback.
+The exact triggers and checks are defined in `.github/workflows/ci.yml` (main,
+develop and PRs). Jobs run in parallel; current database/regression checks extend
+the summary below.
 
 | Workflow | Job | Gates? | Purpose |
 |---|---|---|---|

@@ -76,10 +76,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      <main id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{children}</main>
+      <main key={user.id} id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{children}</main>
 
       <ToastHost />
-      <AttendanceSync />
+      <AttendanceSync userId={user.id} />
 
       {process.env.AGENT_CHAT_ENABLED === "true" && isManager && <AgentWidget />}
 

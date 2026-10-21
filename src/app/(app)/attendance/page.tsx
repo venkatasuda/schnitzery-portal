@@ -8,6 +8,8 @@ import {
 } from "@/lib/queries/attendance";
 import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
 import { isOnline, captureOffline, codeFromQR, type ClockAction } from "@/lib/offline/attendanceQueue";
+import NativeDialog from "@/components/NativeDialog";
+import OfflineReview from "@/components/OfflineReview";
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
 import QrScanner from "./QrScanner";
 import SyncStatus from "@/components/SyncStatus";
@@ -39,17 +41,22 @@ export default function AttendancePage() {
 
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [statusError,setStatusError]=useState(false);
   const [histLoading, setHistLoading] = useState(false);
+  const [historyError,setHistoryError]=useState(false);
+  const historyRequest=useRef(0);
   const [histTab, setHistTab] = useState<"week" | "month">("week");
 
   async function refresh() {
-    const res = await getMyStatus();
-    if (res.ok) {
+    try {
+      const res = await getMyStatus();
+      if (!res.ok)throw Error();
       setClockedIn(res.clockedIn || false);
       setOnBreak(res.onBreak || false);
       setSession(res.session);
-    } else setMessage(res.error || t("att.couldNotLoad"));
-    setLoading(false);
+      setStatusError(false);
+    } catch {setStatusError(true);setMessage(t("att.couldNotLoad"));}
+    finally {setLoading(false);}
   }
 
   useEffect(() => {
@@ -78,6 +85,18 @@ export default function AttendancePage() {
     else if (action === "clock_out") { setClockedIn(false); setOnBreak(false); setSession(null); }
     else if (action === "break_start") setOnBreak(true);
     else if (action === "break_end") setOnBreak(false);
+  }
+
+  async function saveForSync(action: ClockAction, code?: string) {
+    try {
+      await captureOffline(action, code);
+      applyOptimistic(action);
+      setMessage(t("att.savedOffline"));
+      return true;
+    } catch {
+      setMessage(t("att.offlineNotSaved"));
+      return false;
+    }
   }
 
   // Best-effort device location. Resolves null if unavailable/denied/slow —
@@ -116,29 +135,33 @@ export default function AttendancePage() {
     setWorking(true);
     setMessage(null);
     if (offlineAction && !isOnline()) {
-      captureOffline(offlineAction);
-      applyOptimistic(offlineAction);
-      setMessage(t("att.savedOffline"));
+      await saveForSync(offlineAction);
       setWorking(false);
       return;
     }
     try {
       const res = await fn();
       setMessage(res.ok ? okMsg : res.error || t("att.failed"));
-      await refresh();
+      await refresh().catch(() => setMessage(t("att.couldNotLoad")));
     } catch {
-      if (offlineAction) { captureOffline(offlineAction); applyOptimistic(offlineAction); setMessage(t("att.savedOffline")); }
+      if (offlineAction) await saveForSync(offlineAction);
       else setMessage(t("att.failed"));
     }
     setWorking(false);
   }
 
   async function loadHistory(tab: "week" | "month") {
+    const serial=++historyRequest.current;
     setHistLoading(true);
+    setHistoryError(false);
+    try {
     const { from, to } = rangeFor(tab);
     const res = await getMyHistory(from, to);
-    if (res.ok) setHistory(res.sessions || []);
-    setHistLoading(false);
+    if(serial!==historyRequest.current)return;
+    if (!res.ok) throw Error();
+    setHistory(res.sessions || []);
+    }catch{if(serial===historyRequest.current)setHistoryError(true);}
+    finally{if(serial===historyRequest.current)setHistLoading(false);}
   }
   function toggleHistory() {
     const next = !showHistory;
@@ -164,8 +187,8 @@ export default function AttendancePage() {
     setWorking(true);
     const action: ClockAction = codeMode === "out" ? "clock_out" : "clock_in";
     if (!isOnline()) {
-      captureOffline(action, clean); applyOptimistic(action);
-      setWorking(false); setShowCode(false); setMessage(t("att.savedOffline"));
+      const saved = await saveForSync(action, clean);
+      setWorking(false); if (saved) setShowCode(false); else setCodeErr(t("att.offlineNotSaved"));
       return;
     }
     const fn = codeMode === "out" ? clockOutWithCode : clockInWithCode;
@@ -176,13 +199,13 @@ export default function AttendancePage() {
       if (res.ok) {
         setShowCode(false);
         setMessage(codeMode === "out" ? t("att.outCode") : t("att.inCode"));
-        await refresh();
+        await refresh().catch(() => setMessage(t("att.couldNotLoad")));
       } else {
         setCodeErr(res.error || t("att.failedShort"));
       }
     } catch {
-      captureOffline(action, clean); applyOptimistic(action);
-      setWorking(false); setShowCode(false); setMessage(t("att.savedOffline"));
+      const saved = await saveForSync(action, clean);
+      setWorking(false); if (saved) setShowCode(false); else setCodeErr(t("att.offlineNotSaved"));
     }
   }
 
@@ -191,8 +214,8 @@ export default function AttendancePage() {
     setWorking(true);
     const action: ClockAction = codeMode === "out" ? "clock_out" : "clock_in";
     if (!isOnline()) {
-      captureOffline(action, codeFromQR(payload)); applyOptimistic(action);
-      setWorking(false); setMessage(t("att.savedOffline"));
+      await saveForSync(action, codeFromQR(payload));
+      setWorking(false);
       return;
     }
     setMessage(t("att.readingQR"));
@@ -202,13 +225,13 @@ export default function AttendancePage() {
       setWorking(false);
       if (res.ok) {
         setMessage(codeMode === "out" ? t("att.outQR") : t("att.inQR"));
-        await refresh();
+        await refresh().catch(() => setMessage(t("att.couldNotLoad")));
       } else {
         setMessage(res.error || t("att.qrFailed"));
       }
     } catch {
-      captureOffline(action, codeFromQR(payload)); applyOptimistic(action);
-      setWorking(false); setMessage(t("att.savedOffline"));
+      await saveForSync(action, codeFromQR(payload));
+      setWorking(false);
     }
   }
 
@@ -254,11 +277,12 @@ export default function AttendancePage() {
     <div className="fade-up">
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🕐" size={22} /> {t("att.title")}</div>
       <SyncStatus />
+      <details><summary>{t("offlineReview.title")}</summary><OfflineReview /></details>
       <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}><Icon e="✏️" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("corr.request")}</Link>
       <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
       <div className="card" style={{ padding: 24 }}>
-        {loading ? (
+        {statusError ? <div role="alert"><p>{t("att.couldNotLoad")}</p><button className="btn-secondary" onClick={refresh}>{t("business.retry")}</button></div> : loading ? (
           <div style={{ padding: "10px 0" }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><Skeleton height={15} width={130} /></div>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}><Skeleton height={118} width={118} radius={60} /></div>
@@ -356,8 +380,7 @@ export default function AttendancePage() {
 
       {/* CODE ENTRY MODAL */}
       {showCode && (
-        <div onClick={() => setShowCode(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} className="card" style={{ maxWidth: 360, width: "100%", padding: 24 }}>
+        <NativeDialog title={codeMode === "out" ? t("att.codeOutTitle") : t("att.codeInTitle")} busy={working} onClose={() => setShowCode(false)}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, color: "var(--white)" }}>
               {codeMode === "out" ? t("att.codeOutTitle") : t("att.codeInTitle")}
             </div>
@@ -366,6 +389,7 @@ export default function AttendancePage() {
             </div>
             <input
               autoFocus
+              aria-label={t("att.codeHint")}
               value={codeValue}
               onChange={(e) => setCodeValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
               onKeyDown={(e) => e.key === "Enter" && submitCode()}
@@ -375,11 +399,10 @@ export default function AttendancePage() {
             />
             {codeErr && <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>{t("common.cancel")}</button>
+              <button disabled={working} onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>{t("common.cancel")}</button>
               <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : t("att.confirm")}</button>
             </div>
-          </div>
-        </div>
+        </NativeDialog>
       )}
 
       <button onClick={toggleHistory} style={historyToggle}><Icon e="📅" size={15} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
@@ -408,7 +431,7 @@ export default function AttendancePage() {
           {/* records */}
           {histLoading ? (
             <CardSkeleton rows={3} />
-          ) : history.length === 0 ? (
+          ) : historyError ? <p role="alert">{t("offlineReview.failed")} <button className="btn-secondary" onClick={()=>loadHistory(histTab)}>{t("business.retry")}</button></p> : history.length === 0 ? (
             <div className="card" style={{ color: "var(--gray)", fontSize: 13, padding: 30, textAlign: "center" }}>
               <div style={{ marginBottom: 6 }}><Icon e="📭" size={28} color="var(--gray)" /></div>
               {histTab === "week" ? t("att.noRecordsWeek") : t("att.noRecordsMonth")}

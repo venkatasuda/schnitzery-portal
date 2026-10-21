@@ -1,5 +1,10 @@
 # Schnitzery — Staff & Operations Portal
 
+> Review handoff updated 2026-10-21: start with
+> [Claude review handoff](docs/CLAUDE-REVIEW-HANDOFF.md) and
+> [audit status](docs/ops/AUDIT-STATUS.md). Local commit `e5b7d46` is not deployed;
+> local staging is unfinished. Feature descriptions below are not audit sign-off.
+
 A production multi-branch workforce- and operations-management platform for the **Schnitzery** restaurant franchise, covering attendance, scheduling, payroll, inventory, food safety, and day-to-day operations across all branches from a single mobile-first app.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)
@@ -21,8 +26,8 @@ Beyond time and attendance, the app now runs the **full inventory and operations
 The system is built around three principles:
 
 - **Database-enforced security.** Permissions live in the database (Postgres Row-Level Security + role helpers), not just in the UI, so a leaked endpoint can't leak another branch's data.
-- **Tamper-proof attendance.** Clock events are stamped server-side through privileged database functions, so worked hours can't be fabricated from the client.
-- **Mobile-first, offline-tolerant.** The whole interface is designed for a phone in a busy kitchen, and attendance keeps working when the connection drops.
+- **Attendance validation.** Server functions enforce attendance rules; offline evidence also needs replay validation and manager review where verification fails.
+- **Responsive workflows.** Management uses a desktop workspace and employees have focused mobile navigation. Offline reliability and account isolation still require the staging browser checks in the audit tracker.
 
 ---
 

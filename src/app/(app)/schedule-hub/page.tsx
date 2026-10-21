@@ -41,18 +41,20 @@ export default function ScheduleHubPage() {
     try {
       const thisWk = await getWeekStart(0);
       const nextWk = await getWeekStart(1);
-      const src = await getRoster(thisWk);
-      if (!src.ok || !src.roster || Object.keys(src.roster).length === 0) {
+      const [src,target] = await Promise.all([getRoster(thisWk),getRoster(nextWk)]);
+      if(!target.ok)throw Error(target.error);
+      if(Object.values(target.roster||{}).some(rows=>Array.isArray(rows)&&rows.length>0)) { toast(t("schedhub.copyExists"),"error"); return; }
+      if (!src.ok || !src.roster || !Object.values(src.roster).some(rows=>Array.isArray(rows)&&rows.length>0)) {
         toast(t("schedhub.emptyCopy"), "error");
       } else {
-        const res = await saveRoster(nextWk, src.roster);
+        const res = await saveRoster(nextWk, src.roster, target.expected || null);
         if (res.ok) { toast(t("schedhub.copied"), "success"); loadOverview(); }
         else toast(res.error || t("schedhub.copyFailed"), "error");
       }
     } catch {
       toast(t("schedhub.copyFailed"), "error");
     }
-    setCopyBusy(false);
+    finally { setCopyBusy(false); }
   }
 
   const weekLabel = (() => {

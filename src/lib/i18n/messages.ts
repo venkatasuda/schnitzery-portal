@@ -6,6 +6,11 @@
 
 export const messages = {
   en: {
+    offlineReview: {
+      title:"Offline attendance review",managerHelp:"These events were recorded but could not update working hours. Check the employee's correction before marking reviewed. Your note is visible to the employee.",employeeHelp:"These offline events need review. Request a correction if your working hours are missing or incorrect. A review note does not approve payroll.",
+      refresh:"Refresh",pending:"Needs review",history:"Reviewed history",corrections:"Attendance corrections",failed:"Records could not be loaded or saved. Refresh and try again.",empty:"No records in this view.",employee:"Employee",record:"Offline record",timezone:"Berlin time",note:"Review note · visible to employee",markReviewed:"Mark reviewed",reviewed:"Review note",awaiting:"Awaiting manager review",limit:"Showing up to 100 records. Further pending records appear as earlier ones are reviewed.",
+      clock_in:"Clock in",clock_out:"Clock out",break_start:"Start break",break_end:"End break",qr_not_verified:"The clock code could not be verified.",offline_location_not_verified:"Required location evidence could not be verified offline.",capture_time_needs_review:"The device time is in the future or outside the seven-day automatic replay window.",already_clocked_in:"An open shift already exists.",no_open_session:"No open shift was found for this event.",non_monotonic_time:"The event is earlier than the preceding shift action.",invalid_break_sequence:"The break sequence needs correction.",legacy_capture_needs_review:"This capture came from an older app version and needs manager review.",overlapping_shift:"This time overlaps another recorded shift.",generic:"The event could not be applied. Check the recorded time and request a correction.",
+    },
     inventoryReview: { recount: "Needs review · check counts and movements", explanation: "Some estimates are withheld: count pairs, purchase prices or movement records need review. Unexplained stock increases are not zero usage. Transfers need reconciliation. Check Stock history before relying on these estimates." },
     stockHistory: {
       title: "Stock history", help: "Trace deliveries, counts, waste and transfer changes in your branch.",
@@ -170,6 +175,7 @@ export const messages = {
       enter6: "Enter the 6-digit code", inCode: "✅ Clocked in with code!", outCode: "✅ Clocked out with code!",
       readingQR: "Reading QR…", inQR: "✅ Clocked in by QR!", outQR: "✅ Clocked out by QR!", qrFailed: "QR scan failed.",
       savedOffline: "Saved offline — will sync once you are back online.",
+      offlineNotSaved: "Attendance could not be saved on this device. Reconnect and sign in again, or contact your manager. This action was not recorded offline.",
       locating: "📍 Getting your location…",
       clockedIn: "✅ Clocked in!", clockedOut: "✅ Clocked out!", breakStarted: "☕ Break started", breakEnded: "✅ Break ended",
       tlClockIn: "Clock In", tlClockOut: "Clock Out", tlBreakStart: "Break {n} start", tlBreakEnd: "Break {n} end", minutesShort: "min",
@@ -217,7 +223,7 @@ export const messages = {
       forecastNoUse: "Not enough counts yet to estimate usage. Count regularly for a few days.",
       forecastNoData: "No stock counts yet.", nothingToOrder: "Nothing to order right now.",
       orderListTitle: "Suggested order:",
-      pickProduct: "Pick a product.", pickProductOpt: "Select a product…", enterQtyCost: "Enter a quantity or cost.",
+      pickProduct: "Pick a product.", pickProductOpt: "Select a product…", enterQtyCost: "Enter both quantity and total cost. Use 0 only for a genuinely free delivery.",
       recordDelivery: "Record a delivery", recordDeliverySub: "Log stock you received and what you paid.",
       qtyReceived: "Qty received", costPaid: "Cost paid (€)", supplier: "Supplier", phSupplier: "e.g. Metro", note: "Note", date: "Date",
       saveDelivery: "Save delivery", deliverySaved: "Delivery recorded", recentDeliveries: "Recent deliveries", noDeliveries: "No deliveries yet.",
@@ -266,6 +272,7 @@ export const messages = {
       expired: "Expired {n}d ago", expiresIn: "Expires in {n}d", validUntil: "Valid until {date}",
     },
     schedhub: {
+      copyExists:"Next week's roster already contains shifts. Open the editor; the existing plan was not replaced.",
       title: "Schedule", subtitle: "Plan · analyse · fix",
       broadcast: "📣 Broadcast", reminders: "🔔 Reminders", covers: "🔁 Covers",
       tabRoster: "📋 Roster", tabTeam: "👥 Team", tabInsights: "📊 Insights", tabConflicts: "⚖️ Conflicts", tabTools: "🔧 Tools",
@@ -389,7 +396,7 @@ export const messages = {
     },
     roster: {
       title: "Weekly Roster", subtitle: "Assign staff to shifts · {week}", managersOnly: "Only managers can edit the roster.",
-      thisWeek: "This week", weeksPlus: "+{n}w", weeksMinus: "{n}w", saveRoster: "💾 Save Roster",
+      thisWeek: "This week", weeksPlus: "+{n}w", weeksMinus: "{n}w", saveRoster: "Save roster", loadFailed: "Roster could not be loaded. Your existing plan has not been changed.", discardChanges: "Leave this week and discard your unsaved changes?", removeShift: "Remove shift for {name}",
       weekGlance: "Week at a Glance · {n} shifts", assigned: "{n} assigned", add: "+ Add",
       staff: "Staff", select: "Select…", team: "Team", shift: "Shift", noOne: "No one assigned.",
       customTime: "Custom time…", from: "From", to: "To", badTime: "Set a start and end time.",
@@ -506,12 +513,14 @@ export const messages = {
       filterAll: "All", noResults: "No documents match these filters.", reviewedBy: "Reviewed",
     },
     sync: {
+      needsReview: "{n} offline records were saved for manager review; they were not applied to your hours.", failed: "Sync did not finish. Your unconfirmed records remain on this device.",
       online: "Online", offline: "Offline", pending: "{n} waiting to sync",
       syncNow: "Sync now", syncing: "Syncing…", syncedN: "{n} records synced",
       allSynced: "All synced", offlineToast: "Still offline — will retry automatically.",
       offlineTag: "Offline",
-      stranded: "{n} clock record(s) from another user on this device",
-      strandedHelp: "They will sync when that person next signs in here. Tell a manager if this doesn't clear.",
+      stranded: "{n} clock record(s) need attention on this device",
+      retryMine: "Retry my unsent records",
+      strandedHelp: "These records need review. Ownerless records are never assigned to the next person signing in. Contact a manager on this device.",
     },
     view: { label: "View mode", hq: "HQ", branch: "Branch" },
     wbranch: {
@@ -779,7 +788,7 @@ export const messages = {
       type_certificate: "Certificate", type_other: "Other",
       type_tax_id: "Tax ID", type_health_certificate: "Health Certificate", type_training_certificate: "Training Certificate",
       tooBig: "File must be under 5 MB.", uploaded: "Document uploaded.",
-      uploadFailed: "Upload failed: ", couldNotOpen: "Could not open document.",
+      uploadFailed: "Upload failed: ", couldNotOpen: "Could not open document.", loadFailed: "Documents could not be loaded. Try again.",
       deleted: "Document deleted.", deleteFailed: "Delete failed.",
       confirmDelete: "Delete this document?",
     },
@@ -802,6 +811,11 @@ export const messages = {
   },
 
   de: {
+    offlineReview: {
+      title:"Offline-Anwesenheit prüfen",managerHelp:"Diese Ereignisse wurden erfasst, konnten die Arbeitsstunden aber nicht aktualisieren. Prüfen Sie die Korrektur, bevor Sie den Vorgang abschließen. Die Notiz ist für die betreffende Person sichtbar.",employeeHelp:"Diese Offline-Ereignisse müssen geprüft werden. Beantragen Sie eine Korrektur bei fehlenden oder falschen Arbeitszeiten. Eine Prüfnotiz ist keine Lohnfreigabe.",
+      refresh:"Aktualisieren",pending:"Prüfung nötig",history:"Geprüfte Vorgänge",corrections:"Anwesenheitskorrekturen",failed:"Datensätze konnten nicht geladen oder gespeichert werden. Aktualisieren und erneut versuchen.",empty:"Keine Datensätze in dieser Ansicht.",employee:"Mitarbeiter",record:"Offline-Ereignis",timezone:"Berliner Zeit",note:"Prüfnotiz · für Mitarbeiter sichtbar",markReviewed:"Als geprüft markieren",reviewed:"Prüfnotiz",awaiting:"Prüfung durch die Leitung ausstehend",limit:"Bis zu 100 Datensätze. Weitere offene Vorgänge erscheinen, sobald frühere geprüft wurden.",
+      clock_in:"Einstempeln",clock_out:"Ausstempeln",break_start:"Pause beginnen",break_end:"Pause beenden",qr_not_verified:"Der Stempelcode konnte nicht bestätigt werden.",offline_location_not_verified:"Der erforderliche Standort konnte offline nicht bestätigt werden.",capture_time_needs_review:"Die Gerätezeit liegt in der Zukunft oder außerhalb des siebentägigen automatischen Synchronisationsfensters.",already_clocked_in:"Eine offene Schicht besteht bereits.",no_open_session:"Für dieses Ereignis wurde keine offene Schicht gefunden.",non_monotonic_time:"Das Ereignis liegt vor der vorherigen Schichtaktion.",invalid_break_sequence:"Die Pausenfolge muss korrigiert werden.",legacy_capture_needs_review:"Diese Erfassung stammt aus einer älteren App-Version und muss geprüft werden.",overlapping_shift:"Diese Zeit überschneidet sich mit einer anderen erfassten Schicht.",generic:"Das Ereignis konnte nicht angewendet werden. Prüfen Sie die Zeit und beantragen Sie eine Korrektur.",
+    },
     inventoryReview: { recount: "Prüfung nötig · Zählungen und Bewegungen prüfen", explanation: "Einige Schätzungen fehlen: Zählpaare, Einkaufspreise oder Bewegungen müssen geprüft werden. Unerklärte Bestandszunahmen sind kein Nullverbrauch. Transfers müssen abgestimmt werden. Prüfen Sie den Bestandsverlauf, bevor Sie diese Schätzungen verwenden." },
     stockHistory: {
       title: "Bestandsverlauf", help: "Lieferungen, Zählungen, Abfall und Transferänderungen Ihrer Filiale nachvollziehen.",
@@ -966,6 +980,7 @@ export const messages = {
       enter6: "Gib den 6-stelligen Code ein", inCode: "✅ Mit Code eingestempelt!", outCode: "✅ Mit Code ausgestempelt!",
       readingQR: "QR wird gelesen…", inQR: "✅ Per QR eingestempelt!", outQR: "✅ Per QR ausgestempelt!", qrFailed: "QR-Scan fehlgeschlagen.",
       savedOffline: "Offline gespeichert – wird synchronisiert, sobald du wieder online bist.",
+      offlineNotSaved: "Die Anwesenheit konnte auf diesem Gerät nicht gespeichert werden. Stellen Sie die Verbindung wieder her und melden Sie sich erneut an oder kontaktieren Sie die Leitung. Diese Aktion wurde nicht offline erfasst.",
       locating: "📍 Standort wird ermittelt…",
       clockedIn: "✅ Eingestempelt!", clockedOut: "✅ Ausgestempelt!", breakStarted: "☕ Pause gestartet", breakEnded: "✅ Pause beendet",
       tlClockIn: "Eingestempelt", tlClockOut: "Ausgestempelt", tlBreakStart: "Pause {n} Beginn", tlBreakEnd: "Pause {n} Ende", minutesShort: "Min.",
@@ -1013,7 +1028,7 @@ export const messages = {
       forecastNoUse: "Noch nicht genug Zählungen für eine Verbrauchsschätzung. Ein paar Tage regelmäßig zählen.",
       forecastNoData: "Noch keine Bestandszählungen.", nothingToOrder: "Derzeit nichts zu bestellen.",
       orderListTitle: "Bestellvorschlag:",
-      pickProduct: "Produkt wählen.", pickProductOpt: "Produkt auswählen…", enterQtyCost: "Menge oder Kosten eingeben.",
+      pickProduct: "Produkt wählen.", pickProductOpt: "Produkt auswählen…", enterQtyCost: "Menge und Gesamtkosten eingeben. 0 nur für tatsächlich kostenlose Lieferungen verwenden.",
       recordDelivery: "Lieferung erfassen", recordDeliverySub: "Erhaltene Ware und Kosten erfassen.",
       qtyReceived: "Erhaltene Menge", costPaid: "Bezahlt (€)", supplier: "Lieferant", phSupplier: "z. B. Metro", note: "Notiz", date: "Datum",
       saveDelivery: "Lieferung speichern", deliverySaved: "Lieferung erfasst", recentDeliveries: "Letzte Lieferungen", noDeliveries: "Noch keine Lieferungen.",
@@ -1062,6 +1077,7 @@ export const messages = {
       expired: "Vor {n} T. abgelaufen", expiresIn: "Läuft in {n} T. ab", validUntil: "Gültig bis {date}",
     },
     schedhub: {
+      copyExists:"Der Dienstplan für nächste Woche enthält bereits Schichten. Öffnen Sie den Editor; der bestehende Plan wurde nicht ersetzt.",
       title: "Dienstplan", subtitle: "Planen · analysieren · korrigieren",
       broadcast: "📣 Rundnachricht", reminders: "🔔 Erinnerungen", covers: "🔁 Vertretung",
       tabRoster: "📋 Dienstplan", tabTeam: "👥 Team", tabInsights: "📊 Auswertung", tabConflicts: "⚖️ Konflikte", tabTools: "🔧 Werkzeuge",
@@ -1185,7 +1201,7 @@ export const messages = {
     },
     roster: {
       title: "Wochendienstplan", subtitle: "Mitarbeiter Schichten zuweisen · {week}", managersOnly: "Nur Manager können den Dienstplan bearbeiten.",
-      thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "💾 Dienstplan speichern",
+      thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "Dienstplan speichern", loadFailed: "Dienstplan konnte nicht geladen werden. Der bestehende Plan wurde nicht verändert.", discardChanges: "Diese Woche verlassen und ungespeicherte Änderungen verwerfen?", removeShift: "Schicht für {name} entfernen",
       weekGlance: "Wochenüberblick · {n} Schichten", assigned: "{n} zugewiesen", add: "+ Hinzufügen",
       staff: "Mitarbeiter", select: "Wählen…", team: "Team", shift: "Schicht", noOne: "Niemand zugewiesen.",
       customTime: "Eigene Zeit…", from: "Von", to: "Bis", badTime: "Start- und Endzeit angeben.",
@@ -1302,12 +1318,14 @@ export const messages = {
       filterAll: "Alle", noResults: "Keine Dokumente entsprechen diesen Filtern.", reviewedBy: "Geprüft",
     },
     sync: {
+      needsReview: "{n} Offline-Datensätze wurden zur Prüfung gespeichert; sie wurden Ihren Arbeitsstunden nicht hinzugefügt.", failed: "Die Synchronisierung ist nicht abgeschlossen. Unbestätigte Datensätze bleiben auf diesem Gerät.",
       online: "Online", offline: "Offline", pending: "{n} warten auf Synchronisierung",
       syncNow: "Jetzt synchronisieren", syncing: "Synchronisiere…", syncedN: "{n} Einträge synchronisiert",
       allSynced: "Alles synchronisiert", offlineToast: "Noch offline – wird automatisch erneut versucht.",
       offlineTag: "Offline",
-      stranded: "{n} Zeiterfassung(en) eines anderen Nutzers auf diesem Gerät",
-      strandedHelp: "Sie werden synchronisiert, sobald sich diese Person hier erneut anmeldet. Sag einem Manager Bescheid, falls das bestehen bleibt.",
+      stranded: "{n} Zeiterfassung(en) auf diesem Gerät müssen geprüft werden",
+      retryMine: "Meine nicht gesendeten Einträge erneut versuchen",
+      strandedHelp: "Diese Datensätze müssen geprüft werden. Einträge ohne bestätigte Person werden nie der nächsten Anmeldung zugeordnet. Kontaktieren Sie die Leitung auf diesem Gerät.",
     },
     view: { label: "Ansicht", hq: "Zentrale", branch: "Filiale" },
     wbranch: {
@@ -1575,7 +1593,7 @@ export const messages = {
       type_certificate: "Zertifikat", type_other: "Sonstiges",
       type_tax_id: "Steuer-ID", type_health_certificate: "Gesundheitszeugnis", type_training_certificate: "Schulungsnachweis",
       tooBig: "Datei muss kleiner als 5 MB sein.", uploaded: "Dokument hochgeladen.",
-      uploadFailed: "Upload fehlgeschlagen: ", couldNotOpen: "Dokument konnte nicht geöffnet werden.",
+      uploadFailed: "Upload fehlgeschlagen: ", couldNotOpen: "Dokument konnte nicht geöffnet werden.", loadFailed: "Dokumente konnten nicht geladen werden. Bitte erneut versuchen.",
       deleted: "Dokument gelöscht.", deleteFailed: "Löschen fehlgeschlagen.",
       confirmDelete: "Dieses Dokument löschen?",
     },

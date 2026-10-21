@@ -23,7 +23,7 @@
 // after confirming it renders nothing user-specific.
 // ────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = "schnitzery-v4";
+const CACHE_VERSION = "schnitzery-v5";
 
 // Routes safe to serve to any user of a shared device.
 // "/" is deliberately ABSENT — it is the authenticated home page.
@@ -32,6 +32,7 @@ const CACHEABLE_PAGES = ["/kiosk", "/login"];
 const APP_SHELL = [
   "/kiosk",
   "/login",
+  "/offline.html",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -44,16 +45,17 @@ function isCacheablePage(pathname) {
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) =>
+    caches.open(CACHE_VERSION).then(() =>
       // Individually, NOT cache.addAll — addAll is atomic, so a single missing
       // asset (the icons, historically) rejected the whole call and left the
       // cache completely empty while the .catch() hid the failure.
       Promise.all(
-        APP_SHELL.map((url) =>
-          cache.add(url).catch((err) => {
+        APP_SHELL.map((url) => {
+          const request = new Request(new URL(url,self.location.origin));
+          return fetch(request).then(response=>putInCache(request,response)).catch((err) => {
             console.warn("[sw] precache skipped:", url, err && err.message);
-          })
-        )
+          });
+        })
       )
     )
   );
@@ -62,22 +64,23 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("schnitzery-") && k !== CACHE_VERSION).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
 // Store a response only if it is genuinely safe and useful to replay later.
-function putInCache(request, response) {
+async function putInCache(request, response) {
   try {
     if (!response || !response.ok || response.status !== 200) return response;
     if (response.type !== "basic") return response;   // opaque/cors/redirect → skip
+    if (response.redirected) return response; // a login redirect can contain a private dashboard
 
     const cc = (response.headers.get("Cache-Control") || "").toLowerCase();
     if (cc.includes("no-store") || cc.includes("private")) return response;
 
     const copy = response.clone();
-    caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy)).catch(() => {});
+    await caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy)).catch(() => {});
   } catch {
     /* caching must never break the response */
   }
@@ -108,12 +111,15 @@ self.addEventListener("fetch", (event) => {
     // Not on the allowlist → straight to the network, and never cached.
     // No cross-route cache fallback either: serving a cached /kiosk in place of
     // a failed /payroll is how the wrong person's page ends up on screen.
-    if (!isCacheablePage(url.pathname)) return;
+    if (!isCacheablePage(url.pathname)) {
+      event.respondWith(fetch(req).catch(()=>caches.match("/offline.html")));
+      return;
+    }
 
     event.respondWith(
       fetch(req)
         .then((res) => putInCache(req, res))
-        .catch(() => caches.match(req).then((hit) => hit || caches.match("/kiosk")))
+        .catch(() => caches.match(req).then((hit) => hit || caches.match("/offline.html")))
     );
     return;
   }

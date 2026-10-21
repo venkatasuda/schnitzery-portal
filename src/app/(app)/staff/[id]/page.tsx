@@ -134,7 +134,7 @@ export default function StaffDetailPage() {
       )}
 
       {/* documents — required-doc checklist + approve/reject (manager) */}
-      {staff && <EmployeeDocuments userId={id} />}
+      {staff && <EmployeeDocuments key={id} userId={id} />}
     </div>
   );
 }

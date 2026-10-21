@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getRoster, saveRoster, getWeekStart } from "@/lib/queries/schedule";
 import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { toast } from "@/components/Toast";
@@ -32,6 +32,9 @@ export default function RosterPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [denied, setDenied] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [expected,setExpected] = useState<{id:string;roster:any}|null>(null);
+  const loadSerial=useRef(0);
 
   // add-shift form (per selected day)
   const [activeDay, setActiveDay] = useState<string | null>(null);
@@ -43,30 +46,32 @@ export default function RosterPage() {
   const [customEnd, setCustomEnd] = useState("17:00");
 
   async function load(offset: number) {
+    const serial=++loadSerial.current;
     setLoading(true);
-    const ws = await getWeekStart(offset);
-    const res = await getRoster(ws);
-    if (!res.ok) {
-      if (res.error?.includes("managers")) setDenied(true);
-      setLoading(false);
-      return;
-    }
-    setWeekStart(res.weekStart || "");
-    setRoster(res.roster || {});
-    setStaff(res.staff || []);
-    setAvail((res as any).avail || {});
-    setLoading(false);
+    setLoadError("");
+    try {
+      const ws = await getWeekStart(offset);
+      const res = await getRoster(ws);
+      if(serial!==loadSerial.current)return;
+      if (!res.ok) { if (res.error?.includes("managers")) setDenied(true); throw Error(res.error); }
+      setWeekStart(res.weekStart || ""); setRoster(res.roster || {}); setExpected(res.expected || null);
+      setStaff(res.staff || []); setAvail((res as any).avail || {});
+    } catch { if(serial===loadSerial.current)setLoadError(t("roster.loadFailed")); }
+    finally { if(serial===loadSerial.current)setLoading(false); }
   }
 
-  useEffect(() => { load(0); }, []);
+  useEffect(() => { load(0); return()=>{loadSerial.current++;}; }, []);
 
   function changeWeek(delta: number) {
+    if(saving || loading)return;
+    if(JSON.stringify(roster)!==JSON.stringify(expected?.roster || {}) && !confirm(t("roster.discardChanges")))return;
     const next = weekOffset + delta;
     setWeekOffset(next);
     load(next);
   }
 
   function addEntry() {
+    if(saving || loadError)return;
     if (!activeDay || !selStaff) { toast(t("roster.pickStaff"), "error"); return; }
     const person = staff.find((p) => p.id === selStaff);
     if (!person) return;
@@ -96,11 +101,14 @@ export default function RosterPage() {
   }
 
   async function doSave() {
+    if(saving || loading || loadError)return;
     setSaving(true);
-    const res = await saveRoster(weekStart, roster);
-    setSaving(false);
-    if (res.ok) toast(t("roster.saved"), "success");
-    else toast(res.error || t("roster.saveFailed"), "error");
+    try {
+      const res = await saveRoster(weekStart, roster, expected);
+      if (res.ok && res.expected) { setExpected(res.expected); setRoster(res.expected.roster); toast(t("roster.saved"), "success"); }
+      else toast(res.error || t("roster.saveFailed"), "error");
+    } catch { toast(t("roster.saveFailed"),"error"); }
+    finally { setSaving(false); }
   }
 
   const weekLabel = (() => {
@@ -125,22 +133,23 @@ export default function RosterPage() {
     <div className="fade-up">
       <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📋" size={22} /> {t("roster.title")}</div>
       <div className="page-sub">{t("roster.subtitle", { week: weekLabel || "…" })}</div>
+      {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
       {/* week nav + save */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
+          <button disabled={loading||saving} onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
           <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--action)", fontWeight: 600, padding: "0 4px" }}>
             {weekOffset === 0 ? t("roster.thisWeek") : weekOffset > 0 ? t("roster.weeksPlus", { n: weekOffset }) : t("roster.weeksMinus", { n: weekOffset })}
           </span>
-          <button onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
+          <button disabled={loading||saving} onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
         </div>
-        <button onClick={doSave} disabled={saving} style={{ ...primaryBtn, width: "auto", padding: "10px 24px", opacity: saving ? 0.6 : 1 }}>
+        <button onClick={doSave} disabled={saving||loading||!!loadError} style={{ ...primaryBtn, width: "auto", padding: "10px 24px", opacity: saving ? 0.6 : 1 }}>
           {saving ? t("common.saving") : t("roster.saveRoster")}
         </button>
       </div>
 
-      {loading ? (
+      {loadError ? null : loading ? (
         <CardSkeleton rows={4} />
       ) : (
         <>
@@ -230,7 +239,7 @@ export default function RosterPage() {
                     {submitted(e.user_id) && !availableDay(e.user_id, day) && (
                       <span style={{ fontSize: 12, fontWeight: 700, color: "#e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
                     )}
-                    <button onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
+                    <button disabled={saving} aria-label={t("roster.removeShift",{name:e.name})} onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 18, lineHeight: 1, minWidth:44, minHeight:44 }}>×</button>
                   </div>
                 ))}
 
@@ -239,7 +248,7 @@ export default function RosterPage() {
                   <div style={{ marginTop: 12, padding: 12, background: "var(--dark3)", borderRadius: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
                     <div style={{ flex: "1 1 140px" }}>
                       <label style={miniLbl}>{t("roster.staff")}</label>
-                      <select value={selStaff} onChange={(e) => setSelStaff(e.target.value)} style={miniSelect}>
+                      <select aria-label={t("roster.staff")} value={selStaff} onChange={(e) => setSelStaff(e.target.value)} style={miniSelect}>
                         <option value="">{t("roster.select")}</option>
                         {[...staff].sort((a, b) => (availableDay(a.id, day) ? 0 : 1) - (availableDay(b.id, day) ? 0 : 1) || (a.full_name || "").localeCompare(b.full_name || "")).map((p) => {
                           const tag = availableDay(p.id, day) ? t("roster.avAvailable") : submitted(p.id) ? t("roster.avNot") : t("roster.avNone");
@@ -253,13 +262,13 @@ export default function RosterPage() {
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
                       <label style={miniLbl}>{t("roster.team")}</label>
-                      <select value={selTeam} onChange={(e) => { const tm = e.target.value; setSelTeam(tm); setSelShift(presetsFor(tm)[0]?.shift ?? CUSTOM); }} style={miniSelect}>
+                      <select aria-label={t("roster.team")} value={selTeam} onChange={(e) => { const tm = e.target.value; setSelTeam(tm); setSelShift(presetsFor(tm)[0]?.shift ?? CUSTOM); }} style={miniSelect}>
                         {TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
                       </select>
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
                       <label style={miniLbl}>{t("roster.shift")}</label>
-                      <select value={selShift} onChange={(e) => setSelShift(e.target.value)} style={miniSelect}>
+                      <select aria-label={t("roster.shift")} value={selShift} onChange={(e) => setSelShift(e.target.value)} style={miniSelect}>
                         {presetsFor(selTeam).map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time})</option>)}
                         <option value={CUSTOM}>{t("roster.customTime")}</option>
                       </select>
@@ -268,11 +277,11 @@ export default function RosterPage() {
                       <div style={{ flex: "1 1 180px", display: "flex", gap: 6, alignItems: "flex-end" }}>
                         <div style={{ flex: 1 }}>
                           <label style={miniLbl}>{t("roster.from")}</label>
-                          <input type="time" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={miniSelect} />
+                          <input type="time" aria-label={t("roster.from")} value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={miniSelect} />
                         </div>
                         <div style={{ flex: 1 }}>
                           <label style={miniLbl}>{t("roster.to")}</label>
-                          <input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={miniSelect} />
+                          <input type="time" aria-label={t("roster.to")} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={miniSelect} />
                         </div>
                       </div>
                     )}

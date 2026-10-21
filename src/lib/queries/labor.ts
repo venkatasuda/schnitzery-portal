@@ -51,7 +51,7 @@ export async function getLaborSummary() {
 
   // sales this month
   const { data: sales, error: salesError } = await readAll(supabase
-    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).order("id"));
+    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).lte("sale_date", berlinToday()).order("id"));
   if (salesError) return { ok: false, error: salesError.message };
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
@@ -60,7 +60,7 @@ export async function getLaborSummary() {
 
   // inventory spend this month → food cost % (safe if the deliveries table doesn't exist yet)
   const { data: purch, error: purchErr } = await readAll(supabase
-    .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first).lt("purchase_date", next).order("id"));
+    .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first).lt("purchase_date", next).lte("purchase_date", berlinToday()).order("id"));
   if (purchErr) return { ok: false, error: purchErr.message };
   let monthInvSpend = 0;
   for (const p of purch || []) monthInvSpend += Number(p.cost) || 0;
@@ -84,7 +84,7 @@ export async function setDailySales(saleDate: string, amount: number) {
   const { supabase, user, role, branchId } = await getMgr();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
-  if (!isCalendarDate(saleDate) || !Number.isFinite(amount) || amount < 0) return { ok: false, error: "Invalid sales amount." };
+  if (!isCalendarDate(saleDate) || saleDate > berlinToday() || !Number.isFinite(amount) || amount < 0) return { ok: false, error: "Invalid sales date or amount." };
   const { error } = await supabase
     .from("daily_sales")
     .upsert({ branch_id: branchId, sale_date: saleDate, amount }, { onConflict: "branch_id,sale_date" });
