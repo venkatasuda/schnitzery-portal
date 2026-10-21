@@ -9,7 +9,8 @@ they are verified; they do not wait behind new features.
 
 | Release | Scope | Gate | Status |
 |---|---|---|---|
-| **A** | Offline attendance + roster integrity (`e5b7d46`, `a9f3c28`) | Staging browser pass (RELEASE runbook Step 0b) | Review ✅ · prod gates F1/F2 ✅ · browser pass ✅ (GO, 2026-10-21) · **next: runbook Step 0 → 5** |
+| **A** | Offline attendance + roster integrity (`e5b7d46`, `a9f3c28`) | Staging browser pass (RELEASE runbook Step 0b) | ✅ **Deployed 2026-10-21** (migration applied, prod release `bba3d17`) · smoke test pending |
+| **A.1** | Hotfix: auth proxy redirected `/sw.js`, `/offline.html`, manifest to login for signed-out visitors | `service-worker.cjs` proxy assertion | Fix ready locally → small PR |
 | **E** (owner's priority #2) | Payroll gaps: historical branch assignments, frozen-approval verification | Design note + staging verification; never invent wage dates | Codex to start on `feature/payroll-branch-history` |
 | B | UI/UX checks: roster, staff, reports, settings, dialogs (German, keyboard, 390px) + staging findings B1 (English server errors in German UI), B2 (unlocalized date), B3 (stale "saved offline" note) | Staging review incl. 390px | After A; can run alongside E |
 | C | Stock reconciliation (counts/deliveries/transfers/waste → reviewable, flag unexplained) | Short design agreed **before** building | After E |
