@@ -3,11 +3,16 @@
 Feature → **develop** (test everything) → **main** (live production). Lightweight
 GitHub Flow + a staging branch — right-sized for a small team on Vercel.
 
+**2026-10-21 clarification:** `develop` and PR deployments are previews, not proof
+of database isolation. Use synthetic data against a separate database before
+testing writes. The current local staging attempt is incomplete; see
+[audit status](AUDIT-STATUS.md). New agent branches use `codex/` by default.
+
 ## Branches
 | Branch | Purpose | Deploys to |
 |---|---|---|
 | `main` | **Production** — always live, always releasable. Protected. | Vercel **Production** (schnitzery-portal.vercel.app) |
-| `develop` | **Integration / testing** — features land here first and are tested together. Protected. | Vercel **staging** preview URL |
+| `develop` | **Integration / testing** — features land here first and are tested together. Protected. | Vercel preview; database isolation must be configured separately |
 | `feature/*` | one short-lived branch per feature or fix | ephemeral Vercel preview per PR |
 | `hotfix/*` | urgent production fix, branched off `main` | preview → straight to `main`, then back-merge to `develop` |
 
@@ -26,7 +31,7 @@ git push -u origin feature/waste-report
 ```
 1. The PR runs **CI** (type-check, tests, build) + **secret scan** + **CodeQL**, and
    Vercel posts a **preview URL**. Review + test on that URL.
-2. Merge to `develop`. That deploys the **staging** site — do final testing there.
+2. Merge to `develop`. Test its preview only after verifying the configured database target; a preview may still use production data.
 3. When a batch on `develop` is good, open a PR **`develop → main`**. CI runs again.
 4. Merge to `main` → **production deploys**. Tag the release: `git tag v1.1.0 && git push --tags`.
 

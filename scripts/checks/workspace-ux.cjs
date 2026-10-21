@@ -12,7 +12,7 @@ function moduleAt(file, resolve) {
 }
 async function ui(page, result) {
   const states=[], effects=[]; let cursor=0, initial=true;
-  const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(){return {current:null};}};
+  const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(value){return {current:value};}};
   const component=moduleAt(`src/app/(app)/${page}/page.tsx`, name=>{
     if(name==='react')return hooks;
     if(name==='@/lib/time/berlinDate')return {berlinToday:()=> '2026-10-13'};
@@ -28,7 +28,7 @@ async function ui(page, result) {
 }
 function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray(tree.props?.children)){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
-  for(const page of ['staff','settings','profile','labor']){
+  for(const page of ['staff','settings','profile','labor','attendance-hub']){
     for(const fail of [{ok:false,error:'Database unavailable'},new Error('Disconnected')]){
       const rendered=(await ui(page,fail)).render();
       assert.match(rendered,/role="alert"/); assert.match(rendered,/business.retry/);
@@ -60,11 +60,11 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     assert.equal((await admin.saveBranchSettings(true,'required')).ok,true);
   }
   assert.equal(writes,4);branch=null;assert.equal((await admin.getBranchSettings()).ok,false);assert.equal((await admin.saveBranchSettings(true,'required')).ok,false);assert.equal(writes,4);
-  const laborClient={auth:{getUser:async()=>({data:{user:{id:'caller'}}})},from(table){const q={table,count:1,select:()=>q,eq:()=>q,gte:()=>q,lt:()=>q,order:()=>q,single:async()=>({data:{role:'manager',branch_id:'branch-a'}})};return q;}};
+  const laborClient={auth:{getUser:async()=>({data:{user:{id:'caller'}}})},from(table){const q={table,count:1,select:()=>q,eq:()=>q,gte:()=>q,lt:()=>q,lte:()=>q,order:()=>q,single:async()=>({data:{role:'manager',branch_id:'branch-a'}})};return q;}};
   const calc=moduleAt('src/lib/pay/calculations.ts',require);
   const laborQueries=moduleAt('src/lib/queries/labor.ts',name=>({
     '@/lib/supabase/server':{createClient:async()=>laborClient},
-    '@/lib/time/berlinDate':{monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
+    '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
     '@/lib/pay/wages':{wageMapForBranches:async()=>({a:0})},
     '@/lib/supabase/readAll':{readAll:async q=>({data:q.table==='attendance_logs'?[{user_id:'a',clock_in:'2026-10-01T08:00:00Z',clock_out:'2026-10-01T09:00:00Z'}]:[],error:null})},

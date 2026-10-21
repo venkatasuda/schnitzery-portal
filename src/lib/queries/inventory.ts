@@ -213,7 +213,7 @@ export async function addDelivery(input: {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
   if (!input || !validInventoryItem(input)) return { ok: false, error: "Product is required." };
-  if (input.date !== undefined && !isCalendarDate(input.date)) return { ok: false, error: "Invalid delivery date." };
+  if (input.date !== undefined && (!isCalendarDate(input.date) || input.date > berlinToday())) return { ok: false, error: "Invalid delivery date." };
   if (!branchId || !Number.isFinite(input.qty) || input.qty <= 0 || !Number.isFinite(input.cost) || input.cost < 0) return { ok: false, error: "Enter a positive quantity and a valid cost." };
   const { error } = await supabase.from("inventory_purchases").insert({
     branch_id: branchId,
@@ -260,12 +260,12 @@ export async function getInventoryAnalytics(days = 30) {
   const { data: purchases, error: purchasesError } = await readAll(supabase
     .from("inventory_purchases")
     .select("product, category, qty, cost, purchase_date, unit")
-    .eq("branch_id", branchId).gte("purchase_date", sinceStr).order("id"));
+    .eq("branch_id", branchId).gte("purchase_date", sinceStr).lte("purchase_date", berlinToday()).order("id"));
   if (purchasesError) return { ok: false, error: purchasesError.message };
   const { data: counts, error: countsError } = await readAll(supabase
     .from("inventory_counts")
     .select("product, ist, count_date, created_at, category, unit")
-    .eq("branch_id", branchId).gte("count_date", sinceStr)
+    .eq("branch_id", branchId).gte("count_date", sinceStr).lte("count_date", berlinToday())
     .order("count_date", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).order("id"));
   if (countsError) return { ok: false, error: countsError.message };
   const transfers = await movedStock(supabase, branchId, sinceStr);
@@ -275,7 +275,7 @@ export async function getInventoryAnalytics(days = 30) {
 
   // sales (for food cost %) + previous-window spend (for trend vs last period)
   const { data: salesRows, error: salesRowsError } = await readAll(supabase
-    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", sinceStr).order("id"));
+    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", sinceStr).lte("sale_date", berlinToday()).order("id"));
   if (salesRowsError) return { ok: false, error: salesRowsError.message };
   let totalSales = 0;
   for (const s of salesRows || []) totalSales += Number(s.amount) || 0;
@@ -411,8 +411,8 @@ export async function getInventoryTrend(months = 6) {
   const startStr = start.toISOString().slice(0, 10);
 
   const [purchRes, salesRes] = await Promise.all([
-    readAll(supabase.from("inventory_purchases").select("cost, purchase_date").eq("branch_id", branchId).gte("purchase_date", startStr).order("id")),
-    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", startStr).order("id")),
+    readAll(supabase.from("inventory_purchases").select("cost, purchase_date").eq("branch_id", branchId).gte("purchase_date", startStr).lte("purchase_date", berlinToday()).order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", startStr).lte("sale_date", berlinToday()).order("id")),
   ]);
 
   if (purchRes.error || salesRes.error) return { ok: false, error: purchRes.error?.message || salesRes.error?.message, trend: [] };
@@ -450,9 +450,9 @@ export async function getInventoryVariance(days = 30) {
   const fetchFrom = at(3 * days); // lead-in so the first count pair in each window is complete
 
   const [countsRes, purchRes, salesRes, transferRes] = await Promise.all([
-    readAll(supabase.from("inventory_counts").select("product, count_date, ist, category, unit").eq("branch_id", branchId).gte("count_date", fetchFrom).order("count_date").order("created_at").order("id").order("id")),
-    readAll(supabase.from("inventory_purchases").select("product, purchase_date, qty, cost, category, unit").eq("branch_id", branchId).gte("purchase_date", fetchFrom).order("id")),
-    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", prevStart).order("id")),
+    readAll(supabase.from("inventory_counts").select("product, count_date, ist, category, unit").eq("branch_id", branchId).gte("count_date", fetchFrom).lte("count_date", berlinToday()).order("count_date").order("created_at").order("id").order("id")),
+    readAll(supabase.from("inventory_purchases").select("product, purchase_date, qty, cost, category, unit").eq("branch_id", branchId).gte("purchase_date", fetchFrom).lte("purchase_date", berlinToday()).order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", prevStart).lte("sale_date", berlinToday()).order("id")),
     movedStock(supabase, branchId, fetchFrom),
   ]);
   if (purchRes.error || countsRes.error || salesRes.error || transferRes.error) return { ok: false, error: purchRes.error?.message || countsRes.error?.message || salesRes.error?.message || transferRes.error?.message, items: [], hasData: false };

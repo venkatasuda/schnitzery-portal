@@ -1,8 +1,51 @@
 # Schnitzery Portal — Roadmap & Tasks
 
-_Last updated: 2026-10-10. Living checklist. Tick items as they ship; don't let it rot._
+_Status updated: 2026-10-21. Older planning checklist retained below for context._
 
-## Now (pre-pitch / immediate)
+## Current plan — release train (set by lead, 2026-10-21)
+
+Small, separately reviewed releases. Built-and-reviewed safety fixes ship as soon as
+they are verified; they do not wait behind new features.
+
+| Release | Scope | Gate | Status |
+|---|---|---|---|
+| **A** | Offline attendance + roster integrity (`e5b7d46`, `a9f3c28`) | Staging browser pass (RELEASE runbook Step 0b) | ✅ **Deployed 2026-10-21** (migration applied, prod release `bba3d17`) · smoke test pending |
+| **A.1** | Hotfix: auth proxy redirected `/sw.js`, `/offline.html`, manifest to login for signed-out visitors | `service-worker.cjs` proxy assertion | Fix ready locally → small PR |
+| **E** (owner's priority #2) | Payroll gaps: historical branch assignments, frozen-approval verification | Design note + staging verification; never invent wage dates | Codex to start on `feature/payroll-branch-history` |
+| B | UI/UX checks: roster, staff, reports, settings, dialogs (German, keyboard, 390px) + staging findings B1 (English server errors in German UI), B2 (unlocalized date), B3 (stale "saved offline" note) | Staging review incl. 390px | After A; can run alongside E |
+| C | Stock reconciliation (counts/deliveries/transfers/waste → reviewable, flag unexplained) | Short design agreed **before** building | After E |
+| D | Reliable analytics: prices/valuation, missing ≠ zero, cost only when supported | **Depends on C** | After C |
+
+Owner decisions 2026-10-21: ship early in small releases; payroll gaps (E) first
+after A; Codex builds / Claude verifies + reviews + releases.
+
+Release A detail: [RELEASE-e5b7d46.md](ops/RELEASE-e5b7d46.md) ·
+review: [REVIEW-e5b7d46.md](ops/REVIEW-e5b7d46.md) · rollback:
+`scripts/ops/rollback-offline-migration.sql`.
+
+Done: local staging (Docker, schema-only baseline, migration applied locally, six
+synthetic accounts, eleven checks — see [LOCAL-STAGING.md](ops/LOCAL-STAGING.md)).
+
+### Working agreement (Codex + Claude)
+- **Codex builds** C, D, E — each on its own `feature/*` branch, never directly on a
+  branch under review or release.
+- **Claude verifies + releases** — staging browser verification, independent review
+  of every feature branch before merge, then develop → main with exact-head CI.
+- One agent per branch at a time. Status of record: `docs/ops/AUDIT-STATUS.md`.
+- Invariants for everyone: AI deferred · never invent wage effective dates · no
+  real payroll/attendance/wage records as test fixtures · staging only on the local
+  isolated stack · verify Supabase project identity before any write.
+
+### Business actions (not code — owner/managers)
+- Confirm actual wage **effective dates** in Labour Cost. Until then, payroll
+  approval stays blocked for affected employees (by design; dates are never guessed).
+- Confirm kitchen device browsers (F5): offline clocking needs Safari/iOS ≥ 15.4.
+
+The six-area progress matrix is in [audit status](ops/AUDIT-STATUS.md). AI remains
+deferred. The older checklist below is not a current deployment instruction;
+revalidate unchecked items before acting on them.
+
+## Historical pre-pitch checklist (2026-10-10)
 - [ ] Commit + push outstanding work to `main`; create/sync `develop`.
 - [ ] Set GitHub branch protection on `main` + `develop` (require CI gate + gitleaks).
 - [ ] Enable Supabase leaked-password protection.

@@ -39,12 +39,19 @@ export async function getMyStatus() {
     .from("attendance_logs")
     .select("*")
     .eq("user_id", user.id)
+    .in("status", ["active", "on-break"])
     .order("created_at", { ascending: false })
     .limit(1);
 
   if (error) return { ok: false, error: error.message };
 
-  const latest = data && data.length ? data[0] : null;
+  let latest = data && data.length ? data[0] : null;
+  if (!latest) {
+    const closed = await supabase.from("attendance_logs").select("*").eq("user_id", user.id)
+      .eq("work_date", berlinToday()).order("created_at", { ascending: false }).limit(1);
+    if (closed.error) return { ok: false, error: closed.error.message };
+    latest = closed.data?.[0] || null;
+  }
   const clockedIn = !!latest && (latest.status === "active" || latest.status === "on-break");
   const onBreak = !!latest && latest.status === "on-break";
   // Show the latest session if it's still open, or if it belongs to today (Berlin).

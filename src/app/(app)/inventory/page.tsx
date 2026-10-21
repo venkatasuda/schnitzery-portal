@@ -16,6 +16,7 @@ import Icon from "@/components/Icon";
 import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import ScanToCount from "./ScanToCount";
 import StockHistory from "./StockHistory";
+import NativeDialog from "@/components/NativeDialog";
 
 const GOLD = "var(--gold-ink)";
 const BLUE = "var(--info)";
@@ -114,7 +115,7 @@ export default function InventoryPage() {
   }
   async function doAddDelivery() {
     if (!del.product) { toast(t("inv.pickProduct"), "error"); return; }
-    if (del.qty === "" && del.cost === "") { toast(t("inv.enterQtyCost"), "error"); return; }
+    if (del.qty.trim() === "" || del.cost.trim() === "") { toast(t("inv.enterQtyCost"), "error"); return; }
     const prod = products.find((p) => p.id === del.product);
     setSavingDel(true);
     const res = await addDelivery({
@@ -250,19 +251,17 @@ export default function InventoryPage() {
             <>
               {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load()} />}
               {gridSel && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setGridSel(null)}>
-                  <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--dark)", borderRadius: 14, padding: 20, width: "100%", maxWidth: 320, border: "1px solid var(--border)" }}>
+                <NativeDialog title={`${t("inv.count")}: ${gridSel.product}`} busy={savingP === gridSel.product} onClose={() => setGridSel(null)}>
                     <div style={{ fontSize: 12, color: "var(--gray)" }}>{gridSel.category}</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{gridSel.product}</div>
                     <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[inventoryKey(gridSel)] ? ` · ${t("inv.current")} ${counts[inventoryKey(gridSel)].ist}` : ""}</div>
-                    <input type="number" inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
+                    <input type="number" min="0" step="any" aria-label={t("inv.count")} inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
                       style={{ width: "100%", padding: 14, fontSize: 20, textAlign: "center", borderRadius: 10, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontWeight: 700 }} />
                     <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
                       <button onClick={() => quickSave(gridSel, gridVal)} disabled={savingP === gridSel.product} style={{ flex: 1, padding: 13, borderRadius: 10, background: "var(--action)", color: "var(--on-action)", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{savingP === gridSel.product ? "…" : t("inv.count")}</button>
-                      <button onClick={() => setGridSel(null)} style={{ padding: "13px 16px", borderRadius: 10, background: "transparent", color: "var(--gray)", border: "1px solid var(--border)", cursor: "pointer" }}>✕</button>
+                      <button aria-label={t("common.close")} disabled={savingP === gridSel.product} onClick={() => setGridSel(null)} style={{ padding: "13px 16px", borderRadius: 10, background: "transparent", color: "var(--gray)", border: "1px solid var(--border)", cursor: "pointer" }}>✕</button>
                     </div>
-                  </div>
-                </div>
+                </NativeDialog>
               )}
               <div className="inventory-toolbar">
                 <label className="inventory-search">

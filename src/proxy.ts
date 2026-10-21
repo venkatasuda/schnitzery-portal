@@ -57,7 +57,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on all routes EXCEPT static files and Next internals
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Run on all routes EXCEPT static files and Next internals. The service
+    // worker, its public offline page and the web manifest must load signed-out:
+    // a redirect here breaks SW registration and leaves no offline fallback.
+    "/((?!_next/static|_next/image|favicon.ico|sw\\.js$|offline\\.html$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

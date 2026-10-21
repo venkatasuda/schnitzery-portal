@@ -1,6 +1,11 @@
 # Schnitzery Portal — Architecture
 
-_Last updated: 2026-10-10. Grounded in the current codebase and database._
+_Architecture baseline: 2026-10-10. Status annotation updated 2026-10-21._
+
+For later payroll, inventory and offline changes, read
+[review handoff](CLAUDE-REVIEW-HANDOFF.md) and [audit status](ops/AUDIT-STATUS.md).
+Vercel previews are not verified isolated staging: database separation must be
+configured independently. Local staging setup remains incomplete.
 
 ## 1. Stack
 - **Frontend/Backend:** Next.js 16.2.7 (App Router, React Server Components, Server

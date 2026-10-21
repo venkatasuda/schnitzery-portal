@@ -1,5 +1,10 @@
 # Schnitzery Portal — Project Memory
 
+> Status updated 2026-10-21: [review handoff](CLAUDE-REVIEW-HANDOFF.md) and
+> [audit tracker](ops/AUDIT-STATUS.md) take precedence over the historical notes
+> below. Latest implementation `e5b7d46` is local, not deployed. Last recorded
+> production release is `94614db`. Local staging is unfinished; AI is deferred.
+
 _A human-readable "state of the project": decisions, context, gotchas. Read this first
 when picking the project back up. Append-only-ish; prune stale notes._
 
@@ -36,11 +41,14 @@ mobile-first. See PRD / ARCHITECTURE for detail.
 
 ## Gotchas / scars (don't relearn the hard way)
 - **Next 16 ≠ older Next.** Middleware is `proxy.ts`. Read `node_modules/next/dist/docs/`.
-- **`execute_sql` via the Supabase tool is read-only** — use `apply_migration` for writes.
+- **Verify connector project scope.** The connected app exposed FarmersFresh during
+  staging setup; Schnitzery required its authorized local CLI/API session. Use
+  `apply_migration` for DDL through the connector; do not infer tool capabilities
+  from old permission errors.
 - **A guard trigger once referenced a dropped `hourly_wage` column** — broke every
   `users` update until fixed (migrations 07/08). Watch copied trigger bodies.
-- **Mounted drive (E:) is read-only to the sandbox for deletes** — Claude can create/edit
-  files but not `rm`; deletions must be done by the user.
+- **Permissions vary by reviewer environment.** Inspect current tool restrictions;
+  the earlier E-drive sandbox limitation is not a universal project rule.
 - **npm installs here can time out mid-extract** — if types resolve to `any`, suspect an
   incomplete install; run `npm install` locally to repair. Do **not** `npm audit fix --force`.
 - **Business dates are Europe/Berlin** — use `src/lib/time/*`.
@@ -58,6 +66,9 @@ VAPID public/private/subject, `ANTHROPIC_API_KEY`, `AGENT_CHAT_ENABLED`, `AGENT_
 - Seeds/ops scripts: `scripts/ops/*`. Pending migrations: `supabase/pending/*`.
 
 ## Current status
-Phase-1 agent built + typechecks clean (flag off). Stuttgart inventory real + clean.
-Outstanding: push to main, branch protection, enable agent in staging, enter Drinks
-figures, delete `tsconfig.agentcheck.json`. See ROADMAP for the full list.
+Use the six-area matrix in `ops/AUDIT-STATUS.md`. Payroll snapshots/wage history
+and stock evidence are deployed. Offline replay/review, roster concurrency and
+dialog/error improvements are committed locally in `e5b7d46`; their migration
+is unapplied. Docker interrupted local staging setup. Unknown wage dates remain
+unconfirmed. Reconciliation, valuation and full role/browser verification remain
+open. The older AI flag and seed counts above were not rechecked for this handoff.

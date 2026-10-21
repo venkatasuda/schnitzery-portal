@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
-import { berlinMonday, berlinMonth } from "@/lib/time/berlinDate";
+import { berlinMonday, berlinMonth, isCalendarDate } from "@/lib/time/berlinDate";
+import { shiftMinutes } from "@/lib/pay/calculations";
 
 // ============================================================
 // SCHEDULE / ROSTER — weekly_roster stores ONE row per branch
@@ -86,31 +87,36 @@ export async function getRoster(weekStart?: string) {
   }
 
   const ws = weekStart || berlinMonday();
+  if (!isCalendarDate(ws) || new Date(ws+"T12:00:00Z").getUTCDay() !== 1) return { ok:false, error:"Choose a Monday for the roster." };
 
-  const { data } = await supabase
+  const { data, error: rosterError } = await supabase
     .from("weekly_roster")
-    .select("roster_data")
+    .select("id,roster_data")
     .eq("branch_id", branchId)
     .eq("week_start", ws)
     .maybeSingle();
+  if (rosterError) return { ok:false, error:rosterError.message };
 
   // staff list for assignment dropdowns (same branch)
-  const { data: staff } = await supabase
+  const { data: staff, error: staffError } = await supabase
     .from("users")
     .select("id, full_name, role, contract_hours")
     .eq("branch_id", branchId)
+    .eq("status", "active").neq("role", "kiosk")
     .order("full_name");
+  if (staffError) return { ok:false, error:staffError.message };
 
   // month-to-date worked hours per staff (capacity hint vs monthly contract)
   const monthStart = berlinMonth() + "-01";
-  const { data: mLogs } = await supabase
+  const { data: mLogs, error: logsError } = await supabase
     .from("attendance_logs")
-    .select("user_id, duration_mins, status")
+    .select("user_id,duration_mins,status,clock_in,clock_out,breaks")
     .eq("branch_id", branchId)
     .gte("work_date", monthStart)
     .eq("status", "complete");
+  if (logsError) return { ok:false, error:logsError.message };
   const workedMins: Record<string, number> = {};
-  for (const l of mLogs || []) workedMins[l.user_id] = (workedMins[l.user_id] || 0) + (l.duration_mins || 0);
+  for (const l of mLogs || []) workedMins[l.user_id] = (workedMins[l.user_id] || 0) + shiftMinutes(l).paidMin;
 
   const staffEnriched = (staff || []).map((s: any) => ({
     id: s.id,
@@ -121,11 +127,12 @@ export async function getRoster(weekStart?: string) {
   }));
 
   // availability submitted for THIS week → { [user_id]: { Monday: ["Morning",...], ... } }
-  const { data: avRows } = await supabase
+  const { data: avRows, error: availabilityError } = await supabase
     .from("availability")
     .select("user_id, days")
     .eq("branch_id", branchId)
     .eq("week_start", ws);
+  if (availabilityError) return { ok:false, error:availabilityError.message };
   const avail: Record<string, any> = {};
   for (const a of avRows || []) avail[a.user_id] = a.days || {};
 
@@ -133,13 +140,14 @@ export async function getRoster(weekStart?: string) {
     ok: true,
     weekStart: ws,
     roster: (data?.roster_data as any) || {},
+    expected: data ? { id:data.id, roster:data.roster_data } : null,
     staff: staffEnriched,
     avail,
   };
 }
 
 // ── MANAGER: save the roster for a week (upsert by branch + week) ──
-export async function saveRoster(weekStart: string, rosterData: any) {
+export async function saveRoster(weekStart: string, rosterData: any, expected: {id:string;roster:any} | null) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!branchId) return { ok: false, error: "No branch assigned." };
@@ -147,27 +155,27 @@ export async function saveRoster(weekStart: string, rosterData: any) {
     return { ok: false, error: "Only managers can edit the roster." };
   }
 
-  // upsert: one row per branch+week
-  const { data: existing } = await supabase
-    .from("weekly_roster")
-    .select("id")
-    .eq("branch_id", branchId)
-    .eq("week_start", weekStart)
-    .maybeSingle();
-
-  if (existing) {
-    const { error } = await supabase
-      .from("weekly_roster")
-      .update({ roster_data: rosterData })
-      .eq("id", existing.id);
-    if (error) return { ok: false, error: error.message };
-  } else {
-    const { error } = await supabase
-      .from("weekly_roster")
-      .insert({ branch_id: branchId, week_start: weekStart, roster_data: rosterData });
-    if (error) return { ok: false, error: error.message };
-  }
-  return { ok: true };
+  if (expected === undefined || !isCalendarDate(weekStart) || new Date(weekStart+"T12:00:00Z").getUTCDay() !== 1
+    || !rosterData || typeof rosterData !== "object" || Array.isArray(rosterData)
+    || Object.entries(rosterData).some(([day,rows])=>!DAYS.includes(day) || !Array.isArray(rows) || rows.length>200
+      || rows.some(e=>!e || typeof e.user_id!=="string" || typeof e.shift!=="string"
+        || !(SHIFT_MODEL[e.team]?.some(s=>s.shift===e.shift) || /^(?:[01]\d|2[0-3]):[0-5]\d–(?:[01]\d|2[0-3]):[0-5]\d$/.test(e.shift))
+        || !["Manager","Preparation","Kitchen","Cashier","Dishwashing"].includes(e.team)))) return {ok:false,error:"Invalid roster. Reload before saving."};
+  const ids = [...new Set<string>(Object.values(rosterData).flat().map((e:any)=>e.user_id))];
+  const {data:people,error:peopleError}=ids.length ? await supabase.from("users").select("id,full_name").in("id",ids).eq("branch_id",branchId).eq("status","active").neq("role","kiosk") : {data:[],error:null};
+  if (peopleError || people?.length!==ids.length) return {ok:false,error:"Roster staff must be active in this branch."};
+  const names=new Map((people||[]).map(p=>[p.id,p.full_name]));
+  const normalized=Object.fromEntries(Object.entries(rosterData).map(([day,rows])=>[day,(rows as any[]).map(e=>({user_id:e.user_id,name:names.get(e.user_id),team:e.team,shift:e.shift}))]));
+  let query;
+  if (expected) {
+    if (typeof expected.id!=="string") return {ok:false,error:"Reload before saving."};
+    query=supabase.from("weekly_roster").update({roster_data:normalized}).eq("id",expected.id).eq("branch_id",branchId).eq("week_start",weekStart);
+    query=expected.roster==null ? query.is("roster_data",null) : query.eq("roster_data",JSON.stringify(expected.roster));
+  } else query=supabase.from("weekly_roster").insert({branch_id:branchId,week_start:weekStart,roster_data:normalized});
+  const {data:changed,error}=await query.select("id,roster_data").maybeSingle();
+  if (error && error.code!=="23505") return {ok:false,error:error.message};
+  if (error || !changed) return {ok:false,error:"Roster changed elsewhere. Reload before saving; your draft has not been saved."};
+  return {ok:true,expected:{id:changed.id,roster:changed.roster_data}};
 }
 
 // ── SWAP REQUESTS ──
