@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
-import { readQueueMine, readStranded, getQueueOwner, queueStorageError } from "@/lib/offline/attendanceQueue";
+import { readQueueMine, readStranded, getQueueOwner, queueStorageError, retryOwnEvents } from "@/lib/offline/attendanceQueue";
 import { flushQueue } from "@/lib/offline/sync";
 import { toast } from "@/components/Toast";
 
@@ -13,6 +13,7 @@ export default function SyncStatus() {
   const { t } = useLang();
   const [pending, setPending] = useState(0);
   const [stranded, setStranded] = useState(0);
+  const [retryable, setRetryable] = useState(0);
   const [online, setOnline] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -24,7 +25,9 @@ export default function SyncStatus() {
       const uid = getQueueOwner();
       setUserId(uid);
       setPending(readQueueMine(uid).length);
-      setStranded(readStranded(uid).length);
+      const stopped = readStranded(uid);
+      setStranded(stopped.length);
+      setRetryable(stopped.filter(e => e.user_id === uid).length);
       setOnline(navigator.onLine);
       setStorageFailed(queueStorageError());
       if (event instanceof CustomEvent && event.detail?.needsReview) setReview(n => n + event.detail.needsReview);
@@ -49,12 +52,21 @@ export default function SyncStatus() {
     setSyncing(false);
     const mine = readQueueMine(userId).length;
     setPending(mine);
-    setStranded(readStranded(userId).length);
+    const stopped = readStranded(userId);
+    setStranded(stopped.length);
+    setRetryable(stopped.filter(e => e.user_id === userId).length);
     if (r.offline) toast(t("sync.offlineToast"), "error");
     else if (r.needsReview) toast(t("sync.needsReview", { n: r.needsReview }), "error");
     else if (!r.ok) toast(t("sync.failed"), "error");
     else if (r.synced > 0) toast(t("sync.syncedN", { n: r.synced }), "success");
     else if (mine === 0) toast(t("sync.allSynced"), "success");
+  }
+
+  async function retryMine() {
+    setSyncing(true);
+    try { await retryOwnEvents(); await syncNow(); }
+    catch { toast(t("sync.failed"), "error"); }
+    finally { setSyncing(false); }
   }
 
   if (online && pending === 0 && stranded === 0 && !storageFailed && !review) return null;
@@ -101,6 +113,7 @@ export default function SyncStatus() {
           <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 3 }}>
             {t("sync.strandedHelp")}
           </div>
+          {retryable > 0 && online && <button className="btn-secondary" disabled={syncing} onClick={retryMine} style={{marginTop:8}}>{t("sync.retryMine")}</button>}
         </div>
       )}
     </>

@@ -71,6 +71,7 @@ jobs:
           node scripts/checks/service-worker.cjs
           node scripts/checks/offline-client.cjs
           node scripts/checks/roster-integrity.cjs
+          node scripts/checks/local-staging.cjs
       - name: Atomic database workflow checks
         run: |
           npm install --prefix .audit-db --no-save --package-lock=false @electric-sql/pglite@0.5.8

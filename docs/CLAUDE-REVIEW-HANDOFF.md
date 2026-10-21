@@ -4,6 +4,13 @@ Updated 2026-10-21 (Europe/Berlin). Review source and evidence before making
 changes. This document describes the last observed state; it does not certify
 the full audit or current production health.
 
+**2026-10-21 continuation:** Local schema/API staging now runs; six synthetic
+accounts and eleven actual local workflow/boundary checks pass. Login renders,
+but full browser flows remain pending. A subsequent local patch adds manual
+retry of the employee's exhausted unsent records and an isolated staging launcher.
+Read the newest section of `docs/ops/AUDIT-STATUS.md` and `LOCAL-STAGING.md` before
+the earlier setup-attempt details below. Production remains unchanged.
+
 ## Read first
 
 1. `AGENTS.md`: read relevant installed Next.js 16.2.7 guides before coding.

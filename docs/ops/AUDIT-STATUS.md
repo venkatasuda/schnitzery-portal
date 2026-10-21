@@ -3,6 +3,26 @@
 Read this file before older handoff notes. Check Git and deployment state before
 treating local changes as live. AI billing and further AI work are deferred.
 
+## Continuation — 2026-10-21
+
+Docker now responds with engine 29.9.1 following the Desktop update. Five local
+services run on the dedicated ports. A valid schema-only baseline (47 tables,
+no business rows) was imported transactionally; the offline migration applied
+locally only. Six synthetic accounts were created for two branches. Eleven
+actual local Auth/PostgREST/RLS/replay/review/roster checks passed. Login returned
+HTTP 200 and rendered in the browser; complete role/browser/offline workflows
+remain pending. See [local staging](LOCAL-STAGING.md). Low RAM slowed setup, so
+work was serialized. Production was not migrated or deployed.
+
+Additional local changes: manual retry for the signed-in employee's exhausted
+unsent attendance records, preserving capture evidence and refusing ownership
+changes; corrected the stranded-record label. A staging launcher refuses remote
+database targets and disables external sending credentials. Root TypeScript now
+excludes the ignored staging source snapshot. Offline client/database and roster
+checks passed again; launcher isolation checks and TypeScript pass. These additions
+are not deployed. Prior staging failures below are historical, superseded by this
+section; complete browser release verification is still outstanding.
+
 ## Latest recorded release and local state — updated 2026-10-21
 
 - Local branch: `codex/offline-roster-integrity`; implementation commit `e5b7d46`.

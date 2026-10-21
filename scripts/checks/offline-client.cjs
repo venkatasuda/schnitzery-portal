@@ -33,6 +33,14 @@ function load(file,imports,globals={}){const exports={};vm.runInNewContext(ts.tr
  assert.equal(queue.readQueueMine('A').length,101,'Concurrent captures cannot overwrite another capture');
  reply=null;assert.equal((await sync.flushQueue()).synced,100);assert.equal(lastPayload.length,100);assert.equal((await sync.flushQueue()).synced,1);
  assert.equal(queue.readQueue().length,1);
+ const exhaustedA={...a,attempts:queue.MAX_ATTEMPTS},exhaustedB={...b,attempts:queue.MAX_ATTEMPTS};
+ storage.setItem('sz_attendance_queue',JSON.stringify([exhaustedA,exhaustedB,legacy]));
+ queue.setQueueOwner(null);await assert.rejects(queue.retryOwnEvents(),/identity/);
+ queue.setQueueOwner('A');await queue.retryOwnEvents();
+ assert.equal(queue.readQueueMine('A').length,1);
+ assert.equal(queue.readQueue().find(e=>e.event_uuid===b.event_uuid).attempts,queue.MAX_ATTEMPTS,'Manual retry cannot reset another employee records');
+ assert.equal(queue.readQueue().find(e=>e.event_uuid===legacy.event_uuid).user_id,null,'Manual retry never assigns legacy evidence');
+ assert.equal(queue.readQueueMine('A')[0].captured_at,a.captured_at,'Retry preserves the original capture');
  storage.setItem('sz_attendance_queue','corrupt evidence');await assert.rejects(queue.captureOffline('clock_in'),/cannot be read/);
  assert.equal(storage.getItem('sz_attendance_queue'),'corrupt evidence','Corrupt evidence must not be overwritten');
  console.log('Offline capture → real server action → acknowledgement checks pass: ownership, account changes, quota, corruption, locks, retries, partial results and batching.');

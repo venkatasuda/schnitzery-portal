@@ -109,6 +109,17 @@ export async function bumpAttempts(uuids: string[]) {
   await updateQueue(rows => rows.map(e => set.has(e.event_uuid) ? { ...e, attempts: e.attempts + 1 } : e));
 }
 
+// A manual retry never adopts legacy records or changes their original evidence.
+export async function retryOwnEvents() {
+  const userId = getQueueOwner();
+  if (!userId) throw new Error("Attendance identity is not confirmed");
+  await updateQueue(rows => {
+    if (getQueueOwner() !== userId) throw new Error("Attendance account changed");
+    return rows.map(e => e.user_id === userId && e.attempts >= MAX_ATTEMPTS ? { ...e, attempts: 0 } : e);
+  });
+  try { window.dispatchEvent(new CustomEvent("sz-queue-changed")); } catch {}
+}
+
 // Build + persist a captured event. Returns it so callers can update UI.
 export async function captureOffline(action: ClockAction, code?: string | null): Promise<QueuedEvent> {
   const userId = getQueueOwner();
