@@ -19,6 +19,9 @@ const out={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/quer
  assert.equal((await out.saveRoster('2026-10-19',roster,expected)).ok,true);
  assert.equal(writes[0][2].roster_data.Monday[0].name,'Real name');assert(writes.some(x=>x[0]==='eq'&&x[1]==='roster_data'&&x[2]===JSON.stringify(expected.roster)));
  changed=null;const result=await out.saveRoster('2026-10-19',roster,expected);assert.equal(result.ok,false);assert.match(result.error,/changed elsewhere/);
+ // The UI translates by code; both languages must carry it (German managers saw English before).
+ assert.equal(result.code,'errConflict');
+ for(const lang of ['en','de'])assert.ok(new RegExp(`errConflict:`).test(fs.readFileSync('src/lib/i18n/messages.ts','utf8').split(/\n\s*de:\s*\{/)[lang==='en'?0:1]),`roster.errConflict missing in ${lang}`);
  console.log('Roster: role/branch/staff/time boundaries and snapshot compare-and-swap reject unsafe saves.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 

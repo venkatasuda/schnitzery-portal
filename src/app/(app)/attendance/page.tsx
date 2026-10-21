@@ -7,7 +7,7 @@ import {
   getMyStatus, clockIn, clockOut, getMyHistory, startBreak, endBreak,
 } from "@/lib/queries/attendance";
 import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
-import { isOnline, captureOffline, codeFromQR, type ClockAction } from "@/lib/offline/attendanceQueue";
+import { isOnline, captureOffline, codeFromQR, readQueueMine, getQueueOwner, type ClockAction } from "@/lib/offline/attendanceQueue";
 import NativeDialog from "@/components/NativeDialog";
 import OfflineReview from "@/components/OfflineReview";
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
@@ -18,7 +18,8 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
 export default function AttendancePage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const dateLocale = locale === "de" ? "de-DE" : "en-US";
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [clockedIn, setClockedIn] = useState(false);
@@ -60,10 +61,28 @@ export default function AttendancePage() {
   }
 
   useEffect(() => {
-    setTodayLabel(new Date().toLocaleDateString([], { weekday: "long", day: "2-digit", month: "short", year: "numeric" }));
     refresh();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
+
+  // Follow the app's EN/DE choice, not the browser's language.
+  useEffect(() => {
+    setTodayLabel(new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "2-digit", month: "short", year: "numeric" }));
+  }, [dateLocale]);
+
+  // Once queued offline records have synced, drop the "saved offline" note and
+  // reload the server's status so the screen shows what was actually recorded.
+  const messageRef = useRef(message);
+  messageRef.current = message;
+  useEffect(() => {
+    const onQueue = () => {
+      if (messageRef.current !== t("att.savedOffline") || readQueueMine(getQueueOwner()).length) return;
+      setMessage(null);
+      refresh();
+    };
+    window.addEventListener("sz-queue-changed", onQueue);
+    return () => window.removeEventListener("sz-queue-changed", onQueue);
+  }, [t]);
 
   // Live timer: counts TOTAL time since clock-in (break time included).
   useEffect(() => {
@@ -245,7 +264,7 @@ export default function AttendancePage() {
   const fmtTime = (iso: string | null) =>
     iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
   const fmtDate = (d: string) =>
-    d ? new Date(d).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" }) : "—";
+    d ? new Date(d).toLocaleDateString(dateLocale, { weekday: "short", day: "2-digit", month: "short" }) : "—";
   const fmtDur = (min: number | null) =>
     min == null ? "—" : `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, "0")}m`;
 

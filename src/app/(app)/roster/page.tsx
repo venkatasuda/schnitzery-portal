@@ -106,7 +106,7 @@ export default function RosterPage() {
     try {
       const res = await saveRoster(weekStart, roster, expected);
       if (res.ok && res.expected) { setExpected(res.expected); setRoster(res.expected.roster); toast(t("roster.saved"), "success"); }
-      else toast(res.error || t("roster.saveFailed"), "error");
+      else { const code = (res as { code?: string }).code; toast(code ? t(`roster.${code}`) : (res.error || t("roster.saveFailed")), "error"); }
     } catch { toast(t("roster.saveFailed"),"error"); }
     finally { setSaving(false); }
   }

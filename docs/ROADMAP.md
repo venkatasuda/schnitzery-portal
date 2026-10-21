@@ -10,9 +10,9 @@ they are verified; they do not wait behind new features.
 | Release | Scope | Gate | Status |
 |---|---|---|---|
 | **A** | Offline attendance + roster integrity (`e5b7d46`, `a9f3c28`) | Staging browser pass (RELEASE runbook Step 0b) | ✅ **Deployed 2026-10-21** (migration applied, prod release `bba3d17`) · smoke test pending |
-| **A.1** | Hotfix: auth proxy redirected `/sw.js`, `/offline.html`, manifest to login for signed-out visitors | `service-worker.cjs` proxy assertion | Fix ready locally → small PR |
-| **E** (owner's priority #2) | Payroll gaps: historical branch assignments, frozen-approval verification | Design note + staging verification; never invent wage dates | Design ✅ · **Built + tested by Claude** (Codex out of tokens) · isolated DB test reproduces bug + proves fix ✅ · runbook [RELEASE-E](ops/RELEASE-E-payroll-branch-history.md) → **ship** |
-| B | UI/UX checks: roster, staff, reports, settings, dialogs (German, keyboard, 390px) + staging findings B1 (English server errors in German UI), B2 (unlocalized date), B3 (stale "saved offline" note) | Staging review incl. 390px | After A; can run alongside E |
+| **A.1** | Hotfix: auth proxy redirected `/sw.js`, `/offline.html`, manifest to login for signed-out visitors | `service-worker.cjs` proxy assertion | ✅ Live (verified `/sw.js` loads signed-out) |
+| **E** (owner's priority #2) | Payroll gaps: historical branch assignments, frozen-approval verification | Design note + staging verification; never invent wage dates | ✅ **Live** 2026-10-21 (prod build `488597b`, promoted after an out-of-order deploy) · DB migration `20261021120000` must be applied for the fix to take effect · runbook [RELEASE-E](ops/RELEASE-E-payroll-branch-history.md) |
+| B | UI/UX checks: roster, staff, reports, settings, dialogs (German, keyboard, 390px) + staging findings B1 (English server errors in German UI), B2 (unlocalized date), B3 (stale "saved offline" note) | Staging review incl. 390px | B1–B3 **built** (roster errors translated via codes, clock date follows app language, offline note clears + status reloads after sync); checks pass · 390px review still open |
 | C | Stock reconciliation (counts/deliveries/transfers/waste → reviewable, flag unexplained) | Short design agreed **before** building | After E |
 | D | Reliable analytics: prices/valuation, missing ≠ zero, cost only when supported | **Depends on C** | After C |
 
