@@ -160,21 +160,21 @@ export async function saveRoster(weekStart: string, rosterData: any, expected: {
     || Object.entries(rosterData).some(([day,rows])=>!DAYS.includes(day) || !Array.isArray(rows) || rows.length>200
       || rows.some(e=>!e || typeof e.user_id!=="string" || typeof e.shift!=="string"
         || !(SHIFT_MODEL[e.team]?.some(s=>s.shift===e.shift) || /^(?:[01]\d|2[0-3]):[0-5]\d–(?:[01]\d|2[0-3]):[0-5]\d$/.test(e.shift))
-        || !["Manager","Preparation","Kitchen","Cashier","Dishwashing"].includes(e.team)))) return {ok:false,error:"Invalid roster. Reload before saving."};
+        || !["Manager","Preparation","Kitchen","Cashier","Dishwashing"].includes(e.team)))) return {ok:false,code:"errInvalid",error:"Invalid roster. Reload before saving."};
   const ids = [...new Set<string>(Object.values(rosterData).flat().map((e:any)=>e.user_id))];
   const {data:people,error:peopleError}=ids.length ? await supabase.from("users").select("id,full_name").in("id",ids).eq("branch_id",branchId).eq("status","active").neq("role","kiosk") : {data:[],error:null};
-  if (peopleError || people?.length!==ids.length) return {ok:false,error:"Roster staff must be active in this branch."};
+  if (peopleError || people?.length!==ids.length) return {ok:false,code:"errStaff",error:"Roster staff must be active in this branch."};
   const names=new Map((people||[]).map(p=>[p.id,p.full_name]));
   const normalized=Object.fromEntries(Object.entries(rosterData).map(([day,rows])=>[day,(rows as any[]).map(e=>({user_id:e.user_id,name:names.get(e.user_id),team:e.team,shift:e.shift}))]));
   let query;
   if (expected) {
-    if (typeof expected.id!=="string") return {ok:false,error:"Reload before saving."};
+    if (typeof expected.id!=="string") return {ok:false,code:"errReload",error:"Reload before saving."};
     query=supabase.from("weekly_roster").update({roster_data:normalized}).eq("id",expected.id).eq("branch_id",branchId).eq("week_start",weekStart);
     query=expected.roster==null ? query.is("roster_data",null) : query.eq("roster_data",JSON.stringify(expected.roster));
   } else query=supabase.from("weekly_roster").insert({branch_id:branchId,week_start:weekStart,roster_data:normalized});
   const {data:changed,error}=await query.select("id,roster_data").maybeSingle();
   if (error && error.code!=="23505") return {ok:false,error:error.message};
-  if (error || !changed) return {ok:false,error:"Roster changed elsewhere. Reload before saving; your draft has not been saved."};
+  if (error || !changed) return {ok:false,code:"errConflict",error:"Roster changed elsewhere. Reload before saving; your draft has not been saved."};
   return {ok:true,expected:{id:changed.id,roster:changed.roster_data}};
 }
 
