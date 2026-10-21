@@ -3,7 +3,19 @@
 Read this file before older handoff notes. Check Git and deployment state before
 treating local changes as live. AI billing and further AI work are deferred.
 
-## Verified production baseline — 2026-10-13
+## Latest recorded release and local state — updated 2026-10-21
+
+- Local branch: `codex/offline-roster-integrity`; implementation commit `e5b7d46`.
+  No remote-tracking branch contains that commit in the local Git inventory.
+- Latest recorded production main: `94614db9401ac829ce2a75500ca520d03f917934`,
+  Vercel deployment `DgYUHBVhibK7cPxCjLPET2CAn3KP` (#43).
+  This is the last verified release, not a fresh production inspection today.
+- Review entry point: [CLAUDE-REVIEW-HANDOFF.md](../CLAUDE-REVIEW-HANDOFF.md).
+- The offline migration remains unapplied. Local staging has not been bootstrapped
+  or verified; see the staging section below. Do not treat a Vercel preview as an
+  isolated database environment.
+
+## Historical verified production baseline — 2026-10-13
 
 - Main `c42430e71fcc5eb7581e0e6c8925d1dee79e7b99`; production deployment
   `dpl_FJBR515GAdsMCmwvuJB3hU4m5EiP` is Ready at schnitzery-portal.vercel.app.
@@ -45,10 +57,39 @@ follow-up edits; browser testing is still pending.
 
 Migration `20261017160350_offline_attendance_integrity.sql` is local only.
 Do not deploy these screens before applying the migration in the target staging
-environment. User confirmed that staging details will be provided; website URL,
-Supabase reference and test accounts have not arrived. Keep credentials in a
-local ignored environment file. No production payroll/attendance records were
-changed for these tests. AI remains deferred.
+environment. The supplied Vercel URL and Supabase ref were confirmed to be
+production, not staging. Keep credentials in a local ignored environment file.
+No production payroll/attendance records were changed for these tests. AI remains
+deferred; its current production flag has not been rechecked for this handoff.
+
+### Staging setup attempt — 2026-10-20
+
+User chose the existing Schnitzery organization `ytkyidefqefejvxrqgcq` and then
+authorized local staging instead of a paid cloud upgrade. Organization is Free;
+creating `schnitzery-staging` was rejected by Supabase's two-free-project account
+limit. No cloud project was created and no plan upgrade was performed.
+
+Ignored work directory: `.audit-db/local-staging/`. Supabase config uses project
+ID `schnitzery-local-staging`, API port 55321 and DB port 55322 to avoid an existing
+unrelated local stack. Intended portal URL is `http://schnitzery.localhost:3100`;
+it is not running. A source snapshot of `e5b7d46` was extracted under `app/` with
+a junction to the repository's installed dependencies. No staging app environment
+or synthetic test accounts were completed. Do not copy production `.env.local`.
+
+Docker initially failed on its Secrets Engine `engine.sock` reparse point. A
+rename attempt failed; automatic approval review blocked a subsequent removal
+attempt. Neither repair succeeded. Docker later briefly answered with engine
+29.8.2, then stopped during a Desktop update. Supabase image pulls/start failed.
+The schema-only dump also failed and `schema-only.sql` was zero bytes when last
+checked. Recheck engine/container state before resuming; do not import that file
+as a baseline. No successful clone, local migration or browser-role proof exists.
+
+The connected Supabase app exposed FarmersFresh rather than Schnitzery. CLI
+login was saved in Windows Credential Manager but was not picked up by this CLI
+session; an ignored helper bridged it in memory for authorized management reads.
+Vercel's connector denied access, while its local CLI project inspection worked.
+Never include the ignored helper, credential files or private historical
+migrations in a review bundle. Recheck access instead of assuming it persists.
 
 | Original audit area | Honest status |
 | --- | --- |

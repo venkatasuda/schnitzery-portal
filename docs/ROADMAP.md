@@ -1,8 +1,24 @@
 # Schnitzery Portal — Roadmap & Tasks
 
-_Last updated: 2026-10-10. Living checklist. Tick items as they ship; don't let it rot._
+_Status updated: 2026-10-21. Older planning checklist retained below for context._
 
-## Now (pre-pitch / immediate)
+## Current priorities
+
+- [ ] Independently review implementation `e5b7d46` using
+      [Claude review handoff](CLAUDE-REVIEW-HANDOFF.md).
+- [ ] Finish local staging after Docker is healthy; import a valid schema-only
+      baseline, apply the pending offline migration and seed synthetic accounts.
+- [ ] Verify employee/manager/owner role flows, cross-branch isolation, offline
+      recovery and keyboard/German/mobile page behaviour in staging.
+- [ ] Release the reviewed batch through develop/main with exact-head CI.
+- [ ] Finish stock reconciliation, confirmed valuation inputs and historical
+      branch assignment handling. Do not invent wage effective dates.
+
+The six-area progress matrix is in [audit status](ops/AUDIT-STATUS.md). AI remains
+deferred. The older checklist below is not a current deployment instruction;
+revalidate unchecked items before acting on them.
+
+## Historical pre-pitch checklist (2026-10-10)
 - [ ] Commit + push outstanding work to `main`; create/sync `develop`.
 - [ ] Set GitHub branch protection on `main` + `develop` (require CI gate + gitleaks).
 - [ ] Enable Supabase leaked-password protection.
