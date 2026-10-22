@@ -22,9 +22,11 @@ function component(file) {
   } });
   return exports.default;
 }
-const data = { from: '2026-10-05', to: '2026-10-11', metrics: { totalSales: 12450, laborCost: 3120, salesPerLaborHour: 78.6 }, business: { salesDays: 6, elapsedDays: 7, purchaseSpend: 2680, missingWageStaff: 1, wasteEntries: 8, salesTrend: [900, 1250, 1400, 2300, 2800, 3800, 0].map((sales, i) => ({ day: `2026-10-${String(5+i).padStart(2,'0')}`, sales, recorded: i !== 6 })) } };
+const data = { from: '2026-10-05', to: '2026-10-11', metrics: { totalSales: 12450, laborCost: 3120, salesPerLaborHour: 78.6 }, business: { salesDays: 6, elapsedDays: 7, purchaseSpend: 2680, missingWageStaff: 1, wasteEntries: 8, coverage: { sales: { complete: false, missing: { salesDays: 1 } }, labor: { complete: false, missing: { wages: 1 } }, spend: { complete: false, missing: { costs: 2 } } }, salesTrend: [900, 1250, 1400, 2300, 2800, 3800, 0].map((sales, i) => ({ day: `2026-10-${String(5+i).padStart(2,'0')}`, sales, recorded: i !== 6 })) } };
 const overview = renderToStaticMarkup(React.createElement(component('src/components/BusinessOverview.tsx'), { data }));
 assert.ok(overview.includes('Purchase spending') && overview.includes('no wage set') && overview.includes('not consumption cost'));
+// Release D: incomplete figures show only their known part, marked as a lower bound.
+assert.ok(overview.includes('≥ €3,120') && overview.includes('≥ €2,680') && overview.includes('Deliveries without a cost: 2'));
 if (process.argv[2]) {
   const nav = renderToStaticMarkup(React.createElement(component('src/components/ManagementNav.tsx'), { role: 'manager' }));
   const css = fs.readFileSync('src/app/globals.css', 'utf8');

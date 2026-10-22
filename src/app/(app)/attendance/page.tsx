@@ -331,7 +331,7 @@ export default function AttendancePage() {
             </div>
 
             {/* STATUS ROW: In / Break / Out / Total */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8, marginBottom: 18 }}>
               <StatCell label={t("att.in")} value={fmtTime(session?.clock_in)} color="var(--success)" />
               <StatCell label={t("att.break")} value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="var(--warn)" />
               <StatCell label={t("att.out")} value={fmtTime(session?.clock_out)} color="var(--danger)" />

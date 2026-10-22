@@ -10,13 +10,15 @@ type Report = Extract<Awaited<ReturnType<typeof getBranchAnalytics>>, { ok: true
 export default function BusinessOverview({ data }: { data: Report }) {
   const { t, locale } = useLang();
   const { metrics: m, business: b } = data;
+  const { sales, labor, spend } = b.coverage;
+  const min = (f: { complete: boolean }) => f.complete ? "" : "≥ "; // known part of an incomplete figure
   const money = (v: number) => new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
   return <section className="business-overview" aria-label={t("business.overview")}>
     <div className="business-kpis">
       {[
-        [t("business.sales"), b.salesDays ? money(m.totalSales) : "—", t("business.recordedDays", { n: b.salesDays, total: b.elapsedDays })],
-        [t("business.labor"), money(m.laborCost), b.missingWageStaff ? t("business.missingWages", { n: b.missingWageStaff }) : t("business.baseWages")],
-        [t("business.purchases"), money(b.purchaseSpend), t("business.purchaseNote")],
+        [t("business.sales"), b.salesDays ? min(sales) + money(m.totalSales) : "—", t("business.recordedDays", { n: b.salesDays, total: b.elapsedDays })],
+        [t("business.labor"), min(labor) + money(m.laborCost), b.missingWageStaff ? t("business.missingWages", { n: b.missingWageStaff }) : t("business.baseWages")],
+        [t("business.purchases"), min(spend) + money(b.purchaseSpend), spend.missing.costs ? t("business.missingCosts", { n: spend.missing.costs }) : t("business.purchaseNote")],
         [t("business.productivity"), m.salesPerLaborHour == null ? "—" : money(m.salesPerLaborHour), t("business.perPaidHour")],
       ].map(([label, value, note]) => <article className="business-kpi" key={label}><span>{label}</span><strong>{value}</strong><small>{note}</small></article>)}
     </div>

@@ -42,7 +42,7 @@ export default function OverviewPage() {
       ) : (
         <>
           {/* totals */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, margin: "6px 0 10px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, margin: "6px 0 10px" }}>
             <Stat value={data.totals.branches} label={t("org.branches")} />
             <Stat value={data.totals.employees} label={t("org.employees")} />
             <Stat value={data.totals.workingNow} label={t("org.workingNow")} color={GREEN} />
@@ -52,7 +52,7 @@ export default function OverviewPage() {
           </div>
 
           {/* signals row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginBottom: 16 }}>
             <Link href="/export" className="card" style={{ padding: 13, textDecoration: "none" }}>
               <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.payrollStatus")}</div>
               <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, color: data.payroll.approved === data.payroll.total ? GREEN : AMBER }}>
@@ -115,7 +115,7 @@ export default function OverviewPage() {
                       <td style={{ color: "var(--white)", fontWeight: 600 }}>{b.name}</td>
                       <td style={{ textAlign: "center", color: rateColor(b.attendancePct), fontWeight: 700 }}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
                       <td style={{ textAlign: "center", color: "var(--white)" }}>{b.laborHours}h</td>
-                      <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>{b.laborCost ? `€${b.laborCost.toFixed(0)}` : "—"}</td>
+                      <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>{b.laborCost ? `${b.missingWageStaff ? "≥ " : ""}€${b.laborCost.toFixed(0)}` : "—"}</td>
                     </tr>
                   ))}
                 </tbody>

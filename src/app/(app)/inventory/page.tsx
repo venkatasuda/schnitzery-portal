@@ -16,6 +16,7 @@ import Icon from "@/components/Icon";
 import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import ScanToCount from "./ScanToCount";
 import StockHistory from "./StockHistory";
+import Reconciliation from "./Reconciliation";
 import NativeDialog from "@/components/NativeDialog";
 
 const GOLD = "var(--gold-ink)";
@@ -23,7 +24,7 @@ const BLUE = "var(--info)";
 
 export default function InventoryPage() {
   const { t } = useLang();
-  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast" | "catalog" | "history">("count");
+  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast" | "catalog" | "history" | "reconcile">("count");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -203,6 +204,8 @@ export default function InventoryPage() {
       && (statusFilter === "all" || statusFilter === status);
   });
   const eur = (n: number | null | undefined) => n == null || !Number.isFinite(n) ? "—" : `€${Math.round(n).toLocaleString()}`;
+  // Release D: an incomplete figure shows only its known part, marked as a lower bound.
+  const atLeast = (complete: boolean | undefined, n: number | null | undefined) => (n != null && complete === false ? "≥ " : "") + eur(n);
 
   return (
     <div className="inventory-page">
@@ -240,12 +243,14 @@ export default function InventoryPage() {
         <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")}>{t("inventoryWorkflow.reports")}</TabBtn>
         <TabBtn active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabBtn>
         <TabBtn active={tab === "history"} onClick={() => setTab("history")}>{t("stockHistory.title")}</TabBtn>
+        <TabBtn active={tab === "reconcile"} onClick={() => setTab("reconcile")}>{t("reconcile.title")}</TabBtn>
       </div>
-      <p className="inventory-task-description">{t(tab === "history" ? "stockHistory.help" : `inventoryWorkflow.${tab}Help`)}</p>
+      <p className="inventory-task-description">{t(tab === "history" ? "stockHistory.help" : tab === "reconcile" ? "reconcile.help" : `inventoryWorkflow.${tab}Help`)}</p>
 
       {loading ? <CardSkeleton rows={4} /> : (
         <>
           {tab === "history" && <StockHistory />}
+          {tab === "reconcile" && <Reconciliation />}
           {/* ============ COUNT ============ */}
           {(tab === "count" || tab === "catalog") && (
             <>
@@ -301,7 +306,7 @@ export default function InventoryPage() {
 
               {tab === "catalog" && showAdd && (
                 <div style={{ ...card, marginBottom: 14 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
                     <Field label={t("inv.category")}><input value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })} style={input} placeholder={t("inv.phCategory")} /></Field>
                     <Field label={t("inv.product")}><input value={np.product} onChange={(e) => setNp({ ...np, product: e.target.value })} style={input} placeholder={t("inv.phProduct")} /></Field>
                     <Field label={t("inv.target")}><input type="number" value={np.soll} onChange={(e) => setNp({ ...np, soll: e.target.value })} style={input} placeholder="20" /></Field>
@@ -388,7 +393,7 @@ export default function InventoryPage() {
                 <div style={{ ...card, marginBottom: 14 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.recordDelivery")}</div>
                   <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.recordDeliverySub")}</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
                     <Field label={t("inv.product")}>
                       <select value={del.product} onChange={(e) => setDel({ ...del, product: e.target.value })} style={input}>
                         <option value="">{t("inv.pickProductOpt")}</option>
@@ -452,16 +457,17 @@ export default function InventoryPage() {
                       {analytics.foodCostPct != null ? (
                         <span style={chip}>{t("inv.foodCost")}: <b style={{ color: fcColor(analytics.foodCostPct) }}>{analytics.foodCostPct}%</b></span>
                       ) : (
-                        <span style={{ ...chip, color: "var(--gray)" }}>{t("inv.addSalesForFoodCost")}</span>
+                        <span style={{ ...chip, color: "var(--gray)" }}>{analytics.missingSalesDays ? t("business.missingSalesDays", { n: analytics.missingSalesDays }) : analytics.missingCosts ? t("business.missingCosts", { n: analytics.missingCosts }) : t("inv.addSalesForFoodCost")}</span>
                       )}
+                      <span style={analytics.cogsPct != null ? chip : { ...chip, color: "var(--gray)" }}>{t("inv.cogsPct")}: {analytics.cogsPct != null ? <b>{analytics.cogsPct}%</b> : t("inv.cogsUnavailable")}</span>
                       {analytics.topCategory && <span style={chip}>{t("inv.topCat")}: <b>{analytics.topCategory.category}</b> · {eur(analytics.topCategory.eur)}</span>}
                     </div>
                   </div>
 
                   <div className="inventory-report-kpis">
-                    <Kpi label={t("inv.kSpend")} value={eur(analytics.totalSpend)} color={GOLD} />
-                    <Kpi label={t("inv.kUsed")} value={eur(analytics.totalUsageEur)} color={BLUE} />
-                    <Kpi label={t("inv.kStockValue")} value={eur(analytics.stockValue)} color="var(--success)" />
+                    <Kpi label={t("inv.kSpend")} value={atLeast(analytics.spendComplete, analytics.totalSpend)} color={GOLD} />
+                    <Kpi label={t("inv.kUsed")} value={atLeast(analytics.usageComplete, analytics.totalUsageEur)} color={BLUE} />
+                    <Kpi label={t("inv.kStockValue")} value={atLeast(analytics.stockComplete, analytics.stockValue)} color="var(--success)" />
                   </div>
 
                   <div style={{ ...card, marginBottom: 14 }}>

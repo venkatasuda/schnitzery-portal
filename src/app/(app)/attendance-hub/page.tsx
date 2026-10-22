@@ -222,7 +222,7 @@ export default function AttendanceHubPage() {
           ) : (
             <>
               {/* summary */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginBottom: 12 }}>
                 <Stat value={otStats.peopleOver} label={t("home.overContract")} color={otStats.peopleOver > 0 ? "var(--warn)" : "var(--success)"} />
                 <Stat value={fmtH(otStats.totalOvertimeMins)} label={t("ahub.totalOvertime")} color={otStats.totalOvertimeMins > 0 ? "var(--warn)" : "var(--white)"} />
               </div>

@@ -1,5 +1,6 @@
 "use server";
 import { readAll } from "@/lib/supabase/readAll";
+import { figure, missingSalesDays, pctOf, spendFigure } from "@/lib/analytics/coverage";
 
 
 import { createClient } from "@/lib/supabase/server";
@@ -41,7 +42,7 @@ export async function getLaborSummary() {
 
   // labor cost from completed attendance this month
   const { data: logs, error: logsError } = await readAll(supabase
-    .from("attendance_logs").select("user_id, duration_mins, breaks, clock_in, clock_out, status")
+    .from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, status")
     .eq("branch_id", branchId).gte("work_date", first).lt("work_date", next).eq("status", "complete").order("id"));
   if (logsError) return { ok: false, error: logsError.message };
   const paidByUser: Record<string, number> = {};
@@ -51,20 +52,26 @@ export async function getLaborSummary() {
 
   // sales this month
   const { data: sales, error: salesError } = await readAll(supabase
-    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).lte("sale_date", berlinToday()).order("id"));
+    .from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).lte("sale_date", berlinToday()).order("id"));
   if (salesError) return { ok: false, error: salesError.message };
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
 
-  const laborPct = monthSales > 0 && !missingWageStaff ? Math.round((laborCost / monthSales) * 1000) / 10 : null;
 
   // inventory spend this month → food cost % (safe if the deliveries table doesn't exist yet)
   const { data: purch, error: purchErr } = await readAll(supabase
     .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first).lt("purchase_date", next).lte("purchase_date", berlinToday()).order("id"));
   if (purchErr) return { ok: false, error: purchErr.message };
-  let monthInvSpend = 0;
-  for (const p of purch || []) monthInvSpend += Number(p.cost) || 0;
-  const foodCostPct = (!purchErr && monthSales > 0) ? Math.round((monthInvSpend / monthSales) * 1000) / 10 : null;
+  // Release D: missing sales days, wages or delivery costs are never zero; ratios need complete inputs.
+  const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0).map(l => ({ branch_id: branchId, work_date: l.work_date }));
+  const coverage = {
+    sales: figure(monthSales, { salesDays: missingSalesDays(worked, (sales || []).map(s => ({ branch_id: branchId, sale_date: s.sale_date })), berlinToday()) }),
+    labor: figure(laborCost, { wages: missingWageStaff }),
+    spend: spendFigure(purch || []),
+  };
+  const monthInvSpend = coverage.spend.value;
+  const laborPct = pctOf(coverage.labor, coverage.sales);
+  const foodCostPct = pctOf(coverage.spend, coverage.sales); // purchases ÷ sales, labelled as such
 
   return {
     ok: true,
@@ -77,6 +84,7 @@ export async function getLaborSummary() {
     staffCount: staffCount || 0,
     withWage,
     missingWageStaff,
+    coverage,
   };
 }
 
@@ -156,7 +164,7 @@ export async function getMonthlySummary(month?: string) {
   for (const s of staff || []) info[s.id] = { ...s, hourly_wage: monthWages[s.id] ?? null };
 
   const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs")
-    .select("user_id, duration_mins, breaks, clock_in, clock_out, late_mins, status")
+    .select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, late_mins, status")
     .eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).eq("status", "complete").order("id"));
   if (logsError) return { ok: false, error: logsError.message };
 
@@ -173,7 +181,7 @@ export async function getMonthlySummary(month?: string) {
   }
 
   const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales")
-    .select("amount").eq("branch_id", branchId).gte("sale_date", from).lte("sale_date", to).order("id"));
+    .select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", from).lte("sale_date", to).order("id"));
   if (salesError) return { ok: false, error: salesError.message };
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
@@ -181,14 +189,16 @@ export async function getMonthlySummary(month?: string) {
   const { data: purch, error: purchErr } = await readAll(supabase.from("inventory_purchases")
     .select("cost").eq("branch_id", branchId).gte("purchase_date", from).lte("purchase_date", to).order("id"));
   if (purchErr) return { ok: false, error: purchErr.message };
-  let foodSpend = 0;
-  if (!purchErr) for (const p of purch || []) foodSpend += Number(p.cost) || 0;
+  const spend = spendFigure(purch || []); // deliveries without a cost are missing, not €0
+  const foodSpend = spend.value;
 
-  let laborCost = 0, overtimeHrs = 0;
+  let laborCost = 0, overtimeHrs = 0, missingWage = 0;
   const rows = Object.keys(per).map((uid) => {
     const s = info[uid] || {};
     const hrs = Math.round((per[uid].mins / 60) * 10) / 10;
+    const known = s.hourly_wage != null;
     const wage = s.hourly_wage || 0;
+    if (!known && per[uid].mins > 0) missingWage++;
     laborCost += payForMinutes(per[uid].mins, wage);
     const contract = s.contract_hours || 0;
     const ot = contract > 0 ? Math.max(0, Math.round((hrs - contract) * 10) / 10) : 0;
@@ -196,13 +206,20 @@ export async function getMonthlySummary(month?: string) {
     return {
       name: s.full_name || "—", team: s.team || "—",
       hours: hrs, shifts: per[uid].shifts, late: per[uid].late,
-      overtime: ot, laborCost: payForMinutes(per[uid].mins, wage),
+      overtime: ot, laborCost: known ? payForMinutes(per[uid].mins, wage) : null,
     };
   }).sort((a, b) => b.hours - a.hours);
 
   const totalHours = Math.round((totalMins / 60) * 10) / 10;
-  const laborPct = monthSales > 0 ? Math.round((laborCost / monthSales) * 1000) / 10 : null;
-  const foodPct = (!purchErr && monthSales > 0) ? Math.round((foodSpend / monthSales) * 1000) / 10 : null;
+  // Release D: ratios only on complete inputs (wages, delivery costs, sales on every open day).
+  const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0).map(l => ({ branch_id: branchId, work_date: l.work_date }));
+  const coverage = {
+    sales: figure(monthSales, { salesDays: missingSalesDays(worked, (sales || []).map(s => ({ branch_id: branchId, sale_date: s.sale_date })), berlinToday()) }),
+    labor: figure(laborCost, { wages: missingWage }),
+    spend,
+  };
+  const laborPct = pctOf(coverage.labor, coverage.sales);
+  const foodPct = pctOf(coverage.spend, coverage.sales);
   const primePct = (laborPct != null && foodPct != null) ? Math.round((laborPct + foodPct) * 10) / 10 : null;
   const lateRate = shifts > 0 ? Math.round((lateShifts / shifts) * 1000) / 10 : null;
 
@@ -214,6 +231,7 @@ export async function getMonthlySummary(month?: string) {
     totalHours, shifts, lateShifts, lateRate,
     overtimeHrs: Math.round(overtimeHrs * 10) / 10,
     rows,
-    hasSales: monthSales > 0, hasFood: !purchErr,
+    hasSales: monthSales > 0, hasFood: spend.complete,
+    coverage, complete: coverage.sales.complete && coverage.labor.complete && coverage.spend.complete,
   };
 }

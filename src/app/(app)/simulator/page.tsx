@@ -70,10 +70,13 @@ export default function SimulatorPage() {
 
       {loading ? <CardSkeleton rows={4} /> : !base || !base.hasSales ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13, marginTop: 12 }}>{t("sim.needData")}</div>
+      ) : !base.complete ? (
+        // Release D: never simulate on a partial baseline — the result would look precise and be wrong.
+        <div role="status" className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13, marginTop: 12 }}>{t("sim.incomplete")}</div>
       ) : (
         <>
           <div className="card" style={{ margin: "12px 0", padding: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 6 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginBottom: 6 }}>
               <Metric label={t("sim.primeCost")} baseVal={base.primePct} simVal={primePct} color={primeColor} />
               <Metric label={t("sim.margin")} baseVal={base.hasFood ? ((base.sales - base.foodSpend - base.laborCost) / base.sales) * 100 : null} simVal={marginPct} color={marginColor} />
               <Metric label={t("sim.foodPct")} baseVal={base.foodPct} simVal={foodPct} color="var(--white)" />

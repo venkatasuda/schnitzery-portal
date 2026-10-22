@@ -63,7 +63,7 @@ export default function AnalyticsPage() {
   const m = data?.metrics;
   const clr = (v: number, dir: "up" | "down", good: number, ok: number) => dir === "up" ? (v >= good ? GREEN : v >= ok ? AMBER : RED) : (v <= good ? GREEN : v <= ok ? AMBER : RED);
   const sel: React.CSSProperties = { padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 13 };
-  const teamRows: any[] = Object.values(staff.reduce((acc: any, s: any) => { const k = s.team || "—"; (acc[k] = acc[k] || { team: k, hours: 0, cost: 0 }); acc[k].hours += s.totalHours; acc[k].cost += s.cost; return acc; }, {})).sort((a: any, b: any) => b.cost - a.cost);
+  const teamRows: any[] = Object.values(staff.reduce((acc: any, s: any) => { const k = s.team || "—"; (acc[k] = acc[k] || { team: k, hours: 0, cost: 0, partial: false }); acc[k].hours += s.totalHours; acc[k].cost += s.cost ?? 0; acc[k].partial ||= s.cost == null; return acc; }, {})).sort((a: any, b: any) => b.cost - a.cost);
   const mostWorked = staff.reduce((m: any, s: any) => (s.totalHours > (m?.totalHours ?? -1) ? s : m), null as any);
   const topOT = staff.reduce((m: any, s: any) => (s.otHours > (m?.otHours ?? -1) ? s : m), null as any);
   const missedTotal = staff.reduce((n: number, s: any) => n + (s.absent || 0), 0);
@@ -79,11 +79,11 @@ export default function AnalyticsPage() {
       {view === "workforce" && today?.ok && (
         <div className="card" style={{ marginBottom: 12, padding: 14 }}>
           <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}><Icon e="📅" size={14} color="var(--gold)" /> {t("bana.today")}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8 }}>
             <Kpi value={today.metrics.totalSales ? `€${today.metrics.totalSales.toFixed(0)}` : "—"} label={t("bana.totalSales")} color={GOLD} />
             <Kpi value={`${today.metrics.attended}/${today.metrics.scheduled}`} label={t("bana.present")} color={GOLD} />
             <Kpi value={`${today.metrics.attendancePct}%`} label={t("bana.kAttendance")} color={clr(today.metrics.attendancePct, "up", 95, 85)} />
-            <Kpi value={today.metrics.laborCost ? `€${today.metrics.laborCost.toFixed(0)}` : "—"} label={t("bana.kLaborCost")} color={GOLD} />
+            <Kpi value={today.metrics.laborCost ? `${today.business.coverage.labor.complete ? "" : "≥ "}€${today.metrics.laborCost.toFixed(0)}` : "—"} label={t("bana.kLaborCost")} color={GOLD} />
             <Kpi value={`${today.metrics.latePct}%`} label={t("bana.kLate")} color={clr(today.metrics.latePct, "down", 10, 20)} />
             <Kpi value={today.metrics.laborCostPct != null ? `${today.metrics.laborCostPct}%` : "—"} label={t("bana.laborCostPct")} color={GOLD} />
           </div>
@@ -121,7 +121,7 @@ export default function AnalyticsPage() {
       ) : (
         <>
           {/* KPI grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "14px 0" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, margin: "14px 0" }}>
             <Kpi value={`${m.attendancePct}%`} label={t("bana.kAttendance")} color={clr(m.attendancePct, "up", 95, 85)} sub={`${m.attended}/${m.scheduled}`} />
             <Kpi value={`${m.absencePct}%`} label={t("bana.kAbsence")} color={clr(m.absencePct, "down", 5, 15)} />
             <Kpi value={`${m.latePct}%`} label={t("bana.kLate")} color={clr(m.latePct, "down", 10, 20)} />
@@ -129,14 +129,14 @@ export default function AnalyticsPage() {
             <Kpi value={`${m.utilizationPct}%`} label={t("bana.kUtilization")} color={clr(m.utilizationPct, "up", 90, 70)} />
             <Kpi value={`${m.overtimePct}%`} label={t("bana.kOvertime")} color={clr(m.overtimePct, "down", 10, 20)} />
             <Kpi value={`${m.laborHours}h`} label={t("bana.kLaborHours")} color={GOLD} />
-            <Kpi value={m.laborCost ? `€${m.laborCost.toFixed(0)}` : "—"} label={t("bana.kLaborCost")} color={GOLD} />
+            <Kpi value={m.laborCost ? `${data.business.coverage.labor.complete ? "" : "≥ "}€${m.laborCost.toFixed(0)}` : "—"} label={t("bana.kLaborCost")} color={GOLD} />
           </div>
 
           {/* productivity */}
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="card-title" style={{ marginBottom: 10 }}>{t("bana.productivity")}</div>
             {m.totalSales > 0 ? (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8 }}>
                 <Kpi value={m.salesPerLaborHour != null ? `€${m.salesPerLaborHour}` : "—"} label={t("bana.salesPerHour")} color={BLUE} />
                 <Kpi value={m.laborCostPct != null ? `${m.laborCostPct}%` : "—"} label={t("bana.laborCostPct")} color={clr(m.laborCostPct ?? 0, "down", 25, 35)} />
                 <Kpi value={`€${m.totalSales.toFixed(0)}`} label={t("bana.totalSales")} color={GOLD} />
@@ -259,7 +259,7 @@ export default function AnalyticsPage() {
                 <tr key={tr.team} style={{ borderTop: "1px solid var(--border)" }}>
                   <td style={{ color: "var(--white)", fontWeight: 600, textTransform: "capitalize" }}>{tr.team}</td>
                   <td style={{ textAlign: "center", color: "var(--white)" }}>{tr.hours.toFixed(1)}h</td>
-                  <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>€{tr.cost.toFixed(0)}</td>
+                  <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>{tr.partial ? "≥ " : ""}€{tr.cost.toFixed(0)}</td>
                 </tr>
               ))}
             </tbody>
@@ -270,7 +270,7 @@ export default function AnalyticsPage() {
       {!loading && staff.length > 0 && (
         <div className="card" style={{ marginBottom: 14 }}>
           <div className="card-title" style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗓️" size={16} color="var(--gold)" /> {t("bana.shiftStats")}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
             <Kpi value={mostWorked ? `${mostWorked.totalHours}h` : "—"} label={t("bana.mostWorked")} color={GOLD} sub={mostWorked ? mostWorked.name : undefined} />
             <Kpi value={topOT && topOT.otHours > 0 ? `${topOT.otHours}h` : "—"} label={t("bana.topOvertime")} color={topOT && topOT.otHours > 0 ? "var(--warn)" : "var(--gray)"} sub={topOT && topOT.otHours > 0 ? topOT.name : undefined} />
             <Kpi value={swaps} label={t("bana.swaps")} color={GOLD} />
@@ -296,7 +296,7 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 function Kpi({ value, label, color, sub }: { value: string | number; label: string; color?: string; sub?: string }) {
   return (
     <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid var(--border)", borderRadius: 12, padding: "13px 10px", textAlign: "center" }}>
-      <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", color: color || "var(--white)", lineHeight: 1.2 }}>{value}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", color: color || "var(--white)", lineHeight: 1.2, overflowWrap: "anywhere" }}>{value}</div>
       <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{label}</div>
       {sub && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>{sub}</div>}
     </div>
