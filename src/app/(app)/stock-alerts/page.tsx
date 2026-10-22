@@ -89,7 +89,7 @@ export default function StockAlertsPage() {
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 3 }}>{t("salert.alertBelow")}</div>
-                <input
+                <input aria-label={t("salert.alertBelow")}
                   type="number" inputMode="decimal" style={input}
                   value={edits[it.id] ?? String(it.level)}
                   onChange={(e) => setEdits((s) => ({ ...s, [it.id]: e.target.value }))}

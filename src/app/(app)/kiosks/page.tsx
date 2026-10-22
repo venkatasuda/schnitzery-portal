@@ -55,7 +55,7 @@ export default function KiosksPage() {
 
       {/* add */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder={t("kioskadm.addPlaceholder")}
+        <input aria-label={t("kioskadm.addPlaceholder")} value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder={t("kioskadm.addPlaceholder")}
           style={{ flex: 1, padding: "11px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" }} />
         <button onClick={add} disabled={busy || !newLabel.trim()} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy || !newLabel.trim() ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("kioskadm.add")}</button>
       </div>
@@ -71,10 +71,10 @@ export default function KiosksPage() {
               <div className="u-row">
                 <div className="u-grow">
                   {editId === k.id ? (
-                    <input value={editLabel} onChange={(e) => setEditLabel(e.target.value)} onBlur={() => saveName(k.id)} onKeyDown={(e) => e.key === "Enter" && saveName(k.id)} autoFocus
+                    <input aria-label={t("kioskadm.addPlaceholder")} value={editLabel} onChange={(e) => setEditLabel(e.target.value)} onBlur={() => saveName(k.id)} onKeyDown={(e) => e.key === "Enter" && saveName(k.id)} autoFocus
                       style={{ width: "100%", padding: "6px 8px", background: "var(--dark3)", border: "1px solid var(--gold)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" }} />
                   ) : (
-                    <div onClick={() => { setEditId(k.id); setEditLabel(k.label); }} style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", cursor: "pointer" }}>{k.label}</div>
+                    <button type="button" onClick={() => { setEditId(k.id); setEditLabel(k.label); }} aria-label={`${t("common.edit")}: ${k.label}`} style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", cursor: "pointer", background: "none", border: 0, padding: 0, textAlign: "left" }}>{k.label}</button>
                   )}
                 </div>
                 <span style={{ fontSize: 12, fontWeight: 700, color: k.is_active ? "var(--success)" : "var(--gray)", background: k.is_active ? "rgba(88,214,141,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 9px", borderRadius: 20 }}>

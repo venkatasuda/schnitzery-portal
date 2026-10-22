@@ -81,7 +81,7 @@ export default function ChecklistStatusPage() {
 
       <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
         <label style={{ fontSize: 13, color: "var(--gray)", flexShrink: 0 }}>{t("checklist.pickDate")}</label>
-        <input type="date" value={date} max={berlinTodayStr()} onChange={(e) => setDate(e.target.value || berlinTodayStr())} style={{ ...input, flex: 1 }} />
+        <input aria-label={t("checklist.pickDate")} type="date" value={date} max={berlinTodayStr()} onChange={(e) => setDate(e.target.value || berlinTodayStr())} style={{ ...input, flex: 1 }} />
         {!loading && summary.total > 0 && (
           <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0, color: summary.done === summary.total ? "var(--success)" : "#d4a847" }}>
             {summary.done}/{summary.total}

@@ -100,9 +100,9 @@ export default function IncidentsPage() {
             {canManage && inc.status === "open" && (
               resolveId === inc.id ? (
                 <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-                  <input value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} placeholder={t("incidents.resolveNotePlaceholder")} style={{ ...input, flex: 1 }} />
+                  <input aria-label={t("incidents.resolveNotePlaceholder")} value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} placeholder={t("incidents.resolveNotePlaceholder")} style={{ ...input, flex: 1 }} />
                   <button onClick={() => doResolve(inc.id)} style={{ ...primaryBtn, width: "auto", padding: "0 16px" }}>{t("incidents.resolve")}</button>
-                  <button onClick={() => setResolveId(null)} style={{ ...primaryBtn, width: "auto", padding: "0 12px", background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}><Icon e="✕" size={15} /></button>
+                  <button type="button" aria-label={t("common.cancel")} onClick={() => setResolveId(null)} style={{ ...primaryBtn, width: "auto", padding: "0 12px", background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}><Icon e="✕" size={15} /></button>
                 </div>
               ) : (
                 <button onClick={() => { setResolveId(inc.id); setResolveNote(""); }} style={{ ...primaryBtn, width: "auto", padding: "8px 16px", marginTop: 10 }}>{t("incidents.markResolved")}</button>

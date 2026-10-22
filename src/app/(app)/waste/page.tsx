@@ -114,7 +114,7 @@ export default function WastePage() {
         <div className="card-title">{t("waste.logWaste")}</div>
         {!sel ? (
           <>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("waste.searchProduct")}
+            <input aria-label={t("waste.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("waste.searchProduct")}
               style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
             {search && (filtered.length === 0 ? (
               <div style={{ fontSize: 12, color: "var(--gray)", padding: "4px 2px" }}>{t("waste.noProduct")}</div>
@@ -143,11 +143,11 @@ export default function WastePage() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
-              <input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)}
+              <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)}
                 style={{ width: 90, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
               <span className="ui-muted-md">{sel.unit || t("waste.units")}</span>
             </div>
-            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("waste.notePh")}
+            <input aria-label={t("waste.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("waste.notePh")}
               style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
             <button onClick={submit} disabled={busy} style={{ width: "100%", padding: 13, borderRadius: 10, background: "#e74c3c", color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy ? "…" : t("waste.logIt")}</button>
           </>
@@ -167,7 +167,7 @@ export default function WastePage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
             {e.value != null && <span style={{ fontSize: 13, color: "var(--danger)", fontWeight: 600 }}>{eur(e.value)}</span>}
-            <button onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
+            <button type="button" aria-label={t("common.delete")} onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
           </div>
         </div>
       ))}

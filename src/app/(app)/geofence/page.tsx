@@ -117,15 +117,15 @@ export default function GeofencePage() {
         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
           <div className="u-flex1">
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.lat")}</div>
-            <input style={input} value={lat ?? ""} onChange={(e) => setLat(e.target.value === "" ? null : Number(e.target.value))} placeholder="48.7758" />
+            <input aria-label={t("geo.lat")} style={input} value={lat ?? ""} onChange={(e) => setLat(e.target.value === "" ? null : Number(e.target.value))} placeholder="48.7758" />
           </div>
           <div className="u-flex1">
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.lng")}</div>
-            <input style={input} value={lng ?? ""} onChange={(e) => setLng(e.target.value === "" ? null : Number(e.target.value))} placeholder="9.1829" />
+            <input aria-label={t("geo.lng")} style={input} value={lng ?? ""} onChange={(e) => setLng(e.target.value === "" ? null : Number(e.target.value))} placeholder="9.1829" />
           </div>
         </div>
         <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.radius")}</div>
-        <input style={input} type="number" value={radius} onChange={(e) => setRadius(Number(e.target.value) || 0)} />
+        <input aria-label={t("geo.radius")} style={input} type="number" value={radius} onChange={(e) => setRadius(Number(e.target.value) || 0)} />
         {lat != null && lng != null && (
           <a href={`https://www.google.com/maps?q=${lat},${lng}`} target="_blank" rel="noreferrer"
              style={{ display: "inline-block", marginTop: 10, fontSize: 12, color: "var(--gold)", textDecoration: "none" }}>
@@ -142,14 +142,14 @@ export default function GeofencePage() {
       <div className="section-label">{t("geo.overrideLabel")}</div>
       <div className="card" style={{ padding: 14 }}>
         <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>{t("geo.overrideHint")}</div>
-        <select style={{ ...input, marginBottom: 10 }} value={ovUser} onChange={(e) => setOvUser(e.target.value)}>
+        <select aria-label={t("geo.pickStaff")} style={{ ...input, marginBottom: 10 }} value={ovUser} onChange={(e) => setOvUser(e.target.value)}>
           <option value="">{t("geo.pickStaff")}</option>
           {staff.map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
         </select>
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
           <div style={{ width: 110 }}>
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.minutes")}</div>
-            <input style={input} type="number" value={ovMin} onChange={(e) => setOvMin(Math.max(1, Math.min(240, Number(e.target.value) || 15)))} />
+            <input aria-label={t("geo.minutes")} style={input} type="number" value={ovMin} onChange={(e) => setOvMin(Math.max(1, Math.min(240, Number(e.target.value) || 15)))} />
           </div>
           <button onClick={doGrant} disabled={ovBusy} style={{ ...input, flex: 1, cursor: "pointer", background: "linear-gradient(135deg,#b9770e,#e67e22)", border: "none", fontWeight: 600 }}>
             {ovBusy ? "…" : t("geo.grant")}

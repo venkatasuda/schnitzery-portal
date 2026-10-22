@@ -105,11 +105,11 @@ export default function ExpiringDocsPage() {
 
           {/* FILTERS */}
           <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            <select value={employee} onChange={(e) => setEmployee(e.target.value)} style={sel}>
+            <select aria-label={t("docw.filterEmployee")} value={employee} onChange={(e) => setEmployee(e.target.value)} style={sel}>
               <option value="">{t("docw.filterEmployee")}: {t("docw.filterAll")}</option>
               {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            <select value={docType} onChange={(e) => setDocType(e.target.value)} style={sel}>
+            <select aria-label={t("docw.filterType")} value={docType} onChange={(e) => setDocType(e.target.value)} style={sel}>
               <option value="">{t("docw.filterType")}: {t("docw.filterAll")}</option>
               {DOC_TYPE_KEYS.map((k) => <option key={k} value={k}>{typeLabel(k)}</option>)}
             </select>

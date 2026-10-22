@@ -63,7 +63,7 @@ export default function ScanToCount({ products, onClose, onSaved }: { products: 
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.94)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
       <div style={{ padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{t("scan.title")}</span>
-        <button onClick={close} style={{ color: "#fff", background: "none", border: "none", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>✕</button>
+        <button type="button" aria-label={t("common.close")} onClick={close} style={{ color: "#fff", background: "none", border: "none", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>✕</button>
       </div>
 
       {!scanned ? (
@@ -84,7 +84,7 @@ export default function ScanToCount({ products, onClose, onSaved }: { products: 
             <div style={{ fontSize: 12, color: "#9a8f8f" }}>{scanned.category}</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{scanned.product}</div>
             <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 16 }}>{t("scan.target")}: {scanned.soll} {scanned.unit || ""}</div>
-            <input type="number" inputMode="decimal" autoFocus value={count} onChange={(e) => setCount(e.target.value)} placeholder={t("scan.countPh")}
+            <input aria-label={t("scan.countPh")} type="number" inputMode="decimal" autoFocus value={count} onChange={(e) => setCount(e.target.value)} placeholder={t("scan.countPh")}
               style={{ width: "100%", padding: 16, fontSize: 22, textAlign: "center", borderRadius: 12, background: "#241414", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", fontWeight: 700 }} />
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
               <button onClick={save} disabled={saving} style={{ flex: 1, padding: 15, borderRadius: 12, background: "#d4a847", color: "#1a1a1a", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{saving ? "…" : t("scan.saveNext")}</button>

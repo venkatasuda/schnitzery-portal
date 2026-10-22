@@ -68,7 +68,7 @@ export default function NoShowPage() {
           <div className="ui-title spaced">{t("ns.checkTitle")}</div>
           <div className="ui-sub">{t("ns.checkSub")}</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...input, flex: 1 }} />
+            <input aria-label={t("ns.checkTitle")} type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...input, flex: 1 }} />
             <button onClick={checkNoShows} disabled={nsLoading} style={{ ...primaryBtn, width: "auto", padding: "0 20px" }}>{nsLoading ? "…" : t("ns.check")}</button>
           </div>
           {nsChecked && (

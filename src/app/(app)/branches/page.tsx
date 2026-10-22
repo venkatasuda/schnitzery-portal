@@ -48,7 +48,7 @@ export default function BranchesPage() {
             <Total label={t("branches.openIncidents")} value={totals.openIncidents} color={totals.openIncidents ? "var(--danger)" : "var(--success)"} />
           </div>
 
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("branches.search")}
+          <input aria-label={t("branches.search")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("branches.search")}
             style={{ width: "100%", padding: "12px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
           <div className="section-label">{t("branches.sectionBranches")}</div>

@@ -92,7 +92,7 @@ export default function ChangePasswordForm() {
           {t("pw.newPassword")}
         </label>
         <div className="u-relative">
-          <input
+          <input aria-label={t("pw.newPassword")}
             type={showPw ? "text" : "password"}
             value={pw}
             onChange={(e) => setPw(e.target.value)}
@@ -113,7 +113,7 @@ export default function ChangePasswordForm() {
           {t("pw.confirmPassword")}
         </label>
         <div className="u-relative">
-          <input
+          <input aria-label={t("pw.confirmPassword")}
             type={showPw ? "text" : "password"}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}

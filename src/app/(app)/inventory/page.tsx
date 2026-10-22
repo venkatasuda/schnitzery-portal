@@ -18,10 +18,11 @@ import ScanToCount from "./ScanToCount";
 import StockHistory from "./StockHistory";
 import Reconciliation from "./Reconciliation";
 import NativeDialog from "@/components/NativeDialog";
-import { Field, Stat, TabButton } from "@/components/ui";
+import { EmptyState, Field, Panel, Segmented, Stat, TabButton } from "@/components/ui";
 
 const GOLD = "var(--gold-ink)";
 const BLUE = "var(--info)";
+const TOOLTIP = { background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 } as const;
 
 export default function InventoryPage() {
   const { t } = useLang();
@@ -271,13 +272,13 @@ export default function InventoryPage() {
               {gridSel && (
                 <NativeDialog title={`${t("inv.count")}: ${gridSel.product}`} busy={savingP === gridSel.product} onClose={() => setGridSel(null)}>
                     <div className="ui-muted">{gridSel.category}</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{gridSel.product}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[inventoryKey(gridSel)] ? ` · ${t("inv.current")} ${counts[inventoryKey(gridSel)].ist}` : ""}</div>
+                    <div className="ui-dialog-title">{gridSel.product}</div>
+                    <div className="ui-sub">{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[inventoryKey(gridSel)] ? ` · ${t("inv.current")} ${counts[inventoryKey(gridSel)].ist}` : ""}</div>
                     <input type="number" min="0" step="any" aria-label={t("inv.count")} inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
-                      style={{ width: "100%", padding: 14, fontSize: 20, textAlign: "center", borderRadius: 10, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontWeight: 700 }} />
-                    <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                      <button onClick={() => quickSave(gridSel, gridVal)} disabled={savingP === gridSel.product} style={{ flex: 1, padding: 13, borderRadius: 10, background: "var(--action)", color: "var(--on-action)", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{savingP === gridSel.product ? "…" : t("inv.count")}</button>
-                      <button aria-label={t("common.close")} disabled={savingP === gridSel.product} onClick={() => setGridSel(null)} style={{ padding: "13px 16px", borderRadius: 10, background: "transparent", color: "var(--gray)", border: "1px solid var(--border)", cursor: "pointer" }}>✕</button>
+                      className="form-input ui-big-input" />
+                    <div className="ui-actions">
+                      <button type="button" className="btn-gold u-flex1" onClick={() => quickSave(gridSel, gridVal)} disabled={savingP === gridSel.product}>{savingP === gridSel.product ? "…" : t("inv.count")}</button>
+                      <button type="button" className="btn-secondary" disabled={savingP === gridSel.product} onClick={() => setGridSel(null)}>{t("common.cancel")}</button>
                     </div>
                 </NativeDialog>
               )}
@@ -319,13 +320,13 @@ export default function InventoryPage() {
 
               {tab === "catalog" && showAdd && (
                 <div className="card">
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
-                    <Field label={t("inv.category")}><input value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })} style={input} placeholder={t("inv.phCategory")} /></Field>
-                    <Field label={t("inv.product")}><input value={np.product} onChange={(e) => setNp({ ...np, product: e.target.value })} style={input} placeholder={t("inv.phProduct")} /></Field>
-                    <Field label={t("inv.target")}><input type="number" value={np.soll} onChange={(e) => setNp({ ...np, soll: e.target.value })} style={input} placeholder="20" /></Field>
-                    <Field label={t("inv.unit")}><input value={np.unit} onChange={(e) => setNp({ ...np, unit: e.target.value })} style={input} placeholder={t("inv.phUnit")} /></Field>
+                  <div className="ui-form-grid">
+                    <Field label={t("inv.category")}><input value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })} className="form-input" placeholder={t("inv.phCategory")} /></Field>
+                    <Field label={t("inv.product")}><input value={np.product} onChange={(e) => setNp({ ...np, product: e.target.value })} className="form-input" placeholder={t("inv.phProduct")} /></Field>
+                    <Field label={t("inv.target")}><input type="number" value={np.soll} onChange={(e) => setNp({ ...np, soll: e.target.value })} className="form-input" placeholder="20" /></Field>
+                    <Field label={t("inv.unit")}><input value={np.unit} onChange={(e) => setNp({ ...np, unit: e.target.value })} className="form-input" placeholder={t("inv.phUnit")} /></Field>
                   </div>
-                  <button onClick={doAddProduct} style={primaryBtn}>{t("inv.addProduct")}</button>
+                  <button type="button" className="btn-gold ui-block" onClick={doAddProduct}>{t("inv.addProduct")}</button>
                 </div>
               )}
 
@@ -338,14 +339,12 @@ export default function InventoryPage() {
                       {shownProducts.length === 0 && <div className="inventory-empty">{t("inventoryWorkflow.noMatches")} <button className="btn-secondary" onClick={() => { setSearch(""); setActiveCat(""); setStatusFilter("all"); }}>{t("inventoryWorkflow.reset")}</button></div>}
                       {shownProducts.map((p) => {
                         const st = stockStatus(p);
-                        const bg = st === "green" ? "rgba(39,174,96,0.18)" : st === "amber" ? "var(--accent-soft)" : st === "red" ? "rgba(231,76,60,0.18)" : "var(--dark2)";
-                        const bd = st === "green" ? "rgba(39,174,96,0.4)" : st === "amber" ? "var(--accent-line)" : st === "red" ? "rgba(231,76,60,0.4)" : "var(--border)";
                         const c = counts[inventoryKey(p)];
                         return (
-                          <button key={p.id} onClick={() => { setGridSel(p); setGridVal(""); }}
-                            style={{ background: bg, border: `1px solid ${bd}`, borderRadius: 10, padding: 10, textAlign: "left", cursor: "pointer", minHeight: 68 }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--white)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.product}</div>
-                            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>{c ? `${c.ist}` : "—"}/{p.soll}{p.unit ? " " + p.unit : ""}</div>
+                          <button key={p.id} type="button" className={`inv-tile ${st}`} onClick={() => { setGridSel(p); setGridVal(""); }}
+                            aria-label={`${p.product}: ${c ? c.ist : "—"} / ${p.soll}${p.unit ? " " + p.unit : ""}`}>
+                            <span className="inv-tile-name">{p.product}</span>
+                            <span className="ui-meta">{c ? `${c.ist}` : "—"}/{p.soll}{p.unit ? " " + p.unit : ""}</span>
                           </button>
                         );
                       })}
@@ -368,7 +367,7 @@ export default function InventoryPage() {
                     return (
                       <tr key={p.id}>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{p.product}</div>
+                          <div className="u-semibold">{p.product}</div>
                           <div className="muted">{p.category}{p.unit ? ` · ${p.unit}` : ""}</div>
                         </td>
                         <td className="numeric" data-label={t("inv.currentCol")}>{counted ? counted.ist : "—"}{counted && p.unit ? ` ${p.unit}` : ""}</td>
@@ -403,40 +402,37 @@ export default function InventoryPage() {
               {products.length === 0 ? (
                 <div className="card ui-empty-msg">{t("inv.addProductsFirst")}</div>
               ) : (
-                <div className="card">
-                  <div className="ui-title">{t("inv.recordDelivery")}</div>
-                  <div className="ui-sub">{t("inv.recordDeliverySub")}</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+                <Panel title={t("inv.recordDelivery")}>
+                  <p className="ui-sub">{t("inv.recordDeliverySub")}</p>
+                  <div className="ui-form-grid">
                     <Field label={t("inv.product")}>
-                      <select value={del.product} onChange={(e) => setDel({ ...del, product: e.target.value })} style={input}>
+                      <select value={del.product} onChange={(e) => setDel({ ...del, product: e.target.value })} className="form-input">
                         <option value="">{t("inv.pickProductOpt")}</option>
                         {products.map((p) => <option key={p.id} value={p.id}>{p.product} · {p.category}{p.unit ? ` (${p.unit})` : ""}</option>)}
                       </select>
                     </Field>
-                    <Field label={t("inv.qtyReceived")}><input type="number" value={del.qty} onChange={(e) => setDel({ ...del, qty: e.target.value })} style={input} placeholder="100" /></Field>
-                    <Field label={t("inv.costPaid")}><input type="number" value={del.cost} onChange={(e) => setDel({ ...del, cost: e.target.value })} style={input} placeholder="40.00" /></Field>
-                    <Field label={t("inv.date")}><input type="date" value={del.date} onChange={(e) => setDel({ ...del, date: e.target.value })} style={input} /></Field>
-                    <Field label={t("inv.supplier")}><input value={del.supplier} onChange={(e) => setDel({ ...del, supplier: e.target.value })} style={input} placeholder={t("inv.phSupplier")} /></Field>
-                    <Field label={t("inv.note")}><input value={del.note} onChange={(e) => setDel({ ...del, note: e.target.value })} style={input} /></Field>
+                    <Field label={t("inv.qtyReceived")}><input type="number" value={del.qty} onChange={(e) => setDel({ ...del, qty: e.target.value })} className="form-input" placeholder="100" /></Field>
+                    <Field label={t("inv.costPaid")}><input type="number" value={del.cost} onChange={(e) => setDel({ ...del, cost: e.target.value })} className="form-input" placeholder="40.00" /></Field>
+                    <Field label={t("inv.date")}><input type="date" value={del.date} onChange={(e) => setDel({ ...del, date: e.target.value })} className="form-input" /></Field>
+                    <Field label={t("inv.supplier")}><input value={del.supplier} onChange={(e) => setDel({ ...del, supplier: e.target.value })} className="form-input" placeholder={t("inv.phSupplier")} /></Field>
+                    <Field label={t("inv.note")}><input value={del.note} onChange={(e) => setDel({ ...del, note: e.target.value })} className="form-input" /></Field>
                   </div>
-                  <button onClick={doAddDelivery} disabled={savingDel} style={primaryBtn}>{savingDel ? t("common.saving") : t("inv.saveDelivery")}</button>
-                </div>
+                  <button type="button" className="btn-gold ui-block" onClick={doAddDelivery} disabled={savingDel}>{savingDel ? t("common.saving") : t("inv.saveDelivery")}</button>
+                </Panel>
               )}
 
               <section><h2 className="inventory-section-title">{t("inv.recentDeliveries")}</h2>
               {deliveries.length === 0 ? (
-                <div style={{ ...card, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>{t("inv.noDeliveries")}</div>
-              ) : deliveries.map((d) => (
-                <div key={d.id} style={{ ...card, marginBottom: 8, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                    <div className="u-flex1">
-                      <div className="ui-strong">{d.product} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {d.qty} {d.unit || ""}</span></div>
-                      <div className="ui-muted">{d.purchase_date}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>{eur(Number(d.cost))}</div>
+                <div className="card"><EmptyState title={t("inv.noDeliveries")} /></div>
+              ) : <ul className="card ui-list" aria-label={t("inv.recentDeliveries")}>{deliveries.map((d) => (
+                <li key={d.id} className="ui-list-item">
+                  <div className="u-grow">
+                    <div className="ui-strong">{d.product} <span className="ui-muted">· {d.qty} {d.unit || ""}</span></div>
+                    <div className="ui-muted">{d.purchase_date}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
                   </div>
-                </div>
-              ))}
+                  <strong className="ui-figure">{d.cost == null || d.cost === "" ? "—" : eur(Number(d.cost))}</strong>
+                </li>
+              ))}</ul>}
               </section>
             </div>
           )}
@@ -444,12 +440,8 @@ export default function InventoryPage() {
           {/* ============ ANALYTICS ============ */}
           {tab === "analytics" && (
             <>
-              <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-                {[7, 30, 90].map((d) => (
-                  <button key={d} onClick={() => { setDays(d); loadAnalytics(d); }} style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    background: days === d ? "var(--action)" : "var(--dark2)", color: days === d ? "var(--on-action)" : "var(--gray)", border: "1px solid var(--border)" }}>{t("inv.lastNDays", { n: d })}</button>
-                ))}
-              </div>
+              <Segmented label={t("business.reportPeriod")} value={String(days)} onChange={(v) => { setDays(Number(v)); loadAnalytics(Number(v)); }}
+                options={[7, 30, 90].map((d) => ({ value: String(d), label: t("inv.lastNDays", { n: d }) }))} />
 
               {(analytics?.needsReview || variance?.needsReview) && <p role="status" className="card">{t("inventoryReview.explanation")}</p>}
 
@@ -457,45 +449,40 @@ export default function InventoryPage() {
                 <div className="card ui-empty-msg">{t("inv.noAnalytics")}</div>
               ) : (
                 <div className="inventory-report-grid">
-                  <div style={{ ...card, marginBottom: 14, borderColor: "var(--accent-line)" }}>
-                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                      <strong>{t("inv.spentOnStock")}</strong>
-                      {analytics.spendPctChange != null && (
-                        <div style={{ fontSize: 13, fontWeight: 700, color: analytics.spendPctChange > 0 ? "var(--danger)" : "var(--success)" }}>
+                  <Panel title={t("inv.spentOnStock")} actions={analytics.spendPctChange != null ? (
+                        <span className={`ui-trend ${analytics.spendPctChange > 0 ? "tone-danger" : "tone-success"}`}>
                           {analytics.spendPctChange > 0 ? "▲" : "▼"} {Math.abs(analytics.spendPctChange)}% {t("inv.vsPrev")}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                        </span>) : undefined}>
+                    <div className="ui-chips">
                       {analytics.foodCostPct != null ? (
-                        <span style={chip}>{t("inv.foodCost")}: <b style={{ color: fcColor(analytics.foodCostPct) }}>{analytics.foodCostPct}%</b></span>
+                        <span className="ui-chip">{t("inv.foodCost")}: <b style={{ color: fcColor(analytics.foodCostPct) }}>{analytics.foodCostPct}%</b></span>
                       ) : (
-                        <span style={{ ...chip, color: "var(--gray)" }}>{analytics.missingSalesDays ? t("business.missingSalesDays", { n: analytics.missingSalesDays }) : analytics.missingCosts ? t("business.missingCosts", { n: analytics.missingCosts }) : t("inv.addSalesForFoodCost")}</span>
+                        <span className="ui-chip muted">{analytics.missingSalesDays ? t("business.missingSalesDays", { n: analytics.missingSalesDays }) : analytics.missingCosts ? t("business.missingCosts", { n: analytics.missingCosts }) : t("inv.addSalesForFoodCost")}</span>
                       )}
-                      <span style={analytics.cogsPct != null ? chip : { ...chip, color: "var(--gray)" }}>{t("inv.cogsPct")}: {analytics.cogsPct != null ? <b>{analytics.cogsPct}%</b> : t("inv.cogsUnavailable")}</span>
-                      {analytics.topCategory && <span style={chip}>{t("inv.topCat")}: <b>{analytics.topCategory.category}</b> · {eur(analytics.topCategory.eur)}</span>}
+                      <span className={`ui-chip${analytics.cogsPct != null ? "" : " muted"}`}>{t("inv.cogsPct")}: {analytics.cogsPct != null ? <b>{analytics.cogsPct}%</b> : t("inv.cogsUnavailable")}</span>
+                      {analytics.topCategory && <span className="ui-chip">{t("inv.topCat")}: <b>{analytics.topCategory.category}</b> · {eur(analytics.topCategory.eur)}</span>}
                     </div>
-                  </div>
+                  </Panel>
 
                   <div className="inventory-report-kpis">
-                    <Stat label={t("inv.kSpend")} value={atLeast(analytics.spendComplete, analytics.totalSpend)} color={GOLD} />
-                    <Stat label={t("inv.kUsed")} value={atLeast(analytics.usageComplete, analytics.totalUsageEur)} color={BLUE} />
-                    <Stat label={t("inv.kStockValue")} value={atLeast(analytics.stockComplete, analytics.stockValue)} color="var(--success)" />
+                    <Stat label={t("inv.kSpend")} value={atLeast(analytics.spendComplete, analytics.totalSpend)} tone="action" />
+                    <Stat label={t("inv.kUsed")} value={atLeast(analytics.usageComplete, analytics.totalUsageEur)} tone="info" />
+                    <Stat label={t("inv.kStockValue")} value={atLeast(analytics.stockComplete, analytics.stockValue)} tone="success" />
                   </div>
 
                   <div className="card">
                     <div className="ui-title">{t("inv.spendVsUse")}</div>
                     <div className="ui-sub">{t("inv.spendVsUseSub")}</div>
                     {analytics.trend.length === 0 ? (
-                      <div style={{ color: "var(--gray)", fontSize: 12, textAlign: "center", padding: 20 }}>{t("inv.noTrend")}</div>
+                      <EmptyState title={t("inv.noTrend")} />
                     ) : (
-                      <div style={{ width: "100%", height: 220 }}>
+                      <div className="ui-chart">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={analytics.trend} margin={{ top: 6, right: 6, bottom: 0, left: -18 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <YAxis tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                            <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+                            <Tooltip contentStyle={TOOLTIP} />
                             <Legend wrapperStyle={{ fontSize: 12 }} />
                             <Bar name={t("inv.legendSpend")} dataKey="spend" fill="var(--gold)" radius={[4, 4, 0, 0]} maxBarSize={22} />
                             <Bar name={t("inv.legendUse")} dataKey="usageEur" fill={BLUE} radius={[4, 4, 0, 0]} maxBarSize={22} />
@@ -509,14 +496,14 @@ export default function InventoryPage() {
                     <div className="card">
                       <div className="ui-title">{t("inv.sixMonth")}</div>
                       <div className="ui-sub">{t("inv.sixMonthSub")}</div>
-                      <div style={{ width: "100%", height: 220 }}>
+                      <div className="ui-chart">
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart data={monthTrend} margin={{ top: 6, right: -12, bottom: 0, left: -18 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <YAxis yAxisId="l" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} unit="%" />
-                            <Tooltip contentStyle={{ background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+                            <Tooltip contentStyle={TOOLTIP} />
                             <Legend wrapperStyle={{ fontSize: 12 }} />
                             <Bar yAxisId="l" name={t("inv.legendSpend")} dataKey="spend" fill="var(--gold)" radius={[4, 4, 0, 0]} maxBarSize={26} />
                             <Line yAxisId="r" name={t("inv.foodCost")} dataKey="foodCostPct" stroke={BLUE} strokeWidth={2} dot={{ r: 3 }} connectNulls />
@@ -533,18 +520,18 @@ export default function InventoryPage() {
                       {variance.items.filter((v: any) => v.flag === "up" || v.flag === "down").slice(0, 8).map((v: any, i: number) => {
                         const up = v.flag === "up";
                         return (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                          <div key={i} className="ui-list-item">
                             <div>
                               <div className="ui-body">{v.product}</div>
                               <div className="ui-muted">€{v.prevEur} → €{v.curEur}</div>
                             </div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: up ? "var(--danger)" : "var(--success)" }}>
+                            <div className={`ui-trend ${up ? "tone-danger" : "tone-success"}`}>
                               {v.changePct != null ? `${v.changePct > 0 ? "▲" : "▼"} ${Math.abs(v.changePct)}%` : "—"}
                             </div>
                           </div>
                         );
                       })}
-                      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 10 }}>{t("inv.varianceNote")}</div>
+                      <div className="ui-note">{t("inv.varianceNote")}</div>
                     </div>
                   )}
 
@@ -554,13 +541,9 @@ export default function InventoryPage() {
                       analytics.byCategory.map((r: any, i: number) => {
                         const pct = analytics.totalSpend > 0 ? Math.round((r.eur / analytics.totalSpend) * 100) : 0;
                         return (
-                          <div key={i} style={{ marginBottom: 9 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 3 }}>
-                              <span>{r.category}</span><span style={{ color: GOLD, fontWeight: 600 }}>{eur(r.eur)} · {pct}%</span>
-                            </div>
-                            <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 3, overflow: "hidden" }}>
-                              <div style={{ width: `${pct}%`, height: "100%", background: GOLD }} />
-                            </div>
+                          <div key={i} className="ui-bar-row">
+                            <div className="u-between ui-body"><span>{r.category}</span><span className="tone-action u-semibold">{eur(r.eur)} · {pct}%</span></div>
+                            <div className="ui-bar" role="img" aria-label={`${r.category}: ${pct}%`}><span style={{ width: `${pct}%` }} /></div>
                           </div>
                         );
                       })}
@@ -570,20 +553,20 @@ export default function InventoryPage() {
                     <div className="ui-title spaced">{t("inv.topSpend")}</div>
                     {analytics.topSpend.length === 0 ? <div className="ui-muted">{t("inv.noData")}</div> :
                       analytics.topSpend.map((r: any, i: number) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
-                          <span>{r.product}</span><span style={{ color: GOLD, fontWeight: 600 }}>{eur(r.eur)}</span>
+                        <div key={i} className="ui-list-item ui-body">
+                          <span>{r.product}</span><span className="ui-figure tone-action">{eur(r.eur)}</span>
                         </div>
                       ))}
                   </div>
 
-                  <div style={{ ...card }}>
+                  <div className="card">
                     <div className="ui-title">{t("inv.topUse")}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>{t("inv.topUseSub")}</div>
+                    <div className="ui-sub">{t("inv.topUseSub")}</div>
                     {analytics.topUsage.length === 0 ? <div className="ui-muted">{t("inv.noUseData")}</div> :
                       analytics.topUsage.map((r: any, i: number) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
+                        <div key={i} className="ui-list-item ui-body">
                           <span>{r.product} <span className="ui-muted">· {r.qty}</span></span>
-                          <span style={{ color: BLUE, fontWeight: 600 }}>{eur(r.eur)}</span>
+                          <span className="ui-figure tone-info">{eur(r.eur)}</span>
                         </div>
                       ))}
                   </div>
@@ -604,29 +587,25 @@ export default function InventoryPage() {
                   <button className="btn-secondary" onClick={printShoppingList}>{t("inventoryWorkflow.print")}</button>
                 </div>
               </details>}
-              <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
+              <div className="ui-toolbar">
                 <span className="ui-muted">{t("inv.coverFor")}</span>
-                {[7, 14, 30].map((cd) => (
-                  <button key={cd} onClick={() => { setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }}
-                    style={{ ...chip, background: coverDays === cd ? "var(--accent-soft)" : "var(--dark2)", color: coverDays === cd ? "var(--gold-ink)" : "var(--gray)", borderColor: coverDays === cd ? "var(--accent-line)" : "var(--border)", cursor: "pointer" }}>
-                    {cd}{t("inv.daysShort")}
-                  </button>
-                ))}
-                <button onClick={copyOrderList} style={{ ...chip, marginLeft: "auto", cursor: "pointer" }}>{t("inv.copyOrder")}</button>
+                <Segmented label={t("inv.coverFor")} value={String(coverDays)} onChange={(v) => { const cd = Number(v); setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }}
+                  options={[7, 14, 30].map((cd) => ({ value: String(cd), label: `${cd}${t("inv.daysShort")}` }))} />
+                <button type="button" className="btn-secondary u-push" onClick={copyOrderList}>{t("inv.copyOrder")}</button>
               </div>
               {!forecast ? <CardSkeleton rows={4} /> : forecast.items.length === 0 ? (
-                <div style={{ ...card, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>{forecast.hasData ? t("inv.forecastNoUse") : t("inv.forecastNoData")}</div>
+                <div className="card"><EmptyState title={forecast.hasData ? t("inv.forecastNoUse") : t("inv.forecastNoData")} /></div>
               ) : <div className="table-scroll" role="region" aria-label={t("inventoryWorkflow.reorder")} tabIndex={0}><table className="data-table inventory-table"><thead><tr>
                 <th scope="col">{t("inv.product")}</th><th scope="col" className="numeric">{t("inv.onHand")}</th><th scope="col" className="numeric">{t("inventoryWorkflow.dailyUsage")}</th><th scope="col" className="numeric">{t("inventoryWorkflow.coverage")}</th><th scope="col" className="numeric">{t("inv.order")}</th>
               </tr></thead><tbody>{forecast.items.map((it: any, i: number) => {
                 const dl = it.daysLeft;
-                const c = dl == null ? "var(--gray)" : dl < 2 ? "var(--danger)" : dl < 4 ? "var(--gold-ink)" : "var(--success)";
+                const c = dl == null ? "" : dl < 2 ? "tone-danger" : dl < 4 ? "tone-warn" : "tone-success";
                 return (
                   <tr key={i}>
                     <td><strong>{it.product}</strong><div className="muted">{it.category}</div><div className="muted">{it.countDate} · {it.needsReview ? t("inventoryReview.recount") : it.stale ? t("inventoryWorkflow.recount") : t("inventoryWorkflow.observed", { n: it.observedDays || 0 })}</div></td>
                     <td className="numeric" data-label={t("inv.onHand")}>{it.current ?? "—"} {it.unit || ""}</td>
                     <td className="numeric" data-label={t("inventoryWorkflow.dailyUsage")}>{it.usageRate > 0 ? `${it.usageRate} ${it.unit || ""}` : "—"}</td>
-                    <td className="numeric" data-label={t("inventoryWorkflow.coverage")} style={{ color: c }}>{dl == null ? "—" : t("inv.daysLeftVal", { n: dl })}</td>
+                    <td className={`numeric ${c}`} data-label={t("inventoryWorkflow.coverage")}>{dl == null ? "—" : t("inv.daysLeftVal", { n: dl })}</td>
                     <td className="numeric" data-label={t("inv.order")}>{it.suggested > 0 ? `${it.suggested} ${it.unit || ""}` : "—"}</td>
                   </tr>
                 );
@@ -639,8 +618,4 @@ export default function InventoryPage() {
   );
 }
 
-const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 12, padding: 18 };
-const input: React.CSSProperties = { width: "100%", padding: "10px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" };
-const chip: React.CSSProperties = { fontSize: 12, padding: "5px 10px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8 };
 function fcColor(pct: number) { return pct <= 32 ? "var(--success)" : pct <= 38 ? "#d4a847" : "var(--danger)"; }

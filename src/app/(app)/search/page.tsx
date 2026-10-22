@@ -41,7 +41,7 @@ export default function SearchPage() {
       <h1 className="page-title u-row"><Icon e="🔍" size={22} /> {t("search.title")}</h1>
 
       <div className="card" style={{ padding: 8, marginBottom: 14 }}>
-        <input
+        <input aria-label={t("search.title")}
           ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search.placeholder")}
           style={{ width: "100%", padding: "12px 14px", background: "transparent", color: "var(--white)", border: "none", outline: "none", fontSize: 16 }}
         />
