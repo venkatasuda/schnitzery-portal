@@ -43,7 +43,7 @@ export async function getLaborSummary() {
   // labor cost from completed attendance this month
   const { data: logs, error: logsError } = await readAll(supabase
     .from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, status")
-    .eq("branch_id", branchId).gte("work_date", first).lt("work_date", next).eq("status", "complete").order("id"));
+    .eq("branch_id", branchId).gte("work_date", first).lt("work_date", next).lte("work_date", berlinToday()).eq("status", "complete").order("id"));
   if (logsError) return { ok: false, error: logsError.message };
   const paidByUser: Record<string, number> = {};
   for (const l of logs || []) paidByUser[l.user_id] = (paidByUser[l.user_id] || 0) + shiftMinutes(l).paidMin;
@@ -153,7 +153,9 @@ export async function getMonthlySummary(month?: string) {
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
 
-  const { ym, from, to } = monthRange(month);
+  const { ym, from, to: monthEnd } = monthRange(month);
+  // Actuals stop at Berlin today: future-dated records never count as current (review finding 9).
+  const to = monthEnd < berlinToday() ? monthEnd : berlinToday();
 
   const { data: staff, error: staffError } = await readAll(supabase.from("users")
     .select("id, full_name, team, contract_hours")

@@ -5,13 +5,12 @@ import { useLang } from "@/components/LanguageProvider";
 import { toast } from "@/components/Toast";
 import { addReconciliationReview, getReconciliation } from "@/lib/queries/reconciliation";
 import { getAnalyticsScope } from "@/lib/queries/branch-analytics";
+import { reviewSnapshot, sameSnapshot, type ReviewSnapshot } from "@/lib/inventory/reconciliation";
 
 type Row = Extract<Awaited<ReturnType<typeof getReconciliation>>, { ok: true }>["rows"][number];
 const FLAGGED = ["gain", "unusual"];
-const changedSince = (r: Row) => {
-  const f = r.review?.figures as Record<string, unknown> | undefined;
-  return !!f && (f.used !== r.used || f.expected !== r.expected || f.closing !== r.closing);
-};
+// Any change to figures, status or reasons makes a review stale (review finding 7).
+const changedSince = (r: Row) => !!r.review && !sameSnapshot(r.review.figures as ReviewSnapshot, r);
 
 export default function Reconciliation() {
   const { t, locale } = useLang();
@@ -48,7 +47,7 @@ export default function Reconciliation() {
 
   async function save(r: Row) {
     setSaving(true);
-    const res = await addReconciliationReview(r.fromId, r.toId, note, days, branch).catch(() => ({ ok: false as const, code: "saveFailed" }));
+    const res = await addReconciliationReview(r.fromId, r.toId, note, reviewSnapshot(r), days, branch).catch(() => ({ ok: false as const, code: "saveFailed" }));
     setSaving(false);
     if (res.ok) { toast(t("reconcile.saved"), "success"); setOpen(null); setNote(""); setRetry(x => x + 1); return; }
     const code = "code" in res ? res.code : undefined;

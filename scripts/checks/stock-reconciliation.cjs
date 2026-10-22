@@ -20,37 +20,50 @@ const a='00000000-0000-0000-0000-0000000000a1', b='00000000-0000-0000-0000-00000
     alter table inventory_counts enable row level security;
     create policy counts_read on inventory_counts for select using (branch_id in (select accessible_branch_ids()));
     grant select on branches,users,inventory_counts to authenticated;
+    grant all on branches,users,inventory_counts to service_role; -- as in Supabase
     insert into branches values('${X}'),('${Y}');
     insert into users values('${mX}','${X}','manager'),('${staffX}','${X}','staff'),('${mY}','${Y}','branch_owner');
     insert into inventory_counts values('${a}','${X}','Oil','2026-10-01',10),('${b}','${X}','Oil','2026-10-05',2),('${yc}','${Y}','Oil','2026-10-05',2);
   `);
   await db.exec(fs.readFileSync('supabase/migrations/20261021180000_stock_reconciliation_reviews.sql','utf8'));
+  await db.exec(fs.readFileSync('supabase/migrations/20261022090000_stock_reviews_trusted_insert.sql','utf8'));
   const as=async(user,role='authenticated')=>db.exec(`reset role; set role ${role}; select set_config('request.jwt.claim.sub','${user}',false)`);
-  const review=(branch,from,to,note='Metro delivery 03.10 not entered',figures={used:8})=>
-    db.query('insert into stock_reconciliation_reviews(branch_id,from_count_id,to_count_id,figures,note) values($1,$2,$3,$4,$5) returning reviewed_by',[branch,from,to,JSON.stringify(figures),note]);
+  // Reviews are written only by the server (service role) via the trusted function.
+  const review=async(actor,branch,from,to,note='Metro delivery 03.10 not entered',figures={used:8})=>{
+    await db.exec(`reset role; set role service_role; select set_config('request.jwt.claim.sub','',false)`);
+    return db.query('select record_stock_reconciliation_review($1,$2,$3,$4,$5,$6)',[actor,branch,from,to,JSON.stringify(figures),note]);
+  };
   const rejects=async(p,msg)=>assert.rejects(p,undefined,msg);
+  const n=async()=>(await db.query('select count(*)::int n from stock_reconciliation_reviews')).rows[0].n;
 
+  // Review finding 8: a manager can no longer insert figures directly.
   await as(mX);
-  assert.equal((await review(X,a,b)).rows[0].reviewed_by,mX,'Review attributed to the caller');
-  await rejects(review(X,a,b),'Same interval + same figures cannot be reviewed twice');
-  await review(X,a,b,'Re-checked after delivery entered',{used:3}); // figures changed → new review allowed
-  await rejects(review(X,a,yc),'Count from another branch');
-  await rejects(review(Y,a,b),'Other branch');
-  await rejects(review(X,a,b,'  '),'Empty note');
-  await rejects(review(X,a,a),'Zero-length interval');
-  await rejects(db.query(`insert into stock_reconciliation_reviews(branch_id,from_count_id,to_count_id,figures,note,reviewed_by) values($1,$2,$3,'{}','forged',$4)`,[X,a,b,mY]),'Cannot attribute to someone else');
+  await rejects(db.query(`insert into stock_reconciliation_reviews(branch_id,from_count_id,to_count_id,figures,note) values($1,$2,$3,'{"used":123456}','forged')`,[X,a,b]),'No direct client insert');
+  await rejects(db.query('select record_stock_reconciliation_review($1,$2,$3,$4,$5,$6)',[mX,X,a,b,'{}','direct rpc']),'Managers cannot call the trusted function');
+
+  await review(mX,X,a,b);
+  await as(mX,'service_role');
+  assert.equal((await db.query('select reviewed_by from stock_reconciliation_reviews')).rows[0].reviewed_by,mX,'Attributed to the actor');
+  await rejects(review(mX,X,a,b),'Same interval + same figures cannot be reviewed twice');
+  await review(mX,X,a,b,'Re-checked after delivery entered',{used:3}); // figures changed → new review allowed
+  await rejects(review(mX,X,a,yc),'Count from another branch');
+  await rejects(review(mX,Y,a,b),'Other branch');
+  await rejects(review(mX,X,a,b,'  ',{used:4}),'Empty note');
+  await rejects(review(mX,X,a,a,'zero',{used:5}),'Zero-length interval');
+  await rejects(review(staffX,X,a,b,'staff note',{used:1}),'Staff cannot review');
+  await rejects(review(null,X,a,b,'no actor',{used:6}),'Actor required');
+  await as(mX);
   await rejects(db.query(`update stock_reconciliation_reviews set note='edited'`),'Immutable: update');
   await rejects(db.query(`delete from stock_reconciliation_reviews`),'Immutable: delete');
-  assert.equal((await db.query('select count(*)::int n from stock_reconciliation_reviews')).rows[0].n,2);
+  assert.equal(await n(),2,'Manager reads own branch reviews');
 
   await as(staffX);
-  await rejects(review(X,a,b,'staff note',{used:1}),'Staff cannot review');
-  assert.equal((await db.query('select count(*)::int n from stock_reconciliation_reviews')).rows[0].n,0,'Staff cannot read reviews');
+  assert.equal(await n(),0,'Staff cannot read reviews');
   await as(mY);
-  assert.equal((await db.query('select count(*)::int n from stock_reconciliation_reviews')).rows[0].n,0,'Other branch cannot read');
+  assert.equal(await n(),0,'Other branch cannot read');
   await as(mY,'anon');
   await rejects(db.query('select 1 from stock_reconciliation_reviews'),'Anon has no access');
   await as(mX,'service_role');
   await rejects(db.query(`delete from stock_reconciliation_reviews`),'Immutable even for service_role');
-  console.log('Stock reconciliation reviews: manager-only, branch-scoped, count-bound, attributed, immutable.');
+  console.log('Stock reconciliation reviews: server-only trusted writes, manager-only, branch-scoped, count-bound, attributed, immutable.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

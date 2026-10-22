@@ -61,6 +61,12 @@ const api = load('src/lib/queries/branch-analytics.ts', {
   assert.equal(gap.metrics.salesPerLaborHour, null);
   assert.equal(gap.business.purchasePct, null);
   tables.attendance_logs.pop(); tables.inventory_purchases.pop();
+  // Review finding 9: future-dated records are not current actuals (today = 2026-10-11).
+  tables.daily_sales.push({ branch_id: 'branch', sale_date: '2026-10-20', amount: 1000 });
+  tables.inventory_purchases.push({ branch_id: 'branch', purchase_date: '2026-10-20', cost: 300 });
+  const future = await api.getBranchAnalytics({ period: 'monthly', date: '2026-10-11' });
+  assert.equal(future.metrics.totalSales, 100); assert.equal(future.business.purchaseSpend, 30);
+  tables.daily_sales.pop(); tables.inventory_purchases.pop();
   failure = 'inventory_purchases';
   assert.equal((await api.getBranchAnalytics()).ok, false);
   failure = null; role = 'staff';
