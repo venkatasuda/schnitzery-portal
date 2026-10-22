@@ -128,7 +128,7 @@ export default function StaffDetailPage() {
                 type="number" min="0" step="0.5" value={allowance} onChange={(e) => setAllowance(e.target.value)}
                 style={{ width: 80, padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14 }}
               />
-              <button onClick={saveAllowance} style={{ padding: "8px 14px", background: "var(--gold)", color: "#1a1a1a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("common.save")}</button>
+              <button className="btn-gold" onClick={saveAllowance}>{t("common.save")}</button>
             </div>
           </div>
         </>

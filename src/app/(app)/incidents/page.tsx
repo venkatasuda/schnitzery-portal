@@ -69,11 +69,11 @@ export default function IncidentsPage() {
       {showForm && (
         <div style={{ ...card, marginBottom: 16 }}>
           <div style={{ display: "flex", gap: 10 }}>
-            <div className="u-flex1"><Field label={t("incidents.category")}><select value={category} onChange={(e) => setCategory(e.target.value)} style={input}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select></Field></div>
-            <div className="u-flex1"><Field label={t("incidents.severity")}><select value={severity} onChange={(e) => setSeverity(e.target.value)} style={input}>{SEVERITIES.map((s) => <option key={s} value={s}>{sevLabel(s)}</option>)}</select></Field></div>
+            <div className="u-flex1"><Field label={t("incidents.category")}><select className="form-input" value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select></Field></div>
+            <div className="u-flex1"><Field label={t("incidents.severity")}><select className="form-input" value={severity} onChange={(e) => setSeverity(e.target.value)}>{SEVERITIES.map((s) => <option key={s} value={s}>{sevLabel(s)}</option>)}</select></Field></div>
           </div>
           <Field label={t("incidents.whatHappened")}><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ ...input, resize: "vertical" }} placeholder={t("incidents.descPlaceholder")} /></Field>
-          <button onClick={submit} disabled={posting} style={primaryBtn}>{posting ? t("incidents.reporting") : t("incidents.submitReport")}</button>
+          <button className="btn-gold ui-block" onClick={submit} disabled={posting}>{posting ? t("incidents.reporting") : t("incidents.submitReport")}</button>
         </div>
       )}
 

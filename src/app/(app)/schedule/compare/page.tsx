@@ -67,12 +67,12 @@ export default function ComparePage() {
 
       {/* week nav */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 14px" }}>
-        <button onClick={() => setOffset((o) => o - 1)} style={navBtn}>{t("cmp.prevWeek")}</button>
+        <button className="btn-secondary ui-btn-sm" onClick={() => setOffset((o) => o - 1)}>{t("cmp.prevWeek")}</button>
         <div style={{ flex: 1, textAlign: "center" }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--white)" }}>{weekLabel}</div>
           {offset !== 0 && <button onClick={() => setOffset(0)} style={{ background: "none", border: "none", color: "var(--gold)", fontSize: 12, cursor: "pointer", marginTop: 2 }}>{t("cmp.thisWeek")}</button>}
         </div>
-        <button onClick={() => setOffset((o) => o + 1)} style={navBtn}>{t("cmp.nextWeek")}</button>
+        <button className="btn-secondary ui-btn-sm" onClick={() => setOffset((o) => o + 1)}>{t("cmp.nextWeek")}</button>
       </div>
 
       {loading ? (
@@ -128,7 +128,7 @@ export default function ComparePage() {
 
           {/* DETAIL BY DAY */}
           {dates.map((date) => (
-            <div key={date} style={{ marginBottom: 12 }}>
+            <div className="u-mb-3" key={date}>
               <div className="section-label">{fmtDay(date)}</div>
               <div className="u-stack tight">
                 {byDate[date].map((r, i) => {
@@ -174,7 +174,6 @@ function Chip({ label, color }: { label: string; color?: string }) {
   return <span style={{ color: color || "var(--gray)", background: color ? `color-mix(in srgb, ${color} 14%, transparent)` : "rgba(128,128,128,0.12)", padding: "2px 8px", borderRadius: 14, fontWeight: 600 }}>{label}</span>;
 }
 
-const navBtn: React.CSSProperties = { padding: "8px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
 
 function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return <UiStat variant="row" label={label} value={value} color={color} />;

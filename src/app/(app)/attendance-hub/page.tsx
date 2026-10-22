@@ -141,14 +141,14 @@ export default function AttendanceHubPage() {
             <Stat value={liveHours} label={t("home.hours")} color="var(--gold)" />
           </div>
           <div className="workspace-toolbar">
-            <input aria-label={t("ahub.today")} type="date" value={date} onChange={(e) => changeDate(e.target.value)} style={dateInput} />
+            <input className="form-input u-flex1" aria-label={t("ahub.today")} type="date" value={date} onChange={(e) => changeDate(e.target.value)} />
             <button onClick={goToday} style={{ ...todayBtn, opacity: isToday ? 0.6 : 1 }}>{t("ahub.today")}</button>
           </div>
-          <input aria-label={t("ahub.filterName")} value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t("ahub.filterName")} style={filterInput} />
+          <input className="form-input" aria-label={t("ahub.filterName")} value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t("ahub.filterName")} />
           {liveLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("common.loading")}</div>
+            <div className="ui-empty-msg"><div className="spinner spinner-center" />{t("common.loading")}</div>
           ) : filtered.length === 0 ? (
-            <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13 }}>
+            <div className="card ui-empty-msg">
               {rows.length === 0 ? (isToday ? t("ahub.noClockedIn") : t("ahub.noAttendance")) : t("ahub.noMatch")}
             </div>
           ) : (
@@ -180,11 +180,11 @@ export default function AttendanceHubPage() {
       {/* ───────── APPROVAL ───────── */}
       {tab === "approval" && !readError && (
         <div className="hub-tab-panel active">
-          <div className="page-sub" style={{ marginBottom: 12 }}>{t("ahub.signOff")}</div>
+          <div className="page-sub u-mb-3">{t("ahub.signOff")}</div>
           {appLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("common.loading")}</div>
+            <div className="ui-empty-msg"><div className="spinner spinner-center" />{t("common.loading")}</div>
           ) : appRows.length === 0 ? (
-            <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>
+            <div className="card ui-empty-msg">
               <div className="u-mb-2"><Icon e="✅" size={28} color="var(--success)" /></div>{t("ahub.allCaughtUp")}
             </div>
           ) : (
@@ -198,12 +198,12 @@ export default function AttendanceHubPage() {
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{fmtH(r.duration_mins || 0)}</div>
                 </div>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>
+                <div className="ui-sub">
                   {fmtDate(r.work_date)} · {r.team ? teamLabel(r.team) : "—"} · {fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}
                 </div>
                 <div className="u-hstack">
-                  <button onClick={() => decide(r.id, "approved")} disabled={busyId === r.id} style={approveBtn}>{busyId === r.id ? "…" : t("ahub.approve")}</button>
-                  <button onClick={() => decide(r.id, "rejected")} disabled={busyId === r.id} style={rejectBtn}>{t("ahub.reject")}</button>
+                  <button className="btn-gold" onClick={() => decide(r.id, "approved")} disabled={busyId === r.id}>{busyId === r.id ? "…" : t("ahub.approve")}</button>
+                  <button className="btn-quiet-danger" onClick={() => decide(r.id, "rejected")} disabled={busyId === r.id}>{t("ahub.reject")}</button>
                 </div>
               </div>
             ))
@@ -215,11 +215,11 @@ export default function AttendanceHubPage() {
       {tab === "overtime" && !readError && (
         <div className="hub-tab-panel active">
           <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
-            <input aria-label={t("ahub.tabOvertime")} type="month" value={month} onChange={(e) => changeMonth(e.target.value)} style={dateInput} />
+            <input className="form-input u-flex1" aria-label={t("ahub.tabOvertime")} type="month" value={month} onChange={(e) => changeMonth(e.target.value)} />
           </div>
 
           {otLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("common.loading")}</div>
+            <div className="ui-empty-msg"><div className="spinner spinner-center" />{t("common.loading")}</div>
           ) : (
             <>
               {/* summary */}
@@ -229,7 +229,7 @@ export default function AttendanceHubPage() {
               </div>
 
               {otRows.length === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>{t("ahub.noHoursMonth")}</div>
+                <div className="card ui-empty-msg">{t("ahub.noHoursMonth")}</div>
               ) : (
                 <div className="card">
                   <div className="card-title">{t("ahub.contractVsWorked")}</div>
@@ -239,10 +239,10 @@ export default function AttendanceHubPage() {
                     return (
                       <div key={r.user_id} style={{ padding: "11px 0", borderBottom: i < otRows.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                         <div className="u-between">
-                          <div className="ui-strong">{r.name} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {r.team ? teamLabel(r.team) : "—"}</span></div>
+                          <div className="ui-strong">{r.name} <span className="ui-muted">· {r.team ? teamLabel(r.team) : "—"}</span></div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: over ? "var(--warn)" : "var(--success)" }}>{over ? `+${fmtH(r.overtimeMins)}` : t("ahub.within")}</div>
                         </div>
-                        <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 3 }}>
+                        <div className="ui-meta">
                           {t("ahub.workedContract", { w: fmtH(r.workedMins), c: r.contractHours, s: r.shifts })}{r.contractType ? ` · ${r.contractType}` : ""}
                         </div>
                         {/* progress bar: normal (gold) + overtime (orange) */}
@@ -289,8 +289,4 @@ export default function AttendanceHubPage() {
   );
 }
 
-const dateInput: React.CSSProperties = { flex: 1, padding: "10px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
 const todayBtn: React.CSSProperties = { padding: "10px 16px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" };
-const filterInput: React.CSSProperties = { width: "100%", padding: "11px 14px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box", marginBottom: 12 };
-const approveBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "linear-gradient(135deg,#1e8449,#27ae60)", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };
-const rejectBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "transparent", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.4)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };

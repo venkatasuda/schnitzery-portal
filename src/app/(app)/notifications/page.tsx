@@ -85,7 +85,7 @@ export default function NotificationsPage() {
         {unread > 0 && <button onClick={markRead} style={{ padding: "8px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--gold)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{t("notif.markAllRead")}</button>}
       </div>
 
-      <div className="hub-tabs" style={{ marginTop: 10 }}>
+      <div className="hub-tabs u-mt-3">
         <button className={`hub-tab${cat === "all" ? " active" : ""}`} onClick={() => setCat("all")}>{t("notif.catAll")} {items.length || ""}</button>
         <button className={`hub-tab${cat === "mine" ? " active" : ""}`} onClick={() => setCat("mine")}>{t("notif.catMine")} {count("mine") || ""}</button>
         <button className={`hub-tab${cat === "team" ? " active" : ""}`} onClick={() => setCat("team")}>{t("notif.catTeam")} {count("team") || ""}</button>
@@ -98,7 +98,7 @@ export default function NotificationsPage() {
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon className="u-icon-inline" e="🎉" size={16} color="var(--success)" /> {t("notif.caughtUp")}</div>
       ) : (
         groups.map((g) => (
-          <div key={g.label} style={{ marginBottom: 12 }}>
+          <div className="u-mb-3" key={g.label}>
             <div className="section-label">{g.label}</div>
             <div className="u-stack tight">
               {g.rows.map((n) => {

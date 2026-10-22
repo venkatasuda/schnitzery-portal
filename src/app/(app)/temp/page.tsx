@@ -106,7 +106,7 @@ export default function TempPage() {
                 const oor = outOfRange(u, val[u.id] || "");
                 const lt = u.latest;
                 return (
-                  <div key={u.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
+                  <div key={u.id} className="card ui-item-card">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                       <div>
                         <div className="ui-strong">{u.name}</div>
@@ -122,10 +122,10 @@ export default function TempPage() {
                     <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
                       <input aria-label={`${u.name} °C`} type="number" inputMode="decimal" value={val[u.id] ?? ""} onChange={(e) => setVal((s) => ({ ...s, [u.id]: e.target.value }))}
                         placeholder="°C" style={{ width: 90, padding: "9px 10px", borderRadius: 8, background: "var(--dark2)", color: oor ? "var(--danger)" : "var(--white)", border: `1px solid ${oor ? "rgba(231,76,60,0.5)" : "rgba(255,255,255,0.12)"}`, fontSize: 14, textAlign: "center", fontWeight: 600 }} />
-                      <button onClick={() => doLog(u)} disabled={busy === u.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === u.id ? "…" : t("temp.log")}</button>
+                      <button className="btn-gold" onClick={() => doLog(u)} disabled={busy === u.id}>{busy === u.id ? "…" : t("temp.log")}</button>
                     </div>
                     {oor && (
-                      <div style={{ marginTop: 10 }}>
+                      <div className="u-mt-3">
                         <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 6 }}>⚠️ {t("temp.outOfRange")}</div>
                         <input className="form-input" aria-label={t("temp.correctivePh")} value={action[u.id] ?? ""} onChange={(e) => setAction((s) => ({ ...s, [u.id]: e.target.value }))}
                           placeholder={t("temp.correctivePh")} />
@@ -143,7 +143,7 @@ export default function TempPage() {
               {logs.length === 0 ? (
                 <div className="card ui-empty-msg">{t("temp.noHistory")}</div>
               ) : logs.map((l) => (
-                <div key={l.id} className="card" style={{ marginBottom: 8, padding: 12 }}>
+                <div key={l.id} className="card ui-item-card">
                   <div className="u-between">
                     <div>
                       <div className="ui-body">{l.unit?.name || "—"} <span style={{ fontWeight: 700, color: l.in_range ? "var(--success)" : "var(--danger)" }}>{l.temp}°C</span></div>
@@ -173,7 +173,7 @@ export default function TempPage() {
                 <button className="btn-gold ui-block" onClick={doAddUnit} disabled={busy === "add"}>{busy === "add" ? "…" : t("temp.addUnit")}</button>
               </div>
               {units.map((u) => (
-                <div key={u.id} className="card" style={{ marginBottom: 8, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={u.id} className="card ui-item-card ui-item-head">
                   <div>
                     <div className="ui-body">{u.name}</div>
                     <div className="ui-muted">{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>

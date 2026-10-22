@@ -67,15 +67,15 @@ export default function ShiftTimesPage() {
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                       <label className="u-flex1">
                         <div style={lbl}>{t("shiftcfg.start")}</div>
-                        <input type="time" value={r.start} onChange={(e) => edit(r.team, r.shift, "start", e.target.value)} style={input} />
+                        <input className="form-input" type="time" value={r.start} onChange={(e) => edit(r.team, r.shift, "start", e.target.value)} />
                       </label>
                       <label className="u-flex1">
                         <div style={lbl}>{t("shiftcfg.end")}</div>
-                        <input type="time" value={r.end} onChange={(e) => edit(r.team, r.shift, "end", e.target.value)} style={input} />
+                        <input className="form-input" type="time" value={r.end} onChange={(e) => edit(r.team, r.shift, "end", e.target.value)} />
                       </label>
                       <label style={{ width: 78 }}>
                         <div style={lbl}>{t("shiftcfg.breakLabel")}</div>
-                        <input type="number" min={0} value={r.breakMins} onChange={(e) => edit(r.team, r.shift, "breakMins", e.target.value)} style={input} />
+                        <input className="form-input" type="number" min={0} value={r.breakMins} onChange={(e) => edit(r.team, r.shift, "breakMins", e.target.value)} />
                       </label>
                       <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
                     </div>

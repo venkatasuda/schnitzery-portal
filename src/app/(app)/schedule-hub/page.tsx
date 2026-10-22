@@ -114,7 +114,7 @@ export default function ScheduleHubPage() {
               </div>
 
               {(ov?.totalShifts ?? 0) === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>{t("schedhub.noRoster")}</div>
+                <div className="card ui-empty-msg">{t("schedhub.noRoster")}</div>
               ) : (
                 <>
                   <div className="card">

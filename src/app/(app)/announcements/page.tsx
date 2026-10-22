@@ -83,12 +83,12 @@ export default function AnnouncementsPage() {
           </button>
           {showPost && (
             <div style={{ ...card, marginBottom: 16 }}>
-              <Field label={t("announcements.titleLabel")}><input value={title} onChange={(e) => setTitle(e.target.value)} style={input} placeholder={t("announcements.titlePlaceholder")} /></Field>
+              <Field label={t("announcements.titleLabel")}><input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("announcements.titlePlaceholder")} /></Field>
               <Field label={t("announcements.messageLabel")}><textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} style={{ ...input, resize: "vertical" }} placeholder={t("announcements.messagePlaceholder")} /></Field>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
                 <div className="u-flex1">
                   <Field label={t("announcements.categoryLabel")}>
-                    <select value={category} onChange={(e) => setCategory(e.target.value)} style={input}>
+                    <select className="form-input" value={category} onChange={(e) => setCategory(e.target.value)}>
                       {CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}
                     </select>
                   </Field>
@@ -97,7 +97,7 @@ export default function AnnouncementsPage() {
                   <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} /> {t("announcements.pin")}
                 </label>
               </div>
-              <button onClick={post} disabled={posting} style={primaryBtn}>{posting ? t("announcements.posting") : t("announcements.post")}</button>
+              <button className="btn-gold ui-block" onClick={post} disabled={posting}>{posting ? t("announcements.posting") : t("announcements.post")}</button>
             </div>
           )}
         </>

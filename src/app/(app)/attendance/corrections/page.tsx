@@ -122,7 +122,7 @@ export default function CorrectionsPage() {
           {type !== "missing" && history.length > 0 && (
             <label style={{ display: "block", marginBottom: 10 }}>
               <div style={lbl}>{t("corr.pickRecord")}</div>
-              <select value={logId || ""} onChange={(e) => pickRecord(e.target.value)} style={input}>
+              <select className="form-input" value={logId || ""} onChange={(e) => pickRecord(e.target.value)}>
                 <option value="">—</option>
                 {history.slice(0, 30).map((r) => (
                   <option key={r.id} value={r.id}>{fmtDate(r.work_date)} · {fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}</option>
@@ -133,20 +133,20 @@ export default function CorrectionsPage() {
 
           <label style={{ display: "block", marginBottom: 10 }}>
             <div style={lbl}>{t("corr.date")}</div>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={input} />
+            <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </label>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
             {needsIn(type) && (
               <label className="u-flex1">
                 <div style={lbl}>{t("corr.reqIn")}</div>
-                <input type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} style={input} />
+                <input className="form-input" type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} />
               </label>
             )}
             {needsOut(type) && (
               <label className="u-flex1">
                 <div style={lbl}>{t("corr.reqOut")}</div>
-                <input type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} style={input} />
+                <input className="form-input" type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} />
               </label>
             )}
           </div>

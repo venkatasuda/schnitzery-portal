@@ -100,11 +100,11 @@ export default function OrderPage() {
           <button key={cd} onClick={() => { setCoverDays(cd); load(cd); }}
             style={{ fontSize: 12, padding: "5px 10px", borderRadius: 8, cursor: "pointer", background: coverDays === cd ? "var(--accent-soft)" : "rgba(255,255,255,0.05)", color: coverDays === cd ? "var(--gold)" : "var(--gray)", border: `1px solid ${coverDays === cd ? "var(--accent-line)" : "rgba(255,255,255,0.1)"}` }}>{cd}d</button>
         ))}
-        <button onClick={printAll} disabled={loading || groups.length === 0} style={{ marginLeft: "auto", fontSize: 13, fontWeight: 700, padding: "8px 14px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", cursor: "pointer" }}>🖨 {t("po.printPdf")}</button>
+        <button className="btn-gold" onClick={printAll} disabled={loading || groups.length === 0}>🖨 {t("po.printPdf")}</button>
       </div>
 
       {loading ? <CardSkeleton rows={4} /> : groups.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13 }}>{t("po.nothing")}</div>
+        <div className="card ui-empty-msg">{t("po.nothing")}</div>
       ) : (
         <>
           {!hasPrices && <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "var(--gold-ink)", borderColor: "var(--accent-line)" }}>{t("po.noPrices")}</div>}
@@ -129,7 +129,7 @@ export default function OrderPage() {
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={() => copyGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--surface-2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>📋 {t("po.copy")}</button>
-                <button onClick={() => emailGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>✉ {t("po.email")}</button>
+                <button className="btn-secondary" onClick={() => emailGroup(g)}>✉ {t("po.email")}</button>
               </div>
             </div>
           ))}

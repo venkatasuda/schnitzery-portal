@@ -57,7 +57,7 @@ export default function OverviewPage() {
             <Link href="/export" className="card" style={{ padding: 13, textDecoration: "none" }}>
               <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.payrollStatus")}</div>
               <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, color: data.payroll.approved === data.payroll.total ? GREEN : AMBER }}>
-                {data.payroll.approved}/{data.payroll.total} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>{t("org.approved")}</span>
+                {data.payroll.approved}/{data.payroll.total} <span className="ui-muted">{t("org.approved")}</span>
               </div>
             </Link>
             <Link href="/kiosks" className="card" style={{ padding: 13, textDecoration: "none" }}>

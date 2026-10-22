@@ -81,7 +81,7 @@ export default function KiosksPage() {
                   {k.is_active ? t("kioskadm.active") : t("kioskadm.inactive")}
                 </span>
               </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <div className="ui-row-actions">
                 <a href={`/kiosk?k=${k.id}`} target="_blank" rel="noreferrer" style={btn}>{t("kioskadm.openDisplay")}</a>
                 <button onClick={() => toggle(k)} style={{ ...btn, color: k.is_active ? "var(--danger)" : "var(--success)", borderColor: k.is_active ? "rgba(236,112,99,0.3)" : "rgba(88,214,141,0.3)" }}>
                   {k.is_active ? t("kioskadm.deactivate") : t("kioskadm.activate")}

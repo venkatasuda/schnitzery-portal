@@ -64,7 +64,7 @@ export default function NoShowPage() {
       </div>
 
       {tab === "noshow" && (
-        <div style={card}>
+        <div className="card">
           <div className="ui-title spaced">{t("ns.checkTitle")}</div>
           <div className="ui-sub">{t("ns.checkSub")}</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
@@ -92,7 +92,7 @@ export default function NoShowPage() {
       )}
 
       {tab === "missing" && (
-        <div style={card}>
+        <div className="card">
           <div className="ui-title">{t("ns.missingTitle")}</div>
           <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("ns.missingSub")}</div>
           {missLoading ? (

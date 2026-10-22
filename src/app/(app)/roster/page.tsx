@@ -138,11 +138,11 @@ export default function RosterPage() {
       {/* week nav + save */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
         <div className="u-hstack">
-          <button disabled={loading||saving} onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
+          <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(-1)}>{t("shifts.prev")}</button>
           <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--action)", fontWeight: 600, padding: "0 4px" }}>
             {weekOffset === 0 ? t("roster.thisWeek") : weekOffset > 0 ? t("roster.weeksPlus", { n: weekOffset }) : t("roster.weeksMinus", { n: weekOffset })}
           </span>
-          <button disabled={loading||saving} onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
+          <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
         </div>
         <button onClick={doSave} disabled={saving||loading||!!loadError} style={{ ...primaryBtn, width: "auto", padding: "10px 24px", opacity: saving ? 0.6 : 1 }}>
           {saving ? t("common.saving") : t("roster.saveRoster")}
@@ -154,7 +154,7 @@ export default function RosterPage() {
       ) : (
         <>
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
-          <div className="card" style={{ marginBottom: 12 }}>
+          <div className="card u-mb-3">
             <div className="card-title">{t("roster.weekGlance", { n: totalAssigned })}</div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
               {DAYS.map((d) => {
@@ -175,13 +175,13 @@ export default function RosterPage() {
           </div>
 
           {/* TEAM HOURS BOARD — month-to-date worked vs monthly contract */}
-          <div className="card" style={{ marginBottom: 12 }}>
+          <div className="card u-mb-3">
             <button onClick={() => setShowHours(!showHours)} style={{ width: "100%", background: "none", border: "none", color: "var(--white)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: 0 }}>
               <span className="card-title u-m0">{t("roster.teamHours")}</span>
               <span style={{ color: "var(--gray)", fontSize: 13 }}>{showHours ? "▾" : "▸"}</span>
             </button>
             {showHours && (
-              <div style={{ marginTop: 10 }}>
+              <div className="u-mt-3">
                 <div className="ui-sub">{t("roster.teamHoursSub")}</div>
                 {[...staff]
                   .filter((p) => p.contractHours != null || (p.workedH || 0) > 0)
@@ -247,8 +247,8 @@ export default function RosterPage() {
                 {isActive && (
                   <div style={{ marginTop: 12, padding: 12, background: "var(--dark3)", borderRadius: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
                     <div style={{ flex: "1 1 140px" }}>
-                      <label style={miniLbl}>{t("roster.staff")}</label>
-                      <select aria-label={t("roster.staff")} value={selStaff} onChange={(e) => setSelStaff(e.target.value)} style={miniSelect}>
+                      <label className="ui-field-label">{t("roster.staff")}</label>
+                      <select className="form-input" aria-label={t("roster.staff")} value={selStaff} onChange={(e) => setSelStaff(e.target.value)}>
                         <option value="">{t("roster.select")}</option>
                         {[...staff].sort((a, b) => (availableDay(a.id, day) ? 0 : 1) - (availableDay(b.id, day) ? 0 : 1) || (a.full_name || "").localeCompare(b.full_name || "")).map((p) => {
                           const tag = availableDay(p.id, day) ? t("roster.avAvailable") : submitted(p.id) ? t("roster.avNot") : t("roster.avNone");
@@ -261,14 +261,14 @@ export default function RosterPage() {
                       </select>
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
-                      <label style={miniLbl}>{t("roster.team")}</label>
-                      <select aria-label={t("roster.team")} value={selTeam} onChange={(e) => { const tm = e.target.value; setSelTeam(tm); setSelShift(presetsFor(tm)[0]?.shift ?? CUSTOM); }} style={miniSelect}>
+                      <label className="ui-field-label">{t("roster.team")}</label>
+                      <select className="form-input" aria-label={t("roster.team")} value={selTeam} onChange={(e) => { const tm = e.target.value; setSelTeam(tm); setSelShift(presetsFor(tm)[0]?.shift ?? CUSTOM); }}>
                         {TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
                       </select>
                     </div>
                     <div style={{ flex: "1 1 110px" }}>
-                      <label style={miniLbl}>{t("roster.shift")}</label>
-                      <select aria-label={t("roster.shift")} value={selShift} onChange={(e) => setSelShift(e.target.value)} style={miniSelect}>
+                      <label className="ui-field-label">{t("roster.shift")}</label>
+                      <select className="form-input" aria-label={t("roster.shift")} value={selShift} onChange={(e) => setSelShift(e.target.value)}>
                         {presetsFor(selTeam).map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time})</option>)}
                         <option value={CUSTOM}>{t("roster.customTime")}</option>
                       </select>
@@ -276,12 +276,12 @@ export default function RosterPage() {
                     {selShift === CUSTOM && (
                       <div style={{ flex: "1 1 180px", display: "flex", gap: 6, alignItems: "flex-end" }}>
                         <div className="u-flex1">
-                          <label style={miniLbl}>{t("roster.from")}</label>
-                          <input type="time" aria-label={t("roster.from")} value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={miniSelect} />
+                          <label className="ui-field-label">{t("roster.from")}</label>
+                          <input className="form-input" type="time" aria-label={t("roster.from")} value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
                         </div>
                         <div className="u-flex1">
-                          <label style={miniLbl}>{t("roster.to")}</label>
-                          <input type="time" aria-label={t("roster.to")} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={miniSelect} />
+                          <label className="ui-field-label">{t("roster.to")}</label>
+                          <input className="form-input" type="time" aria-label={t("roster.to")} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
                         </div>
                       </div>
                     )}
@@ -303,5 +303,3 @@ export default function RosterPage() {
 
 const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
 const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
-const miniLbl: React.CSSProperties = { display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 4 };
-const miniSelect: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };
