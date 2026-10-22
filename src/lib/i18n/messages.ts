@@ -57,7 +57,7 @@ export const messages = {
     },
     common: {
       save: "Save", saving: "Saving…", cancel: "Cancel", submit: "Submit", submitting: "Submitting…",
-      edit: "Edit", delete: "Delete", add: "Add", back: "Back", close: "Close",
+      edit: "Edit", delete: "Delete", add: "Add", back: "Back", close: "Close", copy: "Copy",
       loading: "Loading…", managersOnly: "Managers only.", yes: "Yes", no: "No",
     },
     roles: {
@@ -216,12 +216,12 @@ export const messages = {
       timeOff: "Time off", swap: "Swap", with: "with", mLate: "m late", overtime: "overtime",
     },
     inv: {
-      status: "Status", lowStatus: "Below target", atTargetStatus: "At target",
+      status: "Status", lowStatus: "Below target", atTargetStatus: "At target", notCountedStatus: "Not counted today",
       title: "Inventory", subtitle: "Stock counts by date · low-stock alerts.",
       belowTarget: "⚠️ {n} item(s) below target", allAtTarget: "✅ All counted items at or above target", short: "short",
       addToCatalog: "➕ Add Product to Catalog", category: "Category", product: "Product", target: "Target (soll)", unit: "Unit",
       phCategory: "Meat", phProduct: "Chicken Schnitzel", phUnit: "kg / pcs",
-      addProduct: "Add Product", noProducts: "No products yet. Add some to the catalog above.",
+      addProduct: "Add Product", noProducts: "No products yet. Add them in the Catalog tab.", noProductsCatalog: "No products yet. Add your first one with the form on this page.",
       targetShort: "Target:", counted: "Counted:", current: "Now:", count: "Count",
       enterCount: "Enter a count first.", countedToast: "counted", failed: "Failed.",
       catProductRequired: "Category + product required.", productAdded: "Product added",
@@ -876,7 +876,7 @@ export const messages = {
     },
     common: {
       save: "Speichern", saving: "Speichern…", cancel: "Abbrechen", submit: "Absenden", submitting: "Wird gesendet…",
-      edit: "Bearbeiten", delete: "Löschen", add: "Hinzufügen", back: "Zurück", close: "Schließen",
+      edit: "Bearbeiten", delete: "Löschen", add: "Hinzufügen", back: "Zurück", close: "Schließen", copy: "Kopieren",
       loading: "Lädt…", managersOnly: "Nur für Manager.", yes: "Ja", no: "Nein",
     },
     roles: {
@@ -1035,12 +1035,12 @@ export const messages = {
       timeOff: "Urlaub", swap: "Tausch", with: "mit", mLate: " Min. zu spät", overtime: "Überstunden",
     },
     inv: {
-      status: "Status", lowStatus: "Unter Zielbestand", atTargetStatus: "Zielbestand erreicht",
+      status: "Status", lowStatus: "Unter Zielbestand", atTargetStatus: "Zielbestand erreicht", notCountedStatus: "Heute nicht gezählt",
       title: "Inventar", subtitle: "Bestandszählung nach Datum · Warnungen bei niedrigem Bestand.",
       belowTarget: "⚠️ {n} Artikel unter Ziel", allAtTarget: "✅ Alle gezählten Artikel auf oder über Ziel", short: "fehlt",
       addToCatalog: "➕ Produkt zum Katalog hinzufügen", category: "Kategorie", product: "Produkt", target: "Ziel (Soll)", unit: "Einheit",
       phCategory: "Fleisch", phProduct: "Hähnchenschnitzel", phUnit: "kg / Stk",
-      addProduct: "Produkt hinzufügen", noProducts: "Noch keine Produkte. Füge oben welche zum Katalog hinzu.",
+      addProduct: "Produkt hinzufügen", noProducts: "Noch keine Produkte. Füge sie im Tab „Katalog“ hinzu.", noProductsCatalog: "Noch keine Produkte. Lege das erste mit dem Formular auf dieser Seite an.",
       targetShort: "Ziel:", counted: "Gezählt:", current: "Jetzt:", count: "Zählen",
       enterCount: "Bitte zuerst einen Bestand eingeben.", countedToast: "gezählt", failed: "Fehlgeschlagen.",
       catProductRequired: "Kategorie + Produkt erforderlich.", productAdded: "Produkt hinzugefügt",

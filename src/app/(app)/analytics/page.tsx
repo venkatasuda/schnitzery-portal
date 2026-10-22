@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
+import { fmtMonthDay } from "@/lib/time/berlinDate";
 import Icon from "@/components/Icon";
 import Link from "next/link";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
@@ -16,7 +17,7 @@ const TEAM_COLORS = ["#c0392b", "#3498db", "#27ae60", "#d4a847", "#9b59b6", "#e6
 type Period = "daily" | "weekly" | "monthly";
 
 export default function AnalyticsPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [period, setPeriod] = useState<Period>("weekly");
   const [anchor, setAnchor] = useState(berlinToday);
   const [view, setView] = useState("business");
@@ -155,9 +156,9 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.trend} margin={{ top: 6, right: 6, bottom: 0, left: -22 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="day" tickFormatter={(v) => fmtMonthDay(v, locale)} tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                   <YAxis tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                  <Tooltip {...tooltip} />
+                  <Tooltip {...tooltip} labelFormatter={(v) => fmtMonthDay(String(v), locale)} />
                   <Bar dataKey="labor" fill={GOLD} radius={[5, 5, 0, 0]} maxBarSize={30} />
                 </BarChart>
               </ResponsiveContainer>

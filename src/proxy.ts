@@ -60,6 +60,8 @@ export const config = {
     // Run on all routes EXCEPT static files and Next internals. The service
     // worker, its public offline page and the web manifest must load signed-out:
     // a redirect here breaks SW registration and leaves no offline fallback.
-    "/((?!_next/static|_next/image|favicon.ico|sw\\.js$|offline\\.html$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // /monitoring is the Sentry tunnel: errors on the login page (signed out)
+    // must still reach Sentry, so it bypasses the login redirect.
+    "/((?!_next/static|_next/image|favicon.ico|monitoring$|sw\\.js$|offline\\.html$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

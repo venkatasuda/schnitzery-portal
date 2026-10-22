@@ -17,6 +17,24 @@ const tables = {
 };
 const sb = {
   auth: { getUser: async () => ({ data: { user: { id: 'manager' } } }) },
+  // In-memory twins of the report-summary SQL functions (proven equal in inventory-summaries.cjs).
+  async rpc(name, args) {
+    const own = t => (tables[t] || []).filter(r => r.branch_id === args.p_branch);
+    if (name === 'inventory_latest_counts') {
+      if (failure === 'inventory_counts') return { data: null, error: { message: 'Unavailable' } };
+      const latest = {};
+      for (const c of own('inventory_counts').filter(c => c.count_date <= '2026-10-11').sort((a, b) => a.count_date < b.count_date ? -1 : a.count_date > b.count_date ? 1 : String(a.created_at) < String(b.created_at) ? -1 : String(a.created_at) > String(b.created_at) ? 1 : String(a.id) < String(b.id) ? -1 : 1)) latest[key(c)] = c;
+      return { data: Object.values(latest), error: null };
+    }
+    if (name === 'inventory_price_baseline') {
+      if (failure === 'inventory_purchases') return { data: null, error: { message: 'Unavailable' } };
+      const pk = p => JSON.stringify([p.category || '', p.product, (p.unit || '').trim().toLowerCase()]);
+      const ok = own('inventory_purchases').filter(p => p.purchase_date < args.p_before && Number(p.qty) > 0 && p.cost != null && Number(p.cost) >= 0);
+      const last = {}; for (const p of ok) if (!(last[pk(p)] >= p.purchase_date)) last[pk(p)] = p.purchase_date;
+      return { data: ok.filter(p => last[pk(p)] === p.purchase_date), error: null };
+    }
+    return { data: null, error: { code: 'PGRST202', message: 'Unknown function' } };
+  },
   from(table) {
     const filters = [], sorts = []; let from = 0, to = Infinity;
     const result = () => {

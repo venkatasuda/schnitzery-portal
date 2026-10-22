@@ -289,20 +289,18 @@ export default function AttendancePage() {
   if (session?.clock_out) timeline.push({ label: t("att.tlClockOut"), time: fmtTime(session.clock_out), color: "var(--danger)" });
 
   const statusLabel = onBreak ? t("att.statusOnBreak") : clockedIn ? t("att.statusWorking") : t("att.statusNotIn");
-  const statusColor = onBreak ? "var(--warn)" : clockedIn ? "var(--success)" : "var(--gray)";
-  const statusEmoji = onBreak ? "☕" : clockedIn ? "🟢" : "⚪";
 
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🕐" size={22} /> {t("att.title")}</h1>
       <SyncStatus />
       <details><summary>{t("offlineReview.title")}</summary><OfflineReview /></details>
-      <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}><Icon className="u-icon-inline" e="✏️" size={14} /> {t("corr.request")}</Link>
-      <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
+      <Link href="/attendance/corrections" className="clock-link"><Icon e="✏️" size={14} /> {t("corr.request")}</Link>
+      <div className="page-sub">{todayLabel}</div>
 
       <div className="card p-6">
         {statusError ? <div role="alert"><p>{t("att.couldNotLoad")}</p><button className="btn-secondary" onClick={refresh}>{t("business.retry")}</button></div> : loading ? (
-          <div style={{ padding: "10px 0" }}>
+          <div>
             <div className="d-flex jc-c mb-4"><Skeleton height={15} width={130} /></div>
             <div className="d-flex jc-c mb-5"><Skeleton height={118} width={118} radius={60} /></div>
             <Skeleton height={46} radius={12} />
@@ -311,9 +309,9 @@ export default function AttendancePage() {
           <>
             {/* STATUS */}
             <div className="u-center mb-2">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, letterSpacing: 1.5, color: statusColor }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: statusColor, boxShadow: clockedIn ? `0 0 10px ${statusColor}` : "none" }} />
-                <Icon e={statusEmoji} size={14} color={statusColor} /> {statusLabel}
+              <span className={`clock-status${onBreak ? " break" : clockedIn ? " working" : ""}`} role="status">
+                <span className="clock-dot" aria-hidden="true" />
+                {statusLabel}
               </span>
               <div className="t-xs u-muted mt-1">
                 {clockedIn ? (onBreak ? t("att.subOnBreak") : t("att.subWorking")) : t("att.subReady")}
@@ -321,17 +319,17 @@ export default function AttendancePage() {
             </div>
 
             {/* STOPWATCH */}
-            <div style={{ textAlign: "center", margin: "20px 0 18px" }}>
-              <div style={{ fontSize: 48, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1, letterSpacing: 1 }}>
+            <div className="clock-timer">
+              <div className="clock-timer-value">
                 {tt.h}<span className="t-2xl u-muted">h </span>
                 {String(tt.m).padStart(2, "0")}<span className="t-2xl u-muted">m </span>
                 {String(tt.s).padStart(2, "0")}<span className="t-2xl u-muted">s</span>
               </div>
-              <div style={{ fontSize: 12, letterSpacing: 2.5, color: "var(--gray)", marginTop: 8, textTransform: "uppercase" }}>{t("att.totalTimeToday")}</div>
+              <div className="clock-caption">{t("att.totalTimeToday")}</div>
             </div>
 
             {/* STATUS ROW: In / Break / Out / Total */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8, marginBottom: 18 }}>
+            <div className="clock-cells">
               <StatCell label={t("att.in")} value={fmtTime(session?.clock_in)} color="var(--success)" />
               <StatCell label={t("att.break")} value={totalBreakMin > 0 ? `${totalBreakMin}m` : "—"} color="var(--warn)" />
               <StatCell label={t("att.out")} value={fmtTime(session?.clock_out)} color="var(--danger)" />
@@ -341,24 +339,24 @@ export default function AttendancePage() {
             {/* ACTION BUTTONS */}
             {!clockedIn ? (
               <div className="u-stack">
-                <button onClick={clockInAction} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
+                <button onClick={clockInAction} disabled={working} className="clock-btn in">{t("att.clockInNow")}</button>
                 <div className="u-hstack">
-                  <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
-                  <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
+                  <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} className="clock-alt">{t("att.scanQR")}</button>
+                  <button onClick={() => openCode("in")} disabled={working} className="clock-alt">{t("att.code")}</button>
                 </div>
               </div>
             ) : (
               <div className="u-stack">
                 {!onBreak ? (
-                  <button onClick={breakStartAction} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
+                  <button onClick={breakStartAction} disabled={working} className="clock-btn break">{t("att.startBreak")}</button>
                 ) : (
-                  <button onClick={breakEndAction} disabled={working} style={bigBtn("linear-gradient(135deg,#117a65,#16a085)", working)}>{t("att.endBreak")}</button>
+                  <button onClick={breakEndAction} disabled={working} className="clock-btn resume">{t("att.endBreak")}</button>
                 )}
-                <button onClick={clockOutAction} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
+                <button onClick={clockOutAction} disabled={working || onBreak} className="clock-btn out">{t("att.clockOut")}</button>
                 {!onBreak && (
                   <div className="u-hstack">
-                    <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
-                    <button onClick={() => openCode("out")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
+                    <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} className="clock-alt">{t("att.scanQR")}</button>
+                    <button onClick={() => openCode("out")} disabled={working} className="clock-alt">{t("att.code")}</button>
                   </div>
                 )}
                 {onBreak && <div className="t-xs u-muted u-center">{t("att.endBreakFirst")}</div>}
@@ -375,8 +373,8 @@ export default function AttendancePage() {
         <div className="card">
           <div className="card-title">{t("att.todaysTimeline")}</div>
           {timeline.map((e, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
+            <div key={i} className="clock-row">
+              <span className="clock-dot" style={{ color: e.color }} aria-hidden="true" />
               <span className="u-flex1 t-md u-text">{e.label}</span>
               {e.extra && <span className="t-xs tone-warn">{e.extra}</span>}
               <span className="t-md fw-6 tone-action">{e.time}</span>
@@ -414,17 +412,17 @@ export default function AttendancePage() {
               onKeyDown={(e) => e.key === "Enter" && submitCode()}
               placeholder="000000"
               inputMode="numeric"
-              style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", boxSizing: "border-box" }}
+              className="clock-code"
             />
             {codeErr && <div className="tone-danger t-xs mt-3 u-center">{codeErr}</div>}
             <div className="d-flex gap-2 mt-4">
-              <button disabled={working} onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>{t("common.cancel")}</button>
-              <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : t("att.confirm")}</button>
+              <button disabled={working} onClick={() => setShowCode(false)} className="clock-alt">{t("common.cancel")}</button>
+              <button onClick={submitCode} disabled={working} className="clock-btn in u-flex1">{working ? "…" : t("att.confirm")}</button>
             </div>
         </NativeDialog>
       )}
 
-      <button onClick={toggleHistory} style={historyToggle}><Icon className="u-icon-inline" e="📅" size={15} /> {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
+      <button onClick={toggleHistory} className="clock-toggle" aria-expanded={showHistory}><Icon e="📅" size={15} /> {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
 
       {showHistory && (
         <div className="mt-4">
@@ -435,23 +433,16 @@ export default function AttendancePage() {
           </div>
 
           {/* days worked + hours stats */}
-          <div className="card" style={{ display: "flex", padding: "16px 0", marginBottom: 12 }}>
-            <div className="u-flex1 u-center">
-              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histDaysWorked}</div>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{t("att.daysWorked")}</div>
-            </div>
-            <div style={{ width: 1, background: "var(--surface-2)" }} />
-            <div className="u-flex1 u-center">
-              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histHours}</div>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? t("att.weekLabel") : t("att.monthLabel")}</div>
-            </div>
+          <div className="card clock-summary">
+            <div><strong>{histDaysWorked}</strong><span className="clock-caption">{t("att.daysWorked")}</span></div>
+            <div><strong>{histHours}</strong><span className="clock-caption">{histTab === "week" ? t("att.weekLabel") : t("att.monthLabel")}</span></div>
           </div>
 
           {/* records */}
           {histLoading ? (
             <CardSkeleton rows={3} />
           ) : historyError ? <p role="alert">{t("offlineReview.failed")} <button className="btn-secondary" onClick={()=>loadHistory(histTab)}>{t("business.retry")}</button></p> : history.length === 0 ? (
-            <div className="card" style={{ color: "var(--gray)", fontSize: 13, padding: 30, textAlign: "center" }}>
+            <div className="card ui-empty-msg">
               <div className="u-mb-2"><Icon e="📭" size={28} color="var(--gray)" /></div>
               {histTab === "week" ? t("att.noRecordsWeek") : t("att.noRecordsMonth")}
             </div>
@@ -461,7 +452,7 @@ export default function AttendancePage() {
               return (
                 <div key={s.id} className="card p-4 mb-2">
                   <div className="u-between">
-                    <div className="t-md fw-6 u-text d-flex ai-c gap-2">{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--warn)", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
+                    <div className="t-md fw-6 u-text d-flex ai-c gap-2">{fmtDate(s.work_date)}{s.source === "offline" && <span className="ui-tag-warn">{t("sync.offlineTag")}</span>}</div>
                     <div className="t-md fw-7 tone-action">
                       {s.status === "active" || s.status === "on-break" ? t("att.inProgress") : fmtDur(s.duration_mins)}
                     </div>
@@ -482,9 +473,9 @@ export default function AttendancePage() {
 // at-a-glance status cell
 function StatCell({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div style={{ background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
+    <div className="clock-cell">
+      <strong style={{ color }}>{value}</strong>
+      <span>{label}</span>
     </div>
   );
 }
@@ -507,14 +498,4 @@ function computeBreakMs(raw: any): number {
 function rangeFor(tab: "week" | "month"): { from: string; to: string } {
   const to = berlinToday();
   return { from: tab === "week" ? mondayOfDate(to) : monthRange(to.slice(0, 7)).from, to };
-}
-
-// styles (CSS-variable based so light mode works)
-const historyToggle: React.CSSProperties = { width: "100%", marginTop: 14, padding: "13px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--white)", fontSize: 14, cursor: "pointer" };
-
-function bigBtn(bg: string, disabled: boolean): React.CSSProperties {
-  return { width: "100%", padding: "16px", background: disabled ? "var(--dark3)" : bg, color: disabled ? "var(--gray)" : "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: disabled ? "default" : "pointer", transition: "transform 0.1s" };
-}
-function secBtn(disabled: boolean): React.CSSProperties {
-  return { flex: 1, padding: "13px", background: "var(--dark3)", color: disabled ? "var(--gray)" : "var(--white)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: disabled ? "default" : "pointer" };
 }

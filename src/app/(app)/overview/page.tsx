@@ -7,9 +7,9 @@ import Link from "next/link";
 import { getOrgOverview } from "@/lib/queries/org-overview";
 import { getBranchComparison } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
-import { Stat } from "@/components/ui";
+import { Stat, StatGrid, type Tone } from "@/components/ui";
 
-const GREEN = "var(--success)", AMBER = "var(--warn)", RED = "var(--danger)", GOLD = "var(--gold-ink)";
+const rateTone = (r: number | null): Tone => r == null ? "default" : r >= 95 ? "success" : r >= 85 ? "warn" : "danger";
 
 export default function OverviewPage() {
   const { t } = useLang();
@@ -31,40 +31,38 @@ export default function OverviewPage() {
 
   if (denied) return <div className="card ui-denied">{t("org.ownersOnly")}</div>;
 
-  const rateColor = (r: number | null) => r == null ? "var(--gray)" : r >= 95 ? GREEN : r >= 85 ? AMBER : RED;
-
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🏢" size={22} /> {t("org.title")}</h1>
       <div className="page-sub">{t("org.subtitle")}</div>
 
       {loading || !data ? (
-        <><div style={{ margin: "8px 0 14px" }}><StatsSkeleton count={3} /></div><Skeleton height={220} radius={14} /></>
+        <><div className="mb-4"><StatsSkeleton count={3} /></div><Skeleton height={220} radius={14} /></>
       ) : (
         <>
           {/* totals */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, margin: "6px 0 10px" }}>
+          <StatGrid label={t("org.title")}>
             <Stat value={data.totals.branches} label={t("org.branches")} />
             <Stat value={data.totals.employees} label={t("org.employees")} />
-            <Stat value={data.totals.workingNow} label={t("org.workingNow")} color={GREEN} />
-            <Stat value={`${data.totals.attended}/${data.totals.scheduled}`} label={t("org.attendanceToday")} color={GOLD} />
-            <Stat value={data.totals.issues} label={t("org.issues")} color={data.totals.issues ? AMBER : "var(--white)"} />
-            <Stat value={data.expiringDocs} label={t("org.expiringDocs")} color={data.expiringDocs ? AMBER : "var(--white)"} />
-          </div>
+            <Stat value={data.totals.workingNow} label={t("org.workingNow")} tone="success" />
+            <Stat value={`${data.totals.attended}/${data.totals.scheduled}`} label={t("org.attendanceToday")} tone="action" />
+            <Stat value={data.totals.issues} label={t("org.issues")} tone={data.totals.issues ? "warn" : "default"} />
+            <Stat value={data.expiringDocs} label={t("org.expiringDocs")} tone={data.expiringDocs ? "warn" : "default"} />
+          </StatGrid>
 
           {/* signals row */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginBottom: 16 }}>
-            <Link href="/export" className="card" style={{ padding: 13, textDecoration: "none" }}>
-              <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.payrollStatus")}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, color: data.payroll.approved === data.payroll.total ? GREEN : AMBER }}>
+          <div className="ui-grid-2">
+            <Link href="/export" className="card ui-link-card">
+              <span className="ui-stat-label">{t("org.payrollStatus")}</span>
+              <strong className={data.payroll.approved === data.payroll.total ? "tone-success" : "tone-warn"}>
                 {data.payroll.approved}/{data.payroll.total} <span className="ui-muted">{t("org.approved")}</span>
-              </div>
+              </strong>
             </Link>
-            <Link href="/kiosks" className="card" style={{ padding: 13, textDecoration: "none" }}>
-              <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 }}>{t("org.systemHealth")}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, color: data.health.status === "ok" ? GREEN : AMBER }}>
+            <Link href="/kiosks" className="card ui-link-card">
+              <span className="ui-stat-label">{t("org.systemHealth")}</span>
+              <strong className={data.health.status === "ok" ? "tone-success" : "tone-warn"}>
                 {data.health.status === "ok" ? `✓ ${t("org.healthOk")}` : `${data.health.kiosksOffline} ${t("org.kiosksOffline")}`}
-              </div>
+              </strong>
             </Link>
           </div>
 
@@ -73,9 +71,9 @@ export default function OverviewPage() {
           <div className="u-stack">
             {data.ranking.map((b: any) => (
               <div key={b.id} className="card p-3 d-flex ai-c gap-3">
-                <div style={{ fontSize: 16, fontWeight: 800, color: b.rank === 1 ? GOLD : "var(--gray)", width: 26, textAlign: "center" }}>{b.rank}</div>
+                <div className={`org-rank${b.rank === 1 ? " first" : ""}`}>{b.rank}</div>
                 <div className="u-grow">
-                  <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
+                  <div className="fw-6 u-ellipsis">{b.name}</div>
                   <div className="ui-muted">
                     <span className="d-iflex ai-c gap-2 f-wrap">
                       <span className="d-iflex ai-c gap-h"><Icon e="🟢" size={10} color="var(--success)" />{b.workingNow}</span>
@@ -86,8 +84,8 @@ export default function OverviewPage() {
                   </div>
                 </div>
                 <div className="u-right">
-                  <div style={{ fontSize: 17, fontWeight: 700, color: rateColor(b.attendanceRate) }}>{b.attendanceRate == null ? "—" : `${b.attendanceRate}%`}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase" }}>{b.attendanceRate == null ? t("org.noRoster") : t("org.attendance")}</div>
+                  <div className={`t-lg fw-7 tone-${rateTone(b.attendanceRate)}`}>{b.attendanceRate == null ? "—" : `${b.attendanceRate}%`}</div>
+                  <div className="ui-stat-label">{b.attendanceRate == null ? t("org.noRoster") : t("org.attendance")}</div>
                 </div>
               </div>
             ))}
@@ -102,7 +100,7 @@ export default function OverviewPage() {
             </div>
           </div>
           {cmp?.ok && (
-            <div className="card" style={{ padding: 0, overflowX: "auto" }}>
+            <div className="card ui-flush">
               <table className="data-table">
                 <thead><tr>
                   <th className="u-left fw-6" scope="col">{t("org.colBranch")}</th>
@@ -114,7 +112,7 @@ export default function OverviewPage() {
                   {cmp.rows.map((b: any) => (
                     <tr className="bt-1" key={b.id}>
                       <td className="ui-strong-inline">{b.name}</td>
-                      <td style={{ textAlign: "center", color: rateColor(b.attendancePct), fontWeight: 700 }}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
+                      <td className={`u-center fw-7 tone-${rateTone(b.attendancePct)}`}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
                       <td className="u-center u-text">{b.laborHours}h</td>
                       <td className="u-right tone-action fw-6">{b.laborCost ? `${b.missingWageStaff ? "≥ " : ""}€${b.laborCost.toFixed(0)}` : "—"}</td>
                     </tr>
@@ -126,7 +124,7 @@ export default function OverviewPage() {
         </>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold-ink)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      <Link href="/" className="ui-back-link">{t("approvals.back")}</Link>
     </div>
   );
 }
