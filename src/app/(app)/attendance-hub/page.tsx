@@ -10,6 +10,7 @@ import OfflineReview from "@/components/OfflineReview";
 import {
   getLiveAttendance, getMonthlyOvertime, getAttendanceApprovals, setAttendanceApproval,
 } from "@/lib/queries/live-attendance";
+import { Stat } from "@/components/ui";
 
 type Tab = "live" | "approval" | "overtime" | "noshow" | "offline";
 
@@ -112,12 +113,12 @@ export default function AttendanceHubPage() {
   const isToday = date === berlinToday();
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("common.managersOnly")}</div>;
+    return <div className="card ui-denied">{t("common.managersOnly")}</div>;
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🕐" size={22} /> {t("nav.attendance")}</div>
+      <h1 className="page-title u-row"><Icon e="🕐" size={22} /> {t("nav.attendance")}</h1>
       <div className="page-sub">{t("ahub.subtitle")}</div>
 
       <div className="hub-tabs" role="group" aria-label={t("nav.attendance")}>
@@ -159,13 +160,13 @@ export default function AttendanceHubPage() {
                 return (
                   <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < filtered.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                     <span style={{ width: 9, height: 9, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: live ? `0 0 8px ${dotColor}` : "none" }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name}{r.late_mins > 0 && <span style={{ fontSize: 12, color: "var(--danger)", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{r.team ? teamLabel(r.team) : "—"} · {statusText}</div>
+                    <div className="u-grow">
+                      <div className="ui-strong">{r.name}{r.late_mins > 0 && <span style={{ fontSize: 12, color: "var(--danger)", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
+                      <div className="ui-muted">{r.team ? teamLabel(r.team) : "—"} · {statusText}</div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
+                    <div className="u-right">
                       <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}</div>
-                      {r.duration_mins != null && <div style={{ fontSize: 12, color: "var(--gray)" }}>{fmtH(r.duration_mins)}</div>}
+                      {r.duration_mins != null && <div className="ui-muted">{fmtH(r.duration_mins)}</div>}
                     </div>
                   </div>
                 );
@@ -184,13 +185,13 @@ export default function AttendanceHubPage() {
             <div style={{ color: "var(--gray)", fontSize: 13, padding: 24, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("common.loading")}</div>
           ) : appRows.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>
-              <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="var(--success)" /></div>{t("ahub.allCaughtUp")}
+              <div className="u-mb-2"><Icon e="✅" size={28} color="var(--success)" /></div>{t("ahub.allCaughtUp")}
             </div>
           ) : (
             appRows.map((r) => (
-              <div key={r.id} className="card" style={{ marginBottom: 8 }}>
+              <div key={r.id} className="card u-mb-2">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
+                  <div className="ui-strong">
                     {r.name}
                     {r.overtime && <span style={{ fontSize: 12, color: "var(--warn)", marginLeft: 8 }}><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
                     {r.late_mins > 0 && <span style={{ fontSize: 12, color: "var(--danger)", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
@@ -200,7 +201,7 @@ export default function AttendanceHubPage() {
                 <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>
                   {fmtDate(r.work_date)} · {r.team ? teamLabel(r.team) : "—"} · {fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className="u-hstack">
                   <button onClick={() => decide(r.id, "approved")} disabled={busyId === r.id} style={approveBtn}>{busyId === r.id ? "…" : t("ahub.approve")}</button>
                   <button onClick={() => decide(r.id, "rejected")} disabled={busyId === r.id} style={rejectBtn}>{t("ahub.reject")}</button>
                 </div>
@@ -237,15 +238,15 @@ export default function AttendanceHubPage() {
                     const pct = r.contractHours > 0 ? Math.min(100, Math.round((r.workedMins / (r.contractHours * 60)) * 100)) : 0;
                     return (
                       <div key={r.user_id} style={{ padding: "11px 0", borderBottom: i < otRows.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.name} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {r.team ? teamLabel(r.team) : "—"}</span></div>
+                        <div className="u-between">
+                          <div className="ui-strong">{r.name} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {r.team ? teamLabel(r.team) : "—"}</span></div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: over ? "var(--warn)" : "var(--success)" }}>{over ? `+${fmtH(r.overtimeMins)}` : t("ahub.within")}</div>
                         </div>
                         <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 3 }}>
                           {t("ahub.workedContract", { w: fmtH(r.workedMins), c: r.contractHours, s: r.shifts })}{r.contractType ? ` · ${r.contractType}` : ""}
                         </div>
                         {/* progress bar: normal (gold) + overtime (orange) */}
-                        <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, marginTop: 7, overflow: "hidden", display: "flex" }}>
+                        <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, marginTop: 7, overflow: "hidden", display: "flex" }}>
                           <div style={{ width: `${Math.min(100, pct)}%`, background: over ? "var(--warn)" : "var(--gold)" }} />
                         </div>
                       </div>
@@ -260,7 +261,7 @@ export default function AttendanceHubPage() {
                   <div className="card-title">{t("ahub.longShifts")}</div>
                   {otLong.map((l, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < otLong.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none", fontSize: 13 }}>
-                      <span style={{ color: "var(--white)" }}>{l.name} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {fmtDate(l.work_date)}</span></span>
+                      <span className="u-text">{l.name} <span className="ui-muted">· {fmtDate(l.work_date)}</span></span>
                       <span style={{ color: "var(--warn)", fontWeight: 600 }}>{fmtH(l.mins)}</span>
                     </div>
                   ))}
@@ -276,7 +277,7 @@ export default function AttendanceHubPage() {
         <div className="hub-tab-panel active">
           <Link href="/noshow" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e="🚫" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("ahub.noShowTracking")}</div><div className="feature-sub">{t("ahub.noShowTrackingSub")}</div></div>
+            <div className="u-flex1"><div className="feature-title">{t("ahub.noShowTracking")}</div><div className="feature-sub">{t("ahub.noShowTrackingSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
@@ -288,17 +289,8 @@ export default function AttendanceHubPage() {
   );
 }
 
-function Stat({ value, label, color }: { value: string | number; label: string; color: string }) {
-  return (
-    <div className="workspace-stat">
-      <strong style={{ color }}>{value}</strong>
-      <span>{label}</span>
-    </div>
-  );
-}
-
-const dateInput: React.CSSProperties = { flex: 1, padding: "10px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const todayBtn: React.CSSProperties = { padding: "10px 16px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" };
-const filterInput: React.CSSProperties = { width: "100%", padding: "11px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box", marginBottom: 12 };
+const dateInput: React.CSSProperties = { flex: 1, padding: "10px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
+const todayBtn: React.CSSProperties = { padding: "10px 16px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" };
+const filterInput: React.CSSProperties = { width: "100%", padding: "11px 14px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 14, boxSizing: "border-box", marginBottom: 12 };
 const approveBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "linear-gradient(135deg,#1e8449,#27ae60)", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };
 const rejectBtn: React.CSSProperties = { flex: 1, padding: "10px", background: "transparent", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.4)", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" };

@@ -25,7 +25,7 @@ export default function WasteByBranchPage() {
   }, [days]);
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("wbranch.ownersOnly")}</div>;
+    return <div className="card ui-denied">{t("wbranch.ownersOnly")}</div>;
   }
 
   const rows = data?.rows || [];
@@ -33,7 +33,7 @@ export default function WasteByBranchPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗑️" size={22} /> {t("wbranch.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🗑️" size={22} /> {t("wbranch.title")}</h1>
       <div className="page-sub">{t("wbranch.subtitle")}</div>
 
       <div style={{ display: "flex", gap: 6, margin: "12px 0" }}>
@@ -45,11 +45,11 @@ export default function WasteByBranchPage() {
       </div>
 
       {loading ? <CardSkeleton /> : rows.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("wbranch.none")}</div>
+        <div className="card ui-empty-msg">{t("wbranch.none")}</div>
       ) : (
         <>
           <div className="card" style={{ padding: 14, marginBottom: 12 }}>
-            <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("wbranch.total")}</div>
+            <div className="ui-muted">{t("wbranch.total")}</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: "var(--danger)" }}>{eur(data.total)}</div>
           </div>
 
@@ -61,7 +61,7 @@ export default function WasteByBranchPage() {
                 </span>
                 <span style={{ fontSize: 16, fontWeight: 700, color: "var(--danger)" }}>{eur(r.value)}</span>
               </div>
-              <div style={{ height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 5, overflow: "hidden" }}>
+              <div style={{ height: 8, background: "var(--surface-2)", borderRadius: 5, overflow: "hidden" }}>
                 <div style={{ width: `${Math.round((r.value / max) * 100)}%`, height: "100%", background: "linear-gradient(90deg,#e67e22,#c0392b)" }} />
               </div>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, display: "flex", justifyContent: "space-between" }}>

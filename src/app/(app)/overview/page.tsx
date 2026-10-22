@@ -7,6 +7,7 @@ import Link from "next/link";
 import { getOrgOverview } from "@/lib/queries/org-overview";
 import { getBranchComparison } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
+import { Stat } from "@/components/ui";
 
 const GREEN = "var(--success)", AMBER = "var(--warn)", RED = "var(--danger)", GOLD = "var(--gold-ink)";
 
@@ -28,13 +29,13 @@ export default function OverviewPage() {
 
   useEffect(() => { getBranchComparison({ period }).then((r) => setCmp(r.ok ? r : null)); }, [period]);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("org.ownersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("org.ownersOnly")}</div>;
 
   const rateColor = (r: number | null) => r == null ? "var(--gray)" : r >= 95 ? GREEN : r >= 85 ? AMBER : RED;
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🏢" size={22} /> {t("org.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🏢" size={22} /> {t("org.title")}</h1>
       <div className="page-sub">{t("org.subtitle")}</div>
 
       {loading || !data ? (
@@ -69,13 +70,13 @@ export default function OverviewPage() {
 
           {/* ranking */}
           <div className="section-label">{t("org.ranking")}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="u-stack">
             {data.ranking.map((b: any) => (
               <div key={b.id} className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: b.rank === 1 ? GOLD : "var(--gray)", width: 26, textAlign: "center" }}>{b.rank}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="u-grow">
                   <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)" }}>
+                  <div className="ui-muted">
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="var(--success)" />{b.workingNow}</span>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="👥" size={11} />{b.employees}</span>
@@ -84,7 +85,7 @@ export default function OverviewPage() {
                     </span>
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div className="u-right">
                   <div style={{ fontSize: 17, fontWeight: 700, color: rateColor(b.attendanceRate) }}>{b.attendanceRate == null ? "—" : `${b.attendanceRate}%`}</div>
                   <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase" }}>{b.attendanceRate == null ? t("org.noRoster") : t("org.attendance")}</div>
                 </div>
@@ -94,7 +95,7 @@ export default function OverviewPage() {
           {/* branch comparison (period) */}
           <div className="section-label" style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
             <span>{t("org.compareTitle")}</span>
-            <div className="hub-tabs" style={{ margin: 0 }}>
+            <div className="hub-tabs u-m0">
               {(["weekly", "monthly"] as const).map((p) => (
                 <button key={p} className={`hub-tab${period === p ? " active" : ""}`} onClick={() => setPeriod(p)}>{t(`bana.${p}`)}</button>
               ))}
@@ -105,14 +106,14 @@ export default function OverviewPage() {
               <table className="data-table">
                 <thead><tr>
                   <th scope="col" style={{ textAlign: "left", fontWeight: 600 }}>{t("org.colBranch")}</th>
-                  <th scope="col" style={{ textAlign: "center", fontWeight: 600 }}>{t("org.colAttendance")}</th>
-                  <th scope="col" style={{ textAlign: "center", fontWeight: 600 }}>{t("org.colHours")}</th>
+                  <th className="u-center u-semibold" scope="col">{t("org.colAttendance")}</th>
+                  <th className="u-center u-semibold" scope="col">{t("org.colHours")}</th>
                   <th scope="col" style={{ textAlign: "right", fontWeight: 600 }}>{t("org.colCost")}</th>
                 </tr></thead>
                 <tbody>
                   {cmp.rows.map((b: any) => (
                     <tr key={b.id} style={{ borderTop: "1px solid var(--border)" }}>
-                      <td style={{ color: "var(--white)", fontWeight: 600 }}>{b.name}</td>
+                      <td className="ui-strong-inline">{b.name}</td>
                       <td style={{ textAlign: "center", color: rateColor(b.attendancePct), fontWeight: 700 }}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
                       <td style={{ textAlign: "center", color: "var(--white)" }}>{b.laborHours}h</td>
                       <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>{b.laborCost ? `${b.missingWageStaff ? "≥ " : ""}€${b.laborCost.toFixed(0)}` : "—"}</td>
@@ -130,11 +131,3 @@ export default function OverviewPage() {
   );
 }
 
-function Stat({ value, label, color }: { value: string | number; label: string; color?: string }) {
-  return (
-    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
-      <div style={{ fontSize: 21, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
-    </div>
-  );
-}

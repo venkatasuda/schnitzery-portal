@@ -21,26 +21,26 @@ export default function AuditPage() {
     })();
   }, []);
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const fmt = (iso: string) => new Date(iso).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("audit.subtitle")}</p>
+      <h1 className="page-title u-row"><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
+      <p className="ui-lede">{t("audit.subtitle")}</p>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : logs.length === 0 ? (
-        <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("audit.empty")}</div>
+        <div className="card ui-empty-msg">{t("audit.empty")}</div>
       ) : (
         logs.map((l) => (
           <div key={l.id} style={{ ...card, marginBottom: 8, padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{(l.action || "").replace(/_/g, " ")}</div>
-              {l.details && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{l.details}</div>}
-              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("audit.by", { actor: l.actor || "—" })}</div>
+              <div className="ui-strong">{(l.action || "").replace(/_/g, " ")}</div>
+              {l.details && <div className="ui-meta">{l.details}</div>}
+              <div className="ui-meta">{t("audit.by", { actor: l.actor || "—" })}</div>
             </div>
             <div style={{ fontSize: 12, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
           </div>

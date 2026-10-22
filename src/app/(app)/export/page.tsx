@@ -123,29 +123,29 @@ export default function PayrollExportPage() {
     a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
   }
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.4 };
-  const inp: React.CSSProperties = { padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 14, width: 90 };
+  const inp: React.CSSProperties = { padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14, width: 90 };
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="💶" size={22} /> {t("pay.title")}</div>
+      <h1 className="page-title u-row"><Icon e="💶" size={22} /> {t("pay.title")}</h1>
       <div className="page-sub">{t("pay.subtitle")}</div>
 
       <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <label htmlFor="payroll-month" style={{ fontSize: 12, color: "var(--gray)" }}>{t("pay.month")}</label>
+        <label className="ui-muted" htmlFor="payroll-month">{t("pay.month")}</label>
         <input id="payroll-month" type="month" value={month} disabled={busy} onChange={(e) => { setMonth(e.target.value); setApprovalId(""); setHistory([]); }} style={{ ...inp, width: "auto" }} />
         {history.length > 0 && <label style={{ fontSize: 12 }}>{t("pay.history")} <select value={approvalId} disabled={busy || loading} onChange={e => setApprovalId(e.target.value)} style={{ ...inp, width: "auto", maxWidth: "100%" }}>
           <option value="">{t("pay.current")}</option>{history.map(h => <option key={h.id} value={h.id}>{fmtDate(h.approved_at)} · {h.approved_name}</option>)}
         </select></label>}
-        <div style={{ flex: 1 }} />
-        <button disabled={loading || busy || !!error || run.status === "approved"} onClick={() => setShowRules((v) => !v)} style={{ padding: "8px 12px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 13, cursor: "pointer" }}><Icon e="⚙" size={14} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("pay.rules")}</button>
+        <div className="u-flex1" />
+        <button disabled={loading || busy || !!error || run.status === "approved"} onClick={() => setShowRules((v) => !v)} style={{ padding: "8px 12px", background: "var(--dark3)", color: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, cursor: "pointer" }}><Icon className="u-icon-inline" e="⚙" size={14} /> {t("pay.rules")}</button>
       </div>
 
       {showRules && (
         <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("pay.rulesHint")}</div>
+          <div className="ui-muted">{t("pay.rulesHint")}</div>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
             <label><div style={lbl}>{t("pay.otDaily")}</div><input style={inp} type="number" min={0} max={24} step="any" value={draft.otDailyHours} onChange={(e) => setDraft({ ...draft, otDailyHours: Number(e.target.value) })} /></label>
             <label><div style={lbl}>{t("pay.nightStart")}</div><input style={inp} type="time" value={draft.nightStart} onChange={(e) => setDraft({ ...draft, nightStart: e.target.value })} /></label>
@@ -161,7 +161,7 @@ export default function PayrollExportPage() {
           <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", borderLeft: "3px solid var(--success)" }}>
             <Icon e="✅" size={18} color="var(--success)" />
             <div style={{ flex: "1 1 260px", fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}<div style={{ marginTop: 6, color: "var(--gray)" }}>{t(run.frozen ? "pay.frozen" : "pay.legacy")}</div></div>
-            {!run.archived && <button onClick={() => toggleApproval(false)} disabled={busy} style={{ padding: "7px 12px", background: "var(--dark3)", color: "var(--gray)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>{t("pay.reopenBtn")}</button>}
+            {!run.archived && <button onClick={() => toggleApproval(false)} disabled={busy} style={{ padding: "7px 12px", background: "var(--dark3)", color: "var(--gray)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>{t("pay.reopenBtn")}</button>}
           </div>
         ) : (
           <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", borderLeft: "3px solid var(--warn)" }}>
@@ -210,8 +210,8 @@ export default function PayrollExportPage() {
             <button onClick={downloadExcel} className="btn-secondary">{t("pay.exportExcel")}</button>
             <button onClick={payrollReport} className="btn-secondary">{t("pay.exportReport")}</button>
           </div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("pay.overlapNote")}</div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("pay.ratesNote")}</div>
+          <div className="ui-note">{t("pay.overlapNote")}</div>
+          <div className="ui-note">{t("pay.ratesNote")}</div>
         </>
       )}
 
@@ -221,7 +221,7 @@ export default function PayrollExportPage() {
         </div>
       )}
 
-      <Link href="/profile" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("pay.backProfile")}</Link>
+      <Link className="ui-back-link" href="/profile">{t("pay.backProfile")}</Link>
     </div>
   );
 }

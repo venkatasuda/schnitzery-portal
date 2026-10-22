@@ -95,22 +95,22 @@ export default function ApprovalsPage() {
     else toast(res.error || t("approvals.actionFailed"), "error");
   }
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const shown = items.filter((i) => filter === "all" || i.kind === filter);
   const count = (k: Kind) => items.filter((i) => i.kind === k).length;
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("approvals.title")}</div>
+      <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("approvals.title")}</h1>
       <div className="page-sub">{t("approvals.subtitle")}</div>
 
       <div className="hub-tabs" role="group" aria-label={t("approvals.title")}>
         <button aria-pressed={filter === "all"} className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>
-        <button aria-pressed={filter === "leave"} className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}><Icon e="🌴" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabLeave")} {count("leave") || ""}</button>
-        <button aria-pressed={filter === "swap"} className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}><Icon e="🔄" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabSwaps")} {count("swap") || ""}</button>
-        <button aria-pressed={filter === "attendance"} className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}><Icon e="🕐" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("approvals.tabTime")} {count("attendance") || ""}</button>
-        <button aria-pressed={filter === "correction"} className={`hub-tab${filter === "correction" ? " active" : ""}`} onClick={() => setFilter("correction")}><Icon e="✏️" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("corr.inbox")} {count("correction") || ""}</button>
+        <button aria-pressed={filter === "leave"} className={`hub-tab${filter === "leave" ? " active" : ""}`} onClick={() => setFilter("leave")}><Icon className="u-icon-inline" e="🌴" size={13} /> {t("approvals.tabLeave")} {count("leave") || ""}</button>
+        <button aria-pressed={filter === "swap"} className={`hub-tab${filter === "swap" ? " active" : ""}`} onClick={() => setFilter("swap")}><Icon className="u-icon-inline" e="🔄" size={13} /> {t("approvals.tabSwaps")} {count("swap") || ""}</button>
+        <button aria-pressed={filter === "attendance"} className={`hub-tab${filter === "attendance" ? " active" : ""}`} onClick={() => setFilter("attendance")}><Icon className="u-icon-inline" e="🕐" size={13} /> {t("approvals.tabTime")} {count("attendance") || ""}</button>
+        <button aria-pressed={filter === "correction"} className={`hub-tab${filter === "correction" ? " active" : ""}`} onClick={() => setFilter("correction")}><Icon className="u-icon-inline" e="✏️" size={13} /> {t("corr.inbox")} {count("correction") || ""}</button>
       </div>
 
       {error ? (
@@ -119,7 +119,7 @@ export default function ApprovalsPage() {
         <CardSkeleton rows={3} />
       ) : shown.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 34 }}>
-          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={32} color="var(--success)" /></div>
+          <div className="u-mb-2"><Icon e="🎉" size={32} color="var(--success)" /></div>
           <div style={{ color: "var(--success)", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
           <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("approvals.caughtUp")}</div>
         </div>

@@ -294,10 +294,10 @@ export default function AttendancePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🕐" size={22} /> {t("att.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🕐" size={22} /> {t("att.title")}</h1>
       <SyncStatus />
       <details><summary>{t("offlineReview.title")}</summary><OfflineReview /></details>
-      <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}><Icon e="✏️" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("corr.request")}</Link>
+      <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}><Icon className="u-icon-inline" e="✏️" size={14} /> {t("corr.request")}</Link>
       <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
       <div className="card" style={{ padding: 24 }}>
@@ -340,15 +340,15 @@ export default function AttendancePage() {
 
             {/* ACTION BUTTONS */}
             {!clockedIn ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="u-stack">
                 <button onClick={clockInAction} disabled={working} style={bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working)}>{t("att.clockInNow")}</button>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className="u-hstack">
                   <button onClick={() => { setCodeMode("in"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
                   <button onClick={() => openCode("in")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
                 </div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="u-stack">
                 {!onBreak ? (
                   <button onClick={breakStartAction} disabled={working} style={bigBtn("linear-gradient(135deg,#b9770e,#e67e22)", working)}>{t("att.startBreak")}</button>
                 ) : (
@@ -356,7 +356,7 @@ export default function AttendancePage() {
                 )}
                 <button onClick={clockOutAction} disabled={working || onBreak} style={bigBtn("linear-gradient(135deg,#922b21,#c0392b)", working || onBreak)}>{t("att.clockOut")}</button>
                 {!onBreak && (
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div className="u-hstack">
                     <button onClick={() => { setCodeMode("out"); setShowScan(true); }} disabled={working} style={secBtn(working)}>{t("att.scanQR")}</button>
                     <button onClick={() => openCode("out")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
                   </div>
@@ -375,7 +375,7 @@ export default function AttendancePage() {
         <div className="card">
           <div className="card-title">{t("att.todaysTimeline")}</div>
           {timeline.map((e, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
               <span style={{ flex: 1, fontSize: 14, color: "var(--white)" }}>{e.label}</span>
               {e.extra && <span style={{ fontSize: 12, color: "var(--warn)" }}>{e.extra}</span>}
@@ -383,12 +383,12 @@ export default function AttendancePage() {
             </div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 13 }}>
-            <span style={{ color: "var(--gray)" }}>{t("att.totalBreakTime")}</span>
+            <span className="u-muted">{t("att.totalBreakTime")}</span>
             <span style={{ color: "var(--warn)", fontWeight: 600 }}>{totalBreakMin} {t("att.minutesShort")}</span>
           </div>
           {session?.clock_out && (
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 13 }}>
-              <span style={{ color: "var(--gray)" }}>{t("att.totalTimeInOut")}</span>
+              <span className="u-muted">{t("att.totalTimeInOut")}</span>
               <span style={{ color: "var(--gold)", fontWeight: 700 }}>{fmtDur(session.duration_mins)}</span>
             </div>
           )}
@@ -414,7 +414,7 @@ export default function AttendancePage() {
               onKeyDown={(e) => e.key === "Enter" && submitCode()}
               placeholder="000000"
               inputMode="numeric"
-              style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", boxSizing: "border-box" }}
             />
             {codeErr && <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
@@ -424,14 +424,14 @@ export default function AttendancePage() {
         </NativeDialog>
       )}
 
-      <button onClick={toggleHistory} style={historyToggle}><Icon e="📅" size={15} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
+      <button onClick={toggleHistory} style={historyToggle}><Icon className="u-icon-inline" e="📅" size={15} /> {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
 
       {showHistory && (
         <div style={{ marginTop: 14 }}>
           {/* week / month tabs */}
           <div className="hub-tabs">
-            <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}><Icon e="📅" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("att.weekLabel")}</button>
-            <button className={`hub-tab${histTab === "month" ? " active" : ""}`} onClick={() => switchHistTab("month")}><Icon e="🗓" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("att.monthLabel")}</button>
+            <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}><Icon className="u-icon-inline" e="📅" size={13} /> {t("att.weekLabel")}</button>
+            <button className={`hub-tab${histTab === "month" ? " active" : ""}`} onClick={() => switchHistTab("month")}><Icon className="u-icon-inline" e="🗓" size={13} /> {t("att.monthLabel")}</button>
           </div>
 
           {/* days worked + hours stats */}
@@ -440,7 +440,7 @@ export default function AttendancePage() {
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histDaysWorked}</div>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{t("att.daysWorked")}</div>
             </div>
-            <div style={{ width: 1, background: "rgba(128,128,128,0.15)" }} />
+            <div style={{ width: 1, background: "var(--surface-2)" }} />
             <div style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histHours}</div>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? t("att.weekLabel") : t("att.monthLabel")}</div>
@@ -452,7 +452,7 @@ export default function AttendancePage() {
             <CardSkeleton rows={3} />
           ) : historyError ? <p role="alert">{t("offlineReview.failed")} <button className="btn-secondary" onClick={()=>loadHistory(histTab)}>{t("business.retry")}</button></p> : history.length === 0 ? (
             <div className="card" style={{ color: "var(--gray)", fontSize: 13, padding: 30, textAlign: "center" }}>
-              <div style={{ marginBottom: 6 }}><Icon e="📭" size={28} color="var(--gray)" /></div>
+              <div className="u-mb-2"><Icon e="📭" size={28} color="var(--gray)" /></div>
               {histTab === "week" ? t("att.noRecordsWeek") : t("att.noRecordsMonth")}
             </div>
           ) : (
@@ -460,7 +460,7 @@ export default function AttendancePage() {
               const bmin = Math.round(computeBreakMs(s.breaks) / 60000);
               return (
                 <div key={s.id} className="card" style={{ padding: 14, marginBottom: 8 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="u-between">
                     <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--warn)", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>
                       {s.status === "active" || s.status === "on-break" ? t("att.inProgress") : fmtDur(s.duration_mins)}
@@ -482,7 +482,7 @@ export default function AttendancePage() {
 // at-a-glance status cell
 function StatCell({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div style={{ background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.12)", borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
+    <div style={{ background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
       <div style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
       <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
     </div>
@@ -510,11 +510,11 @@ function rangeFor(tab: "week" | "month"): { from: string; to: string } {
 }
 
 // styles (CSS-variable based so light mode works)
-const historyToggle: React.CSSProperties = { width: "100%", marginTop: 14, padding: "13px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 12, color: "var(--white)", fontSize: 14, cursor: "pointer" };
+const historyToggle: React.CSSProperties = { width: "100%", marginTop: 14, padding: "13px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--white)", fontSize: 14, cursor: "pointer" };
 
 function bigBtn(bg: string, disabled: boolean): React.CSSProperties {
   return { width: "100%", padding: "16px", background: disabled ? "var(--dark3)" : bg, color: disabled ? "var(--gray)" : "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: disabled ? "default" : "pointer", transition: "transform 0.1s" };
 }
 function secBtn(disabled: boolean): React.CSSProperties {
-  return { flex: 1, padding: "13px", background: "var(--dark3)", color: disabled ? "var(--gray)" : "var(--white)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: disabled ? "default" : "pointer" };
+  return { flex: 1, padding: "13px", background: "var(--dark3)", color: disabled ? "var(--gray)" : "var(--white)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: disabled ? "default" : "pointer" };
 }

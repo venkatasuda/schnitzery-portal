@@ -78,11 +78,11 @@ export default function NotificationsPage() {
 
   return (
     <div className="fade-up">
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ flex: 1 }}>
-          <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔔" size={22} /> {t("notif.center")}</div>
+      <div className="u-row">
+        <div className="u-flex1">
+          <h1 className="page-title u-row"><Icon e="🔔" size={22} /> {t("notif.center")}</h1>
         </div>
-        {unread > 0 && <button onClick={markRead} style={{ padding: "8px 12px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.22)", borderRadius: 10, color: "var(--gold)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{t("notif.markAllRead")}</button>}
+        {unread > 0 && <button onClick={markRead} style={{ padding: "8px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--gold)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{t("notif.markAllRead")}</button>}
       </div>
 
       <div className="hub-tabs" style={{ marginTop: 10 }}>
@@ -95,18 +95,18 @@ export default function NotificationsPage() {
       {loading ? (
         <CardSkeleton rows={4} />
       ) : filtered.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon e="🎉" size={16} color="var(--success)" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
+        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 13 }}><Icon className="u-icon-inline" e="🎉" size={16} color="var(--success)" /> {t("notif.caughtUp")}</div>
       ) : (
         groups.map((g) => (
           <div key={g.label} style={{ marginBottom: 12 }}>
             <div className="section-label">{g.label}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div className="u-stack tight">
               {g.rows.map((n) => {
                 const meta = NOTIF[n.type] || { key: "notif.title", icon: "🔔", href: "/" };
                 return (
                   <Link key={n.id} href={meta.href} className="card" style={{ display: "flex", alignItems: "flex-start", gap: 11, padding: 12, textDecoration: "none" }}>
                     <Icon e={meta.icon} size={18} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="u-grow">
                       <div style={{ fontSize: 13, fontWeight: n.is_read ? 500 : 700, color: "var(--white)" }}>{t(meta.key)}</div>
                       {n.message && <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 2 }}>{n.message}</div>}
                     </div>

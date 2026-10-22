@@ -50,20 +50,20 @@ export default function StockAlertsPage() {
   }
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("salert.managersOnly")}</div>;
+    return <div className="card ui-denied">{t("salert.managersOnly")}</div>;
   }
 
-  const input: React.CSSProperties = { width: 66, padding: "7px 8px", borderRadius: 7, background: "var(--dark2)", color: "var(--white)", border: "1px solid rgba(255,255,255,0.14)", fontSize: 13, textAlign: "center" };
+  const input: React.CSSProperties = { width: 66, padding: "7px 8px", borderRadius: 7, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, textAlign: "center" };
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📦" size={22} /> {t("salert.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📦" size={22} /> {t("salert.title")}</h1>
       <div className="page-sub">{t("salert.subtitle")}</div>
 
       <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "12px 0", padding: 14 }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: lowCount > 0 ? "var(--danger)" : "var(--success)" }}>{lowCount}</div>
-          <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("salert.lowNow")}</div>
+          <div className="ui-muted">{t("salert.lowNow")}</div>
         </div>
         <button onClick={alertMe} disabled={notifying}
           style={{ padding: "10px 16px", borderRadius: 10, border: "none", cursor: notifying ? "default" : "pointer", background: "var(--action)", color: "var(--on-action)", fontSize: 13, fontWeight: 700 }}>
@@ -74,16 +74,16 @@ export default function StockAlertsPage() {
       <div style={{ fontSize: 12, color: "var(--gray)", margin: "0 2px 10px" }}>{t("salert.hint")}</div>
 
       {loading ? <CardSkeleton /> : items.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("salert.noItems")}</div>
+        <div className="card ui-empty-msg">{t("salert.noItems")}</div>
       ) : (
         items.map((it) => (
           <div key={it.id} className="card" style={{ padding: 12, marginBottom: 8, borderColor: it.low ? "rgba(231,76,60,0.4)" : undefined, background: it.low ? "rgba(231,76,60,0.06)" : undefined }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>
+            <div className="u-row">
+              <div className="u-grow">
+                <div className="ui-strong">
                   {it.low && <span style={{ color: "var(--danger)", marginRight: 5 }}>●</span>}{it.product}
                 </div>
-                <div style={{ fontSize: 12, color: "var(--gray)" }}>
+                <div className="ui-muted">
                   {it.category}{it.unit ? ` · ${it.unit}` : ""} · {it.counted ? t("salert.now", { n: it.ist }) : t("salert.notCounted")}
                 </div>
               </div>

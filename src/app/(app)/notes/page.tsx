@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getStaffForNotes, addNote, getNotes } from "@/lib/queries/operations";
+import { Field } from "@/components/ui";
 
 export default function NotesPage() {
   const { t } = useLang();
@@ -40,17 +41,17 @@ export default function NotesPage() {
     else setMsg(res.error || t("notes.failed"));
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const shown = tab === "recognition" ? notes.filter((n) => n.isRecognition) : notes;
   const fmt = (iso: string) => new Date(iso).toLocaleDateString([], { day: "2-digit", month: "short" });
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📝" size={22} /> {t("schedhub.notes")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("notes.subtitle")}</p>
+      <h1 className="page-title u-row"><Icon e="📝" size={22} /> {t("schedhub.notes")}</h1>
+      <p className="ui-lede">{t("notes.subtitle")}</p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "#d4a847", textAlign: "center" }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "var(--gold-ink)", textAlign: "center" }}>{msg}</div>}
 
       {/* add note */}
       <div style={{ ...card, marginBottom: 16 }}>
@@ -68,18 +69,18 @@ export default function NotesPage() {
       </div>
 
       {/* tabs */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 14, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, padding: 4 }}>
+      <div className="ui-segmented" role="group">
         <TabBtn active={tab === "all"} onClick={() => setTab("all")}>{t("notes.tabAll")}</TabBtn>
         <TabBtn active={tab === "recognition"} onClick={() => setTab("recognition")}>{t("notes.tabRec")}</TabBtn>
       </div>
 
       {loading ? <div style={{ color: "var(--gray)", padding: 20, textAlign: "center" }}>{t("common.loading")}</div>
-      : shown.length === 0 ? <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("notes.empty")}</div>
+      : shown.length === 0 ? <div className="card ui-empty-msg">{t("notes.empty")}</div>
       : shown.map((n) => (
-        <div key={n.id} style={{ ...card, marginBottom: 8, borderColor: n.isRecognition ? "rgba(212,168,71,0.3)" : "rgba(255,255,255,0.08)" }}>
+        <div key={n.id} style={{ ...card, marginBottom: 8, borderColor: n.isRecognition ? "var(--accent-line)" : "rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 14, fontWeight: 600 }}>{n.isRecognition && <Icon e="🌟" size={13} color="var(--action)" style={{ verticalAlign: "-2px", marginRight: 4 }} />}{n.subject?.full_name || t("lc.staffFallback")}</span>
-            <span style={{ fontSize: 12, color: "var(--gray)" }}>{fmt(n.created_at)}</span>
+            <span className="ui-strong">{n.isRecognition && <Icon e="🌟" size={13} color="var(--action)" style={{ verticalAlign: "-2px", marginRight: 4 }} />}{n.subject?.full_name || t("lc.staffFallback")}</span>
+            <span className="ui-muted">{fmt(n.created_at)}</span>
           </div>
           <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5 }}>{n.cleanNote}</div>
         </div>
@@ -88,11 +89,9 @@ export default function NotesPage() {
   );
 }
 
-function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
-}
-function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</label>{children}</div>;
+// Segmented switch: styling from .ui-segmented (docs/DESIGN-SYSTEM.md).
+function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return <button type="button" aria-pressed={active} onClick={onClick}>{children}</button>;
 }
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };

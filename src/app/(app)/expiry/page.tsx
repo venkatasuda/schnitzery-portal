@@ -61,7 +61,7 @@ export default function ExpiryPage() {
   const filtered = products.filter((p) => p.product.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
   const badge = (b: any) => {
     if (b.flag === "expired") return { c: "var(--danger)", label: b.daysToExpiry === 0 ? t("expiry.today") : t("expiry.expiredAgo", { n: Math.abs(b.daysToExpiry) }) };
-    if (b.flag === "soon") return { c: "#d4a847", label: b.daysToExpiry === 0 ? t("expiry.today") : t("expiry.inDays", { n: b.daysToExpiry }) };
+    if (b.flag === "soon") return { c: "var(--gold-ink)", label: b.daysToExpiry === 0 ? t("expiry.today") : t("expiry.inDays", { n: b.daysToExpiry }) };
     return { c: "var(--success)", label: t("expiry.inDays", { n: b.daysToExpiry }) };
   };
 
@@ -78,33 +78,33 @@ export default function ExpiryPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📅" size={22} /> {t("expiry.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("expiry.title")}</h1>
       <div className="page-sub">{t("expiry.subtitle")}</div>
 
       {summary && (summary.expired > 0 || summary.soon > 0) && (
-        <div className="card" style={{ margin: "12px 0", padding: 14, borderColor: summary.expired > 0 ? "rgba(231,76,60,0.4)" : "rgba(212,168,71,0.3)" }}>
+        <div className="card" style={{ margin: "12px 0", padding: 14, borderColor: summary.expired > 0 ? "rgba(231,76,60,0.4)" : "var(--accent-line)" }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: summary.expired > 0 ? "var(--danger)" : "#d4a847" }}>
             {summary.expired > 0 ? t("expiry.expiredCount", { n: summary.expired }) : t("expiry.soonCount", { n: summary.soon })}
           </div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("expiry.useFirst")}</div>
+          <div className="ui-meta">{t("expiry.useFirst")}</div>
         </div>
       )}
 
       {!adding ? (
-        <button onClick={() => setAdding(true)} style={{ width: "100%", padding: 12, margin: "6px 0 14px", borderRadius: 10, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ {t("expiry.addBatch")}</button>
+        <button onClick={() => setAdding(true)} style={{ width: "100%", padding: 12, margin: "6px 0 14px", borderRadius: 10, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ {t("expiry.addBatch")}</button>
       ) : (
         <div className="card" style={{ marginBottom: 14, padding: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <div className="card-title" style={{ margin: 0 }}>{t("expiry.addBatch")}</div>
+            <div className="card-title u-m0">{t("expiry.addBatch")}</div>
             <button onClick={resetForm} style={{ background: "none", border: "none", color: "var(--gray)", fontSize: 18, cursor: "pointer" }}>✕</button>
           </div>
           {!sel ? (
             <>
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("expiry.searchProduct")}
                 style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
-              {search && (filtered.length === 0 ? <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("expiry.noProduct")}</div> : filtered.map((p) => (
-                <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
-                  {p.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>({p.category})</span>
+              {search && (filtered.length === 0 ? <div className="ui-muted">{t("expiry.noProduct")}</div> : filtered.map((p) => (
+                <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+                  {p.product} <span className="ui-muted">({p.category})</span>
                 </button>
               )))}
             </>
@@ -116,7 +116,7 @@ export default function ExpiryPage() {
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
                 <input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
-                <span style={{ fontSize: 13, color: "var(--gray)" }}>{sel.unit || ""}</span>
+                <span className="ui-muted-md">{sel.unit || ""}</span>
               </div>
               <label style={{ fontSize: 12, color: "var(--gray)", display: "block", marginBottom: 4 }}>{t("expiry.expiryDate")}</label>
               <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)}
@@ -129,29 +129,29 @@ export default function ExpiryPage() {
         </div>
       )}
 
-      <div className="card-title" style={{ marginBottom: 8 }}>{t("expiry.batches")}</div>
+      <div className="card-title u-mb-2">{t("expiry.batches")}</div>
       {loading ? <CardSkeleton rows={3} /> : batches.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("expiry.none")}</div>
+        <div className="card ui-empty-msg">{t("expiry.none")}</div>
       ) : groups.map((g: any) => {
         const soonest = g.items[0];
         const head = badge(soonest);
         const multi = g.items.length > 1;
         return (
-          <div key={g.product} className="card" style={{ marginBottom: 10, padding: 14, borderColor: soonest.flag === "expired" ? "rgba(231,76,60,0.35)" : soonest.flag === "soon" ? "rgba(212,168,71,0.25)" : "rgba(255,255,255,0.08)" }}>
+          <div key={g.product} className="card" style={{ marginBottom: 10, padding: 14, borderColor: soonest.flag === "expired" ? "rgba(231,76,60,0.35)" : soonest.flag === "soon" ? "var(--accent-line)" : "rgba(255,255,255,0.08)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: multi ? 10 : 6, marginBottom: multi ? 4 : 0, borderBottom: multi ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>{g.product}</div>
-                <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("expiry.totalOnHand", { qty: Math.round(g.total * 10) / 10, unit: g.unit || "" })}{multi ? ` · ${g.items.length} ${t("expiry.batchesShort")}` : ""}</div>
+                <div className="ui-muted">{t("expiry.totalOnHand", { qty: Math.round(g.total * 10) / 10, unit: g.unit || "" })}{multi ? ` · ${g.items.length} ${t("expiry.batchesShort")}` : ""}</div>
               </div>
               <span style={{ fontSize: 12, fontWeight: 700, color: head.c, whiteSpace: "nowrap" }}>{head.label}</span>
             </div>
             {g.items.map((b: any) => {
               const bg = badge(b);
               return (
-                <div key={b.id} style={{ padding: "9px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={b.id} style={{ padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
+                  <div className="u-between">
                     <div>
-                      <div style={{ fontSize: 13, color: "var(--white)" }}>{b.qty}{b.unit ? " " + b.unit : ""} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {t("expiry.expires")} {fmtDate(b.expiry_date)}</span></div>
+                      <div className="ui-body">{b.qty}{b.unit ? " " + b.unit : ""} <span className="ui-muted">· {t("expiry.expires")} {fmtDate(b.expiry_date)}</span></div>
                       {b.note && <div style={{ fontSize: 12, color: "var(--gray)", fontStyle: "italic" }}>{b.note}</div>}
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: bg.c, whiteSpace: "nowrap" }}>{bg.label}</span>

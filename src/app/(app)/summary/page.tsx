@@ -7,21 +7,13 @@ import Icon from "@/components/Icon";
 import { getMonthlySummary } from "@/lib/queries/labor";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { Stat } from "@/components/ui";
 
 const eur = (n: number) => "€" + (n || 0).toLocaleString("de-DE");
 
 // Declared at module scope, NOT inside the page component. A component created
 // during render is a brand-new component type on every render, so React
 // unmounts and remounts it each time — losing any state and costing DOM work.
-function Kpi({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
-  return (
-    <div className="card" style={{ padding: 14 }}>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: color || "var(--white)" }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{sub}</div>}
-    </div>
-  );
-}
 const csvCell = (s: any) => `"${String(s ?? "").replace(/"/g, '""')}"`;
 
 function lastMonths(n: number) {
@@ -83,56 +75,56 @@ export default function SummaryPage() {
   }
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("summary.managersOnly")}</div>;
+    return <div className="card ui-denied">{t("summary.managersOnly")}</div>;
   }
 
   const primeColor = data?.primePct == null ? "var(--gray)" : data.primePct <= 60 ? "#27ae60" : data.primePct <= 68 ? "#d4a847" : "#e74c3c";
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("summary.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("summary.title")}</h1>
       <div className="page-sub">{t("summary.subtitle")}</div>
 
       <Link href="/simulator" className="card" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", margin: "12px 0 0" }}>
         <Icon e="🎛️" size={18} color="var(--gold)" />
-        <div style={{ flex: 1 }}>
+        <div className="u-flex1">
           <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{t("summary.simulator")}</div>
-          <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("summary.simulatorSub")}</div>
+          <div className="ui-muted">{t("summary.simulatorSub")}</div>
         </div>
-        <span style={{ color: "var(--gray)" }}>›</span>
+        <span className="u-muted">›</span>
       </Link>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, margin: "12px 0 14px", flexWrap: "wrap" }}>
         <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14 }}>
           {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
-        <button onClick={downloadCsv} disabled={!data} style={{ padding: "9px 14px", borderRadius: 8, background: "rgba(212,168,71,0.12)", color: "var(--gold-ink)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: data ? "pointer" : "default" }}>{t("summary.downloadCsv")}</button>
+        <button onClick={downloadCsv} disabled={!data} style={{ padding: "9px 14px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--gold-ink)", border: "1px solid var(--accent-line)", fontSize: 13, fontWeight: 600, cursor: data ? "pointer" : "default" }}>{t("summary.downloadCsv")}</button>
       </div>
 
       {loading ? (
         <CardSkeleton rows={4} />
       ) : !data ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("summary.noData")}</div>
+        <div className="card ui-empty-msg">{t("summary.noData")}</div>
       ) : (
         <>
           {data.hasSales && !data.complete && (
-            <div role="status" className="card" style={{ marginBottom: 12, fontSize: 12, color: "#d4a847", borderColor: "rgba(212,168,71,0.3)" }}>
+            <div role="status" className="card" style={{ marginBottom: 12, fontSize: 12, color: "var(--gold-ink)", borderColor: "var(--accent-line)" }}>
               {[data.coverage.labor.missing.wages ? t("business.missingWages", { n: data.coverage.labor.missing.wages }) : "", data.coverage.sales.missing.salesDays ? t("business.missingSalesDays", { n: data.coverage.sales.missing.salesDays }) : "", data.coverage.spend.missing.costs ? t("business.missingCosts", { n: data.coverage.spend.missing.costs }) : ""].filter(Boolean).join(" · ")}
             </div>
           )}
           {!data.hasSales && (
-            <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "#d4a847", borderColor: "rgba(212,168,71,0.3)" }}>{t("summary.needSales")}</div>
+            <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "var(--gold-ink)", borderColor: "var(--accent-line)" }}>{t("summary.needSales")}</div>
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginBottom: 8 }}>
-            <Kpi label={t("summary.sales")} value={eur(data.sales)} />
-            <Kpi label={t("summary.primePct")} value={data.primePct != null ? `${data.primePct}%` : "—"} color={primeColor} sub={t("summary.primeNote")} />
-            <Kpi label={t("summary.laborPct")} value={data.laborPct != null ? `${data.laborPct}%` : "—"} sub={(data.coverage.labor.complete ? "" : "≥ ") + eur(data.laborCost)} />
-            <Kpi label={t("summary.foodPct")} value={data.foodPct != null ? `${data.foodPct}%` : "—"} sub={(data.coverage.spend.complete ? "" : "≥ ") + eur(data.foodSpend)} />
-            <Kpi label={t("summary.overtime")} value={`${data.overtimeHrs}h`} />
-            <Kpi label={t("summary.lateRate")} value={data.lateRate != null ? `${data.lateRate}%` : "—"} />
-            <Kpi label={t("summary.totalHours")} value={`${data.totalHours}h`} />
-            <Kpi label={t("summary.shifts")} value={String(data.shifts)} />
+            <Stat label={t("summary.sales")} value={eur(data.sales)} />
+            <Stat label={t("summary.primePct")} value={data.primePct != null ? `${data.primePct}%` : "—"} color={primeColor} sub={t("summary.primeNote")} />
+            <Stat label={t("summary.laborPct")} value={data.laborPct != null ? `${data.laborPct}%` : "—"} sub={(data.coverage.labor.complete ? "" : "≥ ") + eur(data.laborCost)} />
+            <Stat label={t("summary.foodPct")} value={data.foodPct != null ? `${data.foodPct}%` : "—"} sub={(data.coverage.spend.complete ? "" : "≥ ") + eur(data.foodSpend)} />
+            <Stat label={t("summary.overtime")} value={`${data.overtimeHrs}h`} />
+            <Stat label={t("summary.lateRate")} value={data.lateRate != null ? `${data.lateRate}%` : "—"} />
+            <Stat label={t("summary.totalHours")} value={`${data.totalHours}h`} />
+            <Stat label={t("summary.shifts")} value={String(data.shifts)} />
           </div>
 
           <div className="card" style={{ marginTop: 6 }}>
@@ -145,16 +137,16 @@ export default function SummaryPage() {
                   <thead>
                     <tr>
                       <th scope="col">{t("summary.name")}</th>
-                      <th scope="col" style={{ textAlign: "right" }}>{t("summary.hours")}</th>
-                      <th scope="col" style={{ textAlign: "right" }}>{t("summary.ot")}</th>
-                      <th scope="col" style={{ textAlign: "right" }}>{t("summary.late")}</th>
+                      <th className="u-right" scope="col">{t("summary.hours")}</th>
+                      <th className="u-right" scope="col">{t("summary.ot")}</th>
+                      <th className="u-right" scope="col">{t("summary.late")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.rows.map((r: any, i: number) => (
                       <tr key={i} style={{ borderTop: "1px solid var(--border)" }}>
-                        <td style={{ color: "var(--white)" }}>{r.name}<span style={{ color: "var(--gray)", fontSize: 12 }}> · {r.team}</span></td>
-                        <td style={{ textAlign: "right" }}>{r.hours}h</td>
+                        <td className="u-text">{r.name}<span className="ui-muted"> · {r.team}</span></td>
+                        <td className="u-right">{r.hours}h</td>
                         <td style={{ textAlign: "right", color: r.overtime > 0 ? "var(--danger)" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
                         <td style={{ textAlign: "right", color: r.late > 0 ? "var(--warn)" : "var(--gray)" }}>{r.late || "—"}</td>
                       </tr>

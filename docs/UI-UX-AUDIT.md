@@ -1,5 +1,7 @@
 # Portal UI/UX source audit
 
+Latest pass: [2026-10-22 page-by-page review](ops/UI-UX-PAGE-REVIEW.md). That report tracks all 65 routes, the current local changes, synthetic preview evidence and remaining staging acceptance. Earlier entries below are historical and do not certify this release.
+
 Scope: all current page.tsx routes, shared shell, theme, hubs, dashboard and inventory. This is a source audit, not a claim that every signed-in page has been visually tested. Browser inspection was unavailable under the tool URL policy.
 
 ## Design direction

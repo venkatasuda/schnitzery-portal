@@ -58,8 +58,8 @@ export default function AvailabilityPage() {
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗓" size={22} /> {t("avail.title")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>
+      <h1 className="page-title u-row"><Icon e="🗓" size={22} /> {t("avail.title")}</h1>
+      <p className="ui-lede">
         {t("avail.subtitle", { week: weekLabel })}
       </p>
 
@@ -69,7 +69,7 @@ export default function AvailabilityPage() {
         <>
           {DAYS.map((day) => (
             <div key={day} style={{ ...card, marginBottom: 8 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{dayLabel(day)}</div>
+              <div className="ui-title spaced">{dayLabel(day)}</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {SHIFTS.map((sh) => {
                   const on = (days[day] || []).includes(sh.key);

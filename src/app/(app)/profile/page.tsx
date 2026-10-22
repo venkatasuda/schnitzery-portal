@@ -11,6 +11,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { Field, Stat } from "@/components/ui";
 
 export default function ProfilePage() {
   const { t } = useLang();
@@ -53,7 +54,7 @@ export default function ProfilePage() {
 
   if (loading) return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="👤" size={22} /> {t("profile.title")}</div>
+      <h1 className="page-title u-row"><Icon e="👤" size={22} /> {t("profile.title")}</h1>
       <div className="page-sub">{t("profile.subtitle")}</div>
       <CardSkeleton rows={5} />
     </div>
@@ -65,7 +66,7 @@ export default function ProfilePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="👤" size={22} /> {t("profile.title")}</div>
+      <h1 className="page-title u-row"><Icon e="👤" size={22} /> {t("profile.title")}</h1>
       <div className="page-sub">{t("profile.subtitle")}</div>
 
       <div className="card" style={{ padding: 24 }}>
@@ -98,11 +99,11 @@ export default function ProfilePage() {
               {skillsArr.length ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {skillsArr.map((s, i) => (
-                    <span key={i} style={{ display: "inline-block", padding: "5px 12px", background: "var(--dark3)", border: "1px solid rgba(212,168,71,0.25)", borderRadius: 20, fontSize: 12, color: "var(--white)" }}>{s}</span>
+                    <span key={i} style={{ display: "inline-block", padding: "5px 12px", background: "var(--dark3)", border: "1px solid var(--accent-line)", borderRadius: 20, fontSize: 12, color: "var(--white)" }}>{s}</span>
                   ))}
                 </div>
               ) : (
-                <div style={{ fontSize: 13, color: "var(--gray)" }}>{t("profile.noSkills")}</div>
+                <div className="ui-muted-md">{t("profile.noSkills")}</div>
               )}
             </div>
 
@@ -113,9 +114,9 @@ export default function ProfilePage() {
             <Field label={t("profile.fullName")}><input value={fullName} onChange={(e) => setFullName(e.target.value)} style={input} /></Field>
             <Field label={t("profile.phone")}><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+49 …" style={input} /></Field>
             <Field label={t("profile.skillsLabel")}><input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder={t("profile.skillsPlaceholder")} style={input} /></Field>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("profile.managerNote")}</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => { setEditing(false); load(); }} style={{ ...primaryBtn, background: "transparent", border: "1px solid rgba(128,128,128,0.3)", color: "var(--white)" }}>{t("common.cancel")}</button>
+            <div className="ui-sub">{t("profile.managerNote")}</div>
+            <div className="u-hstack">
+              <button onClick={() => { setEditing(false); load(); }} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
               <button onClick={save} disabled={saving} style={{ ...primaryBtn, opacity: saving ? 0.6 : 1 }}>{saving ? t("common.saving") : t("common.save")}</button>
             </div>
           </>
@@ -132,22 +133,22 @@ export default function ProfilePage() {
           <div className="workspace-grid profile-admin">
           <Link href="/settings" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#555,#777)" }}><Icon e="⚙️" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("profile.branchSettings")}</div><div className="feature-sub">{t("profile.branchSettingsSub")}</div></div>
+            <div className="u-flex1"><div className="feature-title">{t("profile.branchSettings")}</div><div className="feature-sub">{t("profile.branchSettingsSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/export" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#117a65,#16a085)" }}><Icon e="📤" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("profile.payrollExport")}</div><div className="feature-sub">{t("profile.payrollExportSub")}</div></div>
+            <div className="u-flex1"><div className="feature-title">{t("profile.payrollExport")}</div><div className="feature-sub">{t("profile.payrollExportSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/audit" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#2c3e50,#34495e)" }}><Icon e="🔒" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("profile.auditLog")}</div><div className="feature-sub">{t("profile.auditLogSub")}</div></div>
+            <div className="u-flex1"><div className="feature-title">{t("profile.auditLog")}</div><div className="feature-sub">{t("profile.auditLogSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/clock-display" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1a6b8a,#3498db)" }}><Icon e="📲" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("sh.clockDisplay")}</div><div className="feature-sub">{t("sh.clockDisplaySub")}</div></div>
+            <div className="u-flex1"><div className="feature-title">{t("sh.clockDisplay")}</div><div className="feature-sub">{t("sh.clockDisplaySub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           </div>
@@ -162,16 +163,9 @@ export default function ProfilePage() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid rgba(128,128,128,0.12)", fontSize: 13 }}>
-      <span style={{ color: "var(--gray)" }}>{label}</span>
-      <span style={{ color: "var(--white)", textAlign: "right" }}>{value}</span>
-    </div>
-  );
-}
-function Field({ label, children }: any) {
-  return <label style={{ display: "block", marginBottom: 14 }}><span style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</span>{children}</label>;
-}
-const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
+const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
 const primaryBtn: React.CSSProperties = { flex: 1, width: "100%", padding: "13px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
+
+function Row({ label, value }: { label: string; value: string }) {
+  return <Stat variant="row" label={label} value={value} />;
+}

@@ -59,20 +59,20 @@ export default function WastePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🗑️" size={22} /> {t("waste.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🗑️" size={22} /> {t("waste.title")}</h1>
       <div className="page-sub">{t("waste.subtitle")}</div>
 
       {summary && summary.count > 0 && (
         <div className="card" style={{ margin: "12px 0", padding: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.thisWeek")}</span>
+            <span className="ui-muted">{t("waste.thisWeek")}</span>
             {summary.hasPrices && <span style={{ fontSize: 18, fontWeight: 700, color: "var(--danger)" }}>{eur(summary.totalValue)}</span>}
           </div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("waste.entries", { n: summary.count })}</div>
+          <div className="ui-meta">{t("waste.entries", { n: summary.count })}</div>
           {summary.reasons.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
               {summary.reasons.map((r: any) => (
-                <span key={r.reason} style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,0.05)", color: "var(--gray)" }}>
+                <span key={r.reason} style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "var(--surface-2)", color: "var(--gray)" }}>
                   {REASON_EMOJI[r.reason] || "•"} {t("waste.r_" + r.reason)} {summary.hasPrices ? eur(r.value) : `×${r.count}`}
                 </span>
               ))}
@@ -85,7 +85,7 @@ export default function WastePage() {
       {trends && trends.weeks && (
         <div className="card" style={{ margin: "12px 0", padding: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-            <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.trend6w")}</span>
+            <span className="ui-muted">{t("waste.trend6w")}</span>
             {trends.overallPct != null && (
               <span style={{ fontSize: 13, fontWeight: 700, color: trends.overallPct > 5 ? "var(--danger)" : "var(--success)" }}>
                 {t("waste.pctOfSales", { p: trends.overallPct })}
@@ -98,7 +98,7 @@ export default function WastePage() {
               return trends.weeks.map((w: any, i: number) => (
                 <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                   <div title={eur(w.wasteValue)} style={{ width: "100%", height: `${Math.round((w.wasteValue / max) * 52)}px`, minHeight: 3, borderRadius: 4, background: "linear-gradient(180deg,#e67e22,#c0392b)" }} />
-                  <span style={{ fontSize: 12, color: "var(--gray)" }}>{w.weekStart.slice(5)}</span>
+                  <span className="ui-muted">{w.weekStart.slice(5)}</span>
                 </div>
               ));
             })()}
@@ -120,8 +120,8 @@ export default function WastePage() {
               <div style={{ fontSize: 12, color: "var(--gray)", padding: "4px 2px" }}>{t("waste.noProduct")}</div>
             ) : filtered.map((p) => (
               <button key={p.product} onClick={() => { setSel(p); setSearch(""); }}
-                style={{ display: "block", width: "100%", textAlign: "left", padding: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
-                {p.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>({p.category})</span>
+                style={{ display: "block", width: "100%", textAlign: "left", padding: "10px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+                {p.product} <span className="ui-muted">({p.category})</span>
               </button>
             )))}
           </>
@@ -130,7 +130,7 @@ export default function WastePage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{sel.product}</div>
-                <div style={{ fontSize: 12, color: "var(--gray)" }}>{sel.category}</div>
+                <div className="ui-muted">{sel.category}</div>
               </div>
               <button onClick={() => setSel(null)} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("waste.change")}</button>
             </div>
@@ -145,7 +145,7 @@ export default function WastePage() {
             <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
               <input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)}
                 style={{ width: 90, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
-              <span style={{ fontSize: 13, color: "var(--gray)" }}>{sel.unit || t("waste.units")}</span>
+              <span className="ui-muted-md">{sel.unit || t("waste.units")}</span>
             </div>
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("waste.notePh")}
               style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
@@ -155,14 +155,14 @@ export default function WastePage() {
       </div>
 
       {/* RECENT */}
-      <div className="card-title" style={{ marginBottom: 8 }}>{t("waste.recent")}</div>
+      <div className="card-title u-mb-2">{t("waste.recent")}</div>
       {loading ? <CardSkeleton rows={3} /> : entries.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("waste.none")}</div>
+        <div className="card ui-empty-msg">{t("waste.none")}</div>
       ) : entries.map((e) => (
         <div key={e.id} className="card" style={{ marginBottom: 8, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, color: "var(--white)" }}>{REASON_EMOJI[e.reason] || "•"} {e.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
-            <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("waste.r_" + e.reason)} · {fmtWhen(e.created_at)}{e.logged_by_name ? ` · ${e.logged_by_name}` : ""}</div>
+            <div className="ui-body">{REASON_EMOJI[e.reason] || "•"} {e.product} <span className="ui-muted">· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
+            <div className="ui-muted">{t("waste.r_" + e.reason)} · {fmtWhen(e.created_at)}{e.logged_by_name ? ` · ${e.logged_by_name}` : ""}</div>
             {e.note && <div style={{ fontSize: 12, color: "var(--gray)", fontStyle: "italic" }}>“{e.note}”</div>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>

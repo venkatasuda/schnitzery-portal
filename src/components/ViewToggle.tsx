@@ -50,8 +50,8 @@ export default function ViewToggle({ mode }: { mode: "hq" | "branch" }) {
         gap: 2,
         padding: 3,
         borderRadius: 999,
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.10)",
+        background: "var(--surface-2)",
+        border: "1px solid var(--border)",
       }}
     >
       {btn("hq", t("view.hq"))}

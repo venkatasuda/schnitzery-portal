@@ -23,7 +23,7 @@ export default function ActionCenterPage() {
     getStaffAlerts().then((r) => setAlerts(r.ok ? r.alerts : []));
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const it = d?.items;
   const rows = it ? [
@@ -40,13 +40,13 @@ export default function ActionCenterPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🎯" size={22} /> {t("act.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🎯" size={22} /> {t("act.title")}</h1>
       <div className="page-sub">{t("act.subtitle")}</div>
 
       {!loading && alerts.length > 0 && (
         <div className="card" style={{ marginBottom: 14, padding: 14 }}>
           <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}><Icon e="⚠️" size={14} color="var(--warn)" /> {t("act.alertsTitle")}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="u-stack">
             {alerts.map((a) => {
               const color = a.severity === "high" ? "var(--danger)" : "var(--warn)";
               const ic = a.type === "absent" ? "🚫" : a.type === "lowAtt" ? "📉" : "⏰";
@@ -54,10 +54,10 @@ export default function ActionCenterPage() {
                 : a.type === "absent" ? t("act.alertAbsent", { name: a.name, n: a.n })
                 : t("act.alertLowAtt", { name: a.name, n: a.n });
               return (
-                <Link key={a.id} href={`/staff/${a.userId}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)", borderLeft: `3px solid ${color}` }}>
+                <Link key={a.id} href={`/staff/${a.userId}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", padding: "8px 10px", borderRadius: 8, background: "var(--surface-2)", borderLeft: `3px solid ${color}` }}>
                   <Icon e={ic} size={16} color={color} />
                   <span style={{ fontSize: 13, color: "var(--white)", flex: 1, minWidth: 0 }}>{msg}</span>
-                  <span style={{ color: "var(--gray)" }}>›</span>
+                  <span className="u-muted">›</span>
                 </Link>
               );
             })}
@@ -69,7 +69,7 @@ export default function ActionCenterPage() {
         <CardSkeleton rows={4} />
       ) : d?.total === 0 && alerts.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 36 }}>
-          <div style={{ marginBottom: 8 }}><Icon e="🎉" size={34} color="var(--success)" /></div>
+          <div className="u-mb-2"><Icon e="🎉" size={34} color="var(--success)" /></div>
           <div style={{ color: "var(--success)", fontSize: 16, fontWeight: 700 }}>{t("act.allClear")}</div>
           <div style={{ color: "var(--gray)", fontSize: 13, marginTop: 6 }}>{t("act.allClearSub")}</div>
         </div>
@@ -80,23 +80,23 @@ export default function ActionCenterPage() {
             <span style={{ fontSize: 14, color: "var(--gray)", marginLeft: 8 }}>{t("act.needAttention")}</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="u-stack">
             {active.map((r) => (
               <Link key={r.key} href={r.href} className="card" style={{ padding: 14, display: "flex", alignItems: "center", gap: 13, textDecoration: "none", borderLeft: `3px solid ${r.color}` }}>
                 <Icon e={r.icon} size={22} color={r.color} />
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="u-grow">
                   <div style={{ fontWeight: 600 }}>{t(`act.${r.key}`)}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)" }}>{r.sub}</div>
+                  <div className="ui-muted">{r.sub}</div>
                 </div>
                 <span style={{ fontSize: 20, fontWeight: 800, color: r.color }}>{r.count}</span>
-                <span style={{ color: "var(--gray)" }}>›</span>
+                <span className="u-muted">›</span>
               </Link>
             ))}
           </div>
         </>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      <Link className="ui-back-link" href="/">{t("approvals.back")}</Link>
     </div>
   );
 }

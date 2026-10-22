@@ -22,7 +22,7 @@ export default function CookieNotice() {
 
   return (
     <div style={{ position: "fixed", left: 12, right: 12, bottom: 12, zIndex: 200, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
-      <div style={{ pointerEvents: "auto", maxWidth: 620, width: "100%", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", background: "var(--dark2, #1e1e1e)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "12px 14px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+      <div style={{ pointerEvents: "auto", maxWidth: 620, width: "100%", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", background: "var(--dark2, #1e1e1e)", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
         <span style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: "var(--gray-light, #aaa)", lineHeight: 1.5 }}>
           We use only essential cookies to keep you signed in. Usage stats, if any, are anonymous and cookieless.{" "}
           <Link href="/privacy" style={{ color: "var(--gold, #d4a847)", textDecoration: "none" }}>Privacy</Link>

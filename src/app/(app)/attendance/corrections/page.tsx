@@ -99,7 +99,7 @@ export default function CorrectionsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="✏️" size={22} /> {t("corr.title")}</div>
+      <h1 className="page-title u-row"><Icon e="✏️" size={22} /> {t("corr.title")}</h1>
 
       {/* REQUEST FORM */}
       <div className="section-label">{t("corr.request")}</div>
@@ -107,7 +107,7 @@ export default function CorrectionsPage() {
         {TYPES.map((ty) => (
           <button key={ty.key} onClick={() => pickType(ty.key)} style={{
             display: "flex", alignItems: "center", gap: 8, padding: "12px 10px", borderRadius: 12, cursor: "pointer",
-            background: type === ty.key ? "rgba(212,168,71,0.15)" : "var(--dark2)",
+            background: type === ty.key ? "var(--accent-soft)" : "var(--dark2)",
             border: `1px solid ${type === ty.key ? "var(--action)" : "rgba(128,128,128,0.18)"}`,
             color: "var(--white)", fontSize: 12.5, fontWeight: 600, textAlign: "left",
           }}>
@@ -138,13 +138,13 @@ export default function CorrectionsPage() {
 
           <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
             {needsIn(type) && (
-              <label style={{ flex: 1 }}>
+              <label className="u-flex1">
                 <div style={lbl}>{t("corr.reqIn")}</div>
                 <input type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} style={input} />
               </label>
             )}
             {needsOut(type) && (
-              <label style={{ flex: 1 }}>
+              <label className="u-flex1">
                 <div style={lbl}>{t("corr.reqOut")}</div>
                 <input type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} style={input} />
               </label>
@@ -169,17 +169,17 @@ export default function CorrectionsPage() {
       {loading ? (
         <CardSkeleton rows={2} />
       ) : mine.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("corr.none")}</div>
+        <div className="card ui-empty-msg">{t("corr.none")}</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="u-stack">
           {mine.map((r) => {
             const b = statusBadge(r.status);
             return (
               <div key={r.id} className="card" style={{ padding: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="u-row">
+                  <div className="u-grow">
                     <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{typeLabel(r.type)} · {fmtDate(r.target_date)}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>
+                    <div className="ui-meta">
                       {r.requested_clock_in && `${t("corr.reqIn")}: ${fmtTime(r.requested_clock_in)}`}
                       {r.requested_clock_in && r.requested_clock_out && " · "}
                       {r.requested_clock_out && `${t("corr.reqOut")}: ${fmtTime(r.requested_clock_out)}`}
@@ -187,14 +187,14 @@ export default function CorrectionsPage() {
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 700, color: b.color, background: `color-mix(in srgb, ${b.color} 14%, transparent)`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{b.label}</span>
                 </div>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{r.reason}</div>
+                <div className="ui-note">{r.reason}</div>
                 {r.status === "rejected" && r.manager_note && (
                   <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "7px 10px" }}>
                     {t("corr.managerNote")} {r.manager_note}
                   </div>
                 )}
                 {r.status === "pending" && (
-                  <button onClick={() => cancel(r.id)} style={{ marginTop: 10, padding: "6px 12px", background: "none", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--gray)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("corr.cancel")}</button>
+                  <button onClick={() => cancel(r.id)} style={{ marginTop: 10, padding: "6px 12px", background: "none", border: "1px solid var(--border)", borderRadius: 8, color: "var(--gray)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("corr.cancel")}</button>
                 )}
               </div>
             );
@@ -208,4 +208,4 @@ export default function CorrectionsPage() {
 }
 
 const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
-const input: React.CSSProperties = { width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };
+const input: React.CSSProperties = { width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

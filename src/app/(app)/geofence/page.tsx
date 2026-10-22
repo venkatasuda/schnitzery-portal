@@ -78,11 +78,11 @@ export default function GeofencePage() {
     { key: "required", label: t("geo.modeRequired"), hint: t("geo.modeRequiredHint") },
   ];
 
-  if (loading) return <div className="fade-up"><div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📍" size={22} /> {t("geo.title")}</div><CardSkeleton rows={4} /></div>;
+  if (loading) return <div className="fade-up"><h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1><CardSkeleton rows={4} /></div>;
 
   if (!canEdit) return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📍" size={22} /> {t("geo.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1>
       <div className="page-sub">{t("geo.subtitle")}</div>
       <div className="card" style={{ padding: 16 }}>{t("geo.managersOnly")}</div>
     </div>
@@ -92,7 +92,7 @@ export default function GeofencePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📍" size={22} /> {t("geo.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1>
       <div className="page-sub">{branchName} · {t("geo.subtitle")}</div>
 
       {/* MODE */}
@@ -103,7 +103,7 @@ export default function GeofencePage() {
             style={{ padding: 12, textAlign: "left", cursor: "pointer",
               border: mode === m.key ? "1px solid var(--gold)" : "1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ fontWeight: 600, color: mode === m.key ? "var(--gold)" : "var(--white)" }}>{m.label}</div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{m.hint}</div>
+            <div className="ui-meta">{m.hint}</div>
           </button>
         ))}
       </div>
@@ -115,11 +115,11 @@ export default function GeofencePage() {
           {locating ? t("geo.locating") : t("geo.useMyLocation")}
         </button>
         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          <div style={{ flex: 1 }}>
+          <div className="u-flex1">
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.lat")}</div>
             <input style={input} value={lat ?? ""} onChange={(e) => setLat(e.target.value === "" ? null : Number(e.target.value))} placeholder="48.7758" />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="u-flex1">
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.lng")}</div>
             <input style={input} value={lng ?? ""} onChange={(e) => setLng(e.target.value === "" ? null : Number(e.target.value))} placeholder="9.1829" />
           </div>
@@ -162,16 +162,16 @@ export default function GeofencePage() {
       <div className="card" style={{ padding: 14 }}>
         <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: flags.length ? 10 : 0 }}>{t("geo.flagsHint")}</div>
         {flags.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--gray)" }}>{t("geo.noFlags")}</div>
+          <div className="ui-muted-md">{t("geo.noFlags")}</div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="u-stack">
             {flags.map((f) => (
               <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, background: "var(--dark2)" }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{f.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)" }}>{f.date}</div>
+                  <div className="ui-muted">{f.date}</div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#e67e22" }}><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--warn)" }}><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
               </div>
             ))}
           </div>

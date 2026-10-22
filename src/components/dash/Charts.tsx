@@ -23,8 +23,8 @@ type Tone = "gold" | "green" | "red" | "warn" | "blue";
 
 function useTheme() {
   const [c, setC] = useState({
-    gold: "#d4a847", goldLight: "#f0c860", red: "#e74c3c", green: "#27ae60",
-    warn: "#e67e22", blue: "#3498db", gray: "#888", text: "#ffffff",
+    gold: "var(--gold-ink)", goldLight: "#f0c860", red: "var(--danger)", green: "var(--success)",
+    warn: "var(--warn)", blue: "var(--info)", gray: "var(--gray)", text: "#ffffff",
     grid: "rgba(255,255,255,0.08)", card: "#2a2a2a",
   });
   useEffect(() => {
@@ -57,7 +57,7 @@ function toneColor(c: ReturnType<typeof useTheme>, tone: Tone) {
 function tip(c: ReturnType<typeof useTheme>) {
   return {
     contentStyle: {
-      background: c.card, border: "1px solid rgba(255,255,255,0.12)",
+      background: c.card, border: "1px solid var(--border)",
       borderRadius: 10, fontSize: 12, color: c.text, boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
     },
     labelStyle: { color: c.gray, fontSize: 11 },
@@ -122,12 +122,12 @@ export function DonutStat({ segments, centerValue, centerLabel, size = 140 }: {
 export function Legend({ items }: { items: { name: string; tone: Tone; value?: string | number }[] }) {
   const c = useTheme();
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div className="u-stack">
       {items.map((it, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
           <span style={{ width: 10, height: 10, borderRadius: 3, background: toneColor(c, it.tone), flexShrink: 0 }} />
           <span style={{ color: "var(--gray-light)", flex: 1 }}>{it.name}</span>
-          {it.value != null && <span style={{ color: "var(--white)", fontWeight: 600 }}>{it.value}</span>}
+          {it.value != null && <span className="ui-strong-inline">{it.value}</span>}
         </div>
       ))}
     </div>

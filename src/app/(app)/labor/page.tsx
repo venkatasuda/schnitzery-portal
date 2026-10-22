@@ -71,7 +71,7 @@ export default function LaborPage() {
     finally { setSavingWage(null); }
   }
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
   if (loadError) return <div className="card" role="alert"><p>{loadError}</p><button className="workspace-button" onClick={loadAll}>{t("business.retry")}</button></div>;
 
   const pct = sum?.laborPct;
@@ -79,7 +79,7 @@ export default function LaborPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="💶" size={22} /> {t("lab.title")}</div>
+      <h1 className="page-title u-row"><Icon e="💶" size={22} /> {t("lab.title")}</h1>
       <div className="page-sub">{t("lab.subtitle")}</div>
 
       {/* KPI */}
@@ -92,10 +92,10 @@ export default function LaborPage() {
             {pct == null ? "—" : `${pct}%`}
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: 22, marginTop: 8, fontSize: 13, color: "var(--gray)" }}>
-            <span>{t("lab.labor")} <b style={{ color: "var(--white)" }}>{sum?.missingWageStaff ? "—" : eur(sum?.laborCost || 0)}</b></span>
-            <span>{t("lab.sales")} <b style={{ color: "var(--white)" }}>{sum?.recordedSalesDays ? eur(sum.monthSales) : "—"}</b></span>
+            <span>{t("lab.labor")} <b className="u-text">{sum?.missingWageStaff ? "—" : eur(sum?.laborCost || 0)}</b></span>
+            <span>{t("lab.sales")} <b className="u-text">{sum?.recordedSalesDays ? eur(sum.monthSales) : "—"}</b></span>
           </div>
-          {pct == null && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("lab.enterToCalc")}</div>}
+          {pct == null && <div className="ui-note">{t("lab.enterToCalc")}</div>}
           {!!sum?.missingWageStaff && <p role="status" style={{ color: "var(--warn)" }}>{t("lab.missingWageCost")}</p>}
           {pct != null && <div style={{ fontSize: 12, color: pctColor, marginTop: 8 }}>{pct <= 30 ? t("lab.healthy") : pct <= 35 ? t("lab.watchIt") : t("lab.high")} · {t("lab.typicalTarget")}</div>}
         </div>
@@ -103,13 +103,13 @@ export default function LaborPage() {
 
       {/* enter sales */}
       <div className="section-label">{t("lab.enterDailySales")}</div>
-      <div className="card" style={{ marginBottom: 6 }}>
+      <div className="card u-mb-2">
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
-          <div style={{ flex: 1 }}>
+          <div className="u-flex1">
             <div style={lbl}>{t("lab.date")}</div>
             <input type="date" aria-label={t("lab.date")} value={date} onChange={(e) => setDate(e.target.value)} style={input} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="u-flex1">
             <div style={lbl}>{t("lab.revenue")}</div>
             <input type="number" min="0" step="0.01" aria-label={t("lab.revenue")} inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} style={input} />
           </div>
@@ -123,8 +123,8 @@ export default function LaborPage() {
         <div className="card" style={{ padding: 8, marginBottom: 6 }}>
           {sales.map((s, i) => (
             <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 6px", borderBottom: i < sales.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none", fontSize: 13 }}>
-              <span style={{ color: "var(--gray)" }}>{new Date(s.sale_date).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" })}</span>
-              <span style={{ color: "var(--white)", fontWeight: 600 }}>{eur(Number(s.amount))}</span>
+              <span className="u-muted">{new Date(s.sale_date).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" })}</span>
+              <span className="ui-strong-inline">{eur(Number(s.amount))}</span>
             </div>
           ))}
         </div>
@@ -141,7 +141,7 @@ export default function LaborPage() {
             <div key={p.id} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "9px 6px", borderBottom: i < staff.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none" }}>
               <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.full_name}</div>
-                <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team || "—"}</div>
+                <div className="ui-muted">{p.team || "—"}</div>
                 {!p.history?.some((h: any) => h.effective_from) && <div style={{ color: "var(--warn)", fontSize: 12 }}>{t("lab.unconfirmedDate")}</div>}
               </div>
               <input
@@ -152,7 +152,7 @@ export default function LaborPage() {
                 onChange={(e) => setWageEdits((c) => ({ ...c, [p.id]: e.target.value }))}
                 style={{ ...input, width: 72, padding: "8px 10px", textAlign: "right" }}
               />
-              <label style={{ fontSize: 12, color: "var(--gray)" }}>{t("lab.effectiveFrom")}<input type="date" aria-label={`${t("lab.effectiveFrom")} · ${p.full_name}`} min="2000-01-01" max={today()} disabled={!!savingWage} value={wageDates[p.id] || ""} onChange={e => setWageDates(cur => ({ ...cur, [p.id]: e.target.value }))} style={{ ...input, display: "block", width: 160 }} /></label>
+              <label className="ui-muted">{t("lab.effectiveFrom")}<input type="date" aria-label={`${t("lab.effectiveFrom")} · ${p.full_name}`} min="2000-01-01" max={today()} disabled={!!savingWage} value={wageDates[p.id] || ""} onChange={e => setWageDates(cur => ({ ...cur, [p.id]: e.target.value }))} style={{ ...input, display: "block", width: 160 }} /></label>
               <button onClick={() => saveWage(p.id)} disabled={!wageDates[p.id] || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: !wageDates[p.id] ? "var(--dark3)" : "var(--action)", color: !wageDates[p.id] ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: !wageDates[p.id] ? "default" : "pointer" }}>
                 {savingWage === p.id ? t("common.saving") : t("lab.set")}
               </button>
@@ -173,4 +173,4 @@ export default function LaborPage() {
 }
 
 const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
-const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "11px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14 };
+const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "11px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 14 };

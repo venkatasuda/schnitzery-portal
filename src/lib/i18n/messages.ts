@@ -33,7 +33,7 @@ export const messages = {
     },
     business: {
       performance: "Business performance", noSource: "No live records were retrieved for this reply.", get_business_performance: "Business report", get_stock_levels: "Stock counts", get_expiry_risk: "Expiry records", get_waste_trend: "Waste log",
-      reportDate: "Report date", reportBranch: "Report branch",
+      reportDate: "Report date", reportBranch: "Report branch", reportPeriod: "Report period",
       overview: "Business overview", business: "Business overview", workforce: "Workforce", reportView: "Report view", retry: "Try again",
       sales: "Recorded sales", labor: "Estimated labour cost", purchases: "Purchase spending", productivity: "Sales per labour hour", perPaidHour: "Per paid hour worked", baseWages: "Base wages · excludes premiums and employer costs", purchaseNote: "Received purchases, not food consumption cost",
       recordedDays: "{n} of {total} elapsed branch-days recorded", missingWages: "{n} working employees have no wage set", missingCosts: "Deliveries without a cost: {n}", missingSalesDays: "Open days without sales: {n}", salesTrend: "Sales across the period", salesGapNote: "A gap means no sales record; it does not mean zero sales.", nextActions: "Data quality & next steps", salesCoverage: "Sales coverage", wageCoverage: "Wage coverage", wagesComplete: "Wages are set for all employees with recorded paid time.", recordSales: "Review sales records", reviewWages: "Review hourly wages", waste: "Waste prevention", wasteEntries: "{n} waste entries in this period", reviewWaste: "Review waste causes", interpretation: "Read these numbers correctly", limitations: "Sales are manually recorded. Labour is an estimate based on worked hours and current base wages. Purchase spending is not consumption cost. Profit needs stock valuations, overheads, taxes and other costs.",
@@ -50,7 +50,7 @@ export const messages = {
       analyticsHelp: "Review purchase spending, estimated usage and cost trends. Use Stock movements to record waste, expiry and transfers.",
     },
     homeDashboard: { lowStock: "Below target", reviewAll: "Review all", details: "Details", unavailable: "Some data is unavailable. Try refreshing.", rosterReady: "Next week · roster built", rosterOpen: "Next week · roster open", noWasteTrend: "No recorded waste trend to display.", workflows: "Quick actions", offlineKiosks: "Offline kiosks" },
-    workspace: { dashboard: "Dashboard", operations: "Operations", workforce: "Workforce", business: "Business", reports: "Reports & costs", management: "Management workspace", navigation: "Navigation" },
+    workspace: { dashboard: "Dashboard", operations: "Operations", workforce: "Workforce", business: "Business", reports: "Reports & costs", management: "Management workspace", navigation: "Navigation", table: "Report records" },
     nav: {
       home: "Home", myDay: "My Day", shifts: "Shifts", schedule: "Schedule",
       attendance: "Attendance", inventory: "Inventory", profile: "Profile", branches: "Branches", assistant: "Assistant",
@@ -852,7 +852,7 @@ export const messages = {
     },
     business: {
       performance: "Geschäftsentwicklung", noSource: "Für diese Antwort wurden keine aktuellen Datensätze abgerufen.", get_business_performance: "Geschäftsbericht", get_stock_levels: "Bestandszählungen", get_expiry_risk: "Haltbarkeitsdaten", get_waste_trend: "Abfallprotokoll",
-      reportDate: "Berichtsdatum", reportBranch: "Berichtsfiliale",
+      reportDate: "Berichtsdatum", reportBranch: "Berichtsfiliale", reportPeriod: "Berichtszeitraum",
       overview: "Geschäftsübersicht", business: "Geschäftsübersicht", workforce: "Personal", reportView: "Berichtsansicht", retry: "Erneut versuchen",
       sales: "Erfasster Umsatz", labor: "Geschätzte Personalkosten", purchases: "Einkaufsausgaben", productivity: "Umsatz pro Arbeitsstunde", perPaidHour: "Pro bezahlter Arbeitsstunde", baseWages: "Grundlohn · ohne Zuschläge und Arbeitgeberkosten", purchaseNote: "Einkäufe, kein tatsächlicher Warenverbrauch",
       recordedDays: "{n} von {total} vergangenen Filialtagen erfasst", missingWages: "Bei {n} arbeitenden Beschäftigten fehlt der Stundenlohn", missingCosts: "Lieferungen ohne Preis: {n}", missingSalesDays: "Öffnungstage ohne Umsatz: {n}", salesTrend: "Umsatz im Zeitraum", salesGapNote: "Eine Lücke bedeutet fehlende Erfassung, nicht null Umsatz.", nextActions: "Datenqualität & nächste Schritte", salesCoverage: "Umsatzerfassung", wageCoverage: "Lohnerfassung", wagesComplete: "Für alle Beschäftigten mit erfasster Arbeitszeit ist ein Lohn hinterlegt.", recordSales: "Umsatzerfassung prüfen", reviewWages: "Stundenlöhne prüfen", waste: "Abfall vermeiden", wasteEntries: "{n} Abfalleinträge im Zeitraum", reviewWaste: "Abfallursachen prüfen", interpretation: "Zahlen richtig einordnen", limitations: "Umsätze werden manuell erfasst. Personalkosten basieren auf Arbeitszeit und aktuellen Grundlöhnen. Einkaufsausgaben sind kein Warenverbrauch. Für den Gewinn fehlen Bestandsbewertungen, Gemeinkosten, Steuern und weitere Kosten.",
@@ -869,7 +869,7 @@ export const messages = {
       analyticsHelp: "Einkaufsausgaben, geschätzten Verbrauch und Kostentrends prüfen. Abfall, Ablaufdaten und Transfers unter Bestandsbewegungen erfassen.",
     },
     homeDashboard: { lowStock: "Unter Zielbestand", reviewAll: "Alle prüfen", details: "Details", unavailable: "Einige Daten sind nicht verfügbar. Bitte neu laden.", rosterReady: "Nächste Woche · Dienstplan erstellt", rosterOpen: "Nächste Woche · Dienstplan offen", noWasteTrend: "Kein erfasster Abfallverlauf vorhanden.", workflows: "Schnellaktionen", offlineKiosks: "Offline-Kiosks" },
-    workspace: { dashboard: "Übersicht", operations: "Betrieb", workforce: "Personal", business: "Unternehmen", reports: "Berichte & Kosten", management: "Verwaltungsportal", navigation: "Navigation" },
+    workspace: { dashboard: "Übersicht", operations: "Betrieb", workforce: "Personal", business: "Unternehmen", reports: "Berichte & Kosten", management: "Verwaltungsportal", navigation: "Navigation", table: "Berichtsdaten" },
     nav: {
       home: "Start", myDay: "Mein Tag", shifts: "Schichten", schedule: "Dienstplan",
       attendance: "Zeiterfassung", inventory: "Inventar", profile: "Profil", branches: "Filialen", assistant: "Assistent",

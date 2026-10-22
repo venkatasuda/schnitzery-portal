@@ -21,18 +21,18 @@ export default function ConflictsPage() {
     });
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("conf.title")}</div>
+      <h1 className="page-title u-row"><Icon e="⚠️" size={22} /> {t("conf.title")}</h1>
       <div className="page-sub">{t("conf.subtitle")}</div>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : !d || d.total === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 36 }}>
-          <div style={{ marginBottom: 8 }}><Icon e="✅" size={34} color="var(--success)" /></div>
+          <div className="u-mb-2"><Icon e="✅" size={34} color="var(--success)" /></div>
           <div style={{ color: "var(--success)", fontSize: 16, fontWeight: 700 }}>{t("conf.none")}</div>
           <div style={{ color: "var(--gray)", fontSize: 13, marginTop: 6 }}>{t("conf.noneSub")}</div>
         </div>
@@ -42,17 +42,17 @@ export default function ConflictsPage() {
             <div key={i} className="card" style={{ padding: 14, borderLeft: "3px solid #ec7063" }}>
               <Link href={`/staff/${c.userId}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 10 }}>
                 <Icon e="👤" size={18} />
-                <div style={{ flex: 1 }}>
+                <div className="u-flex1">
                   <div style={{ fontWeight: 700, color: "var(--white)" }}>{c.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)" }}>{c.date}{c.crossBranch ? ` · ${t("conf.crossBranch")}` : ""}</div>
+                  <div className="ui-muted">{c.date}{c.crossBranch ? ` · ${t("conf.crossBranch")}` : ""}</div>
                 </div>
-                <span style={{ color: "var(--gray)" }}>›</span>
+                <span className="u-muted">›</span>
               </Link>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div className="u-stack tight">
                 {c.shifts.map((s: any, j: number) => (
                   <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "var(--dark3)", borderRadius: 8, fontSize: 13 }}>
                     <span style={{ color: "var(--danger)" }}>●</span>
-                    <span style={{ flex: 1 }}>{s.branch} · {s.team} · {s.shift}</span>
+                    <span className="u-flex1">{s.branch} · {s.team} · {s.shift}</span>
                     <span style={{ color: "var(--gold)", fontVariantNumeric: "tabular-nums" }}>{s.time}</span>
                   </div>
                 ))}
@@ -62,7 +62,7 @@ export default function ConflictsPage() {
         </div>
       )}
 
-      <Link href="/action" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      <Link className="ui-back-link" href="/action">{t("approvals.back")}</Link>
     </div>
   );
 }

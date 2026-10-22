@@ -45,7 +45,7 @@ export default function ExpiringDocsPage() {
     });
   }, []);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const counts = data?.counts || { within30: 0, within60: 0, within90: 0, expired: 0, pending: 0, missing: 0 };
   const allDocs: any[] = data?.docs || [];
@@ -80,7 +80,7 @@ export default function ExpiringDocsPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📑" size={22} /> {t("exp.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📑" size={22} /> {t("exp.title")}</h1>
       <div className="page-sub">{t("exp.subtitle")}</div>
 
       {loading ? (
@@ -124,9 +124,9 @@ export default function ExpiringDocsPage() {
                 {missing.map((m, i) => (
                   <Link key={`${m.userId}-${m.docType}`} href={`/staff/${m.userId}`} style={rowLink(i < missing.length - 1)}>
                     <Icon e="⚠️" size={18} color="var(--warn)" />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{m.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{typeLabel(m.docType)}</div>
+                    <div className="u-grow">
+                      <div className="ui-strong">{m.name}</div>
+                      <div className="ui-muted">{typeLabel(m.docType)}</div>
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)", background: "#ec706322", padding: "3px 9px", borderRadius: 20 }}>{t("docw.statusMissing")}</span>
                     <span className="feature-chev">›</span>
@@ -143,13 +143,13 @@ export default function ExpiringDocsPage() {
                 return (
                   <Link key={d.id} href={`/staff/${d.user_id}`} style={rowLink(i < docs.length - 1)}>
                     <Icon e="📄" size={18} color="var(--gold)" />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{d.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{typeLabel(d.doc_type)}</div>
+                    <div className="u-grow">
+                      <div className="ui-strong">{d.name}</div>
+                      <div className="ui-muted">{typeLabel(d.doc_type)}</div>
                     </div>
                     <div style={{ textAlign: "right", marginRight: 4 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: info.color }}>{info.label}</div>
-                      {d.expiry_date && <div style={{ fontSize: 12, color: "var(--gray)" }}>{fmtDate(d.expiry_date)}</div>}
+                      {d.expiry_date && <div className="ui-muted">{fmtDate(d.expiry_date)}</div>}
                     </div>
                     <span className="feature-chev">›</span>
                   </Link>
@@ -160,7 +160,7 @@ export default function ExpiringDocsPage() {
         </>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--gold)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
+      <Link className="ui-back-link" href="/">{t("approvals.back")}</Link>
     </div>
   );
 }
@@ -168,12 +168,12 @@ export default function ExpiringDocsPage() {
 function EmptyOk({ t }: { t: Tf }) {
   return (
     <div className="card" style={{ textAlign: "center", padding: 32 }}>
-      <div style={{ marginBottom: 8 }}><Icon e="✅" size={30} color="var(--success)" /></div>
+      <div className="u-mb-2"><Icon e="✅" size={30} color="var(--success)" /></div>
       <div style={{ color: "var(--success)", fontSize: 15, fontWeight: 700 }}>{t("exp.nothing")}</div>
       <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("exp.nothingSub")}</div>
     </div>
   );
 }
 
-const sel: React.CSSProperties = { flex: 1, minWidth: 140, padding: "9px 10px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 12.5 };
+const sel: React.CSSProperties = { flex: 1, minWidth: 140, padding: "9px 10px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 12.5 };
 const rowLink = (border: boolean): React.CSSProperties => ({ display: "flex", alignItems: "center", gap: 12, padding: "12px 8px", borderBottom: border ? "1px solid rgba(128,128,128,0.12)" : "none", textDecoration: "none" });

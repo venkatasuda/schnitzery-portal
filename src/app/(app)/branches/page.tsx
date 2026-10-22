@@ -32,7 +32,7 @@ export default function BranchesPage() {
 
   return (
     <div>
-      <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🏢" size={22} /> {roleLabel}</h1>
+      <h1 className="page-title u-row"><Icon e="🏢" size={22} /> {roleLabel}</h1>
       <p className="page-sub">{t("branches.subtitle", { n: totals?.branches || 0 })}</p>
 
       {loading ? (
@@ -42,25 +42,25 @@ export default function BranchesPage() {
           {/* ORG TOTALS */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 18 }}>
             <Total label={t("branches.branches")} value={totals.branches} />
-            <Total label={t("branches.totalStaff")} value={totals.staff} color="#3498db" />
+            <Total label={t("branches.totalStaff")} value={totals.staff} color="var(--info)" />
             <Total label={t("branches.workingNow")} value={totals.workingNow} color="var(--success)" />
             <Total label={t("branches.pendingLeave")} value={totals.pendingLeave} color={totals.pendingLeave ? "#d4a847" : "var(--success)"} />
             <Total label={t("branches.openIncidents")} value={totals.openIncidents} color={totals.openIncidents ? "var(--danger)" : "var(--success)"} />
           </div>
 
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("branches.search")}
-            style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 10, color: "#fff", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
+            style={{ width: "100%", padding: "12px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
           <div className="section-label">{t("branches.sectionBranches")}</div>
           {filtered.map((b) => (
             <Link key={b.id} href={`/branches/${b.id}`} className="feature-card" style={{ alignItems: "stretch" }}>
-              <div style={{ flex: 1 }}>
+              <div className="u-flex1">
                 <div className="feature-title">{b.name}</div>
                 <div className="feature-sub">{b.address || "—"}</div>
                 <div style={{ display: "flex", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
                   <Mini label={t("branches.miniStaff")} value={b.staff} />
                   <Mini label={t("branches.miniWorking")} value={b.workingNow} color="var(--success)" />
-                  {b.pendingLeave > 0 && <Mini label={t("branches.miniLeave")} value={b.pendingLeave} color="#d4a847" />}
+                  {b.pendingLeave > 0 && <Mini label={t("branches.miniLeave")} value={b.pendingLeave} color="var(--gold-ink)" />}
                   {b.openIncidents > 0 && <Mini label={t("branches.miniIncidents")} value={b.openIncidents} color="var(--danger)" />}
                 </div>
               </div>
@@ -76,11 +76,11 @@ export default function BranchesPage() {
 function Total({ label, value, color }: any) {
   return (
     <div className="card" style={{ textAlign: "center", marginBottom: 0, padding: 16 }}>
-      <div style={{ fontSize: 26, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: color || "var(--text)" }}>{value}</div>
+      <div className="ui-meta">{label}</div>
     </div>
   );
 }
 function Mini({ label, value, color }: any) {
-  return <span style={{ fontSize: 12, color: "var(--gray)" }}><b style={{ color: color || "#fff" }}>{value}</b> {label}</span>;
+  return <span className="ui-muted"><b style={{ color: color || "var(--text)" }}>{value}</b> {label}</span>;
 }

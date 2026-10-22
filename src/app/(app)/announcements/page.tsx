@@ -6,10 +6,11 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import { Field } from "@/components/ui";
 
 const CATEGORIES = ["General", "Urgent", "Schedule", "Policy", "Event"];
 const CAT_COLORS: Record<string, string> = {
-  General: "#3498db", Urgent: "#e74c3c", Schedule: "#27ae60", Policy: "#9b59b6", Event: "#d4a847",
+  General: "var(--info)", Urgent: "var(--danger)", Schedule: "var(--success)", Policy: "#9b59b6", Event: "var(--gold-ink)",
 };
 
 export default function AnnouncementsPage() {
@@ -72,8 +73,8 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📣" size={22} /> {t("announcements.title")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("announcements.subtitle")}</p>
+      <h1 className="page-title u-row"><Icon e="📣" size={22} /> {t("announcements.title")}</h1>
+      <p className="ui-lede">{t("announcements.subtitle")}</p>
 
       {canPost && (
         <>
@@ -85,7 +86,7 @@ export default function AnnouncementsPage() {
               <Field label={t("announcements.titleLabel")}><input value={title} onChange={(e) => setTitle(e.target.value)} style={input} placeholder={t("announcements.titlePlaceholder")} /></Field>
               <Field label={t("announcements.messageLabel")}><textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} style={{ ...input, resize: "vertical" }} placeholder={t("announcements.messagePlaceholder")} /></Field>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
-                <div style={{ flex: 1 }}>
+                <div className="u-flex1">
                   <Field label={t("announcements.categoryLabel")}>
                     <select value={category} onChange={(e) => setCategory(e.target.value)} style={input}>
                       {CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}
@@ -108,7 +109,7 @@ export default function AnnouncementsPage() {
         <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 40 }}><Icon e="📭" size={30} color="var(--gray)" /><br />{t("announcements.empty")}</div>
       ) : (
         list.map((a) => (
-          <div key={a.id} style={{ ...card, marginBottom: 10, borderColor: a.pinned ? "rgba(212,168,71,0.35)" : "rgba(255,255,255,0.08)" }}>
+          <div key={a.id} style={{ ...card, marginBottom: 10, borderColor: a.pinned ? "var(--accent-line)" : "rgba(255,255,255,0.08)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 {a.pinned && <Icon e="📌" size={13} color="var(--gold)" />}
@@ -119,9 +120,9 @@ export default function AnnouncementsPage() {
             </div>
             <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{a.message}</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
-              <span style={{ fontSize: 12, color: "var(--gray)" }}>— {a.author || "Manager"}</span>
+              <span className="ui-muted">— {a.author || "Manager"}</span>
               {canPost && (
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className="u-hstack">
                   <button onClick={() => pin(a)} disabled={busyId === a.id} style={miniBtn}>{a.pinned ? t("announcements.unpin") : t("announcements.pin")}</button>
                   <button onClick={() => del(a.id)} disabled={busyId === a.id} style={{ ...miniBtn, color: "var(--danger)" }}>{t("common.delete")}</button>
                 </div>
@@ -134,9 +135,6 @@ export default function AnnouncementsPage() {
   );
 }
 
-function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</label>{children}</div>;
-}
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
 const primaryBtn: React.CSSProperties = { width: "100%", padding: "13px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };

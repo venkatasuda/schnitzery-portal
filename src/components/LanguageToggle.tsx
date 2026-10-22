@@ -26,7 +26,7 @@ export default function LanguageToggle() {
     </button>
   );
   return (
-    <div role="group" aria-label="Language" style={{ display: "inline-flex", gap: 2, padding: 2, background: "var(--dark3)", borderRadius: 8, border: "1px solid rgba(128,128,128,0.2)" }}>
+    <div role="group" aria-label="Language" style={{ display: "inline-flex", gap: 2, padding: 2, background: "var(--dark3)", borderRadius: 8, border: "1px solid var(--border)" }}>
       {opt("en", "EN", "English")}
       {opt("de", "DE", "Deutsch")}
     </div>

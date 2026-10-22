@@ -35,7 +35,7 @@ export default function ToastHost() {
           pointerEvents: "auto", width: "fit-content", maxWidth: 440,
           background: t.type === "error" ? "#7d2820" : t.type === "info" ? "var(--dark2)" : "#1e6b3f",
           color: "#fff", padding: "12px 18px", borderRadius: 12, fontSize: 14, fontWeight: 600,
-          boxShadow: "0 8px 30px rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.45)", border: "1px solid var(--border)",
           animation: "schToastIn .25s ease",
         }}>
           {t.type === "error" ? "⚠️ " : t.type === "success" ? "✅ " : ""}{t.message}

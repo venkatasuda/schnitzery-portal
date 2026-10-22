@@ -1,6 +1,6 @@
 # Schnitzery Portal — Design & UI
 
-_Last updated: 2026-10-10. Source of truth is `src/app/globals.css`; this summarizes it._
+_Last updated: 2026-10-22. Source of truth is `src/app/globals.css`; this summarizes it. Current acceptance status: [page-by-page review](ops/UI-UX-PAGE-REVIEW.md)._
 
 ## 1. Principles
 - **Mobile-first.** Designed for a phone held in a busy kitchen — large tap targets,
@@ -58,9 +58,11 @@ Always use tokens, never hardcoded hex, so light/dark and future rebrands stay c
 - Managers and owners use `ManagementNav`: grouped Operations, Workforce, and Business links, a fixed desktop sidebar, and a native collapsible mobile menu.
 - Staff retain the focused bottom navigation and narrower mobile content area.
 - Both layouts use the same routes, backend, and existing permission checks; HQ branch view continues to affect navigation.
-- Management content supports a 1440px workspace; the employee content stays at 820px.
+- Management content uses the available desktop workspace width; employee content stays at 820px. Focused forms and legal text keep readable widths.
 - The header includes language and theme controls; keyboard users can skip directly to main content.
 - Inventory uses a compact category/view/action toolbar rather than stacked full-width controls.
+- Inventory separates daily-work tabs, review/history/report tabs and catalogue setup; count rows support keyboard submission and failed-save retry.
+- Related pages share section context in the management header. The avatar links to the personal profile. Analytics keeps period, report date and branch in one labelled toolbar.
 
 ## UI UX Pro Max review
 Guidance: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/.claude/skills/ui-ux-pro-max/SKILL.md

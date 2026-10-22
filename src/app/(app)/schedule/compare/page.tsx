@@ -6,6 +6,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getScheduleComparison } from "@/lib/queries/schedule-compare";
 import { CardSkeleton } from "@/components/Skeleton";
+import { Stat as UiStat } from "@/components/ui";
 
 function mondayOf(offset: number): string {
   const d = new Date(); d.setHours(12, 0, 0, 0);
@@ -37,9 +38,9 @@ export default function ComparePage() {
   const statusMeta: Record<string, { key: string; color: string }> = {
     ontime: { key: "cmp.ontime", color: "var(--success)" },
     late: { key: "cmp.lateStatus", color: "var(--warn)" },
-    left_early: { key: "cmp.leftEarly", color: "#e67e22" },
+    left_early: { key: "cmp.leftEarly", color: "var(--warn)" },
     no_show: { key: "cmp.noShow", color: "var(--danger)" },
-    unscheduled: { key: "cmp.unscheduled", color: "#5dade2" },
+    unscheduled: { key: "cmp.unscheduled", color: "var(--info)" },
     active: { key: "cmp.active", color: "#48c9b0" },
   };
   const weekLabel = (() => {
@@ -48,7 +49,7 @@ export default function ComparePage() {
     return `${f(s)} – ${f(e)}`;
   })();
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("cmp.denied")}</div>;
+  if (denied) return <div className="card ui-denied">{t("cmp.denied")}</div>;
 
   const sum = data?.summary;
   const rows: any[] = data?.rows || [];
@@ -61,7 +62,7 @@ export default function ComparePage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📊" size={22} /> {t("cmp.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("cmp.title")}</h1>
       <div className="page-sub">{t("cmp.subtitle")}</div>
 
       {/* week nav */}
@@ -109,15 +110,15 @@ export default function ComparePage() {
                       <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{e.name}</div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: pctColor(e.pct) }}>{e.pct}%</div>
                     </div>
-                    <div style={{ height: 6, background: "rgba(128,128,128,0.18)", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
+                    <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
                       <div style={{ width: `${e.pct}%`, height: "100%", background: pctColor(e.pct) }} />
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 12 }}>
                       <Chip label={`${e.shifts} ${t("cmp.shifts")}`} />
                       {e.noShows > 0 && <Chip label={`${e.noShows} ${t("cmp.noShow")}`} color="var(--danger)" />}
                       {e.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(e.lateMins)}`} color="var(--warn)" />}
-                      {e.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(e.otMins)}`} color="#5dade2" />}
-                      {e.missingMins > 0 && <Chip label={`${t("cmp.missing")} ${fmtMins(e.missingMins)}`} color="#e67e22" />}
+                      {e.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(e.otMins)}`} color="var(--info)" />}
+                      {e.missingMins > 0 && <Chip label={`${t("cmp.missing")} ${fmtMins(e.missingMins)}`} color="var(--warn)" />}
                     </div>
                   </div>
                 ))}
@@ -129,29 +130,29 @@ export default function ComparePage() {
           {dates.map((date) => (
             <div key={date} style={{ marginBottom: 12 }}>
               <div className="section-label">{fmtDay(date)}</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div className="u-stack tight">
                 {byDate[date].map((r, i) => {
                   const m = statusMeta[r.status] || statusMeta.ontime;
                   return (
                     <div key={i} className="card" style={{ padding: 12, borderLeft: `3px solid ${m.color}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="u-row">
+                        <div className="u-grow">
                           <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{r.name}</div>
-                          <div style={{ fontSize: 12, color: "var(--gray)" }}>{r.team && r.shift ? `${r.team} · ${r.shift}` : t("cmp.unscheduled")}</div>
+                          <div className="ui-muted">{r.team && r.shift ? `${r.team} · ${r.shift}` : t("cmp.unscheduled")}</div>
                         </div>
                         <span style={{ fontSize: 12, fontWeight: 700, color: m.color, background: `color-mix(in srgb, ${m.color} 14%, transparent)`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{t(m.key)}</span>
                       </div>
                       <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 12 }}>
                         {r.schedStart && (
-                          <div><span style={{ color: "var(--gray)", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}>{t("cmp.scheduled")}</span><br /><span style={{ color: "var(--white)" }}>{fmtClock(r.schedStart)} – {fmtClock(r.schedEnd)}</span></div>
+                          <div><span style={{ color: "var(--gray)", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}>{t("cmp.scheduled")}</span><br /><span className="u-text">{fmtClock(r.schedStart)} – {fmtClock(r.schedEnd)}</span></div>
                         )}
-                        <div><span style={{ color: "var(--gray)", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}>{t("cmp.actual")}</span><br /><span style={{ color: "var(--white)" }}>{fmtClock(r.actIn)} – {fmtClock(r.actOut)}</span></div>
+                        <div><span style={{ color: "var(--gray)", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}>{t("cmp.actual")}</span><br /><span className="u-text">{fmtClock(r.actIn)} – {fmtClock(r.actOut)}</span></div>
                       </div>
                       {(r.lateMins > 0 || r.earlyMins > 0 || r.otMins > 0 || r.missingMins > 0) && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, fontSize: 12 }}>
                           {r.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(r.lateMins)}`} color="var(--warn)" />}
-                          {r.earlyMins > 0 && <Chip label={`${t("cmp.early")} ${fmtMins(r.earlyMins)}`} color="#e67e22" />}
-                          {r.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(r.otMins)}`} color="#5dade2" />}
+                          {r.earlyMins > 0 && <Chip label={`${t("cmp.early")} ${fmtMins(r.earlyMins)}`} color="var(--warn)" />}
+                          {r.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(r.otMins)}`} color="var(--info)" />}
                           {r.missingMins > 0 && <Chip label={`${t("cmp.missing")} ${fmtMins(r.missingMins)}`} color="var(--danger)" />}
                         </div>
                       )}
@@ -169,16 +170,12 @@ export default function ComparePage() {
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-      <span style={{ color: "var(--gray)" }}>{label}</span>
-      <span style={{ color: color || "var(--white)", fontWeight: 700 }}>{value}</span>
-    </div>
-  );
-}
 function Chip({ label, color }: { label: string; color?: string }) {
   return <span style={{ color: color || "var(--gray)", background: color ? `color-mix(in srgb, ${color} 14%, transparent)` : "rgba(128,128,128,0.12)", padding: "2px 8px", borderRadius: 14, fontWeight: 600 }}>{label}</span>;
 }
 
-const navBtn: React.CSSProperties = { padding: "8px 12px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const navBtn: React.CSSProperties = { padding: "8px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
+
+function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
+  return <UiStat variant="row" label={label} value={value} color={color} />;
+}

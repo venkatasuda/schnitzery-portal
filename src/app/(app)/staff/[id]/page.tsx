@@ -9,6 +9,7 @@ import { getStaffLeaveBalance, setLeaveAllowance } from "@/lib/queries/leave-bal
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
+import { Stat } from "@/components/ui";
 
 const fmtH = (m: number) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
 export default function StaffDetailPage() {
@@ -52,7 +53,7 @@ export default function StaffDetailPage() {
   if (error || !staff) return (
     <div className="fade-up">
       <Link href="/staff" style={backLink}>{t("staffd.back")}</Link>
-      <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>{error || t("staffd.notFound")}</div>
+      <div className="card ui-empty-msg">{error || t("staffd.notFound")}</div>
     </div>
   );
 
@@ -71,9 +72,9 @@ export default function StaffDetailPage() {
         ) : (
           <div className="avatar mgr" style={{ width: 60, height: 60, fontSize: 24 }}>{initial}</div>
         )}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{staff.full_name || "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--gray)" }}>{staff.employee_code || "—"} · {staff.team ? teamLabel(staff.team) : t("directory.noTeam")}</div>
+        <div className="u-flex1">
+          <h1 className="page-title" style={{ fontSize: 22 }}>{staff.full_name || "—"}</h1>
+          <div className="ui-muted">{staff.employee_code || "—"} · {staff.team ? teamLabel(staff.team) : t("directory.noTeam")}</div>
         </div>
         <span style={{ fontSize: 12, padding: "4px 10px", borderRadius: 20, background: staff.status === "active" ? "rgba(39,174,96,0.2)" : "rgba(128,128,128,0.2)", color: staff.status === "active" ? "var(--success)" : "var(--gray)", fontWeight: 600 }}>
           {staff.status ? statusLabel(staff.status) : "—"}
@@ -97,7 +98,7 @@ export default function StaffDetailPage() {
           <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>{t("profile.skills")}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {staff.skills.map((s: string) => (
-              <span key={s} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 14, background: "var(--dark3)", border: "1px solid rgba(212,168,71,0.25)", color: "var(--gold-light)" }}>{s}</span>
+              <span key={s} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 14, background: "var(--dark3)", border: "1px solid var(--accent-line)", color: "var(--gold-light)" }}>{s}</span>
             ))}
           </div>
         </div>
@@ -121,11 +122,11 @@ export default function StaffDetailPage() {
               <Stat value={bal.used} label={t("staffd.taken")} color="var(--warn)" />
               <Stat value={bal.remaining} label={t("staffd.remaining")} color="var(--gold)" />
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <label style={{ fontSize: 12, color: "var(--gray)" }}>{t("staffd.annualDays")}</label>
+            <div className="u-row">
+              <label className="ui-muted">{t("staffd.annualDays")}</label>
               <input
                 type="number" min="0" step="0.5" value={allowance} onChange={(e) => setAllowance(e.target.value)}
-                style={{ width: 80, padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, fontSize: 14 }}
+                style={{ width: 80, padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14 }}
               />
               <button onClick={saveAllowance} style={{ padding: "8px 14px", background: "var(--gold)", color: "#1a1a1a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t("common.save")}</button>
             </div>
@@ -139,22 +140,8 @@ export default function StaffDetailPage() {
   );
 }
 
-function Row({ label, value, last }: { label: string; value: any; last?: boolean }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 8px", borderBottom: last ? "none" : "1px solid rgba(128,128,128,0.1)" }}>
-      <span style={{ fontSize: 13, color: "var(--gray)" }}>{label}</span>
-      <span style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, textAlign: "right" }}>{value || "—"}</span>
-    </div>
-  );
-}
-
-function Stat({ value, label, color }: { value: string | number; label: string; color?: string }) {
-  return (
-    <div style={{ background: "linear-gradient(145deg,var(--dark3),var(--dark2))", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
-      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</div>
-    </div>
-  );
-}
-
 const backLink: React.CSSProperties = { display: "inline-block", color: "var(--gold)", fontSize: 13, textDecoration: "none", marginBottom: 12 };
+
+function Row({ label, value }: { label: string; value: any; last?: boolean }) {
+  return <Stat variant="row" label={label} value={value || "—"} />;
+}
