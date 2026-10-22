@@ -124,7 +124,7 @@ export default function OrderPage() {
                     style={{ width: 66, padding: "8px", textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, fontWeight: 600 }} />
                   <span style={{ fontSize: 12, color: "var(--gray)", width: 26 }}>{it.unit}</span>
                   <span style={{ fontSize: 12, color: "var(--white)", width: 58, textAlign: "right" }}>{it.lineCost != null ? eur(it.lineCost) : "—"}</span>
-                  <button type="button" aria-label={`${t("common.delete")}: ${it.product}`} onClick={() => removeItem(gi, ii)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
+                  <button className="ui-icon-btn" type="button" aria-label={`${t("common.delete")}: ${it.product}`} onClick={() => removeItem(gi, ii)}>✕</button>
                 </div>
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>

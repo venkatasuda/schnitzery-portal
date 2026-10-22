@@ -90,7 +90,7 @@ export default function SimulatorPage() {
           <div className="card" style={{ padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div className="card-title u-m0">{t("sim.whatIf")}</div>
-              <button onClick={reset} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("sim.reset")}</button>
+              <button className="ui-link-btn" onClick={reset}>{t("sim.reset")}</button>
             </div>
             <Slider label={t("sim.ingredientCost")} val={food} set={setFood} hint={t("sim.ingredientHint")} />
             <Slider label={t("sim.laborCost")} val={labor} set={setLabor} hint={t("sim.laborHint")} />

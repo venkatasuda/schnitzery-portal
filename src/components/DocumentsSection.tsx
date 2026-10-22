@@ -215,7 +215,7 @@ export default function DocumentsSection() {
                     <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={input} />
                   </label>
                 </div>
-                <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: 13, background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                <button className="btn-gold ui-block" onClick={() => fileRef.current?.click()}>
                   {t("documents.chooseUpload")}
                 </button>
                 <button onClick={() => setStage("type")} style={cancelBtn}>‹ {t("common.back")}</button>

@@ -6,6 +6,7 @@ import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getWasteProducts, logWaste, getWasteLog, getWasteSummary, getWasteTrends, deleteWaste } from "@/lib/queries/waste";
+import { PageHeader, Panel } from "@/components/ui";
 
 const REASONS = ["spoiled", "dropped", "overcooked", "expired", "other"];
 const REASON_EMOJI: Record<string, string> = { spoiled: "🦠", dropped: "💥", overcooked: "🔥", expired: "📅", other: "🗑️" };
@@ -59,21 +60,20 @@ export default function WastePage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🗑️" size={22} /> {t("waste.title")}</h1>
-      <div className="page-sub">{t("waste.subtitle")}</div>
+      <PageHeader icon={<Icon e="🗑️" size={22} />} title={t("waste.title")} subtitle={t("waste.subtitle")} />
 
       {summary && summary.count > 0 && (
-        <div className="card" style={{ margin: "12px 0", padding: 14 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <div className="card">
+          <div className="u-between">
             <span className="ui-muted">{t("waste.thisWeek")}</span>
-            {summary.hasPrices && <span style={{ fontSize: 18, fontWeight: 700, color: "var(--danger)" }}>{eur(summary.totalValue)}</span>}
+            {summary.hasPrices && <strong className="ui-figure-lg tone-danger">{eur(summary.totalValue)}</strong>}
           </div>
           <div className="ui-meta">{t("waste.entries", { n: summary.count })}</div>
           {summary.reasons.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+            <div className="ui-chips u-mt-3">
               {summary.reasons.map((r: any) => (
-                <span key={r.reason} style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, background: "var(--surface-2)", color: "var(--gray)" }}>
-                  {REASON_EMOJI[r.reason] || "•"} {t("waste.r_" + r.reason)} {summary.hasPrices ? eur(r.value) : `×${r.count}`}
+                <span key={r.reason} className="ui-chip muted">
+                  <Icon e={REASON_EMOJI[r.reason] || "•"} size={14} /> {t("waste.r_" + r.reason)} {summary.hasPrices ? eur(r.value) : `×${r.count}`}
                 </span>
               ))}
             </div>
@@ -83,91 +83,88 @@ export default function WastePage() {
 
       {/* WEEKLY TREND — managers only (getWasteTrends returns ok:false otherwise) */}
       {trends && trends.weeks && (
-        <div className="card" style={{ margin: "12px 0", padding: 14 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+        <div className="card">
+          <div className="u-between u-mb-3">
             <span className="ui-muted">{t("waste.trend6w")}</span>
             {trends.overallPct != null && (
-              <span style={{ fontSize: 13, fontWeight: 700, color: trends.overallPct > 5 ? "var(--danger)" : "var(--success)" }}>
+              <span className={`ui-trend ${trends.overallPct > 5 ? "tone-danger" : "tone-success"}`}>
                 {t("waste.pctOfSales", { p: trends.overallPct })}
               </span>
             )}
           </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 70 }}>
+          <div className="ui-mini-bars" role="img" aria-label={t("waste.trend6w")}>
             {(() => {
               const max = Math.max(1, ...trends.weeks.map((w: any) => w.wasteValue));
               return trends.weeks.map((w: any, i: number) => (
-                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <div title={eur(w.wasteValue)} style={{ width: "100%", height: `${Math.round((w.wasteValue / max) * 52)}px`, minHeight: 3, borderRadius: 4, background: "linear-gradient(180deg,#e67e22,#c0392b)" }} />
+                <div key={i} className="ui-mini-bar">
+                  <span title={eur(w.wasteValue)} style={{ height: `${Math.round((w.wasteValue / max) * 52)}px` }} />
                   <span className="ui-muted">{w.weekStart.slice(5)}</span>
                 </div>
               ));
             })()}
           </div>
           {trends.hasPrices && (
-            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8, textAlign: "right" }}>{t("waste.trendTotal", { v: eur(trends.totalWaste) })}</div>
+            <div className="ui-note u-right">{t("waste.trendTotal", { v: eur(trends.totalWaste) })}</div>
           )}
         </div>
       )}
 
       {/* QUICK LOG */}
-      <div className="card" style={{ marginBottom: 14, padding: 16 }}>
-        <div className="card-title">{t("waste.logWaste")}</div>
+      <Panel title={t("waste.logWaste")}>
         {!sel ? (
           <>
-            <input aria-label={t("waste.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("waste.searchProduct")}
-              style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
+            <input className="form-input u-mb-2" aria-label={t("waste.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("waste.searchProduct")}
+              />
             {search && (filtered.length === 0 ? (
-              <div style={{ fontSize: 12, color: "var(--gray)", padding: "4px 2px" }}>{t("waste.noProduct")}</div>
+              <div className="ui-muted">{t("waste.noProduct")}</div>
             ) : filtered.map((p) => (
-              <button key={p.product} onClick={() => { setSel(p); setSearch(""); }}
-                style={{ display: "block", width: "100%", textAlign: "left", padding: "10px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+              <button className="ui-pick" key={p.product} onClick={() => { setSel(p); setSearch(""); }}
+               >
                 {p.product} <span className="ui-muted">({p.category})</span>
               </button>
             )))}
           </>
         ) : (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div className="u-between u-mb-3">
               <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{sel.product}</div>
+                <div className="ui-strong">{sel.product}</div>
                 <div className="ui-muted">{sel.category}</div>
               </div>
-              <button onClick={() => setSel(null)} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("waste.change")}</button>
+              <button className="ui-link-btn" onClick={() => setSel(null)}>{t("waste.change")}</button>
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            <div className="ui-chips u-mb-3" role="group" aria-label={t("waste.logWaste")}>
               {REASONS.map((r) => (
-                <button key={r} onClick={() => setReason(r)}
-                  style={{ fontSize: 12, padding: "7px 11px", borderRadius: 8, cursor: "pointer", background: reason === r ? "rgba(231,76,60,0.15)" : "rgba(255,255,255,0.05)", color: reason === r ? "var(--danger)" : "var(--gray)", border: `1px solid ${reason === r ? "rgba(231,76,60,0.35)" : "rgba(255,255,255,0.1)"}` }}>
-                  {REASON_EMOJI[r]} {t("waste.r_" + r)}
+                <button key={r} type="button" className="ui-choice" aria-pressed={reason === r} onClick={() => setReason(r)}>
+                  <Icon e={REASON_EMOJI[r]} size={14} /> {t("waste.r_" + r)}
                 </button>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
-              <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)}
-                style={{ width: 90, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
+            <div className="u-row u-mb-3">
+              <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} className="form-input ui-qty-input" />
               <span className="ui-muted-md">{sel.unit || t("waste.units")}</span>
             </div>
-            <input aria-label={t("waste.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("waste.notePh")}
-              style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
-            <button onClick={submit} disabled={busy} style={{ width: "100%", padding: 13, borderRadius: 10, background: "#e74c3c", color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy ? "…" : t("waste.logIt")}</button>
+            <input className="form-input u-mb-3" aria-label={t("waste.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("waste.notePh")}
+              />
+            <button className="btn-danger ui-block" onClick={submit} disabled={busy}>{busy ? "…" : t("waste.logIt")}</button>
           </>
         )}
-      </div>
+      </Panel>
 
       {/* RECENT */}
-      <div className="card-title u-mb-2">{t("waste.recent")}</div>
+      <h2 className="ui-section-title">{t("waste.recent")}</h2>
       {loading ? <CardSkeleton rows={3} /> : entries.length === 0 ? (
         <div className="card ui-empty-msg">{t("waste.none")}</div>
       ) : entries.map((e) => (
-        <div key={e.id} className="card" style={{ marginBottom: 8, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ minWidth: 0 }}>
-            <div className="ui-body">{REASON_EMOJI[e.reason] || "•"} {e.product} <span className="ui-muted">· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
+        <div key={e.id} className="card ui-item-card ui-item-head">
+          <div className="u-grow">
+            <div className="ui-body u-row"><Icon e={REASON_EMOJI[e.reason] || "•"} size={14} /> {e.product} <span className="ui-muted">· {e.qty}{e.unit ? " " + e.unit : ""}</span></div>
             <div className="ui-muted">{t("waste.r_" + e.reason)} · {fmtWhen(e.created_at)}{e.logged_by_name ? ` · ${e.logged_by_name}` : ""}</div>
-            {e.note && <div style={{ fontSize: 12, color: "var(--gray)", fontStyle: "italic" }}>“{e.note}”</div>}
+            {e.note && <div className="ui-quote">“{e.note}”</div>}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
-            {e.value != null && <span style={{ fontSize: 13, color: "var(--danger)", fontWeight: 600 }}>{eur(e.value)}</span>}
-            <button type="button" aria-label={t("common.delete")} onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: "#7a7070", cursor: "pointer", fontSize: 14 }}>✕</button>
+          <div className="u-row">
+            {e.value != null && <span className="ui-figure tone-danger">{eur(e.value)}</span>}
+            <button className="ui-icon-btn" type="button" aria-label={t("common.delete")} onClick={() => remove(e.id)}>✕</button>
           </div>
         </div>
       ))}

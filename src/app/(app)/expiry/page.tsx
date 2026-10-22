@@ -96,14 +96,14 @@ export default function ExpiryPage() {
         <div className="card" style={{ marginBottom: 14, padding: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <div className="card-title u-m0">{t("expiry.addBatch")}</div>
-            <button type="button" aria-label={t("common.close")} onClick={resetForm} style={{ background: "none", border: "none", color: "var(--gray)", fontSize: 18, cursor: "pointer" }}>✕</button>
+            <button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}>✕</button>
           </div>
           {!sel ? (
             <>
-              <input aria-label={t("expiry.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("expiry.searchProduct")}
-                style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
+              <input className="form-input u-mb-2" aria-label={t("expiry.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("expiry.searchProduct")}
+                />
               {search && (filtered.length === 0 ? <div className="ui-muted">{t("expiry.noProduct")}</div> : filtered.map((p) => (
-                <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+                <button className="ui-pick" key={p.product} onClick={() => { setSel(p); setSearch(""); }}>
                   {p.product} <span className="ui-muted">({p.category})</span>
                 </button>
               )))}
@@ -112,18 +112,18 @@ export default function ExpiryPage() {
             <>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{sel.product}</div>
-                <button onClick={() => setSel(null)} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("expiry.change")}</button>
+                <button className="ui-link-btn" onClick={() => setSel(null)}>{t("expiry.change")}</button>
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
                 <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
                 <span className="ui-muted-md">{sel.unit || ""}</span>
               </div>
               <label style={{ fontSize: 12, color: "var(--gray)", display: "block", marginBottom: 4 }}>{t("expiry.expiryDate")}</label>
-              <input aria-label={t("expiry.expiryDate")} type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)}
-                style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 10 }} />
-              <input aria-label={t("expiry.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("expiry.notePh")}
-                style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
-              <button onClick={submit} disabled={busy === "add"} style={{ width: "100%", padding: 13, borderRadius: 10, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy === "add" ? "…" : t("expiry.addBatch")}</button>
+              <input className="form-input u-mb-3" aria-label={t("expiry.expiryDate")} type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)}
+                />
+              <input className="form-input u-mb-3" aria-label={t("expiry.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("expiry.notePh")}
+                />
+              <button className="btn-gold ui-block" onClick={submit} disabled={busy === "add"}>{busy === "add" ? "…" : t("expiry.addBatch")}</button>
             </>
           )}
         </div>

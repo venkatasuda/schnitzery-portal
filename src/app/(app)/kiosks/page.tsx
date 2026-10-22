@@ -71,8 +71,8 @@ export default function KiosksPage() {
               <div className="u-row">
                 <div className="u-grow">
                   {editId === k.id ? (
-                    <input aria-label={t("kioskadm.addPlaceholder")} value={editLabel} onChange={(e) => setEditLabel(e.target.value)} onBlur={() => saveName(k.id)} onKeyDown={(e) => e.key === "Enter" && saveName(k.id)} autoFocus
-                      style={{ width: "100%", padding: "6px 8px", background: "var(--dark3)", border: "1px solid var(--gold)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" }} />
+                    <input className="form-input" aria-label={t("kioskadm.addPlaceholder")} value={editLabel} onChange={(e) => setEditLabel(e.target.value)} onBlur={() => saveName(k.id)} onKeyDown={(e) => e.key === "Enter" && saveName(k.id)} autoFocus
+                      />
                   ) : (
                     <button type="button" onClick={() => { setEditId(k.id); setEditLabel(k.label); }} aria-label={`${t("common.edit")}: ${k.label}`} style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", cursor: "pointer", background: "none", border: 0, padding: 0, textAlign: "left" }}>{k.label}</button>
                   )}

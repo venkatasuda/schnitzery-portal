@@ -174,8 +174,8 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
         <NativeDialog title={t("docw.rejectTitle")} busy={busy} onClose={() => setRejectId(null)}>
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{t("docw.rejectTitle")}</div>
             <div className="ui-sub">{t("docw.rejectReason")}</div>
-            <textarea autoFocus aria-label={t("docw.rejectReason")} value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder={t("docw.rejectReasonPlaceholder")}
-              style={{ width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+            <textarea className="form-input" autoFocus aria-label={t("docw.rejectReason")} value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder={t("docw.rejectReasonPlaceholder")}
+              />
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button disabled={busy} onClick={() => setRejectId(null)} style={{ ...btn, flex: 1 }}>{t("common.cancel")}</button>
               <button onClick={doReject} disabled={busy || !reason.trim()} style={{ ...btn, flex: 1, background: "#922b21", borderColor: "#922b21", color: "#fff", opacity: !reason.trim() ? 0.5 : 1 }}>{t("docw.confirmReject")}</button>
