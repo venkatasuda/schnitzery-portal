@@ -13,7 +13,7 @@ const tables = {
     count('Milk', 'Dairy', '2026-10-11', 8, 'c'), count('Milk', 'Drinks', '2026-10-09', 100, 'd'),
     count('Milk', 'Drinks', '2026-10-11', 80, 'e'), count('Old stock', 'Dairy', '2026-10-07', 10, 'f'),
     count('Old stock', 'Dairy', '2026-10-08', 5, 'g')],
-  inventory_purchases: [],
+  inventory_purchases: [], daily_sales: [], attendance_logs: [], waste_log: [], stock_transfers: [], stock_events: [], stock_reconciliation_reviews: [],
 };
 const sb = {
   auth: { getUser: async () => ({ data: { user: { id: 'manager' } } }) },
@@ -49,6 +49,10 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync("src/lib/supabase/readAll.
 const exportsObject = {};
 const reconciliation = {};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/inventory/reconciliation.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports:reconciliation});
+const mod = (file, req) => { const exports = {}; vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, { exports, Intl, Date, Set, Map, require: req }); return exports; };
+const coverage = mod('src/lib/analytics/coverage.ts', () => ({}));
+const valuation = mod('src/lib/inventory/valuation.ts', n => n.endsWith('coverage') ? coverage : reconciliation);
+const reconQuery = mod('src/lib/queries/reconciliation.ts', n => ({ '@/lib/supabase/readAll': allRows, '@/lib/supabase/server': { createClient: async () => sb }, '@/lib/time/berlinDate': { berlinToday: () => '2026-10-11' }, '@/lib/inventory/reconciliation': reconciliation })[n]);
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory.ts', 'utf8'), {
   compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
 }).outputText, { exports: exportsObject, Date, Set, Map, console, require(name) {
@@ -58,6 +62,9 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory
   if (name === '@/lib/inventory/identity') return { inventoryKey: key, validInventoryItem: item => typeof item.product === "string" && item.product.length > 0 };
   if (name === '@/lib/inventory/reconciliation') return reconciliation;
   if (name === '@/lib/push/delivery') return {};
+  if (name === '@/lib/inventory/valuation') return valuation;
+  if (name === '@/lib/analytics/coverage') return coverage;
+  if (name === '@/lib/queries/reconciliation') return reconQuery;
   throw new Error(`Unexpected import ${name}`);
 } });
 (async () => {
@@ -93,12 +100,15 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory
   assert.equal(analytics.totalUsageEur,0);assert.equal(analytics.stockValue,0,'Explicit zero purchase price remains distinct from missing price');
   tables.inventory_purchases=[];
   tables.inventory_counts=originalCounts;
-  tables.stock_transfers=[{...master('Milk','Dairy'),status:'sent',updated_at:'2026-10-10T12:00:00Z'}];
+  // Stock sent to this branch but not yet booked in: usage is withheld, not guessed.
+  tables.stock_transfers=[{...master('Milk','Dairy'),id:'t1',from_branch_id:'other',to_branch_id:'branch',qty:3,status:'sent',created_at:'2026-10-10T12:00:00Z',updated_at:'2026-10-10T12:00:00Z'}];
+  tables.inventory_purchases=[{...master('Milk','Dairy'),id:'receipt',purchase_date:'2026-10-01',qty:2,cost:4}];
   reviewed=(await exportsObject.getDepletionForecast()).items.find(row=>row.category==='Dairy'&&row.product==='Milk');
   assert.equal(reviewed.needsReview,true);assert.equal(reviewed.suggested,0);
   assert.equal((await exportsObject.getInventoryAnalytics()).totalUsageEur,null);
   assert.equal((await exportsObject.getInventoryVariance()).hasData,false);
-  tables.stock_transfers=[];
+  assert.equal((await exportsObject.getInventoryAnalytics()).usageComplete,false);
+  tables.stock_transfers=[];tables.inventory_purchases=[];
   failure='stock_transfers';assert.equal((await exportsObject.getDepletionForecast()).ok,false);assert.equal((await exportsObject.getInventoryAnalytics()).ok,false);assert.equal((await exportsObject.getInventoryVariance()).ok,false);
   failure = 'inventory_counts';
   assert.equal((await exportsObject.getOrderAlert()).ok, false);

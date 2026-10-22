@@ -57,7 +57,7 @@ export default function SummaryPage() {
     if (!data) return;
     const head = ["Name", "Team", "Hours", "Shifts", "Late", "Overtime (h)", "Labor cost (EUR)"];
     const lines = [head.join(",")];
-    for (const r of data.rows) lines.push([csvCell(r.name), csvCell(r.team), r.hours, r.shifts, r.late, r.overtime, r.laborCost].join(","));
+    for (const r of data.rows) lines.push([csvCell(r.name), csvCell(r.team), r.hours, r.shifts, r.late, r.overtime, r.laborCost ?? ""].join(","));
     lines.push("");
     const kv: [string, any][] = [
       ["Month", data.month], ["Sales (EUR)", data.sales],
@@ -109,15 +109,20 @@ export default function SummaryPage() {
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("summary.noData")}</div>
       ) : (
         <>
+          {data.hasSales && !data.complete && (
+            <div role="status" className="card" style={{ marginBottom: 12, fontSize: 12, color: "#d4a847", borderColor: "rgba(212,168,71,0.3)" }}>
+              {[data.coverage.labor.missing.wages ? t("business.missingWages", { n: data.coverage.labor.missing.wages }) : "", data.coverage.sales.missing.salesDays ? t("business.missingSalesDays", { n: data.coverage.sales.missing.salesDays }) : "", data.coverage.spend.missing.costs ? t("business.missingCosts", { n: data.coverage.spend.missing.costs }) : ""].filter(Boolean).join(" · ")}
+            </div>
+          )}
           {!data.hasSales && (
             <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "#d4a847", borderColor: "rgba(212,168,71,0.3)" }}>{t("summary.needSales")}</div>
           )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginBottom: 8 }}>
             <Kpi label={t("summary.sales")} value={eur(data.sales)} />
             <Kpi label={t("summary.primePct")} value={data.primePct != null ? `${data.primePct}%` : "—"} color={primeColor} sub={t("summary.primeNote")} />
-            <Kpi label={t("summary.laborPct")} value={data.laborPct != null ? `${data.laborPct}%` : "—"} sub={eur(data.laborCost)} />
-            <Kpi label={t("summary.foodPct")} value={data.foodPct != null ? `${data.foodPct}%` : "—"} sub={eur(data.foodSpend)} />
+            <Kpi label={t("summary.laborPct")} value={data.laborPct != null ? `${data.laborPct}%` : "—"} sub={(data.coverage.labor.complete ? "" : "≥ ") + eur(data.laborCost)} />
+            <Kpi label={t("summary.foodPct")} value={data.foodPct != null ? `${data.foodPct}%` : "—"} sub={(data.coverage.spend.complete ? "" : "≥ ") + eur(data.foodSpend)} />
             <Kpi label={t("summary.overtime")} value={`${data.overtimeHrs}h`} />
             <Kpi label={t("summary.lateRate")} value={data.lateRate != null ? `${data.lateRate}%` : "—"} />
             <Kpi label={t("summary.totalHours")} value={`${data.totalHours}h`} />

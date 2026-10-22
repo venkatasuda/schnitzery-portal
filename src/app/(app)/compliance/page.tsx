@@ -41,7 +41,7 @@ export default function CompliancePage() {
       ) : (
         <>
           {/* summary */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 16 }}>
             <Stat value={data.counts.breakCount} label={t("comp.breakIssues")} color={data.counts.breakCount > 0 ? "var(--danger)" : "var(--success)"} />
             <Stat value={data.counts.restCount} label={t("comp.restIssues")} color={data.counts.restCount > 0 ? "var(--danger)" : "var(--success)"} />
             <Stat value={data.counts.longCount} label={t("comp.over10h")} color={data.counts.longCount > 0 ? "var(--warn)" : "var(--success)"} />

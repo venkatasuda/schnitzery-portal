@@ -35,6 +35,7 @@ const api = load('src/lib/queries/branch-analytics.ts', {
   '@/lib/queries/schedule-constants': { DAYS: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'], SHIFT_MODEL: {} },
   '@/lib/pay/calculations': { shiftMinutes: l => ({ paidMin: l.duration_mins }) },
   '@/lib/pay/wages': { wageMapForBranches: async () => ({ manager: 20 }) },
+  '@/lib/analytics/coverage': load('src/lib/analytics/coverage.ts'),
 });
 (async () => {
   const r = await api.getBranchAnalytics({ period: 'weekly' });
@@ -47,6 +48,19 @@ const api = load('src/lib/queries/branch-analytics.ts', {
   assert.equal(r.business.salesDays, 1);
   assert.equal(r.business.elapsedDays, 7);
   assert.equal(r.business.salesTrend[0].recorded, false);
+  assert.deepEqual({ ...r.business.coverage.labor.missing }, { wages: 1 }, 'Labour cost is a lower bound, not complete');
+  assert.equal(r.business.coverage.sales.complete, true, 'Every open day has sales');
+  assert.equal(r.business.purchasePct, 30);
+  // Release D: an open day without sales and a delivery without cost are missing, not zero.
+  tables.attendance_logs.push({ user_id: 'manager', branch_id: 'branch', work_date: '2026-10-10', duration_mins: 60 });
+  tables.inventory_purchases.push({ branch_id: 'branch', purchase_date: '2026-10-10', cost: null });
+  const gap = await api.getBranchAnalytics({ period: 'weekly' });
+  assert.equal(gap.business.purchaseSpend, 30);
+  assert.deepEqual({ ...gap.business.coverage.spend.missing }, { costs: 1 });
+  assert.deepEqual({ ...gap.business.coverage.sales.missing }, { salesDays: 1 });
+  assert.equal(gap.metrics.salesPerLaborHour, null);
+  assert.equal(gap.business.purchasePct, null);
+  tables.attendance_logs.pop(); tables.inventory_purchases.pop();
   failure = 'inventory_purchases';
   assert.equal((await api.getBranchAnalytics()).ok, false);
   failure = null; role = 'staff';
@@ -55,5 +69,5 @@ const api = load('src/lib/queries/branch-analytics.ts', {
   validation.validateToolInput('get_business_performance', { period: 'monthly' });
   assert.throws(() => validation.validateToolInput('get_business_performance', { period: 'monthly', branchId: 'other' }));
   assert.throws(() => validation.validateToolInput('get_business_performance', { period: 'yearly' }));
-  console.log('Business totals, exact productivity, incomplete wages, sales gaps, role denial and AI tool validation pass.');
+  console.log('Business totals, exact productivity, missing sales days/costs, incomplete wages, sales gaps, role denial and AI tool validation pass.');
 })().catch(e => { console.error(e); process.exitCode = 1; });

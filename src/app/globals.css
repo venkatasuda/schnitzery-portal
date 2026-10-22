@@ -207,6 +207,9 @@ html.light .btn-gold { color: #fff; }
 .data-table th { background: var(--dark2); color: var(--gray); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap; }
 .data-table th, .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .data-table tbody tr:last-child td { border-bottom: 0; }
+/* Phones (390px): any container of a data table scrolls sideways instead of widening the page. */
+:has(> .data-table) { overflow-x: auto; }
+@media (max-width: 600px) { .data-table th, .data-table td { padding: 10px 8px; } }
 .data-table tbody tr:hover { background: var(--dark2); }
 .data-table .numeric { text-align: right; white-space: nowrap; }
 .data-table .muted { color: var(--gray); font-size: 12px; margin-top: 4px; line-height: 1.5; }
@@ -215,6 +218,7 @@ html.light .btn-gold { color: #fff; }
 .status-badge { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--dark3); color: var(--gray-light); white-space: nowrap; }
 .status-badge.low { background: var(--danger-soft); color: var(--danger); }
 .status-badge.good { background: var(--success-soft); color: var(--success); }
+.status-badge.warn { color: var(--gold-ink); box-shadow: inset 0 0 0 1px currentColor; }
 .inventory-page { width: 100%; }
 .business-overview { margin-top: 24px; }
 .business-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }

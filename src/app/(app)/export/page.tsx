@@ -186,7 +186,7 @@ export default function PayrollExportPage() {
       ) : (
         <>
           {/* totals */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, margin: "4px 0 12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, margin: "4px 0 12px" }}>
             <div className="card" style={{ padding: 12, textAlign: "center" }}><div style={lbl}>{t("pay.headcount")}</div><div style={{ fontSize: 20, fontWeight: 700 }}>{rows.length}</div></div>
             <div className="card" style={{ padding: 12, textAlign: "center" }}><div style={lbl}>{t("pay.totalPaid")}</div><div style={{ fontSize: 20, fontWeight: 700 }}>{totals.paidH}h</div></div>
             <div className="card" style={{ padding: 12, textAlign: "center" }}><div style={lbl}>{t("pay.totalGross")}</div><div style={{ fontSize: 20, fontWeight: 700, color: "var(--gold)" }}>{eur(readiness.missingWages ? null : totals.gross)}</div></div>
