@@ -245,7 +245,7 @@ export const messages = {
       noTrend: "Not enough data yet.", legendSpend: "Spent (€)", legendUse: "Used (€)",
       topSpend: "Top spend by product", topUse: "Most used by value", topUseSub: "Estimated from counts + deliveries.",
       noData: "No spend yet.", noUseData: "No usage computed yet — needs at least two counts.",
-      vsPrev: "vs. previous", spentOnStock: "spent on stock this period",
+      vsPrev: "vs. previous", spentOnStock: "Spent on stock this period",
       foodCost: "Purchase spend / sales", cogsPct: "Cost of goods used / sales", cogsUnavailable: "needs complete counts, prices and sales", addSalesForFoodCost: "Add daily sales to see purchase spend / sales %",
       topCat: "Top category", byCategory: "Spend by category",
       variance: "Usage variance", varianceSubNorm: "Usage € per €100 sales vs the previous 30 days. Up = using more per sale.", varianceSubRaw: "Usage € vs the previous 30 days (add daily sales for a sharper signal).", varianceNote: "A signal, not proof — check for over-portioning, spoilage, waste or miscounts.",

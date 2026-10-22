@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { toast } from "@/components/Toast";
+import { CardSkeleton } from "@/components/Skeleton";
+import { EmptyState, ErrorState, Segmented } from "@/components/ui";
 import { addReconciliationReview, getReconciliation } from "@/lib/queries/reconciliation";
 import { getAnalyticsScope } from "@/lib/queries/branch-analytics";
 import { reviewSnapshot, sameSnapshot, type ReviewSnapshot } from "@/lib/inventory/reconciliation";
@@ -56,23 +58,20 @@ export default function Reconciliation() {
   }
 
   return <section className="card" aria-label={t("reconcile.title")} aria-busy={loading}>
-    <h2>{t("reconcile.title")}</h2>
-    <p className="page-sub">{t("reconcile.note")}</p>
-    <div className="inventory-toolbar">
-      {branches.length > 1 && <label>{t("reconcile.branch")}<select className="form-select" value={branch || ""} onChange={e => setBranch(e.target.value)}>
+    <p className="ui-lede">{t("reconcile.note")}</p>
+    <div className="ui-toolbar">
+      {branches.length > 1 && <label className="ui-inline-field"><span className="ui-field-label">{t("reconcile.branch")}</span><select className="form-select" value={branch || ""} onChange={e => setBranch(e.target.value)}>
         {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
       </select></label>}
-      <label>{t("reconcile.period")}<select className="form-select" value={days} onChange={e => setDays(Number(e.target.value))}>
+      <label className="ui-inline-field"><span className="ui-field-label">{t("reconcile.period")}</span><select className="form-select" value={days} onChange={e => setDays(Number(e.target.value))}>
         {[30, 90, 180].map(v => <option key={v} value={v}>{t(`reconcile.days${v}`)}</option>)}
       </select></label>
-      <div role="group" aria-label={t("reconcile.view")}>
-        <button className={all ? "btn-secondary" : "btn-gold"} aria-pressed={!all} onClick={() => setAll(false)}>{t("reconcile.needsReview")}</button>
-        <button className={all ? "btn-gold" : "btn-secondary"} aria-pressed={all} onClick={() => setAll(true)}>{t("reconcile.all")}</button>
-      </div>
+      <Segmented label={t("reconcile.view")} value={all ? "all" : "review"} onChange={v => setAll(v === "all")}
+        options={[{ value: "review", label: t("reconcile.needsReview") }, { value: "all", label: t("reconcile.all") }]} />
     </div>
-    {error ? <div role="alert"><p>{error.startsWith("Manager") ? t("common.managersOnly") : t("reconcile.failed")}</p><button className="btn-secondary" onClick={() => setRetry(x => x + 1)}>{t("business.retry")}</button></div>
-      : loading ? <p role="status">{t("common.loading")}</p>
-      : shown.length === 0 ? <p>{t(all ? "reconcile.emptyAll" : "reconcile.empty")}</p>
+    {error ? <ErrorState message={error.startsWith("Manager") ? t("common.managersOnly") : t("reconcile.failed")} onRetry={() => setRetry(x => x + 1)} retryLabel={t("business.retry")} />
+      : loading ? <div role="status" aria-label={t("common.loading")}><CardSkeleton rows={3} /></div>
+      : shown.length === 0 ? <EmptyState title={t(all ? "reconcile.emptyAll" : "reconcile.empty")} />
       : <div className="table-scroll" tabIndex={0} role="region" aria-label={t("reconcile.title")}><table className="data-table">
         <thead><tr>{["product", "interval", "opening", "delivered", "transfers", "waste", "closing", "used", "status", "review"].map(k =>
           <th scope="col" key={k} className={["opening", "delivered", "transfers", "waste", "closing", "used"].includes(k) ? "numeric" : undefined}>{t(`reconcile.${k}`)}</th>)}</tr></thead>
