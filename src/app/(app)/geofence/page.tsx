@@ -84,7 +84,7 @@ export default function GeofencePage() {
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1>
       <div className="page-sub">{t("geo.subtitle")}</div>
-      <div className="card" style={{ padding: 16 }}>{t("geo.managersOnly")}</div>
+      <div className="card p-4">{t("geo.managersOnly")}</div>
     </div>
   );
 
@@ -97,7 +97,7 @@ export default function GeofencePage() {
 
       {/* MODE */}
       <div className="section-label">{t("geo.modeLabel")}</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+      <div className="d-flex f-col gap-2 mb-5">
         {modes.map((m) => (
           <button key={m.key} onClick={() => setMode(m.key)} className="card"
             style={{ padding: 12, textAlign: "left", cursor: "pointer",
@@ -110,21 +110,21 @@ export default function GeofencePage() {
 
       {/* LOCATION */}
       <div className="section-label">{t("geo.locationLabel")}</div>
-      <div className="card" style={{ padding: 14, marginBottom: 18 }}>
+      <div className="card p-4 mb-5">
         <button onClick={useMyLocation} disabled={locating} style={{ ...input, cursor: "pointer", background: "linear-gradient(135deg,#1e6091,#2980b9)", border: "none", fontWeight: 600, marginBottom: 12 }}>
           {locating ? t("geo.locating") : t("geo.useMyLocation")}
         </button>
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <div className="d-flex gap-2 mb-3">
           <div className="u-flex1">
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.lat")}</div>
+            <div className="t-xs u-muted mb-1">{t("geo.lat")}</div>
             <input className="form-input" aria-label={t("geo.lat")} value={lat ?? ""} onChange={(e) => setLat(e.target.value === "" ? null : Number(e.target.value))} placeholder="48.7758" />
           </div>
           <div className="u-flex1">
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.lng")}</div>
+            <div className="t-xs u-muted mb-1">{t("geo.lng")}</div>
             <input className="form-input" aria-label={t("geo.lng")} value={lng ?? ""} onChange={(e) => setLng(e.target.value === "" ? null : Number(e.target.value))} placeholder="9.1829" />
           </div>
         </div>
-        <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.radius")}</div>
+        <div className="t-xs u-muted mb-1">{t("geo.radius")}</div>
         <input className="form-input" aria-label={t("geo.radius")} type="number" value={radius} onChange={(e) => setRadius(Number(e.target.value) || 0)} />
         {lat != null && lng != null && (
           <a href={`https://www.google.com/maps?q=${lat},${lng}`} target="_blank" rel="noreferrer"
@@ -140,15 +140,15 @@ export default function GeofencePage() {
 
       {/* OVERRIDE */}
       <div className="section-label">{t("geo.overrideLabel")}</div>
-      <div className="card" style={{ padding: 14 }}>
+      <div className="card p-4">
         <div className="ui-sub">{t("geo.overrideHint")}</div>
         <select aria-label={t("geo.pickStaff")} style={{ ...input, marginBottom: 10 }} value={ovUser} onChange={(e) => setOvUser(e.target.value)}>
           <option value="">{t("geo.pickStaff")}</option>
           {staff.map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
         </select>
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+        <div className="d-flex gap-2 ai-e">
           <div style={{ width: 110 }}>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{t("geo.minutes")}</div>
+            <div className="t-xs u-muted mb-1">{t("geo.minutes")}</div>
             <input className="form-input" aria-label={t("geo.minutes")} type="number" value={ovMin} onChange={(e) => setOvMin(Math.max(1, Math.min(240, Number(e.target.value) || 15)))} />
           </div>
           <button onClick={doGrant} disabled={ovBusy} style={{ ...input, flex: 1, cursor: "pointer", background: "linear-gradient(135deg,#b9770e,#e67e22)", border: "none", fontWeight: 600 }}>
@@ -159,7 +159,7 @@ export default function GeofencePage() {
 
       {/* RECENT LOCATION FLAGS */}
       <div className="section-label" style={{ marginTop: 26 }}>{t("geo.flagsLabel")}</div>
-      <div className="card" style={{ padding: 14 }}>
+      <div className="card p-4">
         <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: flags.length ? 10 : 0 }}>{t("geo.flagsHint")}</div>
         {flags.length === 0 ? (
           <div className="ui-muted-md">{t("geo.noFlags")}</div>
@@ -168,10 +168,10 @@ export default function GeofencePage() {
             {flags.map((f) => (
               <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, background: "var(--dark2)" }}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{f.name}</div>
+                  <div className="fw-6 t-md">{f.name}</div>
                   <div className="ui-muted">{f.date}</div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--warn)" }}><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
+                <div className="t-sm fw-7 tone-warn"><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
               </div>
             ))}
           </div>

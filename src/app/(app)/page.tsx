@@ -123,7 +123,7 @@ export default async function HomePage() {
             <Icon e="⚠" size={15} color="var(--danger)" /> {t("home.docsNeedAttention")}
           </div>
           {myExpiring.slice(0, 3).map((e, i) => (
-            <div key={i} style={{ fontSize: 13, color: "var(--white)", marginTop: 2 }}>
+            <div className="t-sm u-text mt-h" key={i}>
               {e.days < 0 ? t("home.docExpired", { doc: e.label, days: Math.abs(e.days) }) : e.days === 0 ? t("home.docToday", { doc: e.label }) : t("home.docSoon", { doc: e.label, days: e.days })}
             </div>
           ))}

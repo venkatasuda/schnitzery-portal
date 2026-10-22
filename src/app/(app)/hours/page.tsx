@@ -34,9 +34,9 @@ export default function HoursPage() {
       <h1 className="page-title u-row"><Icon e="⏱" size={22} /> My Hours</h1>
       <p className="ui-lede">Your worked hours this month.</p>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+      <div className="d-flex jc-sb ai-c mb-4">
         <button className="btn-secondary ui-btn-sm" onClick={() => shiftMonth(-1)}>‹ Prev</button>
-        <span style={{ fontSize: 14, color: "var(--gold-ink)", fontWeight: 600 }}>{monthLabel}</span>
+        <span className="t-md tone-action fw-6">{monthLabel}</span>
         <button className="btn-secondary ui-btn-sm" onClick={() => shiftMonth(1)}>Next ›</button>
       </div>
 
@@ -51,7 +51,7 @@ export default function HoursPage() {
             <div style={{ fontSize: 12, color: "var(--gray)", letterSpacing: 1, marginTop: 4 }}>WORKED THIS MONTH</div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+          <div className="d-flex gap-3 mb-3">
             <Stat label="Shifts" value={String(data.shifts)} />
             <Stat label="Target" value={data.targetHours != null ? `${data.targetHours}h` : "—"} />
             <Stat label={data.debt != null && data.debt > 0 ? "Remaining" : "Over"} value={data.debt != null ? `${Math.abs(data.debt)}h` : "—"} color={data.debt != null && data.debt > 0 ? "var(--warn)" : "var(--success)"} />
@@ -59,11 +59,11 @@ export default function HoursPage() {
 
           {data.targetHours != null && (
             <div className="card">
-              <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>Progress to {data.targetHours}h target</div>
+              <div className="t-xs u-muted mb-2">Progress to {data.targetHours}h target</div>
               <div style={{ height: 10, background: "var(--surface-2)", borderRadius: 5, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: pct >= 100 ? "#27ae60" : "#d4a847", transition: "width 0.4s" }} />
               </div>
-              <div style={{ fontSize: 12, color: "var(--gold-ink)", textAlign: "center", marginTop: 6 }}>{pct}%</div>
+              <div className="t-xs tone-action u-center mt-2">{pct}%</div>
             </div>
           )}
         </>

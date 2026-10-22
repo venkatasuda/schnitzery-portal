@@ -51,7 +51,7 @@ export default function NotesPage() {
       <h1 className="page-title u-row"><Icon e="📝" size={22} /> {t("schedhub.notes")}</h1>
       <p className="ui-lede">{t("notes.subtitle")}</p>
 
-      {msg && <div style={{ marginBottom: 14, fontSize: 13, color: "var(--gold-ink)", textAlign: "center" }}>{msg}</div>}
+      {msg && <div className="mb-4 t-sm tone-action u-center">{msg}</div>}
 
       {/* add note */}
       <div style={{ ...card, marginBottom: 16 }}>
@@ -62,7 +62,7 @@ export default function NotesPage() {
           </select>
         </Field>
         <Field label={t("notes.note")}><textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} style={{ ...input, resize: "vertical" }} placeholder={t("notes.whatHappened")} /></Field>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--gray)", marginBottom: 12, cursor: "pointer" }}>
+        <label className="d-flex ai-c gap-2 t-sm u-muted mb-3 c-p">
           <input type="checkbox" checked={isRec} onChange={(e) => setIsRec(e.target.checked)} /> {t("notes.markRec")}
         </label>
         <button className="btn-gold ui-block" onClick={submit} disabled={posting}>{posting ? t("common.saving") : t("notes.addNote")}</button>
@@ -74,15 +74,15 @@ export default function NotesPage() {
         <TabBtn active={tab === "recognition"} onClick={() => setTab("recognition")}>{t("notes.tabRec")}</TabBtn>
       </div>
 
-      {loading ? <div style={{ color: "var(--gray)", padding: 20, textAlign: "center" }}>{t("common.loading")}</div>
+      {loading ? <div className="u-muted p-5 u-center">{t("common.loading")}</div>
       : shown.length === 0 ? <div className="card ui-empty-msg">{t("notes.empty")}</div>
       : shown.map((n) => (
         <div key={n.id} style={{ ...card, marginBottom: 8, borderColor: n.isRecognition ? "var(--accent-line)" : "rgba(255,255,255,0.08)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+          <div className="d-flex jc-sb mb-1">
             <span className="ui-strong">{n.isRecognition && <Icon e="🌟" size={13} color="var(--action)" style={{ verticalAlign: "-2px", marginRight: 4 }} />}{n.subject?.full_name || t("lc.staffFallback")}</span>
             <span className="ui-muted">{fmt(n.created_at)}</span>
           </div>
-          <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5 }}>{n.cleanNote}</div>
+          <div className="t-md u-text lh-15">{n.cleanNote}</div>
         </div>
       ))}
     </div>

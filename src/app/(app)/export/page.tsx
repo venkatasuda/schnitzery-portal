@@ -133,10 +133,10 @@ export default function PayrollExportPage() {
       <h1 className="page-title u-row"><Icon e="💶" size={22} /> {t("pay.title")}</h1>
       <div className="page-sub">{t("pay.subtitle")}</div>
 
-      <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+      <div className="card d-flex ai-c gap-3 f-wrap">
         <label className="ui-muted" htmlFor="payroll-month">{t("pay.month")}</label>
         <input id="payroll-month" type="month" value={month} disabled={busy} onChange={(e) => { setMonth(e.target.value); setApprovalId(""); setHistory([]); }} style={{ ...inp, width: "auto" }} />
-        {history.length > 0 && <label style={{ fontSize: 12 }}>{t("pay.history")} <select value={approvalId} disabled={busy || loading} onChange={e => setApprovalId(e.target.value)} style={{ ...inp, width: "auto", maxWidth: "100%" }}>
+        {history.length > 0 && <label className="t-xs">{t("pay.history")} <select value={approvalId} disabled={busy || loading} onChange={e => setApprovalId(e.target.value)} style={{ ...inp, width: "auto", maxWidth: "100%" }}>
           <option value="">{t("pay.current")}</option>{history.map(h => <option key={h.id} value={h.id}>{fmtDate(h.approved_at)} · {h.approved_name}</option>)}
         </select></label>}
         <div className="u-flex1" />
@@ -144,9 +144,9 @@ export default function PayrollExportPage() {
       </div>
 
       {showRules && (
-        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="card d-flex f-col gap-3">
           <div className="ui-muted">{t("pay.rulesHint")}</div>
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+          <div className="d-flex gap-4 f-wrap">
             <label><div style={lbl}>{t("pay.otDaily")}</div><input style={inp} type="number" min={0} max={24} step="any" value={draft.otDailyHours} onChange={(e) => setDraft({ ...draft, otDailyHours: Number(e.target.value) })} /></label>
             <label><div style={lbl}>{t("pay.nightStart")}</div><input style={inp} type="time" value={draft.nightStart} onChange={(e) => setDraft({ ...draft, nightStart: e.target.value })} /></label>
             <label><div style={lbl}>{t("pay.nightEnd")}</div><input style={inp} type="time" value={draft.nightEnd} onChange={(e) => setDraft({ ...draft, nightEnd: e.target.value })} /></label>
@@ -160,7 +160,7 @@ export default function PayrollExportPage() {
         run.status === "approved" ? (
           <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", borderLeft: "3px solid var(--success)" }}>
             <Icon e="✅" size={18} color="var(--success)" />
-            <div style={{ flex: "1 1 260px", fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}<div style={{ marginTop: 6, color: "var(--gray)" }}>{t(run.frozen ? "pay.frozen" : "pay.legacy")}</div></div>
+            <div style={{ flex: "1 1 260px", fontSize: 13 }}>{t("pay.approvedBy").replace("{by}", run.approvedBy || "—").replace("{date}", fmtDate(run.approvedAt))}<div className="mt-2 u-muted">{t(run.frozen ? "pay.frozen" : "pay.legacy")}</div></div>
             {!run.archived && <button onClick={() => toggleApproval(false)} disabled={busy} style={{ padding: "7px 12px", background: "var(--dark3)", color: "var(--gray)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>{t("pay.reopenBtn")}</button>}
           </div>
         ) : (
@@ -187,9 +187,9 @@ export default function PayrollExportPage() {
         <>
           {/* totals */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, margin: "4px 0 12px" }}>
-            <div className="card" style={{ padding: 12, textAlign: "center" }}><div style={lbl}>{t("pay.headcount")}</div><div style={{ fontSize: 20, fontWeight: 700 }}>{rows.length}</div></div>
-            <div className="card" style={{ padding: 12, textAlign: "center" }}><div style={lbl}>{t("pay.totalPaid")}</div><div style={{ fontSize: 20, fontWeight: 700 }}>{totals.paidH}h</div></div>
-            <div className="card" style={{ padding: 12, textAlign: "center" }}><div style={lbl}>{t("pay.totalGross")}</div><div style={{ fontSize: 20, fontWeight: 700, color: "var(--gold)" }}>{eur(readiness.missingWages ? null : totals.gross)}</div></div>
+            <div className="card p-3 u-center"><div style={lbl}>{t("pay.headcount")}</div><div className="t-xl fw-7">{rows.length}</div></div>
+            <div className="card p-3 u-center"><div style={lbl}>{t("pay.totalPaid")}</div><div className="t-xl fw-7">{totals.paidH}h</div></div>
+            <div className="card p-3 u-center"><div style={lbl}>{t("pay.totalGross")}</div><div className="t-xl fw-7 tone-action">{eur(readiness.missingWages ? null : totals.gross)}</div></div>
           </div>
 
           <div className="table-scroll" role="region" aria-label={t("pay.reportTitle")} tabIndex={0}>
@@ -199,13 +199,13 @@ export default function PayrollExportPage() {
                 <th scope="row" style={{ whiteSpace: "nowrap", position: "sticky", left: 0, zIndex: 1, background: "var(--dark)", color: "var(--white)", fontSize: 14 }}>{r.name}<div className="muted">{r.code} · {r.team}</div>{r.invalidShifts > 0 && <div><Link href="/attendance-hub">{t("pay.invalidShifts", { count: r.invalidShifts })}</Link></div>}</th>
                 {[r.shifts, r.paidH, r.regularH, r.overtimeH, r.breakH, r.weekendH, r.holidayH, r.nightH].map((value, i) => <td key={i} className="numeric">{value}</td>)}
                 <td className="numeric">{r.wage == null ? r.gross != null && r.rates?.length > 1 ? r.rates.map((v: any) => eur(v.wage)).join(" / ") : <Link href="/labor">{t("pay.setWage")}</Link> : eur(r.wage)}</td>
-                <td className="numeric" style={{ fontWeight: 700 }}>{eur(r.gross)}</td>
+                <td className="numeric fw-7">{eur(r.gross)}</td>
               </tr>)}</tbody>
             </table>
           </div>
 
           {/* exports */}
-          <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+          <div className="d-flex gap-2 mt-4 f-wrap">
             <button onClick={downloadCsv} className="btn-gold">{t("pay.exportCsv")}</button>
             <button onClick={downloadExcel} className="btn-secondary">{t("pay.exportExcel")}</button>
             <button onClick={payrollReport} className="btn-secondary">{t("pay.exportReport")}</button>
@@ -216,7 +216,7 @@ export default function PayrollExportPage() {
       )}
 
       {rows.some((r) => r.gross == null) && (
-        <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 10 }}>
+        <div className="t-xs u-muted mt-3">
           {t("pay.wageNoteA")} <Link href="/labor" style={{ color: "var(--gold)", textDecoration: "none" }}>{t("pay.laborLink")}</Link> {t("pay.wageNoteB")}
         </div>
       )}

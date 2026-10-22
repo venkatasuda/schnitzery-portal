@@ -100,16 +100,16 @@ export default function SchedulePage() {
       {tab === "my" && (
         <div className="hub-tab-panel active">
           {/* week nav */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div className="d-flex jc-sb ai-c mb-3">
             <button className="btn-secondary ui-btn-sm" onClick={() => changeWeek(-1)}>{t("shifts.prev")}</button>
-            <span style={{ fontSize: 13, color: "var(--action)", fontWeight: 600 }}>{weekOffset === 0 ? t("shifts.thisWeek") : weekOffset > 0 ? t("shifts.weeksPlus", { n: weekOffset }) : t("shifts.weeksMinus", { n: weekOffset })}</span>
+            <span className="t-sm tone-action fw-6">{weekOffset === 0 ? t("shifts.thisWeek") : weekOffset > 0 ? t("shifts.weeksPlus", { n: weekOffset }) : t("shifts.weeksMinus", { n: weekOffset })}</span>
             <button className="btn-secondary ui-btn-sm" onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
           </div>
 
           {/* week strip */}
-          <div className="card" style={{ marginBottom: 10 }}>
+          <div className="card mb-3">
             <div className="card-title">{t("shifts.thisWeekTitle")}</div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
+            <div className="d-flex jc-sb gap-1">
               {DAYS.map((d) => {
                 const has = shifts.some((s) => s.day === d);
                 const isToday = d === todayName && weekOffset === 0;
@@ -121,7 +121,7 @@ export default function SchedulePage() {
                 );
               })}
             </div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8, textAlign: "center" }}>
+            <div className="t-xs u-muted mt-2 u-center">
               {t("shifts.shiftsAssigned", { n: shifts.length })}
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function SchedulePage() {
                     <div className="ui-strong">{dayLabel(s.day)}</div>
                     <div className="ui-muted">{teamLabel(s.team)} · {s.shift}</div>
                   </div>
-                  <div style={{ fontSize: 13, color: "var(--action)", fontWeight: 600 }}>{s.time || "—"}</div>
+                  <div className="t-sm tone-action fw-6">{s.time || "—"}</div>
                 </div>
               ))}
             </div>
@@ -155,8 +155,8 @@ export default function SchedulePage() {
       {tab === "request" && (
         <div className="hub-tab-panel active">
           <div className="card">
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, color: "var(--white)" }}>{t("shifts.requestSwapTitle")}</div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 16 }}>{t("shifts.requestSwapSub")}</div>
+            <div className="t-lg fw-7 mb-2 u-text">{t("shifts.requestSwapTitle")}</div>
+            <div className="t-xs u-muted mb-4">{t("shifts.requestSwapSub")}</div>
             <Field label={t("shifts.yourDayGive")}>
               <select value={myDay} onChange={(e) => setMyDay(e.target.value)} style={select}>
                 <option value="">{t("shifts.selectDay")}</option>
@@ -176,7 +176,7 @@ export default function SchedulePage() {
               </select>
             </Field>
             <button className="btn-gold ui-block" onClick={doSubmitSwap}>{t("shifts.submitSwap")}</button>
-            {swapMsg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--action)", textAlign: "center" }}>{swapMsg}</div>}
+            {swapMsg && <div className="mt-3 t-sm tone-action u-center">{swapMsg}</div>}
           </div>
         </div>
       )}
@@ -190,7 +190,7 @@ export default function SchedulePage() {
             mySwaps.map((sw) => (
               <div key={sw.id} className="card u-mb-2">
                 <div className="u-between">
-                  <div style={{ fontSize: 14, color: "var(--white)" }}>{t("shifts.give")} <b>{dayLabel(sw.my_day)}</b> → {t("shifts.get")} <b>{dayLabel(sw.their_day)}</b></div>
+                  <div className="t-md u-text">{t("shifts.give")} <b>{dayLabel(sw.my_day)}</b> → {t("shifts.get")} <b>{dayLabel(sw.their_day)}</b></div>
                   <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 12, background: sw.status === "approved" ? "rgba(39,174,96,0.15)" : sw.status === "denied" ? "rgba(231,76,60,0.15)" : "var(--accent-soft)", color: sw.status === "approved" ? "var(--success)" : sw.status === "denied" ? "var(--danger)" : "var(--action)" }}>
                     {t("shifts.status_" + sw.status)}
                   </span>

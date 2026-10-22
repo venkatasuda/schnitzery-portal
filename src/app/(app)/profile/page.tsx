@@ -69,16 +69,16 @@ export default function ProfilePage() {
       <h1 className="page-title u-row"><Icon e="👤" size={22} /> {t("profile.title")}</h1>
       <div className="page-sub">{t("profile.subtitle")}</div>
 
-      <div className="card" style={{ padding: 24 }}>
+      <div className="card p-6">
         {/* avatar + name */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+        <div className="d-flex ai-c gap-4 mb-5">
           <AvatarUpload currentUrl={profile.avatar_url} name={profile.full_name} isManager={isManager} />
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--white)" }}>
+            <div className="t-xl fw-7 u-text">
               {profile.full_name || "—"}
               {isManager && <span className="mgr-badge">{t("roles." + profile.role)}</span>}
             </div>
-            <div style={{ fontSize: 13, color: "var(--action)", marginTop: 2 }}>
+            <div className="t-sm tone-action mt-h">
               {!isManager && `${t("roles." + profile.role)} · `}{profile.team || "—"}
             </div>
           </div>
@@ -94,10 +94,10 @@ export default function ProfilePage() {
             <Row label={t("profile.status")} value={profile.status || "active"} />
 
             {/* skills as chips */}
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>{t("profile.skills")}</div>
+            <div className="mt-4">
+              <div className="t-xs u-muted mb-2">{t("profile.skills")}</div>
               {skillsArr.length ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                <div className="d-flex f-wrap gap-2">
                   {skillsArr.map((s, i) => (
                     <span key={i} style={{ display: "inline-block", padding: "5px 12px", background: "var(--dark3)", border: "1px solid var(--accent-line)", borderRadius: 20, fontSize: 12, color: "var(--white)" }}>{s}</span>
                   ))}

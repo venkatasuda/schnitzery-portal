@@ -109,10 +109,10 @@ export default function OrderPage() {
         <>
           {!hasPrices && <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "var(--gold-ink)", borderColor: "var(--accent-line)" }}>{t("po.noPrices")}</div>}
           {groups.map((g, gi) => (
-            <div key={gi} className="card" style={{ marginBottom: 12, padding: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>{g.supplier || t("po.noSupplier")}</div>
-                {hasPrices && <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{eur(subtotal(g))}</div>}
+            <div key={gi} className="card mb-3 p-4">
+              <div className="d-flex jc-sb ai-c mb-3">
+                <div className="t-lg fw-7 u-text">{g.supplier || t("po.noSupplier")}</div>
+                {hasPrices && <div className="t-sm tone-action fw-7">{eur(subtotal(g))}</div>}
               </div>
               {g.items.map((it: any, ii: number) => (
                 <div key={ii} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
@@ -127,16 +127,16 @@ export default function OrderPage() {
                   <button className="ui-icon-btn" type="button" aria-label={`${t("common.delete")}: ${it.product}`} onClick={() => removeItem(gi, ii)}>✕</button>
                 </div>
               ))}
-              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <div className="d-flex gap-2 mt-3">
                 <button onClick={() => copyGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--surface-2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>📋 {t("po.copy")}</button>
                 <button className="btn-secondary" onClick={() => emailGroup(g)}>✉ {t("po.email")}</button>
               </div>
             </div>
           ))}
           {hasPrices && (
-            <div className="card" style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 14, color: "var(--white)", fontWeight: 700 }}>{t("po.total")}</span>
-              <span style={{ fontSize: 18, color: "var(--gold)", fontWeight: 700 }}>{eur(grandTotal)}</span>
+            <div className="card p-4 d-flex jc-sb ai-c">
+              <span className="t-md u-text fw-7">{t("po.total")}</span>
+              <span className="t-xl tone-action fw-7">{eur(grandTotal)}</span>
             </div>
           )}
         </>

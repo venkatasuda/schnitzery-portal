@@ -59,7 +59,7 @@ export default function AgentChat() {
       </div>
 
       <div className="u-hstack">
-        <input
+        <input className="u-flex1"
           aria-label={t("business.question")}
           maxLength={1600}
           value={input}
@@ -67,7 +67,7 @@ export default function AgentChat() {
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
           placeholder={t("assistant.placeholder")}
           disabled={busy}
-          style={{ flex: 1 }}
+         
         />
         <button className="btn-gold" onClick={send} disabled={busy || !input.trim()}>{t("assistant.send")}</button>
       </div>

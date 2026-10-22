@@ -27,7 +27,7 @@ export default function BranchDetailPage() {
   if (error) return (
     <div>
       <Link href="/branches" style={{ color: "var(--gold-ink)", fontSize: 13, textDecoration: "none" }}>‹ Back to branches</Link>
-      <div className="card" style={{ textAlign: "center", color: "var(--danger)", marginTop: 16 }}>{error}</div>
+      <div className="card u-center tone-danger mt-4">{error}</div>
     </div>
   );
 
@@ -53,7 +53,7 @@ export default function BranchDetailPage() {
         <div className="card ui-empty-msg">No staff assigned to this branch yet.</div>
       ) : (
         staffList.map((s: any) => (
-          <div key={s.id} className="card" style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 14, padding: 14 }}>
+          <div key={s.id} className="card mb-2 d-flex ai-c gap-4 p-4">
             <div style={{ width: 40, height: 40, borderRadius: "50%", background: TEAM_COLORS[s.team] || "#666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
               {(s.full_name || "?")[0].toUpperCase()}
             </div>

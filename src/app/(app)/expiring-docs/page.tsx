@@ -104,7 +104,7 @@ export default function ExpiringDocsPage() {
           </div>
 
           {/* FILTERS */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+          <div className="d-flex gap-2 mb-4 f-wrap">
             <select aria-label={t("docw.filterEmployee")} value={employee} onChange={(e) => setEmployee(e.target.value)} style={sel}>
               <option value="">{t("docw.filterEmployee")}: {t("docw.filterAll")}</option>
               {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -120,7 +120,7 @@ export default function ExpiringDocsPage() {
             missing.length === 0 ? (
               <EmptyOk t={t} />
             ) : (
-              <div className="card" style={{ padding: 8 }}>
+              <div className="card p-2">
                 {missing.map((m, i) => (
                   <Link key={`${m.userId}-${m.docType}`} href={`/staff/${m.userId}`} style={rowLink(i < missing.length - 1)}>
                     <Icon e="⚠️" size={18} color="var(--warn)" />
@@ -137,7 +137,7 @@ export default function ExpiringDocsPage() {
           ) : docs.length === 0 ? (
             <div className="card ui-empty-msg">{t("docw.noResults")}</div>
           ) : (
-            <div className="card" style={{ padding: 8 }}>
+            <div className="card p-2">
               {docs.map((d, i) => {
                 const info = statusInfo(d.eff, t);
                 return (
@@ -147,7 +147,7 @@ export default function ExpiringDocsPage() {
                       <div className="ui-strong">{d.name}</div>
                       <div className="ui-muted">{typeLabel(d.doc_type)}</div>
                     </div>
-                    <div style={{ textAlign: "right", marginRight: 4 }}>
+                    <div className="u-right mr-1">
                       <div style={{ fontSize: 12, fontWeight: 600, color: info.color }}>{info.label}</div>
                       {d.expiry_date && <div className="ui-muted">{fmtDate(d.expiry_date)}</div>}
                     </div>
@@ -169,8 +169,8 @@ function EmptyOk({ t }: { t: Tf }) {
   return (
     <div className="card" style={{ textAlign: "center", padding: 32 }}>
       <div className="u-mb-2"><Icon e="✅" size={30} color="var(--success)" /></div>
-      <div style={{ color: "var(--success)", fontSize: 15, fontWeight: 700 }}>{t("exp.nothing")}</div>
-      <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("exp.nothingSub")}</div>
+      <div className="tone-success t-lg fw-7">{t("exp.nothing")}</div>
+      <div className="u-muted t-xs mt-2">{t("exp.nothingSub")}</div>
     </div>
   );
 }

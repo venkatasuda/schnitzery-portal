@@ -49,7 +49,7 @@ export default function DirectoryPage() {
               {(p.full_name || "?")[0].toUpperCase()}
             </div>
             <div className="u-grow">
-              <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"}{p.status === "inactive" && <span className="ui-muted"> ({t("directory.inactive")})</span>}</div>
+              <div className="t-lg fw-6">{p.full_name || "—"}{p.status === "inactive" && <span className="ui-muted"> ({t("directory.inactive")})</span>}</div>
               <div className="ui-muted">{p.team ? teamLabel(p.team) : t("directory.noTeam")}</div>
             </div>
             <div className="u-hstack">

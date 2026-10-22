@@ -81,14 +81,14 @@ export default function StockAlertsPage() {
             <div className="u-row">
               <div className="u-grow">
                 <div className="ui-strong">
-                  {it.low && <span style={{ color: "var(--danger)", marginRight: 5 }}>●</span>}{it.product}
+                  {it.low && <span className="tone-danger mr-1">●</span>}{it.product}
                 </div>
                 <div className="ui-muted">
                   {it.category}{it.unit ? ` · ${it.unit}` : ""} · {it.counted ? t("salert.now", { n: it.ist }) : t("salert.notCounted")}
                 </div>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 3 }}>{t("salert.alertBelow")}</div>
+              <div className="u-center">
+                <div className="t-xs u-muted mb-h">{t("salert.alertBelow")}</div>
                 <input className="form-input" aria-label={t("salert.alertBelow")}
                   type="number" inputMode="decimal"
                   value={edits[it.id] ?? String(it.level)}

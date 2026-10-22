@@ -69,9 +69,9 @@ export default function LabelsPage() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
           {products.map((p) => (
-            <div key={p.id} className="card" style={{ textAlign: "center", padding: 12 }}>
+            <div key={p.id} className="card u-center p-3">
               {qr[p.id] ? <img src={qr[p.id]} alt="" style={{ width: "70%", maxWidth: 120 }} /> : <div style={{ height: 100, color: "var(--gray)", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>{t("labels.qrPending")}</div>}
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)", marginTop: 6 }}>{p.product}</div>
+              <div className="t-sm fw-6 u-text mt-2">{p.product}</div>
               <div className="ui-muted">{p.category}</div>
             </div>
           ))}

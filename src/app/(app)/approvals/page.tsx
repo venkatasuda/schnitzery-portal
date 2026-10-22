@@ -120,8 +120,8 @@ export default function ApprovalsPage() {
       ) : shown.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 34 }}>
           <div className="u-mb-2"><Icon e="🎉" size={32} color="var(--success)" /></div>
-          <div style={{ color: "var(--success)", fontSize: 15, fontWeight: 700 }}>{t("approvals.nothing")}</div>
-          <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>{t("approvals.caughtUp")}</div>
+          <div className="tone-success t-lg fw-7">{t("approvals.nothing")}</div>
+          <div className="u-muted t-xs mt-2">{t("approvals.caughtUp")}</div>
         </div>
       ) : (
         <div className="approval-list">

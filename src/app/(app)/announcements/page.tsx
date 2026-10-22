@@ -85,7 +85,7 @@ export default function AnnouncementsPage() {
             <div style={{ ...card, marginBottom: 16 }}>
               <Field label={t("announcements.titleLabel")}><input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("announcements.titlePlaceholder")} /></Field>
               <Field label={t("announcements.messageLabel")}><textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} style={{ ...input, resize: "vertical" }} placeholder={t("announcements.messagePlaceholder")} /></Field>
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+              <div className="d-flex gap-3 ai-e">
                 <div className="u-flex1">
                   <Field label={t("announcements.categoryLabel")}>
                     <select className="form-input" value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -93,7 +93,7 @@ export default function AnnouncementsPage() {
                     </select>
                   </Field>
                 </div>
-                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--gray)", paddingBottom: 18, cursor: "pointer" }}>
+                <label className="d-flex ai-c gap-2 t-sm u-muted pb-5 c-p">
                   <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} /> {t("announcements.pin")}
                 </label>
               </div>
@@ -110,16 +110,16 @@ export default function AnnouncementsPage() {
       ) : (
         list.map((a) => (
           <div key={a.id} style={{ ...card, marginBottom: 10, borderColor: a.pinned ? "var(--accent-line)" : "rgba(255,255,255,0.08)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div className="d-flex jc-sb ai-s mb-2">
+              <div className="d-flex ai-c gap-2 f-wrap">
                 {a.pinned && <Icon e="📌" size={13} color="var(--gold)" />}
                 {a.category && <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.5, padding: "2px 8px", borderRadius: 10, background: (CAT_COLORS[a.category] || "#666") + "26", color: CAT_COLORS[a.category] || "#aaa" }}>{catLabel(a.category).toUpperCase()}</span>}
-                {a.title && <span style={{ fontSize: 15, fontWeight: 700 }}>{a.title}</span>}
+                {a.title && <span className="t-lg fw-7">{a.title}</span>}
               </div>
-              <span style={{ fontSize: 12, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmtWhen(a.created_at)}</span>
+              <span className="t-xs u-muted ws-nw">{fmtWhen(a.created_at)}</span>
             </div>
             <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{a.message}</div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+            <div className="d-flex jc-sb ai-c mt-3">
               <span className="ui-muted">— {a.author || "Manager"}</span>
               {canPost && (
                 <div className="u-hstack">

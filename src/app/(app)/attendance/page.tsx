@@ -300,22 +300,22 @@ export default function AttendancePage() {
       <Link href="/attendance/corrections" style={{ display: "block", textAlign: "center", margin: "0 0 14px", padding: "9px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--gold)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}><Icon className="u-icon-inline" e="✏️" size={14} /> {t("corr.request")}</Link>
       <div className="page-sub" style={{ minHeight: 16 }}>{todayLabel}</div>
 
-      <div className="card" style={{ padding: 24 }}>
+      <div className="card p-6">
         {statusError ? <div role="alert"><p>{t("att.couldNotLoad")}</p><button className="btn-secondary" onClick={refresh}>{t("business.retry")}</button></div> : loading ? (
           <div style={{ padding: "10px 0" }}>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><Skeleton height={15} width={130} /></div>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}><Skeleton height={118} width={118} radius={60} /></div>
+            <div className="d-flex jc-c mb-4"><Skeleton height={15} width={130} /></div>
+            <div className="d-flex jc-c mb-5"><Skeleton height={118} width={118} radius={60} /></div>
             <Skeleton height={46} radius={12} />
           </div>
         ) : (
           <>
             {/* STATUS */}
-            <div style={{ textAlign: "center", marginBottom: 6 }}>
+            <div className="u-center mb-2">
               <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, letterSpacing: 1.5, color: statusColor }}>
                 <span style={{ width: 9, height: 9, borderRadius: "50%", background: statusColor, boxShadow: clockedIn ? `0 0 10px ${statusColor}` : "none" }} />
                 <Icon e={statusEmoji} size={14} color={statusColor} /> {statusLabel}
               </span>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5 }}>
+              <div className="t-xs u-muted mt-1">
                 {clockedIn ? (onBreak ? t("att.subOnBreak") : t("att.subWorking")) : t("att.subReady")}
               </div>
             </div>
@@ -323,9 +323,9 @@ export default function AttendancePage() {
             {/* STOPWATCH */}
             <div style={{ textAlign: "center", margin: "20px 0 18px" }}>
               <div style={{ fontSize: 48, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1, letterSpacing: 1 }}>
-                {tt.h}<span style={{ fontSize: 24, color: "var(--gray)" }}>h </span>
-                {String(tt.m).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>m </span>
-                {String(tt.s).padStart(2, "0")}<span style={{ fontSize: 24, color: "var(--gray)" }}>s</span>
+                {tt.h}<span className="t-2xl u-muted">h </span>
+                {String(tt.m).padStart(2, "0")}<span className="t-2xl u-muted">m </span>
+                {String(tt.s).padStart(2, "0")}<span className="t-2xl u-muted">s</span>
               </div>
               <div style={{ fontSize: 12, letterSpacing: 2.5, color: "var(--gray)", marginTop: 8, textTransform: "uppercase" }}>{t("att.totalTimeToday")}</div>
             </div>
@@ -361,11 +361,11 @@ export default function AttendancePage() {
                     <button onClick={() => openCode("out")} disabled={working} style={secBtn(working)}>{t("att.code")}</button>
                   </div>
                 )}
-                {onBreak && <div style={{ fontSize: 12, color: "var(--gray)", textAlign: "center" }}>{t("att.endBreakFirst")}</div>}
+                {onBreak && <div className="t-xs u-muted u-center">{t("att.endBreakFirst")}</div>}
               </div>
             )}
 
-            {message && <div style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: "var(--gold)" }}>{message}</div>}
+            {message && <div className="u-center mt-4 t-sm tone-action">{message}</div>}
           </>
         )}
       </div>
@@ -377,19 +377,19 @@ export default function AttendancePage() {
           {timeline.map((e, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.color, flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: 14, color: "var(--white)" }}>{e.label}</span>
-              {e.extra && <span style={{ fontSize: 12, color: "var(--warn)" }}>{e.extra}</span>}
-              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gold)" }}>{e.time}</span>
+              <span className="u-flex1 t-md u-text">{e.label}</span>
+              {e.extra && <span className="t-xs tone-warn">{e.extra}</span>}
+              <span className="t-md fw-6 tone-action">{e.time}</span>
             </div>
           ))}
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 13 }}>
+          <div className="d-flex jc-sb mt-3 t-sm">
             <span className="u-muted">{t("att.totalBreakTime")}</span>
-            <span style={{ color: "var(--warn)", fontWeight: 600 }}>{totalBreakMin} {t("att.minutesShort")}</span>
+            <span className="tone-warn fw-6">{totalBreakMin} {t("att.minutesShort")}</span>
           </div>
           {session?.clock_out && (
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 13 }}>
+            <div className="d-flex jc-sb mt-2 t-sm">
               <span className="u-muted">{t("att.totalTimeInOut")}</span>
-              <span style={{ color: "var(--gold)", fontWeight: 700 }}>{fmtDur(session.duration_mins)}</span>
+              <span className="tone-action fw-7">{fmtDur(session.duration_mins)}</span>
             </div>
           )}
         </div>
@@ -400,10 +400,10 @@ export default function AttendancePage() {
       {/* CODE ENTRY MODAL */}
       {showCode && (
         <NativeDialog title={codeMode === "out" ? t("att.codeOutTitle") : t("att.codeInTitle")} busy={working} onClose={() => setShowCode(false)}>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, color: "var(--white)" }}>
+            <div className="t-xl fw-7 mb-1 u-text">
               {codeMode === "out" ? t("att.codeOutTitle") : t("att.codeInTitle")}
             </div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 16 }}>
+            <div className="t-xs u-muted mb-4">
               {t("att.codeHint")}
             </div>
             <input
@@ -416,8 +416,8 @@ export default function AttendancePage() {
               inputMode="numeric"
               style={{ width: "100%", padding: "14px", fontSize: 28, letterSpacing: 8, textAlign: "center", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", boxSizing: "border-box" }}
             />
-            {codeErr && <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 10, textAlign: "center" }}>{codeErr}</div>}
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            {codeErr && <div className="tone-danger t-xs mt-3 u-center">{codeErr}</div>}
+            <div className="d-flex gap-2 mt-4">
               <button disabled={working} onClick={() => setShowCode(false)} style={{ ...secBtn(false), flex: 1 }}>{t("common.cancel")}</button>
               <button onClick={submitCode} disabled={working} style={{ ...bigBtn("linear-gradient(135deg,#1e8449,#27ae60)", working), flex: 1 }}>{working ? "…" : t("att.confirm")}</button>
             </div>
@@ -427,7 +427,7 @@ export default function AttendancePage() {
       <button onClick={toggleHistory} style={historyToggle}><Icon className="u-icon-inline" e="📅" size={15} /> {showHistory ? t("att.hideHistory") : t("att.viewHistory")}</button>
 
       {showHistory && (
-        <div style={{ marginTop: 14 }}>
+        <div className="mt-4">
           {/* week / month tabs */}
           <div className="hub-tabs">
             <button className={`hub-tab${histTab === "week" ? " active" : ""}`} onClick={() => switchHistTab("week")}><Icon className="u-icon-inline" e="📅" size={13} /> {t("att.weekLabel")}</button>
@@ -436,12 +436,12 @@ export default function AttendancePage() {
 
           {/* days worked + hours stats */}
           <div className="card" style={{ display: "flex", padding: "16px 0", marginBottom: 12 }}>
-            <div style={{ flex: 1, textAlign: "center" }}>
+            <div className="u-flex1 u-center">
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histDaysWorked}</div>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{t("att.daysWorked")}</div>
             </div>
             <div style={{ width: 1, background: "var(--surface-2)" }} />
-            <div style={{ flex: 1, textAlign: "center" }}>
+            <div className="u-flex1 u-center">
               <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--gold)", lineHeight: 1 }}>{histHours}</div>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 5, letterSpacing: 1, textTransform: "uppercase" }}>{histTab === "week" ? t("att.weekLabel") : t("att.monthLabel")}</div>
             </div>
@@ -459,15 +459,15 @@ export default function AttendancePage() {
             history.map((s) => {
               const bmin = Math.round(computeBreakMs(s.breaks) / 60000);
               return (
-                <div key={s.id} className="card" style={{ padding: 14, marginBottom: 8 }}>
+                <div key={s.id} className="card p-4 mb-2">
                   <div className="u-between">
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)", display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--warn)", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)" }}>
+                    <div className="t-md fw-6 u-text d-flex ai-c gap-2">{fmtDate(s.work_date)}{s.source === "offline" && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--warn)", background: "rgba(232,163,90,0.15)", padding: "2px 6px", borderRadius: 10 }}>{t("sync.offlineTag")}</span>}</div>
+                    <div className="t-md fw-7 tone-action">
                       {s.status === "active" || s.status === "on-break" ? t("att.inProgress") : fmtDur(s.duration_mins)}
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>
-                    {t("att.recordIn")} {fmtTime(s.clock_in)} → {t("att.recordOut")} {fmtTime(s.clock_out)}{bmin > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}> · <Icon e="☕" size={11} /> {bmin} {t("att.minBreak")}</span>}
+                  <div className="t-xs u-muted mt-1">
+                    {t("att.recordIn")} {fmtTime(s.clock_in)} → {t("att.recordOut")} {fmtTime(s.clock_out)}{bmin > 0 && <span className="d-iflex ai-c gap-1"> · <Icon e="☕" size={11} /> {bmin} {t("att.minBreak")}</span>}
                   </div>
                 </div>
               );

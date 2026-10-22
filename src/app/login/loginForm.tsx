@@ -161,9 +161,9 @@ export default function LoginForm() {
         </button>
 
         <div style={{ marginTop: 18, textAlign: "center", fontSize: 11, color: "#7a6f6f" }}>
-          <a href="/privacy" style={{ color: "var(--gray)", textDecoration: "none" }}>Privacy</a>
+          <a className="u-muted td-n" href="/privacy">Privacy</a>
           <span style={{ margin: "0 8px" }}>·</span>
-          <a href="/terms" style={{ color: "var(--gray)", textDecoration: "none" }}>Terms</a>
+          <a className="u-muted td-n" href="/terms">Terms</a>
         </div>
       </div>
     </div>

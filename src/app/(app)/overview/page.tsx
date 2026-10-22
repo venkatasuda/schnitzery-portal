@@ -72,16 +72,16 @@ export default function OverviewPage() {
           <div className="section-label">{t("org.ranking")}</div>
           <div className="u-stack">
             {data.ranking.map((b: any) => (
-              <div key={b.id} className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12 }}>
+              <div key={b.id} className="card p-3 d-flex ai-c gap-3">
                 <div style={{ fontSize: 16, fontWeight: 800, color: b.rank === 1 ? GOLD : "var(--gray)", width: 26, textAlign: "center" }}>{b.rank}</div>
                 <div className="u-grow">
                   <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
                   <div className="ui-muted">
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="🟢" size={10} color="var(--success)" />{b.workingNow}</span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="👥" size={11} />{b.employees}</span>
-                      {b.issues > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--warn)" }}><Icon e="⚠" size={11} />{b.issues}</span>}
-                      {b.expiringDocs > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon e="📄" size={11} />{b.expiringDocs}</span>}
+                    <span className="d-iflex ai-c gap-2 f-wrap">
+                      <span className="d-iflex ai-c gap-h"><Icon e="🟢" size={10} color="var(--success)" />{b.workingNow}</span>
+                      <span className="d-iflex ai-c gap-h"><Icon e="👥" size={11} />{b.employees}</span>
+                      {b.issues > 0 && <span className="d-iflex ai-c gap-h tone-warn"><Icon e="⚠" size={11} />{b.issues}</span>}
+                      {b.expiringDocs > 0 && <span className="d-iflex ai-c gap-h"><Icon e="📄" size={11} />{b.expiringDocs}</span>}
                     </span>
                   </div>
                 </div>
@@ -93,7 +93,7 @@ export default function OverviewPage() {
             ))}
           </div>
           {/* branch comparison (period) */}
-          <div className="section-label" style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div className="section-label mt-4 d-flex ai-c jc-sb gap-3">
             <span>{t("org.compareTitle")}</span>
             <div className="hub-tabs u-m0">
               {(["weekly", "monthly"] as const).map((p) => (
@@ -105,18 +105,18 @@ export default function OverviewPage() {
             <div className="card" style={{ padding: 0, overflowX: "auto" }}>
               <table className="data-table">
                 <thead><tr>
-                  <th scope="col" style={{ textAlign: "left", fontWeight: 600 }}>{t("org.colBranch")}</th>
+                  <th className="u-left fw-6" scope="col">{t("org.colBranch")}</th>
                   <th className="u-center u-semibold" scope="col">{t("org.colAttendance")}</th>
                   <th className="u-center u-semibold" scope="col">{t("org.colHours")}</th>
-                  <th scope="col" style={{ textAlign: "right", fontWeight: 600 }}>{t("org.colCost")}</th>
+                  <th className="u-right fw-6" scope="col">{t("org.colCost")}</th>
                 </tr></thead>
                 <tbody>
                   {cmp.rows.map((b: any) => (
-                    <tr key={b.id} style={{ borderTop: "1px solid var(--border)" }}>
+                    <tr className="bt-1" key={b.id}>
                       <td className="ui-strong-inline">{b.name}</td>
                       <td style={{ textAlign: "center", color: rateColor(b.attendancePct), fontWeight: 700 }}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
-                      <td style={{ textAlign: "center", color: "var(--white)" }}>{b.laborHours}h</td>
-                      <td style={{ textAlign: "right", color: "var(--gold-ink)", fontWeight: 600 }}>{b.laborCost ? `${b.missingWageStaff ? "≥ " : ""}€${b.laborCost.toFixed(0)}` : "—"}</td>
+                      <td className="u-center u-text">{b.laborHours}h</td>
+                      <td className="u-right tone-action fw-6">{b.laborCost ? `${b.missingWageStaff ? "≥ " : ""}€${b.laborCost.toFixed(0)}` : "—"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -54,7 +54,7 @@ export default function PeopleHubPage() {
             title={t("schedhub.notes")}
             sub={t("ph.notesSub")}
           />
-          <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
+          <div className="card t-xs u-muted lh-16">
             {t("ph.noteHint")}
           </div>
         </div>

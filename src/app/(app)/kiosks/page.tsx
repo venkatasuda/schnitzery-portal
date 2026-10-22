@@ -54,7 +54,7 @@ export default function KiosksPage() {
       <div className="page-sub">{t("kioskadm.subtitle")}</div>
 
       {/* add */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+      <div className="d-flex gap-2 mb-4">
         <input aria-label={t("kioskadm.addPlaceholder")} value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder={t("kioskadm.addPlaceholder")}
           style={{ flex: 1, padding: "11px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" }} />
         <button onClick={add} disabled={busy || !newLabel.trim()} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy || !newLabel.trim() ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("kioskadm.add")}</button>

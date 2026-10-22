@@ -44,7 +44,7 @@ export default function MyDayPage() {
             title={t("myday.availTitle")}
             sub={t("myday.availSub")}
           />
-          <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
+          <div className="card t-xs u-muted lh-16">
 {t("myday.availNote")}
           </div>
         </div>
@@ -53,15 +53,15 @@ export default function MyDayPage() {
       {tab === "timeoff" && (
         <div className="hub-tab-panel active">
           {bal && (
-            <div className="card" style={{ marginBottom: 4 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--white)" }}><Icon className="u-icon-inline" e="🌴" size={13} /> {t("myday.vacationYear", { year: bal.year })}</span>
-                <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{t("myday.daysLeft", { n: bal.remaining })}</span>
+            <div className="card mb-1">
+              <div className="d-flex jc-sb ai-b mb-2">
+                <span className="t-md fw-7 u-text"><Icon className="u-icon-inline" e="🌴" size={13} /> {t("myday.vacationYear", { year: bal.year })}</span>
+                <span className="t-sm tone-action fw-7">{t("myday.daysLeft", { n: bal.remaining })}</span>
               </div>
               <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ width: `${bal.allowance > 0 ? Math.min(100, Math.round((bal.used / bal.allowance) * 100)) : 0}%`, height: "100%", background: "var(--gold)" }} />
               </div>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6 }}>{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
+              <div className="t-xs u-muted mt-2">{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
             </div>
           )}
           <HubLink

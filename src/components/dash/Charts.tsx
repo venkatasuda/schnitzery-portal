@@ -124,7 +124,7 @@ export function Legend({ items }: { items: { name: string; tone: Tone; value?: s
   return (
     <div className="u-stack">
       {items.map((it, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+        <div className="d-flex ai-c gap-2 t-sm" key={i}>
           <span style={{ width: 10, height: 10, borderRadius: 3, background: toneColor(c, it.tone), flexShrink: 0 }} />
           <span style={{ color: "var(--gray-light)", flex: 1 }}>{it.name}</span>
           {it.value != null && <span className="ui-strong-inline">{it.value}</span>}

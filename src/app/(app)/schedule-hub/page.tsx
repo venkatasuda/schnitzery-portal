@@ -128,7 +128,7 @@ export default function ScheduleHubPage() {
                     {(ov?.byPersonArr || []).slice(0, 6).map((p: any) => (
                       <div key={p.name} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
                         <span className="u-text">{p.name}</span>
-                        <span style={{ color: "var(--gold)", fontWeight: 600 }}>{t("schedhub.shiftsCount", { n: p.count })}</span>
+                        <span className="tone-action fw-6">{t("schedhub.shiftsCount", { n: p.count })}</span>
                       </div>
                     ))}
                   </div>
@@ -149,18 +149,18 @@ export default function ScheduleHubPage() {
               {(ov?.conflicts || []).length === 0 ? (
                 <div className="card" style={{ textAlign: "center", padding: 28 }}>
                   <div className="u-mb-2"><Icon e="✅" size={28} color="var(--success)" /></div>
-                  <div style={{ color: "var(--success)", fontSize: 14, fontWeight: 600 }}>{t("schedhub.noConflicts")}</div>
-                  <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 4 }}>{t("schedhub.noConflictsSub")}</div>
+                  <div className="tone-success t-md fw-6">{t("schedhub.noConflicts")}</div>
+                  <div className="u-muted t-xs mt-1">{t("schedhub.noConflictsSub")}</div>
                 </div>
               ) : (
                 <div className="card">
                   <div className="card-title">{t("schedhub.conflictsToReview", { n: ov.conflicts.length })}</div>
                   {ov.conflicts.map((c: any, i: number) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < ov.conflicts.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
-                      <span style={{ fontSize: 16 }}><Icon e={c.type === "Double-booked" ? "🔁" : "⚠️"} size={15} /></span>
+                      <span className="t-lg"><Icon e={c.type === "Double-booked" ? "🔁" : "⚠️"} size={15} /></span>
                       <div className="u-flex1">
-                        <div className="ui-strong">{c.name} <span style={{ color: "var(--gray)", fontWeight: 400, fontSize: 12 }}>· {dayLabel(c.day)}</span></div>
-                        <div style={{ fontSize: 12, color: "var(--warn)" }}>{c.type} — {c.detail}</div>
+                        <div className="ui-strong">{c.name} <span className="u-muted fw-4 t-xs">· {dayLabel(c.day)}</span></div>
+                        <div className="t-xs tone-warn">{c.type} — {c.detail}</div>
                       </div>
                     </div>
                   ))}
@@ -217,7 +217,7 @@ function BarRow({ label, count, max, color }: { label: string; count: number; ma
   const pct = max > 0 ? Math.round((count / max) * 100) : 0;
   return (
     <div style={{ padding: "7px 0" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+      <div className="d-flex jc-sb t-sm mb-1">
         <span className="u-text">{label}</span>
         <span className="u-muted">{count}</span>
       </div>

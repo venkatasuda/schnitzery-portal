@@ -38,8 +38,8 @@ export default function SimulatorPage() {
   const marginColor = marginPct == null ? "var(--gray)" : marginPct >= 25 ? "var(--success)" : marginPct >= 12 ? "#d4a847" : "var(--danger)";
 
   const Slider = ({ label, val, set, hint }: { label: string; val: number; set: (n: number) => void; hint: string }) => (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+    <div className="mb-5">
+      <div className="d-flex jc-sb mb-2">
         <span className="ui-body">{label}</span>
         <span style={{ fontSize: 13, fontWeight: 700, color: val === 0 ? "var(--gray)" : val > 0 ? "var(--danger)" : "var(--success)" }}>{val > 0 ? "+" : ""}{val}%</span>
       </div>
@@ -82,13 +82,13 @@ export default function SimulatorPage() {
               <Metric label={t("sim.foodPct")} baseVal={base.foodPct} simVal={foodPct} color="var(--white)" />
               <Metric label={t("sim.laborPct")} baseVal={base.laborPct} simVal={laborPct} color="var(--white)" />
             </div>
-            <div style={{ fontSize: 12, color: "var(--gray)", textAlign: "center", marginTop: 8 }}>
+            <div className="t-xs u-muted u-center mt-2">
               {t("sim.projected", { sales: eur(simSales), food: eur(simFood), labor: eur(simLabor) })}
             </div>
           </div>
 
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div className="card p-4">
+            <div className="d-flex jc-sb ai-c mb-4">
               <div className="card-title u-m0">{t("sim.whatIf")}</div>
               <button className="ui-link-btn" onClick={reset}>{t("sim.reset")}</button>
             </div>
@@ -97,7 +97,7 @@ export default function SimulatorPage() {
             <Slider label={t("sim.salesPrice")} val={sales} set={setSales} hint={t("sim.salesHint")} />
           </div>
 
-          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 12, textAlign: "center" }}>{t("sim.note")}</div>
+          <div className="t-xs u-muted mt-3 u-center">{t("sim.note")}</div>
         </>
       )}
     </div>

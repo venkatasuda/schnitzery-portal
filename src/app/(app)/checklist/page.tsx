@@ -68,10 +68,10 @@ export default function ChecklistStatusPage() {
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
       <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 14 }}>{t("checklist.statusSub")}</p>
+      <p className="u-muted t-sm mb-4">{t("checklist.statusSub")}</p>
 
       <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <label style={{ fontSize: 13, color: "var(--gray)", flexShrink: 0 }}>{t("checklist.pickDate")}</label>
+        <label className="t-sm u-muted fs-0">{t("checklist.pickDate")}</label>
         <input aria-label={t("checklist.pickDate")} type="date" value={date} max={berlinTodayStr()} onChange={(e) => setDate(e.target.value || berlinTodayStr())} style={{ ...input, flex: 1 }} />
         {!loading && summary.total > 0 && (
           <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0, color: summary.done === summary.total ? "var(--success)" : "#d4a847" }}>

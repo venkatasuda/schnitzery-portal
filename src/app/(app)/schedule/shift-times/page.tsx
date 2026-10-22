@@ -49,7 +49,7 @@ export default function ShiftTimesPage() {
         <CardSkeleton rows={4} />
       ) : (
         teams.map((team) => (
-          <div key={team} style={{ marginBottom: 18 }}>
+          <div className="mb-5" key={team}>
             <div className="section-label">{teamLabel(team)}</div>
             <div className="u-stack">
               {rows.filter((r) => r.team === team).map((r) => {
@@ -57,14 +57,14 @@ export default function ShiftTimesPage() {
                 const isBranch = r.scope === "branch";
                 const saving = busy === r.team + r.shift;
                 return (
-                  <div key={r.shift} className="card" style={{ padding: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                      <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.shift}</div>
+                  <div key={r.shift} className="card p-3">
+                    <div className="d-flex ai-c gap-2 mb-3">
+                      <div className="u-flex1 t-md fw-6 u-text">{r.shift}</div>
                       <span style={{ fontSize: 12, fontWeight: 700, color: isBranch ? "var(--action)" : "var(--gray)", background: isBranch ? "var(--accent-soft)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
                         {isBranch ? t("shiftcfg.scopeBranch") : t("shiftcfg.scopeDefault")}
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                    <div className="d-flex gap-2 ai-e">
                       <label className="u-flex1">
                         <div style={lbl}>{t("shiftcfg.start")}</div>
                         <input className="form-input" type="time" value={r.start} onChange={(e) => edit(r.team, r.shift, "start", e.target.value)} />
@@ -79,7 +79,7 @@ export default function ShiftTimesPage() {
                       </label>
                       <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
                     </div>
-                    {crosses && <div style={{ fontSize: 12, color: "var(--warn)", marginTop: 8 }}><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
+                    {crosses && <div className="t-xs tone-warn mt-2"><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
                   </div>
                 );
               })}

@@ -86,7 +86,7 @@ export default function LaborPage() {
       {loading ? (
         <Skeleton height={120} radius={14} style={{ marginBottom: 14 }} />
       ) : (
-        <div className="card" style={{ textAlign: "center", marginBottom: 14 }}>
+        <div className="card u-center mb-4">
           <div style={{ fontSize: 12, color: "var(--gray)", letterSpacing: 1, textTransform: "uppercase" }}>{t("lab.laborPct")}</div>
           <div style={{ fontSize: 46, fontWeight: 800, fontFamily: "var(--font-display)", color: pctColor, lineHeight: 1.1 }}>
             {pct == null ? "—" : `${pct}%`}
@@ -96,7 +96,7 @@ export default function LaborPage() {
             <span>{t("lab.sales")} <b className="u-text">{sum?.recordedSalesDays ? eur(sum.monthSales) : "—"}</b></span>
           </div>
           {pct == null && <div className="ui-note">{t("lab.enterToCalc")}</div>}
-          {!!sum?.missingWageStaff && <p role="status" style={{ color: "var(--warn)" }}>{t("lab.missingWageCost")}</p>}
+          {!!sum?.missingWageStaff && <p className="tone-warn" role="status">{t("lab.missingWageCost")}</p>}
           {pct != null && <div style={{ fontSize: 12, color: pctColor, marginTop: 8 }}>{pct <= 30 ? t("lab.healthy") : pct <= 35 ? t("lab.watchIt") : t("lab.high")} · {t("lab.typicalTarget")}</div>}
         </div>
       )}
@@ -104,7 +104,7 @@ export default function LaborPage() {
       {/* enter sales */}
       <div className="section-label">{t("lab.enterDailySales")}</div>
       <div className="card u-mb-2">
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div className="d-flex gap-2 ai-e f-wrap">
           <div className="u-flex1">
             <div style={lbl}>{t("lab.date")}</div>
             <input className="form-input" type="date" aria-label={t("lab.date")} value={date} onChange={(e) => setDate(e.target.value)} />
@@ -120,7 +120,7 @@ export default function LaborPage() {
       </div>
 
       {sales.length > 0 && (
-        <div className="card" style={{ padding: 8, marginBottom: 6 }}>
+        <div className="card p-2 mb-2">
           {sales.map((s, i) => (
             <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 6px", borderBottom: i < sales.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none", fontSize: 13 }}>
               <span className="u-muted">{new Date(s.sale_date).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" })}</span>
@@ -132,17 +132,17 @@ export default function LaborPage() {
 
       {/* staff wages */}
       <div className="section-label">{t("lab.staffWages")}</div>
-      <p style={{ color: "var(--gray)", fontSize: 14 }}>{t("lab.wageBasis")}</p>
+      <p className="u-muted t-md">{t("lab.wageBasis")}</p>
       {loading ? (
         <Skeleton height={120} radius={14} />
       ) : (
-        <div className="card" style={{ padding: 8 }}>
+        <div className="card p-2">
           {staff.map((p, i) => (
             <div key={p.id} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "9px 6px", borderBottom: i < staff.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none" }}>
               <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.full_name}</div>
                 <div className="ui-muted">{p.team || "—"}</div>
-                {!p.history?.some((h: any) => h.effective_from) && <div style={{ color: "var(--warn)", fontSize: 12 }}>{t("lab.unconfirmedDate")}</div>}
+                {!p.history?.some((h: any) => h.effective_from) && <div className="tone-warn t-xs">{t("lab.unconfirmedDate")}</div>}
               </div>
               <input
                 type="number" inputMode="decimal" min="0" step="0.01" disabled={!!savingWage}

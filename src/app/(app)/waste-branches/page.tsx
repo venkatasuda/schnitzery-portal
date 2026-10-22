@@ -48,23 +48,23 @@ export default function WasteByBranchPage() {
         <div className="card ui-empty-msg">{t("wbranch.none")}</div>
       ) : (
         <>
-          <div className="card" style={{ padding: 14, marginBottom: 12 }}>
+          <div className="card p-4 mb-3">
             <div className="ui-muted">{t("wbranch.total")}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "var(--danger)" }}>{eur(data.total)}</div>
+            <div className="t-2xl fw-7 tone-danger">{eur(data.total)}</div>
           </div>
 
           {rows.map((r: any, i: number) => (
-            <div key={r.branchId} className="card" style={{ padding: 14, marginBottom: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>
+            <div key={r.branchId} className="card p-4 mb-2">
+              <div className="d-flex jc-sb ai-b mb-2">
+                <span className="t-lg fw-6 u-text">
                   <span style={{ color: i === 0 ? "var(--danger)" : "var(--gray)", marginRight: 6 }}>#{i + 1}</span>{r.name}
                 </span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "var(--danger)" }}>{eur(r.value)}</span>
+                <span className="t-lg fw-7 tone-danger">{eur(r.value)}</span>
               </div>
               <div style={{ height: 8, background: "var(--surface-2)", borderRadius: 5, overflow: "hidden" }}>
                 <div style={{ width: `${Math.round((r.value / max) * 100)}%`, height: "100%", background: "linear-gradient(90deg,#e67e22,#c0392b)" }} />
               </div>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, display: "flex", justifyContent: "space-between" }}>
+              <div className="t-xs u-muted mt-2 d-flex jc-sb">
                 <span>{t("wbranch.entries", { n: r.count })}</span>
                 {r.pct != null && <span>{t("wbranch.pctOfSales", { p: r.pct })}</span>}
               </div>

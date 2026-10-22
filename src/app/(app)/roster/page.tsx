@@ -136,7 +136,7 @@ export default function RosterPage() {
       {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
       {/* week nav + save */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
+      <div className="d-flex jc-sb ai-c mb-4 gap-2 f-wrap">
         <div className="u-hstack">
           <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(-1)}>{t("shifts.prev")}</button>
           <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--action)", fontWeight: 600, padding: "0 4px" }}>
@@ -156,7 +156,7 @@ export default function RosterPage() {
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
           <div className="card u-mb-3">
             <div className="card-title">{t("roster.weekGlance", { n: totalAssigned })}</div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
+            <div className="d-flex jc-sb gap-1">
               {DAYS.map((d) => {
                 const count = roster[d]?.length || 0;
                 const isActive = activeDay === d;
@@ -178,7 +178,7 @@ export default function RosterPage() {
           <div className="card u-mb-3">
             <button onClick={() => setShowHours(!showHours)} style={{ width: "100%", background: "none", border: "none", color: "var(--white)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: 0 }}>
               <span className="card-title u-m0">{t("roster.teamHours")}</span>
-              <span style={{ color: "var(--gray)", fontSize: 13 }}>{showHours ? "▾" : "▸"}</span>
+              <span className="u-muted t-sm">{showHours ? "▾" : "▸"}</span>
             </button>
             {showHours && (
               <div className="u-mt-3">
@@ -193,8 +193,8 @@ export default function RosterPage() {
                     const barColor = over ? "#e74c3c" : near ? "var(--action)" : "#27ae60";
                     const left = p.contractHours != null ? Math.round((p.contractHours - (p.workedH || 0)) * 10) / 10 : null;
                     return (
-                      <div key={p.id} style={{ marginBottom: 10 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+                      <div className="mb-3" key={p.id}>
+                        <div className="d-flex jc-sb t-sm mb-1">
                           <span className="u-text">{p.full_name}</span>
                           <span style={{ color: over ? "var(--danger)" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
                             {p.contractHours != null ? `${p.workedH || 0}/${p.contractHours}h` : `${p.workedH || 0}h`}
@@ -218,10 +218,10 @@ export default function RosterPage() {
             return (
               <div key={day} className="card" style={{ marginBottom: 10, borderColor: isActive ? "var(--accent-line)" : undefined }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: entries.length ? 10 : 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>
+                  <div className="t-lg fw-7 u-text">
                     {dayLabel(day)}
                     {entries.length > 0 && (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--action)", marginLeft: 8 }}>{t("roster.assigned", { n: entries.length })}</span>
+                      <span className="t-xs fw-6 tone-action ml-2">{t("roster.assigned", { n: entries.length })}</span>
                     )}
                   </div>
                   <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--action)" : "var(--dark3)", color: isActive ? "var(--on-action)" : "var(--white)", fontWeight: 600 }}>
@@ -233,7 +233,7 @@ export default function RosterPage() {
                 {entries.map((e, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAM_COLORS[e.team] || "#888", flexShrink: 0 }} />
-                    <div style={{ flex: 1, fontSize: 13, color: "var(--white)" }}>
+                    <div className="u-flex1 t-sm u-text">
                       <b>{e.name}</b> <span className="u-muted">· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
                     {submitted(e.user_id) && !availableDay(e.user_id, day) && (

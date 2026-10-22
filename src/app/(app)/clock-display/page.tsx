@@ -55,7 +55,7 @@ export default function ClockDisplayPage() {
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 4 }}>
         <Icon e="📲" size={24} style={{ verticalAlign: "-3px", marginRight: 8 }} /> {t("cd.title")}
       </h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 24 }}>
+      <p className="u-muted t-sm mb-6">
         {t("cd.subtitle")}
       </p>
 
@@ -65,7 +65,7 @@ export default function ClockDisplayPage() {
         ) : (
           <>
             {/* QR */}
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+            <div className="d-flex jc-c mb-6">
               {qrImg ? (
                 <img src={qrImg} alt="Clock QR" style={{ width: 260, height: 260, borderRadius: 16, background: "#fff", padding: 8 }} />
               ) : (
@@ -80,7 +80,7 @@ export default function ClockDisplayPage() {
             </div>
 
             {/* countdown */}
-            <div style={{ marginTop: 20 }}>
+            <div className="mt-5">
               <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: "#d4a847", transition: "width 1s linear" }} />
               </div>
@@ -92,7 +92,7 @@ export default function ClockDisplayPage() {
         )}
       </div>
 
-      <p style={{ fontSize: 12, color: "var(--gray)", marginTop: 16 }}>
+      <p className="t-xs u-muted mt-4">
         {t("cd.codeChanges", { n: rotateSeconds })}
       </p>
     </div>

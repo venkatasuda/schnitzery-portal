@@ -42,7 +42,7 @@ export default function AuditPage() {
               {l.details && <div className="ui-meta">{l.details}</div>}
               <div className="ui-meta">{t("audit.by", { actor: l.actor || "—" })}</div>
             </div>
-            <div style={{ fontSize: 12, color: "var(--gray)", whiteSpace: "nowrap" }}>{fmt(l.created_at)}</div>
+            <div className="t-xs u-muted ws-nw">{fmt(l.created_at)}</div>
           </div>
         ))
       )}

@@ -117,10 +117,10 @@ export default function CorrectionsPage() {
       </div>
 
       {type && (
-        <div className="card" style={{ padding: 14, marginBottom: 18 }}>
+        <div className="card p-4 mb-5">
           {/* record picker (for everything except 'missing') */}
           {type !== "missing" && history.length > 0 && (
-            <label style={{ display: "block", marginBottom: 10 }}>
+            <label className="d-block mb-3">
               <div style={lbl}>{t("corr.pickRecord")}</div>
               <select className="form-input" value={logId || ""} onChange={(e) => pickRecord(e.target.value)}>
                 <option value="">—</option>
@@ -131,12 +131,12 @@ export default function CorrectionsPage() {
             </label>
           )}
 
-          <label style={{ display: "block", marginBottom: 10 }}>
+          <label className="d-block mb-3">
             <div style={lbl}>{t("corr.date")}</div>
             <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </label>
 
-          <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          <div className="d-flex gap-3 mb-3">
             {needsIn(type) && (
               <label className="u-flex1">
                 <div style={lbl}>{t("corr.reqIn")}</div>
@@ -151,7 +151,7 @@ export default function CorrectionsPage() {
             )}
           </div>
 
-          <label style={{ display: "block", marginBottom: 12 }}>
+          <label className="d-block mb-3">
             <div style={lbl}>{t("corr.reason")}</div>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder={t("corr.reasonPlaceholder")}
               style={{ ...input, resize: "vertical" }} />
@@ -175,10 +175,10 @@ export default function CorrectionsPage() {
           {mine.map((r) => {
             const b = statusBadge(r.status);
             return (
-              <div key={r.id} className="card" style={{ padding: 12 }}>
+              <div key={r.id} className="card p-3">
                 <div className="u-row">
                   <div className="u-grow">
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{typeLabel(r.type)} · {fmtDate(r.target_date)}</div>
+                    <div className="t-sm fw-6 u-text">{typeLabel(r.type)} · {fmtDate(r.target_date)}</div>
                     <div className="ui-meta">
                       {r.requested_clock_in && `${t("corr.reqIn")}: ${fmtTime(r.requested_clock_in)}`}
                       {r.requested_clock_in && r.requested_clock_out && " · "}

@@ -77,10 +77,10 @@ export default function ChecklistStatusPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 14 }}>{t("checklist.statusSub")}</p>
+      <p className="u-muted t-sm mb-4">{t("checklist.statusSub")}</p>
 
       <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <label style={{ fontSize: 13, color: "var(--gray)", flexShrink: 0 }}>{t("checklist.pickDate")}</label>
+        <label className="t-sm u-muted fs-0">{t("checklist.pickDate")}</label>
         <input aria-label={t("checklist.pickDate")} type="date" value={date} max={berlinTodayStr()} onChange={(e) => setDate(e.target.value || berlinTodayStr())} style={{ ...input, flex: 1 }} />
         {!loading && summary.total > 0 && (
           <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0, color: summary.done === summary.total ? "var(--success)" : "#d4a847" }}>
@@ -92,8 +92,8 @@ export default function ChecklistStatusPage() {
       {/* HISTORY — recent days, tap to open */}
       {history.length > 0 && (
         <div style={{ ...card, marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{t("checklist.history")}</div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>{t("checklist.historySub")}</div>
+          <div className="t-sm fw-7 mb-h">{t("checklist.history")}</div>
+          <div className="t-xs u-muted mb-2">{t("checklist.historySub")}</div>
           <div style={{ maxHeight: 220, overflowY: "auto" }}>
             {history.map((d) => {
               const sel = d.date === date;
@@ -109,7 +109,7 @@ export default function ChecklistStatusPage() {
                   <span style={{ fontSize: 12, fontWeight: 700, color: c }}>
                     {d.done === d.total ? t("checklist.allDone") : `${d.done}/${d.total}`}
                   </span>
-                  <span style={{ color: "var(--gray)", fontSize: 14 }}>›</span>
+                  <span className="u-muted t-md">›</span>
                 </button>
               );
             })}
