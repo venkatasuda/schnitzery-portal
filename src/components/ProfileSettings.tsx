@@ -139,7 +139,7 @@ export default function ProfileSettings() {
               </button>
             </div>
             <input aria-label={t("settings.confirmPwPlaceholder")} type={showPw ? "text" : "password"} placeholder={t("settings.confirmPwPlaceholder")} value={pw2} onChange={(e) => setPw2(e.target.value)} style={inputStyle} />
-            <button onClick={changePassword} disabled={busy} style={{ width: "100%", padding: 12, background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: busy ? "default" : "pointer" }}>
+            <button className="btn-gold ui-block" onClick={changePassword} disabled={busy}>
               {busy ? t("common.saving") : t("settings.updatePassword")}
             </button>
           </div>

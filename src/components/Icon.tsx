@@ -11,7 +11,7 @@ import {
   Stethoscope, Briefcase, Scroll, GraduationCap, DoorOpen, LogOut, HelpCircle, Target,
   Inbox, Radio, Hourglass, Square, Printer, ThumbsUp, Phone, MessageSquare, Mail,
   Lightbulb, Circle, ArrowRight, ArrowLeft, ArrowUpRight, ArrowLeftRight, ChevronRight,
-  Thermometer, Trash2,
+  Thermometer, Trash2, Bug, Zap, Flame,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,7 +41,7 @@ const MAP: Record<string, LucideIcon> = {
   "📄": FileText, "📜": Scroll, "📑": Files, "🧾": ReceiptText, "🪪": IdCard,
   "📁": Folder, "🗂": FolderOpen,
   "🔔": Bell, "📣": Megaphone, "📲": Smartphone, "🖥": Monitor, "🖨": Printer,
-  "🌴": Umbrella, "📦": Package, "🌡": Thermometer, "🗑": Trash2,
+  "🌴": Umbrella, "📦": Package, "🌡": Thermometer, "🗑": Trash2, "🦠": Bug, "💥": Zap, "🔥": Flame,
   "💾": Save, "⬇": Download, "📤": Upload, "📥": Inbox, "📭": Inbox,
   "🏢": Building2, "🔒": Lock, "🔄": RefreshCw, "🔁": Repeat, "🔀": Shuffle,
   "💶": Euro, "💵": Banknote, "💼": Briefcase,

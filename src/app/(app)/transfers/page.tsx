@@ -9,6 +9,7 @@ import {
   getTransferBranches, getTransferProducts, requestTransfer, getMyRequests, getFulfillQueue,
   sendTransfer, rejectTransfer, cancelTransfer, receiveTransfer,
 } from "@/lib/queries/transfer";
+import { Badge, Field, PageHeader, Panel, TabButton } from "@/components/ui";
 
 const fmtWhen = (iso: string) => { try { return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch { return iso; } };
 
@@ -58,7 +59,7 @@ export default function TransfersPage() {
     if (r.ok) { toast(t(okMsg), "success"); loadAll(); } else toast(r.error || t("xfer.failed"), "error");
   }
 
-  const stColor = (s: string) => s === "received" ? "var(--success)" : s === "sent" ? "#d4a847" : s === "requested" ? "#5dade2" : "var(--gray)";
+  const stTone = (s: string) => (s === "received" ? "success" : s === "sent" ? "warn" : s === "rejected" || s === "cancelled" ? "danger" : "default") as "success" | "warn" | "danger" | "default";
   const filtered = products.filter((p) => p.product.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
   const pending = queue.filter((q) => q.status === "requested").length;
 
@@ -68,12 +69,11 @@ export default function TransfersPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🔄" size={22} /> {t("xfer.title")}</h1>
-      <div className="page-sub">{t("xfer.subtitle")}</div>
+      <PageHeader icon={<Icon e="🔄" size={22} />} title={t("xfer.title")} subtitle={t("xfer.subtitle")} />
 
-      <div className="hub-tabs" style={{ marginTop: 12 }}>
-        <button className={`hub-tab${tab === "request" ? " active" : ""}`} onClick={() => setTab("request")}>{t("xfer.tabRequest")}</button>
-        <button className={`hub-tab${tab === "fulfill" ? " active" : ""}`} onClick={() => setTab("fulfill")}>{t("xfer.tabFulfill")}{pending ? ` (${pending})` : ""}</button>
+      <div className="hub-tabs" role="group" aria-label={t("xfer.title")}>
+        <TabButton active={tab === "request"} onClick={() => setTab("request")}>{t("xfer.tabRequest")}</TabButton>
+        <TabButton active={tab === "fulfill"} onClick={() => setTab("fulfill")}>{t("xfer.tabFulfill")}{pending ? ` (${pending})` : ""}</TabButton>
       </div>
 
       {loading ? <CardSkeleton rows={4} /> : (
@@ -81,60 +81,57 @@ export default function TransfersPage() {
           {tab === "request" && (
             <div>
               {!showForm ? (
-                <button onClick={() => setShowForm(true)} style={{ width: "100%", padding: 12, margin: "6px 0 14px", borderRadius: 10, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ {t("xfer.newRequest")}</button>
+                <button type="button" className="btn-secondary ui-block u-mb-4" onClick={() => setShowForm(true)}>+ {t("xfer.newRequest")}</button>
               ) : (
-                <div className="card" style={{ marginBottom: 14, padding: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <div className="card-title u-m0">{t("xfer.newRequest")}</div>
-                    <button type="button" aria-label={t("common.close")} onClick={resetForm} style={{ background: "none", border: "none", color: "var(--gray)", fontSize: 18, cursor: "pointer" }}>✕</button>
-                  </div>
-                  <label className="ui-muted">{t("xfer.fromBranch")}</label>
-                  <select aria-label={t("xfer.fromBranch")} value={src} onChange={(e) => setSrc(e.target.value)} style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, margin: "4px 0 12px" }}>
+                <Panel title={t("xfer.newRequest")} actions={<button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}>✕</button>}>
+                  <Field label={t("xfer.fromBranch")}>
+                  <select className="form-select" value={src} onChange={(e) => setSrc(e.target.value)}>
                     <option value="">{t("xfer.selectBranch")}</option>
                     {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
+                  </Field>
                   {!sel ? (
                     <>
-                      <input aria-label={t("xfer.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("xfer.searchProduct")} style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
+                      <input className="form-input u-mb-2" aria-label={t("xfer.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("xfer.searchProduct")} />
                       {search && (filtered.length === 0 ? <div className="ui-muted">{t("xfer.noProduct")}</div> : filtered.map((p) => (
-                        <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+                        <button className="ui-pick" key={p.product} onClick={() => { setSel(p); setSearch(""); }}>
                           {p.product} <span className="ui-muted">({p.category})</span>
                         </button>
                       )))}
                     </>
                   ) : (
                     <>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                      <div className="u-between u-mb-3">
                         <span className="ui-strong">{sel.product}</span>
-                        <button onClick={() => setSel(null)} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("xfer.change")}</button>
+                        <button className="ui-link-btn" onClick={() => setSel(null)}>{t("xfer.change")}</button>
                       </div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
-                        <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
+                      <div className="u-row u-mb-3">
+                        <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} className="form-input ui-qty-input" />
                         <span className="ui-muted-md">{sel.unit || ""}</span>
                       </div>
-                      <input aria-label={t("xfer.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("xfer.notePh")} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
-                      <button onClick={submit} disabled={busy === "req"} style={{ width: "100%", padding: 13, borderRadius: 10, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("xfer.sendRequest")}</button>
+                      <input className="form-input u-mb-3" aria-label={t("xfer.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("xfer.notePh")} />
+                      <button className="btn-gold ui-block" onClick={submit} disabled={busy === "req"}>{busy === "req" ? "…" : t("xfer.sendRequest")}</button>
                     </>
                   )}
-                </div>
+                </Panel>
               )}
 
-              <div className="card-title u-mb-2">{t("xfer.myRequests")}</div>
+              <h2 className="ui-section-title">{t("xfer.myRequests")}</h2>
               {requests.length === 0 ? (
                 <div className="card ui-empty-msg">{t("xfer.noRequests")}</div>
               ) : requests.map((r) => (
-                <div key={r.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div key={r.id} className="card ui-item-card">
+                  <div className="ui-item-head">
                     <div>
                       <div className="ui-strong">{r.product} <span className="ui-muted">· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
                       <div className="ui-muted">{t("xfer.from")} {r.from_branch_name || "—"} · {fmtWhen(r.created_at)}</div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: stColor(r.status) }}>{t("xfer.st_" + r.status)}</span>
+                    <Badge tone={stTone(r.status)}>{t("xfer.st_" + r.status)}</Badge>
                   </div>
                   {(r.status === "requested" || r.status === "sent") && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      {r.status === "sent" && <button onClick={() => act(receiveTransfer, r.id, "xfer.received")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "var(--success)", border: "1px solid rgba(39,174,96,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("xfer.confirmReceived")}</button>}
-                      {r.status === "requested" && <button onClick={() => act(cancelTransfer, r.id, "xfer.cancelled")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, cursor: "pointer" }}>{t("xfer.cancel")}</button>}
+                    <div className="ui-row-actions">
+                      {r.status === "sent" && <button type="button" className="btn-gold" onClick={() => act(receiveTransfer, r.id, "xfer.received")} disabled={busy === r.id}>{t("xfer.confirmReceived")}</button>}
+                      {r.status === "requested" && <button type="button" className="btn-quiet-danger" onClick={() => act(cancelTransfer, r.id, "xfer.cancelled")} disabled={busy === r.id}>{t("xfer.cancel")}</button>}
                     </div>
                   )}
                 </div>
@@ -147,22 +144,22 @@ export default function TransfersPage() {
               {queue.length === 0 ? (
                 <div className="card ui-empty-msg">{t("xfer.noQueue")}</div>
               ) : queue.map((r) => (
-                <div key={r.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div key={r.id} className="card ui-item-card">
+                  <div className="ui-item-head">
                     <div>
                       <div className="ui-strong">{r.product} <span className="ui-muted">· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
                       <div className="ui-muted">{t("xfer.for")} {r.to_branch_name || "—"}{r.requested_by_name ? ` · ${r.requested_by_name}` : ""}</div>
-                      {r.note && <div style={{ fontSize: 12, color: "var(--gray)", fontStyle: "italic", marginTop: 3 }}>“{r.note}”</div>}
+                      {r.note && <div className="ui-quote">“{r.note}”</div>}
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: stColor(r.status) }}>{t("xfer.st_" + r.status)}</span>
+                    <Badge tone={stTone(r.status)}>{t("xfer.st_" + r.status)}</Badge>
                   </div>
                   {r.status === "requested" && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <button onClick={() => act(sendTransfer, r.id, "xfer.sent")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("xfer.markSent")}</button>
-                      <button onClick={() => act(rejectTransfer, r.id, "xfer.rejected")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, cursor: "pointer" }}>{t("xfer.reject")}</button>
+                    <div className="ui-row-actions">
+                      <button type="button" className="btn-gold" onClick={() => act(sendTransfer, r.id, "xfer.sent")} disabled={busy === r.id}>{t("xfer.markSent")}</button>
+                      <button type="button" className="btn-quiet-danger" onClick={() => act(rejectTransfer, r.id, "xfer.rejected")} disabled={busy === r.id}>{t("xfer.reject")}</button>
                     </div>
                   )}
-                  {r.status === "sent" && <div style={{ fontSize: 12, color: "var(--gold-ink)", marginTop: 8 }}>{t("xfer.awaitingReceipt")}</div>}
+                  {r.status === "sent" && <div className="ui-note tone-warn">{t("xfer.awaitingReceipt")}</div>}
                 </div>
               ))}
             </div>

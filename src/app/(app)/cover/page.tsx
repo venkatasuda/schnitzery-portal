@@ -108,8 +108,8 @@ export default function CoverPage() {
                   </div>
                   {reqFor && reqFor.work_date === s.work_date && reqFor.team === s.team && reqFor.shift === s.shift && (
                     <div style={{ marginTop: 12, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
-                      <textarea aria-label={t("cover.reasonPh")} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("cover.reasonPh")} rows={2}
-                        style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, resize: "vertical" }} />
+                      <textarea className="form-input" aria-label={t("cover.reasonPh")} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("cover.reasonPh")} rows={2}
+                        />
                       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                         <button onClick={doRequest} disabled={busy === "req"} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("cover.postRequest")}</button>
                         <button onClick={() => setReqFor(null)} style={{ padding: "9px 14px", borderRadius: 8, background: "transparent", color: "var(--gray)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>{t("cover.cancel")}</button>
@@ -131,7 +131,7 @@ export default function CoverPage() {
                         </div>
                       </div>
                       {(r.status === "open" || r.status === "claimed") && (
-                        <button onClick={() => doCancel(r.id)} disabled={busy === r.id} style={{ fontSize: 12, color: "var(--danger)", background: "none", border: "none", cursor: "pointer" }}>{t("cover.cancel")}</button>
+                        <button className="ui-link-btn" onClick={() => doCancel(r.id)} disabled={busy === r.id}>{t("cover.cancel")}</button>
                       )}
                     </div>
                   ))}
