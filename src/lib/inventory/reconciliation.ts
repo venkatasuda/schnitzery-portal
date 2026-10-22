@@ -39,20 +39,34 @@ const dayIndex = (d: string) => Math.round(Date.parse(`${d}T12:00:00Z`) / 864000
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
 export function reconcileIntervals(counts: StockCount[], moves: StockMove[], unusualFactor = 2): StockInterval[] {
-  // A day can hold several counts (recounts); the last one given (callers order by
-  // created_at) is the day's observation. Stable sort keeps that order.
-  const byDay = new Map<string, StockCount>();
-  for (const c of [...counts].sort((x, y) => x.date.localeCompare(y.date))) byDay.set(c.date, c);
-  const sorted = Array.from(byDay.values()).filter(c => Number.isFinite(c.ist) && c.ist >= 0 && Number.isFinite(dayIndex(c.date)));
+  // A day can hold several counts. Recounts of the same unit: the last one given
+  // (callers order by created_at) is the day's observation. Counts in different units
+  // on one day are not recounts (review finding 3) — the day is flagged, not merged.
+  const days = new Map<string, { count: StockCount; units: Set<string> }>();
+  for (const c of [...counts].sort((x, y) => x.date.localeCompare(y.date))) {
+    const d = days.get(c.date);
+    if (d) { d.count = c; d.units.add(unitOf(c.unit)); } else days.set(c.date, { count: c, units: new Set([unitOf(c.unit)]) });
+  }
+  const valid = (c: StockCount) => Number.isFinite(c.ist) && c.ist >= 0 && Number.isFinite(dayIndex(c.date));
+  const all = Array.from(days.values());
+  const sorted = all.filter(d => valid(d.count));
+  // Invalid counts are not dropped silently (finding 5): they make the bridged interval uncertain.
+  const invalidDays = all.filter(d => !valid(d.count)).map(d => d.count.date);
   const out: StockInterval[] = [];
   for (let i = 1; i < sorted.length; i++) {
-    const a = sorted[i - 1], b = sorted[i];
+    const a = sorted[i - 1].count, b = sorted[i].count;
     const reasons = new Set<Reason>();
     const sum = { delivered: 0, wasted: 0, received: 0, sent: 0 };
-    if (unitOf(a.unit) !== unitOf(b.unit)) reasons.add("unit");
+    if (unitOf(a.unit) !== unitOf(b.unit) || sorted[i - 1].units.size > 1 || sorted[i].units.size > 1) reasons.add("unit");
+    if (invalidDays.some(d => d > a.date && d < b.date)) reasons.add("invalid");
     for (const m of moves) {
-      // Sent to us, not yet booked in at B: it may already sit on our shelf.
-      if (m.kind === "incoming") { if (m.date <= b.date && !(m.until && m.until <= b.date)) reasons.add("in_transit"); continue; }
+      // Stock in transit at either count may or may not be on the shelf (finding 4):
+      // transit spans the opening count, or the closing count, → order unknown.
+      if (m.kind === "incoming") {
+        const openAt = (d: string) => m.date <= d && (!m.until || m.until > d);
+        if (openAt(a.date) || openAt(b.date)) reasons.add("in_transit");
+        continue;
+      }
       // Legacy transfer: happened somewhere in [date, until]; any touching interval is unjudgeable.
       if (m.untimed) { if (m.date <= b.date && (m.until ?? m.date) >= a.date) reasons.add("untimed_transfer"); continue; }
       if (m.date < a.date || m.date > b.date) continue;
@@ -106,3 +120,16 @@ export function transferMoves(branchId: string, t: TransferRow, events: Transfer
   }
   return moves;
 }
+
+// The evidence a manager reviews (review finding 7): every figure, the status and the
+// reasons, in a fixed shape so a review goes stale when any of it changes.
+const SNAPSHOT_KEYS = ["opening", "delivered", "received", "sent", "wasted", "closing", "expected", "used", "status", "reasons"] as const;
+export type ReviewSnapshot = Pick<StockInterval, (typeof SNAPSHOT_KEYS)[number]>;
+export function reviewSnapshot(iv: Partial<ReviewSnapshot> | null | undefined): ReviewSnapshot | null {
+  if (!iv) return null;
+  const out: Record<string, unknown> = {};
+  for (const k of SNAPSHOT_KEYS) out[k] = k === "reasons" ? Array.from((iv.reasons as string[] | undefined) || []).sort() : iv[k] ?? null;
+  return out as ReviewSnapshot;
+}
+export const sameSnapshot = (a: Partial<ReviewSnapshot> | null | undefined, b: Partial<ReviewSnapshot> | null | undefined) =>
+  !!a && !!b && JSON.stringify(reviewSnapshot(a)) === JSON.stringify(reviewSnapshot(b));

@@ -119,15 +119,17 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   // data loads (scoped to target branches + window)
   const { data: rosters, error: rostersError } = await readAll(supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks).order("id"));
   if (rostersError) return { ...blank, ok: false as const, error: rostersError.message };
-  const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks, status").in("branch_id", targets).gte("work_date", from).lte("work_date", to).order("id"));
+  // Actuals stop at Berlin today: future-dated records never count as current (review finding 9).
+  const actualTo = to < todayStr() ? to : todayStr();
+  const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs").select("user_id, branch_id, work_date, clock_in, clock_out, duration_mins, breaks, status").in("branch_id", targets).gte("work_date", from).lte("work_date", actualTo).order("id"));
   if (logsError) return { ...blank, ok: false as const, error: logsError.message };
   const { data: users, error: usersError } = await readAll(supabase.from("users").select("id, team").in("branch_id", targets).order("id"));
   if (usersError) return { ...blank, ok: false as const, error: usersError.message };
-  const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales").select("branch_id, sale_date, amount").in("branch_id", targets).gte("sale_date", from).lte("sale_date", to).order("id"));
+  const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales").select("branch_id, sale_date, amount").in("branch_id", targets).gte("sale_date", from).lte("sale_date", actualTo).order("id"));
   if (salesError) return { ...blank, ok: false as const, error: salesError.message };
-  const { data: purchases, error: purchaseError } = await readAll(supabase.from("inventory_purchases").select("cost").in("branch_id", targets).gte("purchase_date", from).lte("purchase_date", to).order("id"));
+  const { data: purchases, error: purchaseError } = await readAll(supabase.from("inventory_purchases").select("cost").in("branch_id", targets).gte("purchase_date", from).lte("purchase_date", actualTo).order("id"));
   if (purchaseError) return { ...blank, error: purchaseError.message };
-  const { data: waste, error: wasteError } = await readAll(supabase.from("waste_log").select("branch_id, product, category, qty, unit").in("branch_id", targets).gte("work_date", from).lte("work_date", to).order("id"));
+  const { data: waste, error: wasteError } = await readAll(supabase.from("waste_log").select("branch_id, product, category, qty, unit").in("branch_id", targets).gte("work_date", from).lte("work_date", actualTo).order("id"));
   if (wasteError) return { ...blank, error: wasteError.message };
   const { data: psettings, error: psettingsError } = await readAll(supabase.from("payroll_settings").select("branch_id, ot_daily_hours").in("branch_id", targets).order("branch_id"));
   if (psettingsError) return { ...blank, ok: false as const, error: psettingsError.message };

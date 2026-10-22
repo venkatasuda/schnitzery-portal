@@ -2,7 +2,8 @@
 import { readAll } from "@/lib/supabase/readAll";
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
-import { reconcileIntervals, transferMoves, type StockMove, type TransferEvent, type TransferRow } from "@/lib/inventory/reconciliation";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { berlinDateOf, reconcileIntervals, reviewSnapshot, sameSnapshot, transferMoves, type ReviewSnapshot, type StockMove, type TransferEvent, type TransferRow } from "@/lib/inventory/reconciliation";
 
 // Release C: per product, every pair of consecutive counts in the period, explained
 // by deliveries, transfers and waste. Runs entirely under the caller's RLS.
@@ -54,19 +55,40 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
     if (res.error) return { ok: false as const, error: "Reconciliation could not be loaded. Try again." };
     events.push(...(res.data as TransferEvent[]));
   }
+  // Review finding 6: the journal outlives deleted transfer rows. Any transfer evidence
+  // for this branch in the period without a surviving row makes the touched product's
+  // intervals uncertain (it moved stock at some unknown point between its events).
+  const journal = await readAll(db.from("stock_events")
+    .select("source_id,operation,recorded_at,before_status:before_row->>status,after_status:after_row->>status,a_product:after_row->>product,b_product:before_row->>product,a_category:after_row->>category,b_category:before_row->>category")
+    .eq("source_table", "stock_transfers").contains("branch_ids", [branch]).gte("recorded_at", `${from}T00:00:00Z`).order("id"));
+  if (journal.error) return { ok: false as const, error: "Reconciliation could not be loaded. Try again." };
+  const alive = new Set(ids), orphans: Record<string, { product?: string; category?: string; first: string; last: string; moved: boolean }> = {};
+  for (const e of (journal.data || []) as (TransferEvent & Record<string, string | null>)[]) {
+    if (alive.has(e.source_id)) continue;
+    const o = (orphans[e.source_id] ||= { first: e.recorded_at, last: e.recorded_at, moved: false });
+    o.product ||= e.a_product || e.b_product || undefined; o.category ||= e.a_category || e.b_category || undefined;
+    if (e.recorded_at < o.first) o.first = e.recorded_at; if (e.recorded_at > o.last) o.last = e.recorded_at;
+    if (["sent", "received"].includes(e.after_status || "") || ["sent", "received"].includes(e.before_status || "")) o.moved = true;
+  }
+  const unknownProductMoves: StockMove[] = [];
 
   const moves: Record<string, StockMove[]> = {};
   const add = (r: { category?: string | null; product: string }, m: StockMove) => (moves[productKey(r)] ||= []).push(m);
   for (const p of purchases.data || []) add(p, { kind: "delivered", date: p.purchase_date, qty: num(p.qty), unit: p.unit });
   for (const w of waste.data || []) add(w, { kind: "wasted", date: w.work_date, qty: num(w.qty), unit: w.unit });
   for (const t of transfers.data || []) for (const m of transferMoves(branch, t as TransferRow, events, today)) add(t, m);
+  for (const o of Object.values(orphans)) {
+    if (!o.moved) continue;
+    const m: StockMove = { kind: "sent", untimed: true, qty: NaN, date: berlinDateOf(o.first), until: berlinDateOf(o.last) };
+    if (o.product) add({ product: o.product, category: o.category }, m); else unknownProductMoves.push(m); // no product: touches all
+  }
 
   const byProduct: Record<string, { id: string; date: string; ist: number; unit: string | null; product: string; category: string }[]> = {};
   for (const c of counts.data || []) (byProduct[productKey(c)] ||= []).push({ id: c.id, date: c.count_date, ist: num(c.ist), unit: c.unit, product: c.product, category: c.category || "" });
 
   const reviewed = new Map((reviews.data || []).map(r => [`${r.from_count_id}|${r.to_count_id}`, r]));
   const rows = Object.entries(byProduct).flatMap(([key, list]) =>
-    reconcileIntervals(list, moves[key] || []).map(iv => ({
+    reconcileIntervals(list, [...(moves[key] || []), ...unknownProductMoves]).map(iv => ({
       ...iv, product: list[0].product, category: list[0].category, unit: list.find(c => c.id === iv.toId)?.unit ?? null,
       review: reviewed.get(`${iv.fromId}|${iv.toId}`) ?? null,
     })))
@@ -74,19 +96,23 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
   return { ok: true as const, rows, from, days, branch };
 }
 
-// The snapshot is recomputed here, never taken from the browser.
-export async function addReconciliationReview(fromId: string, toId: string, note: string, days = 90, branchId?: string | null) {
+// The snapshot is recomputed here, never taken from the browser, and must equal the
+// one the reviewer saw (review finding 7). Written via a service-role-only function
+// so no client can insert figures directly (finding 8).
+export async function addReconciliationReview(fromId: string, toId: string, note: string, seen: unknown, days = 90, branchId?: string | null) {
   const text = String(note || "").trim();
   if (text.length < 3 || text.length > 500) return { ok: false as const, code: "noteLength" };
   const current = await getReconciliation(days, branchId);
   if (!current.ok) return { ok: false as const, error: current.error };
   const row = current.rows.find(r => r.fromId === fromId && r.toId === toId);
-  if (!row) return { ok: false as const, code: "changed" };
-  const { opening, delivered, received, sent, wasted, closing, expected, used, status, reasons } = row;
+  if (!row || !sameSnapshot(seen as ReviewSnapshot, row)) return { ok: false as const, code: "changed" };
   const db = await createClient();
-  const { error } = await db.from("stock_reconciliation_reviews").insert({
-    branch_id: current.branch, from_count_id: fromId, to_count_id: toId, note: text,
-    figures: { opening, delivered, received, sent, wasted, closing, expected, used, status, reasons },
+  const { data: { user } } = await db.auth.getUser();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!user || !url || !key) return { ok: false as const, code: "saveFailed" };
+  const admin = createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { error } = await admin.rpc("record_stock_reconciliation_review", {
+    p_actor: user.id, p_branch: current.branch, p_from: fromId, p_to: toId, p_figures: reviewSnapshot(row), p_note: text,
   });
   if (error) return { ok: false as const, code: error.code === "23505" ? "already" : "saveFailed" };
   return { ok: true as const };

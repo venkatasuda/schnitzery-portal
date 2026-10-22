@@ -55,15 +55,21 @@ export default function SummaryPage() {
 
   function downloadCsv() {
     if (!data) return;
-    const head = ["Name", "Team", "Hours", "Shifts", "Late", "Overtime (h)", "Labor cost (EUR)"];
+    // Review finding 10: an export carries completeness with every money figure, so a
+    // lower bound never becomes an apparently final amount.
+    const head = ["Name", "Team", "Hours", "Shifts", "Late", "Overtime (h)", "Labor cost (EUR)", "Wage confirmed"];
     const lines = [head.join(",")];
-    for (const r of data.rows) lines.push([csvCell(r.name), csvCell(r.team), r.hours, r.shifts, r.late, r.overtime, r.laborCost ?? ""].join(","));
+    for (const r of data.rows) lines.push([csvCell(r.name), csvCell(r.team), r.hours, r.shifts, r.late, r.overtime, r.laborCost ?? "", r.laborCost == null ? "no" : "yes"].join(","));
     lines.push("");
+    const cov = data.coverage, state = (f: { complete: boolean }) => f.complete ? "complete" : "incomplete (lower bound)";
     const kv: [string, any][] = [
-      ["Month", data.month], ["Sales (EUR)", data.sales],
-      ["Labor cost (EUR)", data.laborCost], ["Labor %", data.laborPct ?? ""],
-      ["Food spend (EUR)", data.foodSpend], ["Food cost %", data.foodPct ?? ""],
-      ["Prime cost %", data.primePct ?? ""], ["Total hours", data.totalHours],
+      ["Month", data.month],
+      ["Sales (EUR)", data.sales], ["Sales status", state(cov.sales)], ["Open days without sales", cov.sales.missing.salesDays ?? 0],
+      ["Labor cost (EUR)", data.laborCost], ["Labor cost status", state(cov.labor)], ["Working employees without wage", cov.labor.missing.wages ?? 0],
+      ["Labor % (blank = inputs incomplete)", data.laborPct ?? ""],
+      ["Purchase spend (EUR)", data.foodSpend], ["Purchase spend status", state(cov.spend)], ["Deliveries without cost", cov.spend.missing.costs ?? 0],
+      ["Purchase spend / sales % (blank = inputs incomplete)", data.foodPct ?? ""],
+      ["Labor + purchases % (blank = inputs incomplete)", data.primePct ?? ""], ["Total hours", data.totalHours],
       ["Shifts", data.shifts], ["Overtime hours", data.overtimeHrs], ["Late rate %", data.lateRate ?? ""],
     ];
     for (const [k, v] of kv) lines.push([csvCell(k), csvCell(v)].join(","));

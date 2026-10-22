@@ -13,6 +13,11 @@ Design: [STOCK-RECONCILIATION.md](../STOCK-RECONCILIATION.md) (approved 2026-10-
 
 Existing forecasts/analytics are unchanged (`countDepletion` untouched).
 
+## Review follow-up (2026-10-22)
+Codex review fixes ([response](REVIEW-C-D-RESPONSE.md)) add migration
+`20261022090000_stock_reviews_trusted_insert.sql`: reviews are written only through a
+service-role function. Apply it right after `20261021180000`, before the code deploy.
+
 ## Order: migration first
 The new tab reads `stock_reconciliation_reviews`; without the table the tab shows
 "could not be loaded". The migration only **adds** a table, so applying it before

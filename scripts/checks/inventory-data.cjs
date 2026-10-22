@@ -36,6 +36,7 @@ const sb = {
       lt: (col, value) => { filters.push(row => row[col] < value); return query; },
       in: (col, values) => { filters.push(row => values.includes(row[col])); return query; },
       or: () => query,
+      contains: () => query,
       order: (col, opts = {}) => { sorts.push([col, opts.ascending === false ? -1 : 1]); return query; },
       single: async () => ({ ...result(), data: result().data?.[0] || null }),
       insert: async () => { writes++; return { error: null }; },
@@ -94,11 +95,15 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory
   tables.inventory_counts=[count('Milk','Dairy','2026-10-09',10,'a'),count('Milk','Dairy','2026-10-11',5,'b')];
   tables.inventory_purchases=[{...master('Milk','Dairy'),id:'receipt',purchase_date:'2026-10-10',qty:2,cost:4}];
   let analytics=await exportsObject.getInventoryAnalytics();
+  // Other catalogue products have no interval here, so usage is honestly incomplete (review finding 1).
+  assert.equal(analytics.needsReview,true);assert.equal(analytics.usageMissing.counts,2);
+  const originalMaster=tables.inventory_master;tables.inventory_master=[master('Milk','Dairy')];
+  analytics=await exportsObject.getInventoryAnalytics();
   assert.equal(analytics.needsReview,false);assert.equal(analytics.totalUsageEur,14);assert.equal(analytics.stockValue,10);
   tables.inventory_purchases[0].cost=0;
   analytics=await exportsObject.getInventoryAnalytics();
   assert.equal(analytics.totalUsageEur,0);assert.equal(analytics.stockValue,0,'Explicit zero purchase price remains distinct from missing price');
-  tables.inventory_purchases=[];
+  tables.inventory_purchases=[];tables.inventory_master=originalMaster;
   tables.inventory_counts=originalCounts;
   // Stock sent to this branch but not yet booked in: usage is withheld, not guessed.
   tables.stock_transfers=[{...master('Milk','Dairy'),id:'t1',from_branch_id:'other',to_branch_id:'branch',qty:3,status:'sent',created_at:'2026-10-10T12:00:00Z',updated_at:'2026-10-10T12:00:00Z'}];
