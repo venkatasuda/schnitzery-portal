@@ -84,6 +84,7 @@ jobs:
           node scripts/checks/stock-reconciliation-query.cjs
           node scripts/checks/review-c-d.cjs
           node scripts/checks/design-tokens.cjs
+          node scripts/checks/a11y-static.cjs
           node scripts/checks/offline-database.cjs
           node scripts/checks/correction-integrity.cjs
       - name: Upload coverage artifact

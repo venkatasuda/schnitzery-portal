@@ -124,7 +124,7 @@ export default function StaffDetailPage() {
             </div>
             <div className="u-row">
               <label className="ui-muted">{t("staffd.annualDays")}</label>
-              <input
+              <input aria-label={t("staffd.annualDays")}
                 type="number" min="0" step="0.5" value={allowance} onChange={(e) => setAllowance(e.target.value)}
                 style={{ width: 80, padding: "8px 10px", background: "var(--dark3)", color: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14 }}
               />

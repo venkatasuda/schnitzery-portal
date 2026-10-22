@@ -43,7 +43,7 @@ export default function SimulatorPage() {
         <span className="ui-body">{label}</span>
         <span style={{ fontSize: 13, fontWeight: 700, color: val === 0 ? "var(--gray)" : val > 0 ? "var(--danger)" : "var(--success)" }}>{val > 0 ? "+" : ""}{val}%</span>
       </div>
-      <input type="range" min={-20} max={40} step={1} value={val} onChange={(e) => set(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--gold-ink)" }} />
+      <input aria-label={label} type="range" min={-20} max={40} step={1} value={val} onChange={(e) => set(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--gold-ink)" }} />
       <div className="ui-meta">{hint}</div>
     </div>
   );

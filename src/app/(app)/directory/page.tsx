@@ -35,7 +35,7 @@ export default function DirectoryPage() {
       <h1 className="page-title u-row"><Icon e="📇" size={22} /> {t("directory.title")}</h1>
       <p className="ui-lede">{t("directory.subtitle")}</p>
 
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}
+      <input aria-label={t("directory.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}
         style={{ width: "100%", padding: "12px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: 14, boxSizing: "border-box", marginBottom: 14 }} />
 
       {loading ? (
