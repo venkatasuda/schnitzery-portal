@@ -80,7 +80,7 @@ export default function TempPage() {
       {summary && (
         <div className="card" style={{ margin: "12px 0", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: summary.breachesToday > 0 ? "rgba(231,76,60,0.4)" : summary.pending > 0 ? "var(--accent-line)" : "rgba(39,174,96,0.3)" }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--white)" }}>{t("temp.todayCoverage", { done: summary.loggedUnits, total: summary.totalUnits })}</div>
+            <div className="t-sm fw-7 u-text">{t("temp.todayCoverage", { done: summary.loggedUnits, total: summary.totalUnits })}</div>
             <div style={{ fontSize: 12, color: summary.breachesToday > 0 ? "var(--danger)" : "var(--gray)" }}>
               {summary.breachesToday > 0 ? t("temp.breachesToday", { n: summary.breachesToday }) : summary.pending > 0 ? t("temp.pendingToday", { n: summary.pending }) : t("temp.allGood")}
             </div>
@@ -107,7 +107,7 @@ export default function TempPage() {
                 const lt = u.latest;
                 return (
                   <div key={u.id} className="card ui-item-card">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                    <div className="d-flex jc-sb ai-s gap-3">
                       <div>
                         <div className="ui-strong">{u.name}</div>
                         <div className="ui-muted">{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
@@ -117,16 +117,16 @@ export default function TempPage() {
                           <div style={{ fontSize: 15, fontWeight: 700, color: lt.in_range ? "var(--success)" : "var(--danger)" }}>{lt.temp}°C</div>
                           <div className="ui-muted">{u.todayCount}× {t("temp.today")}</div>
                         </div>
-                      ) : <span style={{ fontSize: 12, color: "var(--gold-ink)" }}>{t("temp.pending")}</span>}
+                      ) : <span className="t-xs tone-action">{t("temp.pending")}</span>}
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+                    <div className="d-flex gap-2 mt-3 ai-c">
                       <input aria-label={`${u.name} °C`} type="number" inputMode="decimal" value={val[u.id] ?? ""} onChange={(e) => setVal((s) => ({ ...s, [u.id]: e.target.value }))}
                         placeholder="°C" style={{ width: 90, padding: "9px 10px", borderRadius: 8, background: "var(--dark2)", color: oor ? "var(--danger)" : "var(--white)", border: `1px solid ${oor ? "rgba(231,76,60,0.5)" : "rgba(255,255,255,0.12)"}`, fontSize: 14, textAlign: "center", fontWeight: 600 }} />
                       <button className="btn-gold" onClick={() => doLog(u)} disabled={busy === u.id}>{busy === u.id ? "…" : t("temp.log")}</button>
                     </div>
                     {oor && (
                       <div className="u-mt-3">
-                        <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 6 }}>⚠️ {t("temp.outOfRange")}</div>
+                        <div className="t-xs tone-danger mb-2">⚠️ {t("temp.outOfRange")}</div>
                         <input className="form-input" aria-label={t("temp.correctivePh")} value={action[u.id] ?? ""} onChange={(e) => setAction((s) => ({ ...s, [u.id]: e.target.value }))}
                           placeholder={t("temp.correctivePh")} />
                       </div>
@@ -151,7 +151,7 @@ export default function TempPage() {
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: l.in_range ? "var(--success)" : "var(--danger)" }}>{l.in_range ? t("temp.ok") : t("temp.breach")}</span>
                   </div>
-                  {l.corrective_action && <div style={{ fontSize: 12, color: "var(--gold-ink)", marginTop: 6 }}>↳ {l.corrective_action}</div>}
+                  {l.corrective_action && <div className="t-xs tone-action mt-2">↳ {l.corrective_action}</div>}
                 </div>
               ))}
             </div>
@@ -160,13 +160,13 @@ export default function TempPage() {
           {/* UNITS (manager) */}
           {tab === "units" && isMgr && (
             <div>
-              <div className="card" style={{ marginBottom: 12, padding: 14 }}>
+              <div className="card mb-3 p-4">
                 <div className="card-title">{t("temp.addUnit")}</div>
                 <input className="form-input u-mb-2" aria-label={t("temp.unitName")} value={nu.name} onChange={(e) => setNu({ ...nu, name: e.target.value })} placeholder={t("temp.unitName")} />
                 <select className="form-input u-mb-2" aria-label={t("temp.addUnit")} value={nu.kind} onChange={(e) => setNu({ ...nu, kind: e.target.value })}>
                   {KINDS.map((k) => <option key={k} value={k}>{t("temp.kind_" + k)}</option>)}
                 </select>
-                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <div className="d-flex gap-2 mb-2">
                   <input aria-label={t("temp.minC")} type="number" value={nu.min} onChange={(e) => setNu({ ...nu, min: e.target.value })} placeholder={t("temp.minC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13 }} />
                   <input aria-label={t("temp.maxC")} type="number" value={nu.max} onChange={(e) => setNu({ ...nu, max: e.target.value })} placeholder={t("temp.maxC")} style={{ flex: 1, padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13 }} />
                 </div>

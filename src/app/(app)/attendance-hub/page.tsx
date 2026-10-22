@@ -152,7 +152,7 @@ export default function AttendanceHubPage() {
               {rows.length === 0 ? (isToday ? t("ahub.noClockedIn") : t("ahub.noAttendance")) : t("ahub.noMatch")}
             </div>
           ) : (
-            <div className="card" style={{ padding: 8 }}>
+            <div className="card p-2">
               {filtered.map((r, i) => {
                 const live = r.status === "active" || r.status === "on-break";
                 const dotColor = r.status === "on-break" ? "var(--warn)" : live ? "var(--success)" : "var(--gray)";
@@ -161,11 +161,11 @@ export default function AttendanceHubPage() {
                   <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < filtered.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                     <span style={{ width: 9, height: 9, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: live ? `0 0 8px ${dotColor}` : "none" }} />
                     <div className="u-grow">
-                      <div className="ui-strong">{r.name}{r.late_mins > 0 && <span style={{ fontSize: 12, color: "var(--danger)", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
+                      <div className="ui-strong">{r.name}{r.late_mins > 0 && <span className="t-xs tone-danger ml-2"><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}</div>
                       <div className="ui-muted">{r.team ? teamLabel(r.team) : "—"} · {statusText}</div>
                     </div>
                     <div className="u-right">
-                      <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}</div>
+                      <div className="t-sm tone-action fw-6">{fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}</div>
                       {r.duration_mins != null && <div className="ui-muted">{fmtH(r.duration_mins)}</div>}
                     </div>
                   </div>
@@ -190,13 +190,13 @@ export default function AttendanceHubPage() {
           ) : (
             appRows.map((r) => (
               <div key={r.id} className="card u-mb-2">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div className="d-flex jc-sb ai-c mb-2">
                   <div className="ui-strong">
                     {r.name}
-                    {r.overtime && <span style={{ fontSize: 12, color: "var(--warn)", marginLeft: 8 }}><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
-                    {r.late_mins > 0 && <span style={{ fontSize: 12, color: "var(--danger)", marginLeft: 8 }}><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
+                    {r.overtime && <span className="t-xs tone-warn ml-2"><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
+                    {r.late_mins > 0 && <span className="t-xs tone-danger ml-2"><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{fmtH(r.duration_mins || 0)}</div>
+                  <div className="t-sm fw-7 tone-action">{fmtH(r.duration_mins || 0)}</div>
                 </div>
                 <div className="ui-sub">
                   {fmtDate(r.work_date)} · {r.team ? teamLabel(r.team) : "—"} · {fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}
@@ -214,7 +214,7 @@ export default function AttendanceHubPage() {
       {/* ───────── OVERTIME ───────── */}
       {tab === "overtime" && !readError && (
         <div className="hub-tab-panel active">
-          <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+          <div className="d-flex gap-2 mb-3 ai-c">
             <input className="form-input u-flex1" aria-label={t("ahub.tabOvertime")} type="month" value={month} onChange={(e) => changeMonth(e.target.value)} />
           </div>
 
@@ -262,7 +262,7 @@ export default function AttendanceHubPage() {
                   {otLong.map((l, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < otLong.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none", fontSize: 13 }}>
                       <span className="u-text">{l.name} <span className="ui-muted">· {fmtDate(l.work_date)}</span></span>
-                      <span style={{ color: "var(--warn)", fontWeight: 600 }}>{fmtH(l.mins)}</span>
+                      <span className="tone-warn fw-6">{fmtH(l.mins)}</span>
                     </div>
                   ))}
                 </div>
@@ -280,7 +280,7 @@ export default function AttendanceHubPage() {
             <div className="u-flex1"><div className="feature-title">{t("ahub.noShowTracking")}</div><div className="feature-sub">{t("ahub.noShowTrackingSub")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
-          <div className="card" style={{ fontSize: 12, color: "var(--gray)", lineHeight: 1.6 }}>
+          <div className="card t-xs u-muted lh-16">
             {t("ahub.noShowHint")}
           </div>
         </div>

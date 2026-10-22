@@ -68,8 +68,8 @@ export default function ComparePage() {
       {/* week nav */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 14px" }}>
         <button className="btn-secondary ui-btn-sm" onClick={() => setOffset((o) => o - 1)}>{t("cmp.prevWeek")}</button>
-        <div style={{ flex: 1, textAlign: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--white)" }}>{weekLabel}</div>
+        <div className="u-flex1 u-center">
+          <div className="t-sm fw-7 u-text">{weekLabel}</div>
           {offset !== 0 && <button onClick={() => setOffset(0)} style={{ background: "none", border: "none", color: "var(--gold)", fontSize: 12, cursor: "pointer", marginTop: 2 }}>{t("cmp.thisWeek")}</button>}
         </div>
         <button className="btn-secondary ui-btn-sm" onClick={() => setOffset((o) => o + 1)}>{t("cmp.nextWeek")}</button>
@@ -82,8 +82,8 @@ export default function ComparePage() {
       ) : (
         <>
           {/* SUMMARY */}
-          <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div className="card p-4 mb-4">
+            <div className="d-flex ai-c gap-4">
               <div style={{ textAlign: "center", minWidth: 92 }}>
                 <div style={{ fontSize: 34, fontWeight: 800, color: pctColor(sum.pct), lineHeight: 1 }}>{sum.pct}%</div>
                 <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{t("cmp.overall")}</div>
@@ -103,17 +103,17 @@ export default function ComparePage() {
           {byEmp.length > 0 && (
             <>
               <div className="section-label">{t("cmp.perEmployee")}</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+              <div className="d-flex f-col gap-2 mb-4">
                 {byEmp.map((e) => (
-                  <div key={e.userId} className="card" style={{ padding: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                      <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{e.name}</div>
+                  <div key={e.userId} className="card p-3">
+                    <div className="d-flex ai-c gap-3 mb-2">
+                      <div className="u-flex1 t-sm fw-6 u-text">{e.name}</div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: pctColor(e.pct) }}>{e.pct}%</div>
                     </div>
                     <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
                       <div style={{ width: `${e.pct}%`, height: "100%", background: pctColor(e.pct) }} />
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 12 }}>
+                    <div className="d-flex f-wrap gap-2 t-xs">
                       <Chip label={`${e.shifts} ${t("cmp.shifts")}`} />
                       {e.noShows > 0 && <Chip label={`${e.noShows} ${t("cmp.noShow")}`} color="var(--danger)" />}
                       {e.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(e.lateMins)}`} color="var(--warn)" />}
@@ -137,19 +137,19 @@ export default function ComparePage() {
                     <div key={i} className="card" style={{ padding: 12, borderLeft: `3px solid ${m.color}` }}>
                       <div className="u-row">
                         <div className="u-grow">
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{r.name}</div>
+                          <div className="t-sm fw-6 u-text">{r.name}</div>
                           <div className="ui-muted">{r.team && r.shift ? `${r.team} · ${r.shift}` : t("cmp.unscheduled")}</div>
                         </div>
                         <span style={{ fontSize: 12, fontWeight: 700, color: m.color, background: `color-mix(in srgb, ${m.color} 14%, transparent)`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{t(m.key)}</span>
                       </div>
-                      <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 12 }}>
+                      <div className="d-flex gap-4 mt-2 t-xs">
                         {r.schedStart && (
                           <div><span style={{ color: "var(--gray)", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}>{t("cmp.scheduled")}</span><br /><span className="u-text">{fmtClock(r.schedStart)} – {fmtClock(r.schedEnd)}</span></div>
                         )}
                         <div><span style={{ color: "var(--gray)", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}>{t("cmp.actual")}</span><br /><span className="u-text">{fmtClock(r.actIn)} – {fmtClock(r.actOut)}</span></div>
                       </div>
                       {(r.lateMins > 0 || r.earlyMins > 0 || r.otMins > 0 || r.missingMins > 0) && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, fontSize: 12 }}>
+                        <div className="d-flex f-wrap gap-2 mt-2 t-xs">
                           {r.lateMins > 0 && <Chip label={`${t("cmp.late")} ${fmtMins(r.lateMins)}`} color="var(--warn)" />}
                           {r.earlyMins > 0 && <Chip label={`${t("cmp.early")} ${fmtMins(r.earlyMins)}`} color="var(--warn)" />}
                           {r.otMins > 0 && <Chip label={`${t("cmp.overtime")} ${fmtMins(r.otMins)}`} color="var(--info)" />}

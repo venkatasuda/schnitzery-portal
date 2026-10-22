@@ -58,7 +58,7 @@ export default function LeavePage() {
 
       {tab === "request" && (
         <div className="card">
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>{t("myday.requestTimeOff")}</div>
+          <div className="t-lg fw-7 mb-4">{t("myday.requestTimeOff")}</div>
           <Field label={t("leave.fromDate")}>
             <input className="form-input" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
           </Field>
@@ -82,9 +82,9 @@ export default function LeavePage() {
                 <div className="ui-strong">{fmtDate(r.from_date)} → {fmtDate(r.to_date)}</div>
                 <span style={statusStyle(r.status)}>{stLabel(r.status)}</span>
               </div>
-              {r.reason && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6 }}>{r.reason}</div>}
+              {r.reason && <div className="t-xs u-muted mt-2">{r.reason}</div>}
               {r.decided_by && r.status !== "pending" && (
-                <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6 }}>{t("leave.decidedBy", { name: r.decided_by })}</div>
+                <div className="t-xs u-muted mt-2">{t("leave.decidedBy", { name: r.decided_by })}</div>
               )}
             </div>
           ))}

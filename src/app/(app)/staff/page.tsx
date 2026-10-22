@@ -169,12 +169,12 @@ export default function StaffPage() {
         {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
 
-      {msg && <div role="status" style={{ marginBottom: 14, fontSize: 14, color: "var(--white)" }}>{msg}</div>}
+      {msg && <div className="mb-4 t-md u-text" role="status">{msg}</div>}
 
       {resetInfo && (
         <div style={{ ...card, marginBottom: 14, borderColor: "var(--accent-line)", background: "var(--accent-soft)" }}>
-          <div style={{ fontSize: 13, color: "var(--gold-ink)", fontWeight: 600, marginBottom: 6 }}>{t("staff.resetPwFor", { name: resetInfo.name })}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div className="t-sm tone-action fw-6 mb-2">{t("staff.resetPwFor", { name: resetInfo.name })}</div>
+          <div className="d-flex ai-c gap-2 f-wrap">
             <code style={{ fontSize: 18, fontWeight: 700, letterSpacing: 1, background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderRadius: 8, color: "#fff", userSelect: "all" }}>{resetInfo.temp}</code>
             <button onClick={() => { navigator.clipboard?.writeText(resetInfo.temp).catch(() => {}); }} style={editBtn}>⧉ Copy</button>
             <button onClick={() => setResetInfo(null)} style={editBtn}>{t("common.cancel")}</button>
@@ -193,7 +193,7 @@ export default function StaffPage() {
         <dialog ref={addDialog} className="workspace-dialog" aria-labelledby="add-staff-title" onCancel={(e) => { if (adding) e.preventDefault(); else setShowAdd(false); }} onClose={() => setShowAdd(false)}>
           <div>
             <h2 id="add-staff-title" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</h2>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
+            <div className="t-xs u-muted mb-4">{t("staff.addNewSub")}</div>
             <div className="workspace-form-grid">
               <Field label={t("staff.emailReq")}><input className="form-input" autoFocus type="email" autoComplete="off" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} placeholder="name@email.com" /></Field>
               <Field label={t("staff.tempPw")}><input className="form-input" type="password" autoComplete="new-password" value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} placeholder={t("staff.minChars")} /></Field>
@@ -241,26 +241,26 @@ export default function StaffPage() {
         <div key={p.id} style={{ ...card, marginBottom: 8 }}>
           {editId !== p.id ? (
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div className="d-flex ai-c gap-4">
                 <div style={{ width: 42, height: 42, borderRadius: "50%", background: TEAM_COLORS[p.team] || "#666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", opacity: filter === "former" ? 0.55 : 1 }}>
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div className="u-flex1">
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
+                  <div className="t-lg fw-6">{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
                   <div className="ui-muted">{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
 
               {confirmRemoveId === p.id ? (
                 <div style={{ marginTop: 12, padding: 12, background: "rgba(192,57,43,0.12)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: 10 }}>
-                  <div style={{ fontSize: 13, marginBottom: 10 }}>{t("staff.confirmRemove", { name: p.full_name || "—" })}</div>
+                  <div className="t-sm mb-3">{t("staff.confirmRemove", { name: p.full_name || "—" })}</div>
                   <div className="u-hstack">
                     <button onClick={() => setConfirmRemoveId(null)} style={editBtn}>{t("common.cancel")}</button>
                     <button onClick={() => remove(p.id)} disabled={removing} style={{ ...editBtn, background: "rgba(192,57,43,0.25)", border: "1px solid rgba(192,57,43,0.5)", color: "#fff" }}>{removing ? t("common.saving") : t("staff.remove")}</button>
                   </div>
                 </div>
               ) : (
-                <div className="workspace-toolbar" style={{ marginTop: 16 }}>
+                <div className="workspace-toolbar mt-4">
                   <Link href={`/staff/${p.id}`} style={{ ...editBtn, textDecoration: "none" }}>{t("staff.view")}</Link>
                   {filter === "active" ? (
                     <>
@@ -277,7 +277,7 @@ export default function StaffPage() {
             </div>
           ) : (
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>{t("staff.editName", { name: p.full_name })}</div>
+              <div className="t-md fw-7 mb-3">{t("staff.editName", { name: p.full_name })}</div>
               <div className="workspace-form-grid">
                 <Field label={t("profile.fullName")}><input className="form-input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
                 <Field label={t("profile.employeeCode")}><input className="form-input" value={form.employee_code} onChange={(e) => setForm({ ...form, employee_code: e.target.value })} placeholder="KIT-020" /></Field>
@@ -300,7 +300,7 @@ export default function StaffPage() {
                 <Field label={t("profile.phone")}><input className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
               </div>
               <Field label={t("profile.skillsLabel")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Grill, Cashier, Opening" /></Field>
-              <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <div className="d-flex gap-2 mt-2">
                 <button onClick={() => setEditId(null)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
                 <button className="btn-gold" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("common.save")}</button>
               </div>

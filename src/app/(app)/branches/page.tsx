@@ -57,7 +57,7 @@ export default function BranchesPage() {
               <div className="u-flex1">
                 <div className="feature-title">{b.name}</div>
                 <div className="feature-sub">{b.address || "—"}</div>
-                <div style={{ display: "flex", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
+                <div className="d-flex gap-4 mt-2 f-wrap">
                   <Mini label={t("branches.miniStaff")} value={b.staff} />
                   <Mini label={t("branches.miniWorking")} value={b.workingNow} color="var(--success)" />
                   {b.pendingLeave > 0 && <Mini label={t("branches.miniLeave")} value={b.pendingLeave} color="var(--gold-ink)" />}
@@ -75,7 +75,7 @@ export default function BranchesPage() {
 
 function Total({ label, value, color }: any) {
   return (
-    <div className="card" style={{ textAlign: "center", marginBottom: 0, padding: 16 }}>
+    <div className="card u-center mb-0 p-4">
       <div style={{ fontSize: 26, fontWeight: 700, color: color || "var(--text)" }}>{value}</div>
       <div className="ui-meta">{label}</div>
     </div>

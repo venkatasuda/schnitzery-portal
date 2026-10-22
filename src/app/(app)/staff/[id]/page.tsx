@@ -65,7 +65,7 @@ export default function StaffDetailPage() {
       <Link href="/staff" style={backLink}>{t("staffd.back")}</Link>
 
       {/* header */}
-      <div className="card" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+      <div className="card d-flex ai-c gap-4 mb-4">
         {staff.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={staff.avatar_url} alt="" style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover" }} />
@@ -83,7 +83,7 @@ export default function StaffDetailPage() {
 
       {/* details */}
       <div className="section-label">{t("staffd.details")}</div>
-      <div className="card" style={{ padding: 6 }}>
+      <div className="card p-2">
         <Row label={t("staffd.schnitzeryId")} value={staff.employee_code} />
         <Row label={t("staff.team")} value={staff.team ? teamLabel(staff.team) : null} />
         <Row label={t("staff.role")} value={staff.role ? roleLabel(staff.role) : null} />
@@ -94,9 +94,9 @@ export default function StaffDetailPage() {
       </div>
 
       {staff.skills && staff.skills.length > 0 && (
-        <div className="card" style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>{t("profile.skills")}</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div className="card mt-2">
+          <div className="t-xs u-muted mb-2">{t("profile.skills")}</div>
+          <div className="d-flex f-wrap gap-2">
             {staff.skills.map((s: string) => (
               <span key={s} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 14, background: "var(--dark3)", border: "1px solid var(--accent-line)", color: "var(--gold-light)" }}>{s}</span>
             ))}
@@ -116,7 +116,7 @@ export default function StaffDetailPage() {
       {bal && (
         <>
           <div className="section-label">{t("staffd.vacation", { year: bal.year })}</div>
-          <div className="card" style={{ marginBottom: 4 }}>
+          <div className="card mb-1">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 12 }}>
               <Stat value={bal.allowance} label={t("staffd.allowance")} />
               <Stat value={bal.used} label={t("staffd.taken")} color="var(--warn)" />

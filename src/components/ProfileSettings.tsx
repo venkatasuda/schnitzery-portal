@@ -76,7 +76,7 @@ export default function ProfileSettings() {
       <div className="card">
         <div className="u-between">
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{t("settings.lightMode")}</div>
+            <div className="t-lg fw-6 u-text">{t("settings.lightMode")}</div>
             <div className="ui-muted">{t("settings.lightModeSub")}</div>
           </div>
           <button
@@ -93,10 +93,10 @@ export default function ProfileSettings() {
 
       {/* NOTIFICATIONS — opt-in. Hidden entirely on devices that can't do push. */}
       {pushState !== "unsupported" && (
-        <div className="card" style={{ marginTop: 10 }}>
+        <div className="card mt-3">
           <div className="u-between">
             <div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{t("settings.notifications")}</div>
+              <div className="t-lg fw-6 u-text">{t("settings.notifications")}</div>
               <div className="ui-muted">
                 {pushState === "denied" ? t("settings.notificationsBlocked") : t("settings.notificationsSub")}
               </div>
@@ -117,12 +117,12 @@ export default function ProfileSettings() {
 
       {/* ACCOUNT */}
       <div className="section-label">{t("settings.account")}</div>
-      <div className="card" style={{ padding: 8 }}>
+      <div className="card p-2">
         <button
           onClick={() => setOpen((o) => !o)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 10px", background: "none", border: "none", cursor: "pointer", color: "var(--white)", fontSize: 14, fontWeight: 600 }}
         >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon e="🔒" size={14} /> {t("settings.changePassword")}</span>
+          <span className="d-iflex ai-c gap-2"><Icon e="🔒" size={14} /> {t("settings.changePassword")}</span>
           <span className="u-muted">{open ? "▲" : "▼"}</span>
         </button>
 

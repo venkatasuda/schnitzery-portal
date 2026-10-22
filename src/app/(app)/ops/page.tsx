@@ -88,7 +88,7 @@ export default function OpsPage() {
       {loading ? (
         <CardSkeleton rows={4} />
       ) : !m ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24 }}>{t("ops.none")}</div>
+        <div className="card u-center u-muted p-6">{t("ops.none")}</div>
       ) : (
         <>
           {/* METRIC CARDS */}
@@ -102,8 +102,8 @@ export default function OpsPage() {
           </div>
 
           {/* UTILIZATION */}
-          <div className="card" style={{ padding: 14, marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <div className="card p-4 mb-4">
+            <div className="d-flex ai-c jc-sb mb-2">
               <span className="ui-muted-md">{t("ops.utilization")}</span>
               <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }}>{m.utilization}%</span>
             </div>
@@ -124,7 +124,7 @@ export default function OpsPage() {
                 return (
                   <div key={r.userId + r.shift} className="card" style={{ padding: 11, borderLeft: `3px solid ${meta.color}`, display: "flex", alignItems: "center", gap: 10 }}>
                     <div className="u-grow">
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{r.name}</div>
+                      <div className="t-sm fw-6 u-text">{r.name}</div>
                       <div className="ui-muted">
                         {r.shift ? `${teamLabel(r.team)} · ${r.shift}` : (r.team ? teamLabel(r.team) : t("ops.stUnscheduled"))}
                         {r.schedStart != null && ` · ${t("ops.sched")} ${fmtFromMs(r.schedStart)}–${fmtFromMs(r.schedEnd)}`}

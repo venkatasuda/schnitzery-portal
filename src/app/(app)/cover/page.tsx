@@ -107,7 +107,7 @@ export default function CoverPage() {
                     )}
                   </div>
                   {reqFor && reqFor.work_date === s.work_date && reqFor.team === s.team && reqFor.shift === s.shift && (
-                    <div style={{ marginTop: 12, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+                    <div className="mt-3 bt-1 pt-3">
                       <textarea className="form-input" aria-label={t("cover.reasonPh")} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("cover.reasonPh")} rows={2}
                         />
                       <div className="ui-row-actions">
@@ -181,7 +181,7 @@ export default function CoverPage() {
                 <div key={c.id} className="card ui-item-card">
                   <div className="ui-strong">{fmtDate(c.work_date)} · {c.shift} <span className="ui-muted">({c.team})</span></div>
                   <div className="ui-meta">
-                    {c.requester?.full_name} → {c.claimer?.full_name || <span style={{ color: "var(--info)" }}>{t("cover.awaitingClaim")}</span>}
+                    {c.requester?.full_name} → {c.claimer?.full_name || <span className="tone-info">{t("cover.awaitingClaim")}</span>}
                   </div>
                   {c.reason && <div className="ui-quote">“{c.reason}”</div>}
                   {c.status === "claimed" ? (

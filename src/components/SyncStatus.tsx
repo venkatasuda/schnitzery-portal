@@ -83,7 +83,7 @@ export default function SyncStatus() {
       }}>
       <span style={{ width: 9, height: 9, borderRadius: 5, background: online ? "#e8a35a" : "#ec7063", flexShrink: 0 }} />
       <div style={{ flex: 1, fontSize: 12.5, color: "var(--white)" }}>
-        {!online && <span style={{ fontWeight: 700 }}>{t("sync.offline")}</span>}
+        {!online && <span className="fw-7">{t("sync.offline")}</span>}
         {!online && pending > 0 && " · "}
         {pending > 0 ? t("sync.pending", { n: pending }) : (online ? t("sync.online") : "")}
       </div>
@@ -113,7 +113,7 @@ export default function SyncStatus() {
           <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 3 }}>
             {t("sync.strandedHelp")}
           </div>
-          {retryable > 0 && online && <button className="btn-secondary" disabled={syncing} onClick={retryMine} style={{marginTop:8}}>{t("sync.retryMine")}</button>}
+          {retryable > 0 && online && <button className="btn-secondary mt-2" disabled={syncing} onClick={retryMine}>{t("sync.retryMine")}</button>}
         </div>
       )}
     </>

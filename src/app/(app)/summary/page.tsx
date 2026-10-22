@@ -88,7 +88,7 @@ export default function SummaryPage() {
       <Link href="/simulator" className="card" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", margin: "12px 0 0" }}>
         <Icon e="🎛️" size={18} color="var(--gold)" />
         <div className="u-flex1">
-          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{t("summary.simulator")}</div>
+          <div className="t-sm fw-6 u-text">{t("summary.simulator")}</div>
           <div className="ui-muted">{t("summary.simulatorSub")}</div>
         </div>
         <span className="u-muted">›</span>
@@ -127,7 +127,7 @@ export default function SummaryPage() {
             <Stat label={t("summary.shifts")} value={String(data.shifts)} />
           </div>
 
-          <div className="card" style={{ marginTop: 6 }}>
+          <div className="card mt-2">
             <div className="card-title">{t("summary.staffBreakdown")}</div>
             {data.rows.length === 0 ? (
               <div style={{ color: "var(--gray)", fontSize: 13, padding: "8px 0" }}>{t("summary.noStaffData")}</div>
@@ -144,7 +144,7 @@ export default function SummaryPage() {
                   </thead>
                   <tbody>
                     {data.rows.map((r: any, i: number) => (
-                      <tr key={i} style={{ borderTop: "1px solid var(--border)" }}>
+                      <tr className="bt-1" key={i}>
                         <td className="u-text">{r.name}<span className="ui-muted"> · {r.team}</span></td>
                         <td className="u-right">{r.hours}h</td>
                         <td style={{ textAlign: "right", color: r.overtime > 0 ? "var(--danger)" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>

@@ -42,7 +42,7 @@ export default function SettingsPage() {
   return (
     <div className="workspace-page settings-workspace">
       <h1 className="page-title u-row"><Icon e="⚙️" size={22} /> {t("profile.branchSettings")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 18 }}>{t("set.subtitle")}</p>
+      <p className="u-muted t-sm mb-5">{t("set.subtitle")}</p>
 
       {loading ? (
         <div style={{ color: "var(--gray)", padding: 30, textAlign: "center" }}>{t("common.loading")}</div>
@@ -51,7 +51,7 @@ export default function SettingsPage() {
       ) : (
         <>
           <div style={{ ...card, marginBottom: 12 }}>
-            <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+            <label className="d-flex jc-sb ai-c c-p">
               <div>
                 <div className="ui-strong">{t("set.qrTitle")}</div>
                 <div className="ui-meta">{t("set.qrSub")}</div>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
           </div>
 
           <div style={{ ...card, marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{t("set.gpsTitle")}</div>
+            <div className="t-md fw-6 mb-1">{t("set.gpsTitle")}</div>
             <div className="ui-sub">{t("set.gpsSub")}</div>
             <select className="form-input" aria-label={t("set.gpsTitle")} value={gpsMode} onChange={(e) => setGpsMode(e.target.value)}>
               <option value="off">{t("set.gpsOff")}</option>
@@ -71,7 +71,7 @@ export default function SettingsPage() {
           </div>
 
           <button className="btn-gold ui-block" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("set.save")}</button>
-          {msg && <div role="status" style={{ marginTop: 12, fontSize: 14, color: "var(--white)" }}>{msg}</div>}
+          {msg && <div className="mt-3 t-md u-text" role="status">{msg}</div>}
 
           <div style={{ ...card, marginTop: 16, fontSize: 12, color: "var(--gray)" }}>
             {t("set.note")}

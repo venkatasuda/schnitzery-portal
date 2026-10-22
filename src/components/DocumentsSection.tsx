@@ -125,7 +125,7 @@ export default function DocumentsSection() {
           {t("documents.none")}<br />{t("documents.noneHint")}
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="d-flex f-col gap-3">
           {groupKeys.map((type) => {
             const versions = groups[type];
             const cur = versions[0];
@@ -133,9 +133,9 @@ export default function DocumentsSection() {
             const older = versions.slice(1);
             const histOpen = openHist.has(type);
             return (
-              <div key={type} className="card" style={{ padding: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontSize: 22 }}>{iconOf(type)}</span>
+              <div key={type} className="card p-3">
+                <div className="d-flex ai-c gap-3">
+                  <span className="t-2xl">{iconOf(type)}</span>
                   <div className="u-grow">
                     <div className="ui-strong">{docLabel(type)}</div>
                     <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cur.file_name}</div>
@@ -144,7 +144,7 @@ export default function DocumentsSection() {
                 </div>
 
                 {cur.expiry_date && (
-                  <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>
+                  <div className="t-xs u-muted mt-2">
                     {t("documents.expires")}: {fmtDate(cur.expiry_date)}
                   </div>
                 )}
@@ -154,7 +154,7 @@ export default function DocumentsSection() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+                <div className="d-flex gap-2 mt-3 ai-c">
                   <button onClick={() => view(cur.file_path)} style={viewBtn}>{t("documents.view")}</button>
                   <button onClick={() => archive(cur.id)} style={archiveBtn}>{t("docw.archive")}</button>
                   {older.length > 0 && (
@@ -167,9 +167,9 @@ export default function DocumentsSection() {
                 {histOpen && older.map((v) => {
                   const vb = statusBadge(v.eff, t);
                   return (
-                    <div key={v.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                    <div className="d-flex ai-c gap-3 mt-2 pt-2 bt-1" key={v.id}>
                       <div className="u-grow">
-                        <div style={{ fontSize: 12, color: "var(--white)" }}>{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></div>
+                        <div className="t-xs u-text">{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></div>
                         <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
                       </div>
                       <button onClick={() => view(v.file_path)} style={viewBtn}>{t("documents.view")}</button>
@@ -189,11 +189,11 @@ export default function DocumentsSection() {
             {stage === "type" ? (
               <>
                 <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{t("documents.uploadTitle")}</div>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("documents.typeHint")}</div>
+                <div className="t-xs u-muted mb-4">{t("documents.typeHint")}</div>
                 {DOC_TYPES.map((dt) => (
                   <button key={dt.key} onClick={() => pickType(dt.key)} style={typeRow}>
-                    <span style={{ fontSize: 20 }}>{dt.icon}</span>
-                    <span style={{ flex: 1, textAlign: "left", fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{docLabel(dt.key)}</span>
+                    <span className="t-xl">{dt.icon}</span>
+                    <span className="u-flex1 u-left t-md fw-6 u-text">{docLabel(dt.key)}</span>
                     <span className="u-muted">›</span>
                   </button>
                 ))}
@@ -204,8 +204,8 @@ export default function DocumentsSection() {
             ) : (
               <>
                 <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{iconOf(chosenType)} {docLabel(chosenType)}</div>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("documents.datesHint")}</div>
-                <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+                <div className="t-xs u-muted mb-4">{t("documents.datesHint")}</div>
+                <div className="d-flex gap-3 mb-3">
                   <label className="u-flex1">
                     <div style={lbl}>{t("documents.issued")}</div>
                     <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} style={input} />

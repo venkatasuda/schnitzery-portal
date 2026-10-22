@@ -38,7 +38,7 @@ export default function LeaveCalendarPage() {
         <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 40 }}><Icon e="☀️" size={28} color="var(--gray)" /><br />No upcoming leave booked.</div>
       ) : (
         Object.entries(byMonth).map(([month, items]) => (
-          <div key={month} style={{ marginBottom: 18 }}>
+          <div className="mb-5" key={month}>
             <div style={{ fontSize: 12, letterSpacing: 1, color: "var(--gray)", marginBottom: 8 }}>{month.toUpperCase()}</div>
             {items.map((l) => (
               <div key={l.id} style={{ ...card, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -48,7 +48,7 @@ export default function LeaveCalendarPage() {
                     {fmtDate(l.from_date)} → {fmtDate(l.to_date)}{l.reason ? ` · ${l.reason}` : ""}
                   </div>
                 </div>
-                <div style={{ fontSize: 12, color: "var(--gold-ink)", fontWeight: 600 }}>
+                <div className="t-xs tone-action fw-6">
                   {daysBetween(l.from_date, l.to_date)}d
                 </div>
               </div>

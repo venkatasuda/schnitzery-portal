@@ -22,7 +22,7 @@ export default function AgentWidget() {
           <div onClick={close}
             style={{ position: "fixed", inset: 0, zIndex: 998, background: "transparent" }} />
           <div id="assistant-dialog" className="assistant-popover" role="dialog" aria-label={t("assistant.title")} onKeyDown={e => { if (e.key === "Escape") close(); }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div className="d-flex ai-c jc-sb mb-2">
               <strong style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>{t("assistant.title")}</strong>
               <button autoFocus aria-label={t("common.close")} onClick={close}
                 style={{ background: "none", border: "none", color: "inherit", fontSize: 22, lineHeight: 1, cursor: "pointer", padding: 4 }}>×</button>

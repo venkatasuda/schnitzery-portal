@@ -74,6 +74,8 @@ grows** past `scripts/checks/design-baseline.json`. After migrating a page, run
 - 46 most repeated inline style objects → token utilities (`.ui-muted`, `.ui-title`, `.u-row`, `.ui-empty-msg`, `.ui-denied`, …) across 66 files — inline styles 1,716 → 1,217, font-size literals 877 → 666.
 - Text/border colours and named colour constants → theme tokens (`--success/--danger/--info/--warn/--gold-ink/--gray`); **all `rgba(255,255,255,…)` / grey borders and tints → `--border` / `--surface-2`** (those were invisible in light mode). Hard-coded colours 597 → 428. Strong button fills, team colours, kiosk and scanner overlays (fixed dark screens) deliberately untouched.
 
+**Done in F3–F5:** inventory, transfers, waste rebuilt on the kit; shape-based control codemod (`pattern-codemod.py`); shared local style constants (`card/input/primaryBtn/navBtn/…`) replaced on 30 pages; atomic codemod (`atomic-codemod.py`) translates any style object whose every property has a token utility (`t-*`, `fw-*`, `mb-*`, `gap-*`, `d-flex`, `ai-c`, `tone-*` …) — 377 converted. Inline styles 1,716 → 655, font-size literals 877 → 367. Static a11y guard (`a11y-static.cjs`) in CI.
+
 **Next (page by page, most inline styles first), each with before/after screenshots:**
 inventory (87) · attendance (67) · analytics (55) · attendance-hub (51) · transfers (45) ·
 waste (44) · cover (44) · roster (43) · overview (42) · staff (40) · schedule/compare (40) ·

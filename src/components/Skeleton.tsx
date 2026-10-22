@@ -12,7 +12,7 @@ export function Skeleton({ height = 16, width = "100%", radius = 8, style }: { h
 // A card with N shimmering rows — good for list loading states.
 export function CardSkeleton({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="card" style={{ padding: 12 }}>
+    <div className="card p-3">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0" }}>
           <Skeleton height={38} width={38} radius={19} />

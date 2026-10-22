@@ -48,7 +48,7 @@ export default function TermsPage() {
         <p style={p}>Questions about these terms: [NAME / EMAIL].</p>
       </Section>
 
-      <p style={{ marginTop: 24 }}><Link href="/login" style={a}>← Back to sign in</Link></p>
+      <p className="mt-6"><Link href="/login" style={a}>← Back to sign in</Link></p>
     </main>
   );
 }

@@ -51,21 +51,21 @@ export default function CompliancePage() {
           {v.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: 32 }}>
               <div className="u-mb-2"><Icon e="✅" size={30} color="var(--success)" /></div>
-              <div style={{ color: "var(--success)", fontSize: 15, fontWeight: 700 }}>{t("comp.allCompliant")}</div>
-              <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 6 }}>
+              <div className="tone-success t-lg fw-7">{t("comp.allCompliant")}</div>
+              <div className="u-muted t-xs mt-2">
                 {t("comp.checkedNote", { n: data.checked })}
               </div>
             </div>
           ) : (
             <>
               <div className="section-label">{t("comp.issuesHeader", { n: v.length, c: data.checked })}</div>
-              <div className="card" style={{ padding: 8 }}>
+              <div className="card p-2">
                 {v.map((item: any, i: number) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 8px", borderBottom: i < v.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                     <Icon e={ICON[item.type] || "⚠️"} size={18} />
                     <div className="u-flex1">
                       <div className="ui-strong">
-                        {item.name} <span style={{ fontWeight: 400, fontSize: 12, color: "var(--gray)" }}>· {item.date}</span>
+                        {item.name} <span className="fw-4 t-xs u-muted">· {item.date}</span>
                       </div>
                       <div style={{ fontSize: 12, color: item.severity === "high" ? "var(--danger)" : "var(--warn)" }}>{compType(item.type)} — {item.detail}</div>
                     </div>
@@ -77,7 +77,7 @@ export default function CompliancePage() {
 
           {/* rules reference */}
           <div className="card" style={{ marginTop: 14, fontSize: 12, color: "var(--gray)", lineHeight: 1.7 }}>
-            <div style={{ fontWeight: 700, color: "var(--white)", marginBottom: 6 }}>{t("comp.rulesTitle")}</div>
+            <div className="fw-7 u-text mb-2">{t("comp.rulesTitle")}</div>
             {t("comp.ruleBreak")}<br />
             {t("comp.ruleRest")}<br />
             {t("comp.ruleMax")}<br />

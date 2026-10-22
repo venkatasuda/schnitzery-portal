@@ -142,8 +142,8 @@ export default function NotificationBell() {
                   <Link key={`ops-${i}`} href={meta.href} onClick={() => setOpen(false)}
                     style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderBottom: i < ops.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none", textDecoration: "none" }}>
                     <Icon e={meta.icon} size={16} />
-                    <span style={{ flex: 1, fontSize: 13, color: "var(--white)" }}>{t(meta.key, { n: it.count })}</span>
-                    <span style={{ color: "var(--gray)", fontSize: 16 }}>›</span>
+                    <span className="u-flex1 t-sm u-text">{t(meta.key, { n: it.count })}</span>
+                    <span className="u-muted t-lg">›</span>
                   </Link>
                 );
               })}

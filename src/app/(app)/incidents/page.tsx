@@ -68,7 +68,7 @@ export default function IncidentsPage() {
 
       {showForm && (
         <div style={{ ...card, marginBottom: 16 }}>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className="d-flex gap-3">
             <div className="u-flex1"><Field label={t("incidents.category")}><select className="form-input" value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select></Field></div>
             <div className="u-flex1"><Field label={t("incidents.severity")}><select className="form-input" value={severity} onChange={(e) => setSeverity(e.target.value)}>{SEVERITIES.map((s) => <option key={s} value={s}>{sevLabel(s)}</option>)}</select></Field></div>
           </div>
@@ -84,22 +84,22 @@ export default function IncidentsPage() {
       ) : (
         list.map((inc) => (
           <div key={inc.id} style={{ ...card, marginBottom: 10, borderColor: inc.status === "open" ? "rgba(231,76,60,0.25)" : "rgba(255,255,255,0.08)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div className="d-flex jc-sb ai-c mb-2">
+              <div className="d-flex gap-2 ai-c">
                 <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 10, background: (SEV_COLOR[inc.severity] || "#666") + "26", color: SEV_COLOR[inc.severity] || "#aaa" }}>{sevLabel(inc.severity || "").toUpperCase()}</span>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>{catLabel(inc.category)}</span>
+                <span className="t-sm fw-6">{catLabel(inc.category)}</span>
               </div>
               <span style={{ fontSize: 12, padding: "2px 10px", borderRadius: 10, background: inc.status === "open" ? "rgba(231,76,60,0.15)" : "rgba(39,174,96,0.15)", color: inc.status === "open" ? "var(--danger)" : "var(--success)" }}>{statusLabel(inc.status)}</span>
             </div>
             <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{inc.description}</div>
             <div className="ui-note">
               {inc.reporter?.full_name || t("incidents.reporterFallback")} · {fmt(inc.created_at)}
-              {inc.manager_note && <div style={{ color: "var(--success)", marginTop: 4 }}><Icon e="✓" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {inc.reviewed_by}: {inc.manager_note}</div>}
+              {inc.manager_note && <div className="tone-success mt-1"><Icon e="✓" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {inc.reviewed_by}: {inc.manager_note}</div>}
             </div>
 
             {canManage && inc.status === "open" && (
               resolveId === inc.id ? (
-                <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                <div className="mt-3 d-flex gap-2">
                   <input aria-label={t("incidents.resolveNotePlaceholder")} value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} placeholder={t("incidents.resolveNotePlaceholder")} style={{ ...input, flex: 1 }} />
                   <button onClick={() => doResolve(inc.id)} style={{ ...primaryBtn, width: "auto", padding: "0 16px" }}>{t("incidents.resolve")}</button>
                   <button type="button" aria-label={t("common.cancel")} onClick={() => setResolveId(null)} style={{ ...primaryBtn, width: "auto", padding: "0 12px", background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}><Icon e="✕" size={15} /></button>

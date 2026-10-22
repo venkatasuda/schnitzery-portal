@@ -70,7 +70,7 @@ export default function AvailabilityPage() {
           {DAYS.map((day) => (
             <div key={day} style={{ ...card, marginBottom: 8 }}>
               <div className="ui-title spaced">{dayLabel(day)}</div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div className="d-flex gap-2 f-wrap">
                 {SHIFTS.map((sh) => {
                   const on = (days[day] || []).includes(sh.key);
                   return (
@@ -79,7 +79,7 @@ export default function AvailabilityPage() {
                         background: on ? "var(--action)" : "rgba(255,255,255,0.04)",
                         color: on ? "var(--on-action)" : "var(--gray)",
                         border: on ? "1px solid var(--action)" : "1px solid rgba(255,255,255,0.12)" }}>
-                      {shiftLabel(sh.key)}<div style={{ fontSize: 12, fontWeight: 400, marginTop: 2 }}>{sh.time}</div>
+                      {shiftLabel(sh.key)}<div className="t-xs fw-4 mt-h">{sh.time}</div>
                     </button>
                   );
                 })}

@@ -67,18 +67,18 @@ export default function NoShowPage() {
         <div className="card">
           <div className="ui-title spaced">{t("ns.checkTitle")}</div>
           <div className="ui-sub">{t("ns.checkSub")}</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          <div className="d-flex gap-2 mb-4">
             <input aria-label={t("ns.checkTitle")} type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...input, flex: 1 }} />
             <button onClick={checkNoShows} disabled={nsLoading} style={{ ...primaryBtn, width: "auto", padding: "0 20px" }}>{nsLoading ? "…" : t("ns.check")}</button>
           </div>
           {nsChecked && (
             rosteredCount === 0 ? (
-              <div style={{ color: "var(--gray)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.noneRostered")}</div>
+              <div className="u-muted t-sm u-center p-4">{t("ns.noneRostered")}</div>
             ) : noShows.length === 0 ? (
-              <div style={{ color: "var(--success)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allClockedIn")}</div>
+              <div className="tone-success t-sm u-center p-4">{t("ns.allClockedIn")}</div>
             ) : (
               <div>
-                <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
+                <div className="t-xs tone-danger mb-2">{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
                 {noShows.map((n, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
                     <span className="ui-strong">{n.name}</span>
@@ -94,23 +94,23 @@ export default function NoShowPage() {
       {tab === "missing" && (
         <div className="card">
           <div className="ui-title">{t("ns.missingTitle")}</div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("ns.missingSub")}</div>
+          <div className="t-xs u-muted mb-4">{t("ns.missingSub")}</div>
           {missLoading ? (
-            <div style={{ color: "var(--gray)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("common.loading")}</div>
+            <div className="u-muted t-sm u-center p-4">{t("common.loading")}</div>
           ) : (
             <>
               {missing.length === 0 ? (
-                <div style={{ color: "var(--success)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("ns.allSubmitted")}</div>
+                <div className="tone-success t-sm u-center p-4">{t("ns.allSubmitted")}</div>
               ) : (
                 <>
-                  <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.notSubmittedN", { n: missing.length })}</div>
+                  <div className="t-xs tone-danger mb-2">{t("ns.notSubmittedN", { n: missing.length })}</div>
                   {missing.map((m) => (
                     <div key={m.id} style={{ padding: "8px 0", fontSize: 14, borderBottom: "1px solid var(--border)" }}>{m.full_name}</div>
                   ))}
                 </>
               )}
               {submitted.length > 0 && (
-                <div style={{ marginTop: 14, fontSize: 12, color: "var(--gray)" }}>
+                <div className="mt-4 t-xs u-muted">
                   {t("ns.submittedList", { names: submitted.map((s) => s.full_name).join(", ") })}
                 </div>
               )}

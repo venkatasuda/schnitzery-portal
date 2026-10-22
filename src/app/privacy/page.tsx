@@ -79,7 +79,7 @@ export default function PrivacyPage() {
       <p style={{ ...muted, marginTop: 28 }}>
         Questions? Contact [EMAIL]. · See also our <Link href="/terms" style={a}>Terms of Use</Link>.
       </p>
-      <p style={{ marginTop: 20 }}><Link href="/login" style={a}>← Back to sign in</Link></p>
+      <p className="mt-5"><Link href="/login" style={a}>← Back to sign in</Link></p>
     </main>
   );
 }

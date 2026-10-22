@@ -93,8 +93,8 @@ export default function ExpiryPage() {
       {!adding ? (
         <button className="btn-secondary" onClick={() => setAdding(true)}>+ {t("expiry.addBatch")}</button>
       ) : (
-        <div className="card" style={{ marginBottom: 14, padding: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div className="card mb-4 p-4">
+          <div className="d-flex jc-sb ai-c mb-3">
             <div className="card-title u-m0">{t("expiry.addBatch")}</div>
             <button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}>✕</button>
           </div>
@@ -110,15 +110,15 @@ export default function ExpiryPage() {
             </>
           ) : (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{sel.product}</div>
+              <div className="d-flex jc-sb ai-c mb-3">
+                <div className="t-lg fw-6 u-text">{sel.product}</div>
                 <button className="ui-link-btn" onClick={() => setSel(null)}>{t("expiry.change")}</button>
               </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
+              <div className="d-flex gap-2 mb-3 ai-c">
                 <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
                 <span className="ui-muted-md">{sel.unit || ""}</span>
               </div>
-              <label style={{ fontSize: 12, color: "var(--gray)", display: "block", marginBottom: 4 }}>{t("expiry.expiryDate")}</label>
+              <label className="t-xs u-muted d-block mb-1">{t("expiry.expiryDate")}</label>
               <input className="form-input u-mb-3" aria-label={t("expiry.expiryDate")} type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)}
                 />
               <input className="form-input u-mb-3" aria-label={t("expiry.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("expiry.notePh")}
@@ -140,7 +140,7 @@ export default function ExpiryPage() {
           <div key={g.product} className="card" style={{ marginBottom: 10, padding: 14, borderColor: soonest.flag === "expired" ? "rgba(231,76,60,0.35)" : soonest.flag === "soon" ? "var(--accent-line)" : "rgba(255,255,255,0.08)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: multi ? 10 : 6, marginBottom: multi ? 4 : 0, borderBottom: multi ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>{g.product}</div>
+                <div className="t-lg fw-7 u-text">{g.product}</div>
                 <div className="ui-muted">{t("expiry.totalOnHand", { qty: Math.round(g.total * 10) / 10, unit: g.unit || "" })}{multi ? ` · ${g.items.length} ${t("expiry.batchesShort")}` : ""}</div>
               </div>
               <span style={{ fontSize: 12, fontWeight: 700, color: head.c, whiteSpace: "nowrap" }}>{head.label}</span>
@@ -152,7 +152,7 @@ export default function ExpiryPage() {
                   <div className="u-between">
                     <div>
                       <div className="ui-body">{b.qty}{b.unit ? " " + b.unit : ""} <span className="ui-muted">· {t("expiry.expires")} {fmtDate(b.expiry_date)}</span></div>
-                      {b.note && <div style={{ fontSize: 12, color: "var(--gray)", fontStyle: "italic" }}>{b.note}</div>}
+                      {b.note && <div className="t-xs u-muted fs-i">{b.note}</div>}
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: bg.c, whiteSpace: "nowrap" }}>{bg.label}</span>
                   </div>

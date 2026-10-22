@@ -40,7 +40,7 @@ export default function SearchPage() {
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🔍" size={22} /> {t("search.title")}</h1>
 
-      <div className="card" style={{ padding: 8, marginBottom: 14 }}>
+      <div className="card p-2 mb-4">
         <input aria-label={t("search.title")}
           ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search.placeholder")}
           style={{ width: "100%", padding: "12px 14px", background: "transparent", color: "var(--white)", border: "none", outline: "none", fontSize: 16 }}
@@ -50,15 +50,15 @@ export default function SearchPage() {
       {q.trim().length < 2 ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, fontSize: 14 }}>{t("search.hint")}</div>
       ) : loading ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24 }}>…</div>
+        <div className="card u-center u-muted p-6">…</div>
       ) : total === 0 ? (
         <div className="card ui-empty-msg">{t("search.none")}</div>
       ) : (
         <>
           {res!.employees.length > 0 && (
             <>
-              <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon e="👥" size={13} /> {t("search.employees")}</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+              <div className="section-label d-flex ai-c gap-2"><Icon e="👥" size={13} /> {t("search.employees")}</div>
+              <div className="d-flex f-col gap-2 mb-4">
                 {res!.employees.map((e) => (
                   <Link key={e.id} href={`/staff/${e.id}`} className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
                     <div className="avatar" style={{ width: 34, height: 34, fontSize: 14 }}>{(e.name || "?")[0].toUpperCase()}</div>
@@ -74,12 +74,12 @@ export default function SearchPage() {
           )}
           {res!.branches.length > 0 && (
             <>
-              <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon e="🏢" size={13} /> {t("search.branches")}</div>
+              <div className="section-label d-flex ai-c gap-2"><Icon e="🏢" size={13} /> {t("search.branches")}</div>
               <div className="u-stack tight">
                 {res!.branches.map((b) => (
                   <Link key={b.id} href="/branches" className="card" style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
                     <Icon e="🏢" size={18} color="var(--gold)" />
-                    <div style={{ flex: 1, fontWeight: 600 }}>{b.name}</div>
+                    <div className="u-flex1 fw-6">{b.name}</div>
                     <span className="u-muted">›</span>
                   </Link>
                 ))}
