@@ -62,7 +62,7 @@ export default function StockAlertsPage() {
 
       <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "12px 0", padding: 14 }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: lowCount > 0 ? "var(--danger)" : "var(--success)" }}>{lowCount}</div>
+          <div className={`t-xl fw-7 ${lowCount > 0 ? "tone-danger" : "tone-success"}`.trim()}>{lowCount}</div>
           <div className="ui-muted">{t("salert.lowNow")}</div>
         </div>
         <button onClick={alertMe} disabled={notifying}

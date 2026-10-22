@@ -240,7 +240,7 @@ export default function AttendanceHubPage() {
                       <div key={r.user_id} style={{ padding: "11px 0", borderBottom: i < otRows.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                         <div className="u-between">
                           <div className="ui-strong">{r.name} <span className="ui-muted">· {r.team ? teamLabel(r.team) : "—"}</span></div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: over ? "var(--warn)" : "var(--success)" }}>{over ? `+${fmtH(r.overtimeMins)}` : t("ahub.within")}</div>
+                          <div className={`t-sm fw-7 ${over ? "tone-warn" : "tone-success"}`.trim()}>{over ? `+${fmtH(r.overtimeMins)}` : t("ahub.within")}</div>
                         </div>
                         <div className="ui-meta">
                           {t("ahub.workedContract", { w: fmtH(r.workedMins), c: r.contractHours, s: r.shifts })}{r.contractType ? ` · ${r.contractType}` : ""}

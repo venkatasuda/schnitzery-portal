@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { toast } from "@/components/Toast";
 import { saveCount } from "@/lib/queries/inventory";
+import Icon from "@/components/Icon";
 
 export default function ScanToCount({ products, onClose, onSaved }: { products: any[]; onClose: () => void; onSaved: () => void }) {
   const { t } = useLang();
@@ -63,7 +64,7 @@ export default function ScanToCount({ products, onClose, onSaved }: { products: 
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.94)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
       <div style={{ padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{t("scan.title")}</span>
-        <button type="button" aria-label={t("common.close")} onClick={close} style={{ color: "#fff", background: "none", border: "none", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>✕</button>
+        <button type="button" aria-label={t("common.close")} onClick={close} style={{ color: "#fff", background: "none", border: "none", fontSize: 24, cursor: "pointer", lineHeight: 1 }}><Icon e="✕" size={20} /></button>
       </div>
 
       {!scanned ? (

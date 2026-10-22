@@ -82,5 +82,5 @@ function Total({ label, value, color }: any) {
   );
 }
 function Mini({ label, value, color }: any) {
-  return <span className="ui-muted"><b style={{ color: color || "var(--text)" }}>{value}</b> {label}</span>;
+  return <span className="ui-muted"><b className={` ${color || "u-text"}`.trim()}>{value}</b> {label}</span>;
 }

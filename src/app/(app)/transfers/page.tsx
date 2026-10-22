@@ -83,7 +83,7 @@ export default function TransfersPage() {
               {!showForm ? (
                 <button type="button" className="btn-secondary ui-block u-mb-4" onClick={() => setShowForm(true)}>+ {t("xfer.newRequest")}</button>
               ) : (
-                <Panel title={t("xfer.newRequest")} actions={<button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}>✕</button>}>
+                <Panel title={t("xfer.newRequest")} actions={<button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}><Icon e="✕" size={16} /></button>}>
                   <Field label={t("xfer.fromBranch")}>
                   <select className="form-select" value={src} onChange={(e) => setSrc(e.target.value)}>
                     <option value="">{t("xfer.selectBranch")}</option>

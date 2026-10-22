@@ -49,7 +49,7 @@ export default function ChecklistStatusPage() {
           </div>
           <div className="u-grow">
             <div style={{ fontSize: 14, color: "var(--text)" }}>{it.task}</div>
-            <div style={{ fontSize: 12, color: it.done ? "var(--gray)" : "var(--danger)", marginTop: 2 }}>
+            <div className={`t-xs mt-h ${it.done ? "u-muted" : "tone-danger"}`.trim()}>
               {it.done
                 ? `${it.completed_by_name ? `${t("checklist.by")} ${it.completed_by_name}` : ""}${it.completed_at ? ` · ${fmtTime(it.completed_at)}` : ""}`.trim()
                 : t("checklist.notDone")}

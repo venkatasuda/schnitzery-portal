@@ -81,7 +81,7 @@ export default function TempPage() {
         <div className="card" style={{ margin: "12px 0", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: summary.breachesToday > 0 ? "rgba(231,76,60,0.4)" : summary.pending > 0 ? "var(--accent-line)" : "rgba(39,174,96,0.3)" }}>
           <div>
             <div className="t-sm fw-7 u-text">{t("temp.todayCoverage", { done: summary.loggedUnits, total: summary.totalUnits })}</div>
-            <div style={{ fontSize: 12, color: summary.breachesToday > 0 ? "var(--danger)" : "var(--gray)" }}>
+            <div className={`t-xs ${summary.breachesToday > 0 ? "tone-danger" : "u-muted"}`.trim()}>
               {summary.breachesToday > 0 ? t("temp.breachesToday", { n: summary.breachesToday }) : summary.pending > 0 ? t("temp.pendingToday", { n: summary.pending }) : t("temp.allGood")}
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function TempPage() {
                       </div>
                       {lt ? (
                         <div className="u-right">
-                          <div style={{ fontSize: 15, fontWeight: 700, color: lt.in_range ? "var(--success)" : "var(--danger)" }}>{lt.temp}°C</div>
+                          <div className={`t-lg fw-7 ${lt.in_range ? "tone-success" : "tone-danger"}`.trim()}>{lt.temp}°C</div>
                           <div className="ui-muted">{u.todayCount}× {t("temp.today")}</div>
                         </div>
                       ) : <span className="t-xs tone-action">{t("temp.pending")}</span>}
@@ -146,10 +146,10 @@ export default function TempPage() {
                 <div key={l.id} className="card ui-item-card">
                   <div className="u-between">
                     <div>
-                      <div className="ui-body">{l.unit?.name || "—"} <span style={{ fontWeight: 700, color: l.in_range ? "var(--success)" : "var(--danger)" }}>{l.temp}°C</span></div>
+                      <div className="ui-body">{l.unit?.name || "—"} <span className={`fw-7 ${l.in_range ? "tone-success" : "tone-danger"}`.trim()}>{l.temp}°C</span></div>
                       <div className="ui-muted">{fmtWhen(l.recorded_at)}{l.recorded_by_name ? ` · ${l.recorded_by_name}` : ""}</div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: l.in_range ? "var(--success)" : "var(--danger)" }}>{l.in_range ? t("temp.ok") : t("temp.breach")}</span>
+                    <span className={`t-xs fw-6 ${l.in_range ? "tone-success" : "tone-danger"}`.trim()}>{l.in_range ? t("temp.ok") : t("temp.breach")}</span>
                   </div>
                   {l.corrective_action && <div className="t-xs tone-action mt-2">↳ {l.corrective_action}</div>}
                 </div>
@@ -178,7 +178,7 @@ export default function TempPage() {
                     <div className="ui-body">{u.name}</div>
                     <div className="ui-muted">{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
                   </div>
-                  <button className="ui-icon-btn" type="button" aria-label={`${t("temp.removeUnit")}: ${u.name}`} onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")}>🗑</button>
+                  <button className="ui-icon-btn" type="button" aria-label={`${t("temp.removeUnit")}: ${u.name}`} onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")}><Icon e="🗑" size={16} /></button>
                 </div>
               ))}
             </div>

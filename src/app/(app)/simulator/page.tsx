@@ -41,7 +41,7 @@ export default function SimulatorPage() {
     <div className="mb-5">
       <div className="d-flex jc-sb mb-2">
         <span className="ui-body">{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: val === 0 ? "var(--gray)" : val > 0 ? "var(--danger)" : "var(--success)" }}>{val > 0 ? "+" : ""}{val}%</span>
+        <span className={`t-sm fw-7 ${val === 0 ? "u-muted" : val > 0 ? "tone-danger" : "tone-success"}`.trim()}>{val > 0 ? "+" : ""}{val}%</span>
       </div>
       <input aria-label={label} type="range" min={-20} max={40} step={1} value={val} onChange={(e) => set(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--gold-ink)" }} />
       <div className="ui-meta">{hint}</div>
@@ -56,7 +56,7 @@ export default function SimulatorPage() {
         <div style={{ fontSize: 22, fontWeight: 700, color }}>{pct(simVal)}</div>
         <div className="ui-muted">
           {t("sim.was")} {pct(baseVal)}
-          {delta != null && delta !== 0 && <span style={{ color: delta > 0 ? "var(--danger)" : "var(--success)", marginLeft: 4 }}>{delta > 0 ? "▲" : "▼"}{Math.abs(delta)}</span>}
+          {delta != null && delta !== 0 && <span className={`ml-1 ${delta > 0 ? "tone-danger" : "tone-success"}`.trim()}>{delta > 0 ? "▲" : "▼"}{Math.abs(delta)}</span>}
         </div>
       </div>
     );

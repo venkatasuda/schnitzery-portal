@@ -57,7 +57,7 @@ export default function WasteByBranchPage() {
             <div key={r.branchId} className="card p-4 mb-2">
               <div className="d-flex jc-sb ai-b mb-2">
                 <span className="t-lg fw-6 u-text">
-                  <span style={{ color: i === 0 ? "var(--danger)" : "var(--gray)", marginRight: 6 }}>#{i + 1}</span>{r.name}
+                  <span className={`mr-2 ${i === 0 ? "tone-danger" : "u-muted"}`.trim()}>#{i + 1}</span>{r.name}
                 </span>
                 <span className="t-lg fw-7 tone-danger">{eur(r.value)}</span>
               </div>

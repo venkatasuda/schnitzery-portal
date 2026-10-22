@@ -147,8 +147,8 @@ export default function SummaryPage() {
                       <tr className="bt-1" key={i}>
                         <td className="u-text">{r.name}<span className="ui-muted"> · {r.team}</span></td>
                         <td className="u-right">{r.hours}h</td>
-                        <td style={{ textAlign: "right", color: r.overtime > 0 ? "var(--danger)" : "var(--gray)" }}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
-                        <td style={{ textAlign: "right", color: r.late > 0 ? "var(--warn)" : "var(--gray)" }}>{r.late || "—"}</td>
+                        <td className={`u-right ${r.overtime > 0 ? "tone-danger" : "u-muted"}`.trim()}>{r.overtime > 0 ? `${r.overtime}h` : "—"}</td>
+                        <td className={`u-right ${r.late > 0 ? "tone-warn" : "u-muted"}`.trim()}>{r.late || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
