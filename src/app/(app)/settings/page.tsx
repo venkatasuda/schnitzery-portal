@@ -62,15 +62,15 @@ export default function SettingsPage() {
 
           <div style={{ ...card, marginBottom: 12 }}>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{t("set.gpsTitle")}</div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>{t("set.gpsSub")}</div>
-            <select aria-label={t("set.gpsTitle")} value={gpsMode} onChange={(e) => setGpsMode(e.target.value)} style={input}>
+            <div className="ui-sub">{t("set.gpsSub")}</div>
+            <select className="form-input" aria-label={t("set.gpsTitle")} value={gpsMode} onChange={(e) => setGpsMode(e.target.value)}>
               <option value="off">{t("set.gpsOff")}</option>
               <option value="warn">{t("set.gpsWarn")}</option>
               <option value="required">{t("set.gpsRequired")}</option>
             </select>
           </div>
 
-          <button onClick={save} disabled={saving} style={primaryBtn}>{saving ? t("common.saving") : t("set.save")}</button>
+          <button className="btn-gold ui-block" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("set.save")}</button>
           {msg && <div role="status" style={{ marginTop: 12, fontSize: 14, color: "var(--white)" }}>{msg}</div>}
 
           <div style={{ ...card, marginTop: 16, fontSize: 12, color: "var(--gray)" }}>
@@ -95,4 +95,3 @@ export default function SettingsPage() {
 }
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

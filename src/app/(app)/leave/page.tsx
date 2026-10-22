@@ -57,18 +57,18 @@ export default function LeavePage() {
       </div>
 
       {tab === "request" && (
-        <div style={card}>
+        <div className="card">
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>{t("myday.requestTimeOff")}</div>
           <Field label={t("leave.fromDate")}>
-            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={input} />
+            <input className="form-input" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
           </Field>
           <Field label={t("leave.toDate")}>
-            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={input} />
+            <input className="form-input" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
           </Field>
           <Field label={t("leave.reason")}>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("leave.reasonPlaceholder")} rows={3} style={{ ...input, resize: "vertical" }} />
           </Field>
-          <button onClick={submit} disabled={working} style={primaryBtn}>{working ? t("common.submitting") : t("leave.submit")}</button>
+          <button className="btn-gold ui-block" onClick={submit} disabled={working}>{working ? t("common.submitting") : t("leave.submit")}</button>
         </div>
       )}
 
@@ -100,4 +100,3 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 }
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 };
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

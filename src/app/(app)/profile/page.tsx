@@ -111,9 +111,9 @@ export default function ProfilePage() {
           </>
         ) : (
           <>
-            <Field label={t("profile.fullName")}><input value={fullName} onChange={(e) => setFullName(e.target.value)} style={input} /></Field>
-            <Field label={t("profile.phone")}><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+49 …" style={input} /></Field>
-            <Field label={t("profile.skillsLabel")}><input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder={t("profile.skillsPlaceholder")} style={input} /></Field>
+            <Field label={t("profile.fullName")}><input className="form-input" value={fullName} onChange={(e) => setFullName(e.target.value)} /></Field>
+            <Field label={t("profile.phone")}><input className="form-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+49 …" /></Field>
+            <Field label={t("profile.skillsLabel")}><input className="form-input" value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder={t("profile.skillsPlaceholder")} /></Field>
             <div className="ui-sub">{t("profile.managerNote")}</div>
             <div className="u-hstack">
               <button onClick={() => { setEditing(false); load(); }} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>

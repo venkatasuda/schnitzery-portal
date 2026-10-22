@@ -79,7 +79,7 @@ export default function CoverPage() {
       <h1 className="page-title u-row"><Icon e="🔁" size={22} /> {t("cover.title")}</h1>
       <div className="page-sub">{t("cover.subtitle")}</div>
 
-      <div className="hub-tabs" style={{ marginTop: 12 }}>
+      <div className="hub-tabs">
         <button className={`hub-tab${tab === "my" ? " active" : ""}`} onClick={() => setTab("my")}>{t("cover.tabMy")}</button>
         <button className={`hub-tab${tab === "open" ? " active" : ""}`} onClick={() => setTab("open")}>{t("cover.tabOpen")}{openCovers.length ? ` (${openCovers.length})` : ""}</button>
         {isMgr && <button className={`hub-tab${tab === "review" ? " active" : ""}`} onClick={() => setTab("review")}>{t("cover.tabReview")}{mgrCovers.filter((c) => c.status === "claimed").length ? ` (${mgrCovers.filter((c) => c.status === "claimed").length})` : ""}</button>}
@@ -94,8 +94,8 @@ export default function CoverPage() {
               {shifts.length === 0 ? (
                 <div className="card ui-empty-msg">{t("cover.noShifts")}</div>
               ) : shifts.map((s, i) => (
-                <div key={i} className="card" style={{ marginBottom: 8, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div key={i} className="card ui-item-card">
+                  <div className="ui-item-head">
                     <div>
                       <div className="ui-strong">{fmtDate(s.work_date)} · {s.shift}</div>
                       <div className="ui-muted">{s.team}{s.time ? ` · ${s.time}` : ""}</div>
@@ -103,16 +103,16 @@ export default function CoverPage() {
                     {s.requestStatus ? (
                       <span style={{ fontSize: 12, fontWeight: 600, color: statusColor(s.requestStatus) }}>{t("cover.st_" + s.requestStatus)}</span>
                     ) : (
-                      <button onClick={() => { setReqFor(s); setReason(""); }} style={{ padding: "8px 12px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 12, fontWeight: 600, cursor: "pointer", flex: "0 0 auto" }}>{t("cover.requestCover")}</button>
+                      <button className="btn-secondary" onClick={() => { setReqFor(s); setReason(""); }}>{t("cover.requestCover")}</button>
                     )}
                   </div>
                   {reqFor && reqFor.work_date === s.work_date && reqFor.team === s.team && reqFor.shift === s.shift && (
                     <div style={{ marginTop: 12, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
                       <textarea className="form-input" aria-label={t("cover.reasonPh")} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("cover.reasonPh")} rows={2}
                         />
-                      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                        <button onClick={doRequest} disabled={busy === "req"} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("cover.postRequest")}</button>
-                        <button onClick={() => setReqFor(null)} style={{ padding: "9px 14px", borderRadius: 8, background: "transparent", color: "var(--gray)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>{t("cover.cancel")}</button>
+                      <div className="ui-row-actions">
+                        <button className="btn-gold" onClick={doRequest} disabled={busy === "req"}>{busy === "req" ? "…" : t("cover.postRequest")}</button>
+                        <button className="btn-secondary" onClick={() => setReqFor(null)}>{t("cover.cancel")}</button>
                       </div>
                     </div>
                   )}
@@ -121,9 +121,9 @@ export default function CoverPage() {
 
               {mine.filter((r) => r.status !== "cancelled").length > 0 && (
                 <>
-                  <div className="card-title" style={{ margin: "18px 0 8px" }}>{t("cover.myRequests")}</div>
+                  <div className="card-title ui-section-title u-m0top">{t("cover.myRequests")}</div>
                   {mine.filter((r) => r.status !== "cancelled").map((r) => (
-                    <div key={r.id} className="card" style={{ marginBottom: 8, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div key={r.id} className="card ui-item-card ui-item-head">
                       <div>
                         <div className="ui-body">{fmtDate(r.work_date)} · {r.shift} <span className="ui-muted">({r.team})</span></div>
                         <div style={{ fontSize: 12, color: statusColor(r.status) }}>
@@ -146,23 +146,23 @@ export default function CoverPage() {
               {openCovers.length === 0 ? (
                 <div className="card ui-empty-msg">{t("cover.noOpen")}</div>
               ) : openCovers.map((c) => (
-                <div key={c.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div key={c.id} className="card ui-item-card">
+                  <div className="ui-item-head">
                     <div>
                       <div className="ui-strong">{fmtDate(c.work_date)} · {c.shift}</div>
                       <div className="ui-muted">{c.team} · {c.requester?.full_name || "—"}</div>
-                      {c.reason && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4, fontStyle: "italic" }}>“{c.reason}”</div>}
+                      {c.reason && <div className="ui-quote">“{c.reason}”</div>}
                     </div>
-                    <button onClick={() => doClaim(c.id)} disabled={busy === c.id} style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "var(--success)", border: "1px solid rgba(39,174,96,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer", flex: "0 0 auto" }}>{busy === c.id ? "…" : t("cover.claim")}</button>
+                    <button className="btn-gold" onClick={() => doClaim(c.id)} disabled={busy === c.id}>{busy === c.id ? "…" : t("cover.claim")}</button>
                   </div>
                 </div>
               ))}
 
               {claimedByMe.filter((r) => r.status === "claimed" || r.status === "approved").length > 0 && (
                 <>
-                  <div className="card-title" style={{ margin: "18px 0 8px" }}>{t("cover.imCovering")}</div>
+                  <div className="card-title ui-section-title u-m0top">{t("cover.imCovering")}</div>
                   {claimedByMe.filter((r) => r.status === "claimed" || r.status === "approved").map((r) => (
-                    <div key={r.id} className="card" style={{ marginBottom: 8, padding: 12 }}>
+                    <div key={r.id} className="card ui-item-card">
                       <div className="ui-body">{fmtDate(r.work_date)} · {r.shift} <span className="ui-muted">({r.team})</span></div>
                       <div style={{ fontSize: 12, color: statusColor(r.status) }}>{t("cover.st_" + r.status)} · {r.requester?.full_name}</div>
                     </div>
@@ -178,19 +178,19 @@ export default function CoverPage() {
               {mgrCovers.length === 0 ? (
                 <div className="card ui-empty-msg">{t("cover.noReview")}</div>
               ) : mgrCovers.map((c) => (
-                <div key={c.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
+                <div key={c.id} className="card ui-item-card">
                   <div className="ui-strong">{fmtDate(c.work_date)} · {c.shift} <span className="ui-muted">({c.team})</span></div>
-                  <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 3 }}>
+                  <div className="ui-meta">
                     {c.requester?.full_name} → {c.claimer?.full_name || <span style={{ color: "var(--info)" }}>{t("cover.awaitingClaim")}</span>}
                   </div>
-                  {c.reason && <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 4, fontStyle: "italic" }}>“{c.reason}”</div>}
+                  {c.reason && <div className="ui-quote">“{c.reason}”</div>}
                   {c.status === "claimed" ? (
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <button onClick={() => doDecide(c.id, "approved")} disabled={busy === c.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(39,174,96,0.15)", color: "var(--success)", border: "1px solid rgba(39,174,96,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{busy === c.id ? "…" : t("cover.approve")}</button>
-                      <button onClick={() => doDecide(c.id, "rejected")} disabled={busy === c.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("cover.reject")}</button>
+                    <div className="ui-row-actions">
+                      <button className="btn-gold" onClick={() => doDecide(c.id, "approved")} disabled={busy === c.id}>{busy === c.id ? "…" : t("cover.approve")}</button>
+                      <button className="btn-quiet-danger" onClick={() => doDecide(c.id, "rejected")} disabled={busy === c.id}>{t("cover.reject")}</button>
                     </div>
                   ) : (
-                    <div style={{ fontSize: 12, color: "var(--info)", marginTop: 8 }}>{t("cover.waitingForClaim")}</div>
+                    <div className="ui-note tone-info">{t("cover.waitingForClaim")}</div>
                   )}
                 </div>
               ))}

@@ -59,8 +59,8 @@ export default function LabelsPage() {
       <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🏷️" size={22} /> {t("labels.title")}</h1>
       <div className="page-sub">{t("labels.subtitle")}</div>
 
-      <button onClick={printLabels} disabled={loading || products.length === 0}
-        style={{ width: "100%", padding: 12, margin: "14px 0", borderRadius: 10, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+      <button className="btn-gold" onClick={printLabels} disabled={loading || products.length === 0}
+       >
         🖨 {t("labels.print")}
       </button>
 

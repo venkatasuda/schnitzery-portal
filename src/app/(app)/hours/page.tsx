@@ -35,9 +35,9 @@ export default function HoursPage() {
       <p className="ui-lede">Your worked hours this month.</p>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <button onClick={() => shiftMonth(-1)} style={navBtn}>‹ Prev</button>
+        <button className="btn-secondary ui-btn-sm" onClick={() => shiftMonth(-1)}>‹ Prev</button>
         <span style={{ fontSize: 14, color: "var(--gold-ink)", fontWeight: 600 }}>{monthLabel}</span>
-        <button onClick={() => shiftMonth(1)} style={navBtn}>Next ›</button>
+        <button className="btn-secondary ui-btn-sm" onClick={() => shiftMonth(1)}>Next ›</button>
       </div>
 
       {loading ? (
@@ -58,7 +58,7 @@ export default function HoursPage() {
           </div>
 
           {data.targetHours != null && (
-            <div style={card}>
+            <div className="card">
               <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 8 }}>Progress to {data.targetHours}h target</div>
               <div style={{ height: 10, background: "var(--surface-2)", borderRadius: 5, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: pct >= 100 ? "#27ae60" : "#d4a847", transition: "width 0.4s" }} />
@@ -73,4 +73,3 @@ export default function HoursPage() {
 }
 
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 };
-const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 13, cursor: "pointer" };

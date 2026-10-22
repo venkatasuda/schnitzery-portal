@@ -101,9 +101,9 @@ export default function SchedulePage() {
         <div className="hub-tab-panel active">
           {/* week nav */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <button onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
+            <button className="btn-secondary ui-btn-sm" onClick={() => changeWeek(-1)}>{t("shifts.prev")}</button>
             <span style={{ fontSize: 13, color: "var(--action)", fontWeight: 600 }}>{weekOffset === 0 ? t("shifts.thisWeek") : weekOffset > 0 ? t("shifts.weeksPlus", { n: weekOffset }) : t("shifts.weeksMinus", { n: weekOffset })}</span>
-            <button onClick={() => changeWeek(1)} style={navBtn}>{t("shifts.next")}</button>
+            <button className="btn-secondary ui-btn-sm" onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
           </div>
 
           {/* week strip */}
@@ -175,7 +175,7 @@ export default function SchedulePage() {
                 {DAYS.map((d) => <option key={d} value={d}>{dayLabel(d)}</option>)}
               </select>
             </Field>
-            <button onClick={doSubmitSwap} style={primaryBtn}>{t("shifts.submitSwap")}</button>
+            <button className="btn-gold ui-block" onClick={doSubmitSwap}>{t("shifts.submitSwap")}</button>
             {swapMsg && <div style={{ marginTop: 12, fontSize: 13, color: "var(--action)", textAlign: "center" }}>{swapMsg}</div>}
           </div>
         </div>
@@ -204,6 +204,4 @@ export default function SchedulePage() {
   );
 }
 
-const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
 const select: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

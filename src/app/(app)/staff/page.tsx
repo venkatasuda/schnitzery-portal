@@ -195,32 +195,32 @@ export default function StaffPage() {
             <h2 id="add-staff-title" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</h2>
             <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("staff.addNewSub")}</div>
             <div className="workspace-form-grid">
-              <Field label={t("staff.emailReq")}><input autoFocus type="email" autoComplete="off" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} style={input} placeholder="name@email.com" /></Field>
-              <Field label={t("staff.tempPw")}><input type="password" autoComplete="new-password" value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} style={input} placeholder={t("staff.minChars")} /></Field>
-              <Field label={t("profile.fullName")}><input value={addForm.full_name} onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })} style={input} /></Field>
-              <Field label={t("profile.employeeCode")}><input value={addForm.employee_code} onChange={(e) => setAddForm({ ...addForm, employee_code: e.target.value })} style={input} placeholder={t("staff.codeAuto")} /></Field>
+              <Field label={t("staff.emailReq")}><input className="form-input" autoFocus type="email" autoComplete="off" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} placeholder="name@email.com" /></Field>
+              <Field label={t("staff.tempPw")}><input className="form-input" type="password" autoComplete="new-password" value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} placeholder={t("staff.minChars")} /></Field>
+              <Field label={t("profile.fullName")}><input className="form-input" value={addForm.full_name} onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })} /></Field>
+              <Field label={t("profile.employeeCode")}><input className="form-input" value={addForm.employee_code} onChange={(e) => setAddForm({ ...addForm, employee_code: e.target.value })} placeholder={t("staff.codeAuto")} /></Field>
               <Field label={t("staff.team")}>
-                <select value={addForm.team} onChange={(e) => setAddForm({ ...addForm, team: e.target.value })} style={input}>
+                <select className="form-input" value={addForm.team} onChange={(e) => setAddForm({ ...addForm, team: e.target.value })}>
                   <option value="">—</option>{TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
                 </select>
               </Field>
               <Field label={t("staff.role")}>
-                <select value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value })} style={input}>
+                <select className="form-input" value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value })}>
                   {ROLES.map((rl) => <option key={rl} value={rl}>{roleLabel(rl)}</option>)}
                 </select>
               </Field>
               <Field label={t("profile.contract")}>
-                <select value={addForm.contract_type} onChange={(e) => setAddForm({ ...addForm, contract_type: e.target.value })} style={input}>
+                <select className="form-input" value={addForm.contract_type} onChange={(e) => setAddForm({ ...addForm, contract_type: e.target.value })}>
                   <option value="">—</option>{CONTRACTS.map((c) => <option key={c} value={c}>{contractLabel(c)}</option>)}
                 </select>
               </Field>
-              <Field label={t("profile.contractHours")}><input type="number" value={addForm.contract_hours} onChange={(e) => setAddForm({ ...addForm, contract_hours: e.target.value })} style={input} /></Field>
+              <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={addForm.contract_hours} onChange={(e) => setAddForm({ ...addForm, contract_hours: e.target.value })} /></Field>
             </div>
-            <Field label={t("profile.phone")}><input value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} style={input} /></Field>
+            <Field label={t("profile.phone")}><input className="form-input" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} /></Field>
             {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "var(--success)" : "var(--danger)", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
             <div className="u-hstack">
               <button disabled={adding} onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
-              <button onClick={createStaff} disabled={adding} style={primaryBtn}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
+              <button className="btn-gold" onClick={createStaff} disabled={adding}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
             </div>
           </div>
         </dialog>
@@ -279,30 +279,30 @@ export default function StaffPage() {
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>{t("staff.editName", { name: p.full_name })}</div>
               <div className="workspace-form-grid">
-                <Field label={t("profile.fullName")}><input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={input} /></Field>
-                <Field label={t("profile.employeeCode")}><input value={form.employee_code} onChange={(e) => setForm({ ...form, employee_code: e.target.value })} style={input} placeholder="KIT-020" /></Field>
+                <Field label={t("profile.fullName")}><input className="form-input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
+                <Field label={t("profile.employeeCode")}><input className="form-input" value={form.employee_code} onChange={(e) => setForm({ ...form, employee_code: e.target.value })} placeholder="KIT-020" /></Field>
                 <Field label={t("staff.team")}>
-                  <select value={form.team} onChange={(e) => setForm({ ...form, team: e.target.value })} style={input}>
+                  <select className="form-input" value={form.team} onChange={(e) => setForm({ ...form, team: e.target.value })}>
                     <option value="">—</option>{TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
                   </select>
                 </Field>
                 <Field label={t("staff.role")}>
-                  <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} style={input}>
+                  <select className="form-input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                     {ROLES.map((rl) => <option key={rl} value={rl}>{roleLabel(rl)}</option>)}
                   </select>
                 </Field>
                 <Field label={t("profile.contract")}>
-                  <select value={form.contract_type} onChange={(e) => setForm({ ...form, contract_type: e.target.value })} style={input}>
+                  <select className="form-input" value={form.contract_type} onChange={(e) => setForm({ ...form, contract_type: e.target.value })}>
                     <option value="">—</option>{CONTRACTS.map((c) => <option key={c} value={c}>{contractLabel(c)}</option>)}
                   </select>
                 </Field>
-                <Field label={t("profile.contractHours")}><input type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} style={input} placeholder="20" /></Field>
-                <Field label={t("profile.phone")}><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={input} /></Field>
+                <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} placeholder="20" /></Field>
+                <Field label={t("profile.phone")}><input className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
               </div>
-              <Field label={t("profile.skillsLabel")}><input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} style={input} placeholder="Grill, Cashier, Opening" /></Field>
+              <Field label={t("profile.skillsLabel")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Grill, Cashier, Opening" /></Field>
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                 <button onClick={() => setEditId(null)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
-                <button onClick={save} disabled={saving} style={primaryBtn}>{saving ? t("common.saving") : t("common.save")}</button>
+                <button className="btn-gold" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("common.save")}</button>
               </div>
             </div>
           )}

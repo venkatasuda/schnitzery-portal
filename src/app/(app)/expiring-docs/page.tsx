@@ -135,7 +135,7 @@ export default function ExpiringDocsPage() {
               </div>
             )
           ) : docs.length === 0 ? (
-            <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13 }}>{t("docw.noResults")}</div>
+            <div className="card ui-empty-msg">{t("docw.noResults")}</div>
           ) : (
             <div className="card" style={{ padding: 8 }}>
               {docs.map((d, i) => {

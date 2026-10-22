@@ -91,7 +91,7 @@ export default function ExpiryPage() {
       )}
 
       {!adding ? (
-        <button onClick={() => setAdding(true)} style={{ width: "100%", padding: 12, margin: "6px 0 14px", borderRadius: 10, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ {t("expiry.addBatch")}</button>
+        <button className="btn-secondary" onClick={() => setAdding(true)}>+ {t("expiry.addBatch")}</button>
       ) : (
         <div className="card" style={{ marginBottom: 14, padding: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -156,7 +156,7 @@ export default function ExpiryPage() {
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: bg.c, whiteSpace: "nowrap" }}>{bg.label}</span>
                   </div>
-                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <div className="ui-row-actions">
                     <button onClick={() => used(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "rgba(39,174,96,0.12)", color: "var(--success)", border: "1px solid rgba(39,174,96,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("expiry.used")}</button>
                     <button onClick={() => discard(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "rgba(231,76,60,0.1)", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("expiry.discard")}</button>
                   </div>

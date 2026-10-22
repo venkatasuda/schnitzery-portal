@@ -671,3 +671,6 @@ html:not(.light) .btn-danger { background: #c0392b; }
 .ui-choice { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 36px; padding: 6px 12px; font: 600 var(--text-xs)/1.3 var(--font-body); background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
 .ui-choice[aria-pressed="true"] { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
 .ui-choice:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 2px; }
+.ui-btn-sm { padding: 8px 14px; font-size: var(--text-sm); }
+.ui-section-title.u-m0top { margin-top: var(--space-5); }
+.spinner-center { margin: 0 auto var(--space-3); }

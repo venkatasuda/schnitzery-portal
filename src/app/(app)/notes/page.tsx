@@ -56,7 +56,7 @@ export default function NotesPage() {
       {/* add note */}
       <div style={{ ...card, marginBottom: 16 }}>
         <Field label={t("notes.staffMember")}>
-          <select value={userId} onChange={(e) => setUserId(e.target.value)} style={input}>
+          <select className="form-input" value={userId} onChange={(e) => setUserId(e.target.value)}>
             <option value="">{t("roster.select")}</option>
             {staff.map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
           </select>
@@ -65,7 +65,7 @@ export default function NotesPage() {
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--gray)", marginBottom: 12, cursor: "pointer" }}>
           <input type="checkbox" checked={isRec} onChange={(e) => setIsRec(e.target.checked)} /> {t("notes.markRec")}
         </label>
-        <button onClick={submit} disabled={posting} style={primaryBtn}>{posting ? t("common.saving") : t("notes.addNote")}</button>
+        <button className="btn-gold ui-block" onClick={submit} disabled={posting}>{posting ? t("common.saving") : t("notes.addNote")}</button>
       </div>
 
       {/* tabs */}
@@ -95,4 +95,3 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 }
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
