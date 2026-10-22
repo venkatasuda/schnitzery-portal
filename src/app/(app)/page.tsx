@@ -226,8 +226,8 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       <section className="dashboard-panel">
         <div className="dashboard-panel-heading"><h2>{t("business.overview")}</h2><Link href="/analytics">{t("homeDashboard.details")} ›</Link></div>
         <div className="dashboard-costs">
-          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null ? "—" : `${cost.coverage?.sales.complete === false ? "≥ " : ""}€${cost.monthSales.toLocaleString()}`}</strong></div>
-          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null ? "—" : `${cost.coverage?.spend.complete === false ? "≥ " : ""}€${cost.invSpend.toLocaleString()}`}</strong></div>
+          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null || (cost.coverage?.sales.complete === false && !cost.monthSales) ? "—" : `${cost.coverage?.sales.complete === false ? "≥ " : ""}€${cost.monthSales.toLocaleString()}`}</strong></div>
+          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null || (cost.coverage?.spend.complete === false && !cost.invSpend) ? "—" : `${cost.coverage?.spend.complete === false ? "≥ " : ""}€${cost.invSpend.toLocaleString()}`}</strong></div>
         </div>
         <div className="dashboard-facts">
           <div><span>{t("home.laborPct")}</span><strong>{cost?.laborPct == null ? "—" : `${cost.laborPct}%`}</strong></div>

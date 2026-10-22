@@ -695,3 +695,12 @@ html:not(.light) .btn-danger { background: #c0392b; }
 .ui-chart.h-210 { height: 210px; }
 .ui-link { color: var(--gold-ink); text-decoration: none; font-weight: 600; } .ui-link:hover { text-decoration: underline; }
 .ui-stat-grid.u-m0 { margin: 0; }
+/* Visual review fixes (staging walkthrough) */
+.ui-segmented { display: inline-flex; max-width: 100%; }
+.ui-segmented button { flex: 0 0 auto; }
+@media (max-width: 600px) { .ui-segmented { display: flex; } .ui-segmented button { flex: 1 0 auto; } }
+.ui-panel-head h2::first-letter { text-transform: uppercase; }
+.ui-inline-field { display: grid; gap: var(--space-1); }
+.ui-inline-field .ui-field-label { margin: 0; }
+.ui-inline-field .form-select { width: auto; min-width: 160px; }
+.ui-toolbar { align-items: flex-end; }
