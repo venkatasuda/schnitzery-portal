@@ -164,7 +164,7 @@ export default function WastePage() {
           </div>
           <div className="u-row">
             {e.value != null && <span className="ui-figure tone-danger">{eur(e.value)}</span>}
-            <button className="ui-icon-btn" type="button" aria-label={t("common.delete")} onClick={() => remove(e.id)}>✕</button>
+            <button className="ui-icon-btn" type="button" aria-label={t("common.delete")} onClick={() => remove(e.id)}><Icon e="✕" size={16} /></button>
           </div>
         </div>
       ))}

@@ -102,7 +102,7 @@ export default function GeofencePage() {
           <button key={m.key} onClick={() => setMode(m.key)} className="card"
             style={{ padding: 12, textAlign: "left", cursor: "pointer",
               border: mode === m.key ? "1px solid var(--gold)" : "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ fontWeight: 600, color: mode === m.key ? "var(--gold)" : "var(--white)" }}>{m.label}</div>
+            <div className={`fw-6 ${mode === m.key ? "tone-action" : "u-text"}`.trim()}>{m.label}</div>
             <div className="ui-meta">{m.hint}</div>
           </button>
         ))}

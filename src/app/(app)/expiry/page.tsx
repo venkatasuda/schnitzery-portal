@@ -96,7 +96,7 @@ export default function ExpiryPage() {
         <div className="card mb-4 p-4">
           <div className="d-flex jc-sb ai-c mb-3">
             <div className="card-title u-m0">{t("expiry.addBatch")}</div>
-            <button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}>✕</button>
+            <button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}><Icon e="✕" size={16} /></button>
           </div>
           {!sel ? (
             <>

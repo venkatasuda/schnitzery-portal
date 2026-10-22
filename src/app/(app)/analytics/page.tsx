@@ -101,7 +101,7 @@ export default function AnalyticsPage() {
       {view === "workforce" && today?.ok && (
         <div className="card mb-3 p-4">
           <div className="section-label d-flex ai-c gap-2 mb-3"><Icon e="📅" size={14} color="var(--gold)" /> {t("bana.today")}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8 }}>
+          <div className="ui-stat-grid u-m0">
             <Stat value={today.metrics.totalSales ? `€${today.metrics.totalSales.toFixed(0)}` : "—"} label={t("bana.totalSales")} color={GOLD} />
             <Stat value={`${today.metrics.attended}/${today.metrics.scheduled}`} label={t("bana.present")} color={GOLD} />
             <Stat value={`${today.metrics.attendancePct}%`} label={t("bana.kAttendance")} color={clr(today.metrics.attendancePct, "up", 95, 85)} />
@@ -118,9 +118,9 @@ export default function AnalyticsPage() {
       {view === "business" && !loading && data?.ok && <BusinessOverview data={data} />}
       <div hidden={view !== "workforce"} className="workforce-report">
       {loading ? (
-        <div className="mt-4"><StatsSkeleton count={4} /><div style={{ height: 12 }} /><Skeleton height={210} radius={14} /></div>
+        <div className="mt-4"><StatsSkeleton count={4} /><div className="mb-3" /><Skeleton height={210} radius={14} /></div>
       ) : !m || m.scheduled === 0 && m.laborHours === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 36, fontSize: 14, lineHeight: 1.6 }}><Icon e="📊" size={26} color="var(--gray)" /> {t("bana.noData")}</div>
+        <div className="card ui-empty-msg"><Icon e="📊" size={26} color="var(--gray)" /> {t("bana.noData")}</div>
       ) : (
         <>
           {/* KPI grid */}
@@ -139,13 +139,13 @@ export default function AnalyticsPage() {
           <div className="card u-mb-4">
             <div className="card-title mb-3">{t("bana.productivity")}</div>
             {m.totalSales > 0 ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8 }}>
+              <div className="ui-stat-grid u-m0">
                 <Stat value={m.salesPerLaborHour != null ? `€${m.salesPerLaborHour}` : "—"} label={t("bana.salesPerHour")} color={BLUE} />
                 <Stat value={m.laborCostPct != null ? `${m.laborCostPct}%` : "—"} label={t("bana.laborCostPct")} color={clr(m.laborCostPct ?? 0, "down", 25, 35)} />
                 <Stat value={`€${m.totalSales.toFixed(0)}`} label={t("bana.totalSales")} color={GOLD} />
               </div>
             ) : (
-              <div className="ui-muted-md">{t("bana.noSales")} <Link href="/labor" style={{ color: "var(--gold-ink)", textDecoration: "none" }}>{t("bana.laborLink")}</Link></div>
+              <div className="ui-muted-md">{t("bana.noSales")} <Link href="/labor" className="ui-link">{t("bana.laborLink")}</Link></div>
             )}
           </div>
 
@@ -200,11 +200,11 @@ export default function AnalyticsPage() {
       {!loading && data?.ok && (
         <div className="card u-mb-4">
           <div className="card-title mb-h d-flex ai-c gap-2"><Icon e="👥" size={16} /> {t("bana.staffPerf")}</div>
-          <div style={{ fontSize: 10.5, color: "var(--gray)", marginBottom: 10 }}>{t("bana.staffPerfHint")}</div>
+          <div className="ui-sub">{t("bana.staffPerfHint")}</div>
           {staff.length === 0 ? (
-            <div style={{ color: "var(--gray)", fontSize: 12, textAlign: "center", padding: "14px 0" }}>{t("bana.noStaffData")}</div>
+            <div className="ui-empty-msg">{t("bana.noStaffData")}</div>
           ) : (
-            <div style={{ overflowX: "auto" }}>
+            <div className="table-scroll" role="region" aria-label={t("bana.staffPerf")} tabIndex={0}>
               <table className="data-table">
                 <thead>
                   <tr>
@@ -223,11 +223,11 @@ export default function AnalyticsPage() {
                       <tr className="bt-1" key={s.id}>
                         <td>
                           <div className="ui-strong-inline">{s.name}</div>
-                          <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "capitalize" }}>{s.team}</div>
+                          <div className="ui-muted u-capitalize">{s.team}</div>
                         </td>
                         <td style={{ textAlign: "center", color: attColor, fontWeight: 700 }}>{att == null ? "—" : `${att}%`}</td>
                         <td className="u-center">
-                          <span style={{ color: s.late > 0 ? "var(--warn)" : "var(--white)", fontWeight: 600 }}>{s.late}</span>
+                          <span className={`fw-6 ${s.late > 0 ? "tone-warn" : "u-text"}`.trim()}>{s.late}</span>
                           {s.absent > 0 && <span className="t-xs tone-danger ml-1">{s.absent} {t("bana.absShort")}</span>}
                         </td>
                         <td className="u-right">
@@ -260,7 +260,7 @@ export default function AnalyticsPage() {
             <tbody>
               {teamRows.map((tr: any) => (
                 <tr className="bt-1" key={tr.team}>
-                  <td style={{ color: "var(--white)", fontWeight: 600, textTransform: "capitalize" }}>{tr.team}</td>
+                  <td className="ui-strong-inline u-capitalize">{tr.team}</td>
                   <td className="u-center u-text">{tr.hours.toFixed(1)}h</td>
                   <td className="u-right tone-action fw-6">{tr.partial ? "≥ " : ""}€{tr.cost.toFixed(0)}</td>
                 </tr>
@@ -273,7 +273,7 @@ export default function AnalyticsPage() {
       {!loading && staff.length > 0 && (
         <div className="card u-mb-4">
           <div className="card-title mb-3 d-flex ai-c gap-2"><Icon e="🗓️" size={16} color="var(--gold)" /> {t("bana.shiftStats")}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+          <div className="ui-two-col">
             <Stat value={mostWorked ? `${mostWorked.totalHours}h` : "—"} label={t("bana.mostWorked")} color={GOLD} sub={mostWorked ? mostWorked.name : undefined} />
             <Stat value={topOT && topOT.otHours > 0 ? `${topOT.otHours}h` : "—"} label={t("bana.topOvertime")} color={topOT && topOT.otHours > 0 ? "var(--warn)" : "var(--gray)"} sub={topOT && topOT.otHours > 0 ? topOT.name : undefined} />
             <Stat value={swaps} label={t("bana.swaps")} color={GOLD} />
@@ -294,5 +294,5 @@ const tooltip = {
 } as const;
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="card u-mb-4"><div className="card-title mb-3">{title}</div><div style={{ width: "100%", height: 210 }}>{children}</div></div>;
+  return <div className="card u-mb-4"><div className="card-title mb-3">{title}</div><div className="ui-chart h-210">{children}</div></div>;
 }

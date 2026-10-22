@@ -7,6 +7,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import NativeDialog from "@/components/NativeDialog";
+import Icon from "@/components/Icon";
 
 const DOC_TYPES = [
   { key: "id_card", icon: "🪪" },
@@ -203,7 +204,7 @@ export default function DocumentsSection() {
               <div style={{ textAlign: "center", padding: 30, color: "var(--gray)", fontSize: 13 }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("documents.uploading")}</div>
             ) : (
               <>
-                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{iconOf(chosenType)} {docLabel(chosenType)}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}><Icon e={iconOf(chosenType)} size={16} /> {docLabel(chosenType)}</div>
                 <div className="t-xs u-muted mb-4">{t("documents.datesHint")}</div>
                 <div className="d-flex gap-3 mb-3">
                   <label className="u-flex1">

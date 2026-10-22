@@ -690,3 +690,8 @@ html:not(.light) .btn-danger { background: #c0392b; }
 .pb-0{padding-bottom:0}.pb-h{padding-bottom:2px}.pb-1{padding-bottom:var(--space-1)}.pb-2{padding-bottom:var(--space-2)}.pb-3{padding-bottom:var(--space-3)}.pb-4{padding-bottom:var(--space-4)}.pb-5{padding-bottom:var(--space-5)}.pb-6{padding-bottom:var(--space-6)}
 .ml-0{margin-left:0}.ml-h{margin-left:2px}.ml-1{margin-left:var(--space-1)}.ml-2{margin-left:var(--space-2)}.ml-3{margin-left:var(--space-3)}.ml-4{margin-left:var(--space-4)}.ml-5{margin-left:var(--space-5)}.ml-6{margin-left:var(--space-6)}
 .mr-0{margin-right:0}.mr-h{margin-right:2px}.mr-1{margin-right:var(--space-1)}.mr-2{margin-right:var(--space-2)}.mr-3{margin-right:var(--space-3)}.mr-4{margin-right:var(--space-4)}.mr-5{margin-right:var(--space-5)}.mr-6{margin-right:var(--space-6)}
+.u-capitalize { text-transform: capitalize; }
+.ui-two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.ui-chart.h-210 { height: 210px; }
+.ui-link { color: var(--gold-ink); text-decoration: none; font-weight: 600; } .ui-link:hover { text-decoration: underline; }
+.ui-stat-grid.u-m0 { margin: 0; }
