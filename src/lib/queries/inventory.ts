@@ -267,24 +267,29 @@ export async function getInventoryAnalytics(days = 30) {
   // intervals, valued at the latest delivery price on or before each count; missing
   // data is reported, never counted as zero.
   // ponytail: full purchase history for latest prices; bounded by readAll's 100k rows.
-  const [purchRes, histRes, countsRes, salesRes, workRes, prevRes, rec] = await Promise.all([
+  const [purchRes, histRes, countsRes, salesRes, workRes, prevRes, rec, catalogRes] = await Promise.all([
     readAll(supabase.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
       .eq("branch_id", branchId).gte("purchase_date", sinceStr).lte("purchase_date", today).order("id")),
     readAll(supabase.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
       .eq("branch_id", branchId).lte("purchase_date", today).order("id")),
+    // All count history: stock value needs the latest count per product, not only this window.
     readAll(supabase.from("inventory_counts").select("product, ist, count_date, created_at, category, unit")
-      .eq("branch_id", branchId).gte("count_date", sinceStr).lte("count_date", today)
+      .eq("branch_id", branchId).lte("count_date", today)
       .order("count_date").order("created_at").order("id")),
     readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", sinceStr).lte("sale_date", today).order("id")),
     readAll(supabase.from("attendance_logs").select("work_date, duration_mins").eq("branch_id", branchId).eq("status", "complete")
       .gte("work_date", sinceStr).lte("work_date", today).order("id")),
     readAll(supabase.from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr).order("id")),
     getReconciliation(Math.min(180, Math.max(7, days))),
+    readAll(supabase.from("inventory_master").select("product, category, unit").eq("branch_id", branchId).eq("is_active", true).order("id")),
   ]);
-  const failed = purchRes.error || histRes.error || countsRes.error || salesRes.error || workRes.error || prevRes.error;
+  const failed = purchRes.error || histRes.error || countsRes.error || salesRes.error || workRes.error || prevRes.error || catalogRes.error;
   if (failed) return { ok: false, error: failed.message };
   if (!rec.ok && !/Manager/.test(rec.error)) return { ok: false, error: rec.error };
-  const P = purchRes.data || [], C = countsRes.data || [], S = salesRes.data || [];
+  const P = purchRes.data || [], S = salesRes.data || [];
+  const allCounts = countsRes.data || [], C = allCounts.filter(c => c.count_date >= sinceStr);
+  // Every stock identity the branch carries must be covered (review findings 1–2).
+  const required = [...(catalogRes.data || []), ...C];
 
   // Spend: deliveries without a usable cost are missing, not €0.
   const spend = spendFigure(P);
@@ -309,15 +314,15 @@ export async function getInventoryAnalytics(days = 30) {
   const sales = salesIn(dayBefore, today); // whole window, sinceStr inclusive
 
   // Usage (cost of goods used) from reconciliation; null when nothing could be valued.
-  const valued = rec.ok ? valueUsage(rec.rows, histRes.data || []) : null;
+  const valued = rec.ok ? valueUsage(rec.rows, histRes.data || [], required) : null;
   const usage = valued && valued.products.length > 0 ? valued.usage : null;
   const cogsPct = usage && valued?.span ? pctOf(usage, salesIn(valued.span.from, valued.span.to)) : null;
 
   // Stock value: latest count per product × latest price.
   const latest: Record<string, { product: string; category: string; unit: string; ist: number }> = {};
-  for (const c of C) latest[inventoryKey(c)] = { product: c.product, category: c.category, unit: c.unit, ist: c.ist == null ? NaN : Number(c.ist) };
-  const stock = valueStock(Object.values(latest), histRes.data || [], today);
-  const stockKnown = stock.priced > 0 || stock.complete;
+  for (const c of allCounts) latest[inventoryKey(c)] = { product: c.product, category: c.category, unit: c.unit, ist: c.ist == null ? NaN : Number(c.ist) };
+  const stock = valueStock(Object.values(latest), histRes.data || [], today, required);
+  const stockKnown = stock.priced > 0 || (stock.complete && Object.keys(latest).length > 0);
 
   const byCategory = Object.entries(spendByCategory).map(([category, eur]) => ({ category, eur: Math.round(eur) })).sort((a, b) => b.eur - a.eur);
   const dates = [...new Set([...Object.keys(spendByDate), ...Object.keys(valued?.byDate || {})])].sort();

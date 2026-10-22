@@ -74,11 +74,11 @@ export default function TempPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🌡️" size={22} /> {t("temp.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🌡️" size={22} /> {t("temp.title")}</h1>
       <div className="page-sub">{t("temp.subtitle")}</div>
 
       {summary && (
-        <div className="card" style={{ margin: "12px 0", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: summary.breachesToday > 0 ? "rgba(231,76,60,0.4)" : summary.pending > 0 ? "rgba(212,168,71,0.3)" : "rgba(39,174,96,0.3)" }}>
+        <div className="card" style={{ margin: "12px 0", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: summary.breachesToday > 0 ? "rgba(231,76,60,0.4)" : summary.pending > 0 ? "var(--accent-line)" : "rgba(39,174,96,0.3)" }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--white)" }}>{t("temp.todayCoverage", { done: summary.loggedUnits, total: summary.totalUnits })}</div>
             <div style={{ fontSize: 12, color: summary.breachesToday > 0 ? "var(--danger)" : "var(--gray)" }}>
@@ -101,7 +101,7 @@ export default function TempPage() {
           {tab === "check" && (
             <div>
               {units.length === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{isMgr ? t("temp.noUnitsMgr") : t("temp.noUnits")}</div>
+                <div className="card ui-empty-msg">{isMgr ? t("temp.noUnitsMgr") : t("temp.noUnits")}</div>
               ) : units.map((u) => {
                 const oor = outOfRange(u, val[u.id] || "");
                 const lt = u.latest;
@@ -109,15 +109,15 @@ export default function TempPage() {
                   <div key={u.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{u.name}</div>
-                        <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
+                        <div className="ui-strong">{u.name}</div>
+                        <div className="ui-muted">{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
                       </div>
                       {lt ? (
-                        <div style={{ textAlign: "right" }}>
+                        <div className="u-right">
                           <div style={{ fontSize: 15, fontWeight: 700, color: lt.in_range ? "var(--success)" : "var(--danger)" }}>{lt.temp}°C</div>
-                          <div style={{ fontSize: 12, color: "var(--gray)" }}>{u.todayCount}× {t("temp.today")}</div>
+                          <div className="ui-muted">{u.todayCount}× {t("temp.today")}</div>
                         </div>
-                      ) : <span style={{ fontSize: 12, color: "#d4a847" }}>{t("temp.pending")}</span>}
+                      ) : <span style={{ fontSize: 12, color: "var(--gold-ink)" }}>{t("temp.pending")}</span>}
                     </div>
                     <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
                       <input type="number" inputMode="decimal" value={val[u.id] ?? ""} onChange={(e) => setVal((s) => ({ ...s, [u.id]: e.target.value }))}
@@ -141,17 +141,17 @@ export default function TempPage() {
           {tab === "history" && (
             <div>
               {logs.length === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("temp.noHistory")}</div>
+                <div className="card ui-empty-msg">{t("temp.noHistory")}</div>
               ) : logs.map((l) => (
                 <div key={l.id} className="card" style={{ marginBottom: 8, padding: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="u-between">
                     <div>
-                      <div style={{ fontSize: 13, color: "var(--white)" }}>{l.unit?.name || "—"} <span style={{ fontWeight: 700, color: l.in_range ? "var(--success)" : "var(--danger)" }}>{l.temp}°C</span></div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{fmtWhen(l.recorded_at)}{l.recorded_by_name ? ` · ${l.recorded_by_name}` : ""}</div>
+                      <div className="ui-body">{l.unit?.name || "—"} <span style={{ fontWeight: 700, color: l.in_range ? "var(--success)" : "var(--danger)" }}>{l.temp}°C</span></div>
+                      <div className="ui-muted">{fmtWhen(l.recorded_at)}{l.recorded_by_name ? ` · ${l.recorded_by_name}` : ""}</div>
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: l.in_range ? "var(--success)" : "var(--danger)" }}>{l.in_range ? t("temp.ok") : t("temp.breach")}</span>
                   </div>
-                  {l.corrective_action && <div style={{ fontSize: 12, color: "#d4a847", marginTop: 6 }}>↳ {l.corrective_action}</div>}
+                  {l.corrective_action && <div style={{ fontSize: 12, color: "var(--gold-ink)", marginTop: 6 }}>↳ {l.corrective_action}</div>}
                 </div>
               ))}
             </div>
@@ -175,8 +175,8 @@ export default function TempPage() {
               {units.map((u) => (
                 <div key={u.id} className="card" style={{ marginBottom: 8, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <div style={{ fontSize: 13, color: "var(--white)" }}>{u.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
+                    <div className="ui-body">{u.name}</div>
+                    <div className="ui-muted">{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
                   </div>
                   <button onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")} style={{ background: "none", border: "none", color: "var(--gray)", cursor: "pointer", fontSize: 16 }}>🗑</button>
                 </div>

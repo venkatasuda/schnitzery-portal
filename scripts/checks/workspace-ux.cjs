@@ -6,7 +6,7 @@ const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 function moduleAt(file, resolve) {
   const exports = {};
-  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText,
+  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText,
     { exports, require: resolve, URL, setTimeout, console });
   return exports;
 }
@@ -16,10 +16,13 @@ async function ui(page, result) {
   const component=moduleAt(`src/app/(app)/${page}/page.tsx`, name=>{
     if(name==='react')return hooks;
     if(name==='@/lib/time/berlinDate')return {berlinToday:()=> '2026-10-13'};
-    if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:()=>async()=>{if(result instanceof Error)throw result; return result;}});
+    if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:(_target,key)=>async(...args)=>{if(result instanceof Error)throw result; return typeof result==='function'?result(key,args):result;}});
+    if(name==='@/lib/inventory/identity')return moduleAt('src/lib/inventory/identity.ts',require);
+    if(name.startsWith('./'))return {__esModule:true,default:()=>null};
     if(name==='@/components/LanguageProvider')return {useLang:()=>({t:k=>k})};
     if(name==='next/link')return {__esModule:true,default:({href,children,...rest})=>React.createElement('a',{href,...rest},children)};
     if(name==='@/components/Toast')return {toast(){}};
+    if(name==='@/components/ui')return moduleAt('src/components/ui.tsx',require); // real kit, not a stub
     if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null,Skeleton:()=>null};
     return require(name);
   }).default;
@@ -28,7 +31,28 @@ async function ui(page, result) {
 }
 function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray(tree.props?.children)){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
-  for(const page of ['staff','settings','profile','labor','attendance-hub']){
+  // Exercise the actual count form, including keyboard submit and failed-save retry.
+  let attempts=0;
+  const product={id:'oil',product:'Oil',category:'Dry goods',unit:'L',soll:10};
+  const inventory=await ui('inventory',(name,args)=>{
+    if(name==='saveCount') { attempts++; assert.equal(args[2],7); if(attempts===1)throw Error('Disconnected'); return {ok:true}; }
+    return {ok:true,products:[product],counts:[{...product,ist:5}],lowStock:[]};
+  });
+  assert.match(inventory.render(),/Oil/);
+  find(inventory.tree(),e=>e.type==='input'&&e.props.type==='number').props.onChange({target:{value:'7'}});
+  assert.equal(find(inventory.tree(),e=>e.type==='input'&&e.props.type==='number').props.value,'7');
+  assert.equal(find(inventory.tree(),e=>e.type==='button'&&e.props.type==='submit').props.disabled,false);
+  let prevented=false;
+  find(inventory.tree(),e=>e.type==='form').props.onSubmit({preventDefault(){prevented=true;}});
+  await new Promise(r=>setImmediate(r));
+  assert.equal(prevented,true); assert.equal(attempts,1);
+  assert.equal(find(inventory.tree(),e=>e.type==='input'&&e.props.type==='number').props.value,'7','Failed save retains the count');
+  assert.equal(find(inventory.tree(),e=>e.type==='button'&&e.props.type==='submit').props.disabled,false,'Failed save releases busy state');
+  find(inventory.tree(),e=>e.type==='form').props.onSubmit({preventDefault(){}});
+  await new Promise(r=>setImmediate(r));
+  assert.equal(attempts,2);
+  assert.equal(find(inventory.tree(),e=>e.type==='input'&&e.props.type==='number').props.value,'','Successful retry clears the saved input');
+  for(const page of ['inventory','staff','settings','profile','labor','attendance-hub']){
     for(const fail of [{ok:false,error:'Database unavailable'},new Error('Disconnected')]){
       const rendered=(await ui(page,fail)).render();
       assert.match(rendered,/role="alert"/); assert.match(rendered,/business.retry/);

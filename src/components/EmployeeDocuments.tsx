@@ -19,11 +19,11 @@ function statusInfo(status: string, t: Tf): { label: string; color: string } {
   switch (status) {
     case "approved":  return { label: t("docw.statusApproved"),  color: "#58d68d" };
     case "pending":   return { label: t("docw.statusPending"),   color: "#e8a35a" };
-    case "rejected":  return { label: t("docw.statusRejected"),  color: "#ec7063" };
+    case "rejected":  return { label: t("docw.statusRejected"),  color: "var(--danger)" };
     case "expiring":  return { label: t("docw.statusExpiring"),  color: "#e8a35a" };
-    case "expired":   return { label: t("docw.statusExpired"),   color: "#ec7063" };
-    case "missing":   return { label: t("docw.statusMissing"),   color: "#9a8f8f" };
-    default:          return { label: t("docw.statusArchived"),  color: "#9a8f8f" };
+    case "expired":   return { label: t("docw.statusExpired"),   color: "var(--danger)" };
+    case "missing":   return { label: t("docw.statusMissing"),   color: "var(--gray)" };
+    default:          return { label: t("docw.statusArchived"),  color: "var(--gray)" };
   }
 }
 const fmtDate = (d?: string | null) =>
@@ -94,7 +94,7 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
           return (
             <div key={it.docType} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", borderBottom: i < items.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
               <span style={{ fontSize: 18 }}>{iconOf(it.docType)}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="u-grow">
                 <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{docLabel(it.docType)}</div>
                 <div style={{ fontSize: 10, color: "var(--gray)" }}>{it.isRequired ? t("docw.required") : t("docw.optional")}</div>
               </div>
@@ -107,7 +107,7 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
       {/* DOCUMENTS + APPROVE/REJECT */}
       <div className="section-label">{t("staffd.documents")}</div>
       {groupKeys.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("staffd.noDocuments")}</div>
+        <div className="card ui-empty-msg">{t("staffd.noDocuments")}</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {groupKeys.map((type) => {
@@ -120,8 +120,8 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
               <div key={type} className="card" style={{ padding: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <span style={{ fontSize: 22 }}>{iconOf(type)}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{docLabel(type)}</div>
+                  <div className="u-grow">
+                    <div className="ui-strong">{docLabel(type)}</div>
                     <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cur.file_name}</div>
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, color: info.color, background: `${info.color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{info.label}</span>
@@ -131,7 +131,7 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
                   <div style={{ fontSize: 11, color: "var(--gray)", marginTop: 8 }}>{t("documents.expires")}: {fmtDate(cur.expiry_date)}</div>
                 )}
                 {cur.status === "rejected" && cur.rejection_reason && (
-                  <div style={{ fontSize: 12, color: "#ec7063", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
                     {t("docw.rejReasonLabel")} {cur.rejection_reason}
                   </div>
                 )}
@@ -154,8 +154,8 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
                 {histOpen && older.map((v) => {
                   const vb = statusInfo(v.eff, t);
                   return (
-                    <div key={v.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(128,128,128,0.12)" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    <div key={v.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                      <div className="u-grow">
                         <div style={{ fontSize: 12, color: "var(--white)" }}>{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></div>
                         <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
                       </div>
@@ -173,9 +173,9 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
       {rejectId && (
         <NativeDialog title={t("docw.rejectTitle")} busy={busy} onClose={() => setRejectId(null)}>
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{t("docw.rejectTitle")}</div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("docw.rejectReason")}</div>
+            <div className="ui-sub">{t("docw.rejectReason")}</div>
             <textarea autoFocus aria-label={t("docw.rejectReason")} value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder={t("docw.rejectReasonPlaceholder")}
-              style={{ width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+              style={{ width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button disabled={busy} onClick={() => setRejectId(null)} style={{ ...btn, flex: 1 }}>{t("common.cancel")}</button>
               <button onClick={doReject} disabled={busy || !reason.trim()} style={{ ...btn, flex: 1, background: "#922b21", borderColor: "#922b21", color: "#fff", opacity: !reason.trim() ? 0.5 : 1 }}>{t("docw.confirmReject")}</button>
@@ -186,4 +186,4 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
   );
 }
 
-const btn: React.CSSProperties = { padding: "7px 13px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
+const btn: React.CSSProperties = { padding: "7px 13px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };

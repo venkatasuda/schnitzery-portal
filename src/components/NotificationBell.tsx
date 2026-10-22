@@ -97,8 +97,8 @@ export default function NotificationBell() {
   const hasAny = notes.length > 0 || ops.length > 0;
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={openMenu} className="theme-btn" aria-label={t("notif.title")} style={{ position: "relative" }}>
+    <div className="u-relative" ref={ref}>
+      <button onClick={openMenu} className="theme-btn u-relative" aria-label={t("notif.title")}>
         <Icon e="🔔" size={20} />
         {total > 0 && (
           <span style={{ position: "absolute", top: -3, right: -3, minWidth: 16, height: 16, borderRadius: 8, background: "#e74c3c", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", boxShadow: "0 0 0 2px var(--dark)" }}>
@@ -108,15 +108,15 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div style={{ position: "absolute", right: 0, top: 46, width: 300, background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,0.5)", zIndex: 200, overflow: "hidden" }}>
-          <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(128,128,128,0.15)", fontSize: 13, fontWeight: 700, color: "var(--white)" }}>
+        <div style={{ position: "absolute", right: 0, top: 46, width: 300, background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,0.5)", zIndex: 200, overflow: "hidden" }}>
+          <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", fontSize: 13, fontWeight: 700, color: "var(--white)" }}>
             {t("notif.title")}{total > 0 ? ` · ${total}` : ""}
           </div>
 
           {!loaded ? (
             <div style={{ padding: 22, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>{t("notif.loading")}</div>
           ) : !hasAny ? (
-            <div style={{ padding: 26, textAlign: "center", color: "var(--gray)", fontSize: 13 }}><Icon e="🎉" size={15} color="#58d68d" style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("notif.caughtUp")}</div>
+            <div style={{ padding: 26, textAlign: "center", color: "var(--gray)", fontSize: 13 }}><Icon className="u-icon-inline" e="🎉" size={15} color="#58d68d" /> {t("notif.caughtUp")}</div>
           ) : (
             <div style={{ maxHeight: 360, overflowY: "auto" }}>
               {/* personal notifications */}
@@ -124,9 +124,9 @@ export default function NotificationBell() {
                 const meta = NOTIF[n.type] || { key: "notif.title", icon: "🔔", href: "/" };
                 return (
                   <Link key={n.id} href={meta.href} onClick={() => setOpen(false)}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 11, padding: "11px 14px", borderBottom: "1px solid rgba(128,128,128,0.1)", textDecoration: "none" }}>
+                    style={{ display: "flex", alignItems: "flex-start", gap: 11, padding: "11px 14px", borderBottom: "1px solid var(--border)", textDecoration: "none" }}>
                     <Icon e={meta.icon} size={16} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="u-grow">
                       <div style={{ fontSize: 13, fontWeight: n.is_read ? 500 : 700, color: "var(--white)" }}>{t(meta.key)}</div>
                       <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 1 }}>{detailOf(n)}</div>
                     </div>
@@ -150,7 +150,7 @@ export default function NotificationBell() {
             </div>
           )}
           <Link href="/notifications" onClick={() => setOpen(false)}
-            style={{ display: "block", textAlign: "center", padding: "11px 14px", borderTop: "1px solid rgba(128,128,128,0.15)", color: "var(--gold)", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}>
+            style={{ display: "block", textAlign: "center", padding: "11px 14px", borderTop: "1px solid var(--border)", color: "var(--gold)", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}>
             {t("notif.viewAll")}
           </Link>
         </div>

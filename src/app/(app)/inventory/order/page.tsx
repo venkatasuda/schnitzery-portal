@@ -91,14 +91,14 @@ export default function OrderPage() {
   return (
     <div className="fade-up">
       <Link href="/inventory" style={{ color: "var(--gray)", fontSize: 13, textDecoration: "none" }}>‹ {t("po.back")}</Link>
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🧾" size={22} /> {t("po.title")}</div>
+      <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🧾" size={22} /> {t("po.title")}</h1>
       <div className="page-sub">{t("po.subtitle")}</div>
 
       <div style={{ display: "flex", gap: 6, alignItems: "center", margin: "14px 0" }}>
-        <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("po.coverFor")}</span>
+        <span className="ui-muted">{t("po.coverFor")}</span>
         {[7, 14, 30].map((cd) => (
           <button key={cd} onClick={() => { setCoverDays(cd); load(cd); }}
-            style={{ fontSize: 12, padding: "5px 10px", borderRadius: 8, cursor: "pointer", background: coverDays === cd ? "rgba(212,168,71,0.15)" : "rgba(255,255,255,0.05)", color: coverDays === cd ? "var(--gold)" : "var(--gray)", border: `1px solid ${coverDays === cd ? "rgba(212,168,71,0.3)" : "rgba(255,255,255,0.1)"}` }}>{cd}d</button>
+            style={{ fontSize: 12, padding: "5px 10px", borderRadius: 8, cursor: "pointer", background: coverDays === cd ? "var(--accent-soft)" : "rgba(255,255,255,0.05)", color: coverDays === cd ? "var(--gold)" : "var(--gray)", border: `1px solid ${coverDays === cd ? "var(--accent-line)" : "rgba(255,255,255,0.1)"}` }}>{cd}d</button>
         ))}
         <button onClick={printAll} disabled={loading || groups.length === 0} style={{ marginLeft: "auto", fontSize: 13, fontWeight: 700, padding: "8px 14px", borderRadius: 8, background: "var(--gold)", color: "#1a1a1a", border: "none", cursor: "pointer" }}>🖨 {t("po.printPdf")}</button>
       </div>
@@ -107,7 +107,7 @@ export default function OrderPage() {
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13 }}>{t("po.nothing")}</div>
       ) : (
         <>
-          {!hasPrices && <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "#d4a847", borderColor: "rgba(212,168,71,0.3)" }}>{t("po.noPrices")}</div>}
+          {!hasPrices && <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "var(--gold-ink)", borderColor: "var(--accent-line)" }}>{t("po.noPrices")}</div>}
           {groups.map((g, gi) => (
             <div key={gi} className="card" style={{ marginBottom: 12, padding: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -115,10 +115,10 @@ export default function OrderPage() {
                 {hasPrices && <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{eur(subtotal(g))}</div>}
               </div>
               {g.items.map((it: any, ii: number) => (
-                <div key={ii} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                <div key={ii} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
+                  <div className="u-grow">
                     <div style={{ fontSize: 13, color: "var(--white)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{it.product}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)" }}>{it.unitPrice != null ? `${eur(it.unitPrice)}/${it.unit || t("po.unit")}` : t("po.noPrice")}</div>
+                    <div className="ui-muted">{it.unitPrice != null ? `${eur(it.unitPrice)}/${it.unit || t("po.unit")}` : t("po.noPrice")}</div>
                   </div>
                   <input type="number" inputMode="decimal" value={it.qty} onChange={(e) => setQty(gi, ii, e.target.value)}
                     style={{ width: 66, padding: "8px", textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, fontWeight: 600 }} />
@@ -128,8 +128,8 @@ export default function OrderPage() {
                 </div>
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <button onClick={() => copyGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(255,255,255,0.05)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>📋 {t("po.copy")}</button>
-                <button onClick={() => emailGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>✉ {t("po.email")}</button>
+                <button onClick={() => copyGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--surface-2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>📋 {t("po.copy")}</button>
+                <button onClick={() => emailGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>✉ {t("po.email")}</button>
               </div>
             </div>
           ))}

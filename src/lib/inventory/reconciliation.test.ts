@@ -17,6 +17,7 @@ it("times transfer legs from the journal and marks legacy legs untimed", () => {
 });
 
 const c = (date: string, ist: number, unit = "kg"): StockCount => ({ id: date, date, ist, unit });
+const c2 = (id: string, date: string, ist: number, unit: string): StockCount => ({ id, date, ist, unit });
 
 it("keeps countDepletion behaviour for forecasts", () => {
   expect(countDepletion(10, 5, 12)).toBe(3);
@@ -38,6 +39,22 @@ it("computes expected and used from deliveries, transfers and waste", () => {
 it("uses the last recount of a day, never a zero-length interval", () => {
   const counts = [c("2026-10-01", 10), { id: "r1", date: "2026-10-02", ist: 9, unit: "kg" }, { id: "r0", date: "2026-10-02", ist: 7, unit: "kg" }];
   expect(reconcileIntervals(counts, []).map(i => [i.toId, i.closing])).toEqual([["r0", 7]]);
+});
+
+// Codex review C/D findings 3, 4, 5 (docs/ops/REVIEW-C-D.md) — formerly reproduced as bugs.
+it("review 3: counts in different units on one day are flagged, not merged as recounts", () => {
+  const units = reconcileIntervals([c("2026-10-01", 100), c2("kg1b", "2026-10-01", 10, "bag"), c("2026-10-03", 80), c2("bag2", "2026-10-03", 8, "bag")], []);
+  expect(units).toHaveLength(1);
+  expect(units[0]).toMatchObject({ status: "uncertain", reasons: ["unit"] });
+});
+it("review 4: an opening count taken while stock was in transit is uncertain", () => {
+  const [iv] = reconcileIntervals([c("2026-10-02", 14), c("2026-10-05", 10)],
+    [{ kind: "incoming", date: "2026-10-01", until: "2026-10-04", qty: 4, unit: "kg" }, { kind: "received", date: "2026-10-04", qty: 4, unit: "kg" }]);
+  expect(iv).toMatchObject({ status: "uncertain", reasons: ["in_transit"] });
+});
+it("review 5: an invalid count in between makes the bridged interval uncertain", () => {
+  const [iv] = reconcileIntervals([c("2026-10-01", 10), c("2026-10-02", NaN), c("2026-10-03", 5)], []);
+  expect(iv).toMatchObject({ from: "2026-10-01", to: "2026-10-03", status: "uncertain", reasons: ["invalid"] });
 });
 
 it("flags a gain when more stock is counted than records explain", () => {
@@ -62,7 +79,9 @@ it("marks unknown order, legacy transfers, in-transit, unit and invalid inputs u
   expect(reason({ kind: "sent", date: "2026-09-01", until: "2026-09-30", qty: 4, untimed: true }).status).toBe("ok");
   expect(reason({ kind: "incoming", date: "2026-10-03", qty: 4 })).toMatchObject({ status: "uncertain", reasons: ["in_transit"] });
   expect(reason({ kind: "incoming", date: "2026-09-20", qty: 4 }).reasons).toEqual(["in_transit"]); // sent long ago, still open
-  expect(reason({ kind: "incoming", date: "2026-09-20", qty: 4, until: "2026-10-05" }).status).toBe("ok"); // booked in by B
+  expect(reason({ kind: "incoming", date: "2026-09-20", qty: 4, until: "2026-10-05" }).reasons).toEqual(["in_transit"]); // in transit at the opening count
+  expect(reason({ kind: "incoming", date: "2026-09-20", qty: 4, until: "2026-10-01" }).status).toBe("ok"); // booked in on/before A
+  expect(reason({ kind: "incoming", date: "2026-10-02", qty: 4, until: "2026-10-04" }).status).toBe("ok"); // sent and booked in between the counts
   expect(reason({ kind: "incoming", date: "2026-10-06", qty: 4 }).status).toBe("ok"); // sent after B
   expect(reason({ kind: "delivered", date: "2026-10-03", qty: 4, unit: "pcs" })).toMatchObject({ status: "uncertain", reasons: ["unit"], delivered: 0 });
   expect(reason({ kind: "wasted", date: "2026-10-03", qty: Number.NaN })).toMatchObject({ status: "uncertain", reasons: ["invalid"] });

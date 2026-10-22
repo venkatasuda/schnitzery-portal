@@ -37,11 +37,11 @@ export default function SettingsPage() {
     finally { setSaving(false); }
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   return (
     <div className="workspace-page settings-workspace">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚙️" size={22} /> {t("profile.branchSettings")}</h1>
+      <h1 className="page-title u-row"><Icon e="⚙️" size={22} /> {t("profile.branchSettings")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 18 }}>{t("set.subtitle")}</p>
 
       {loading ? (
@@ -53,8 +53,8 @@ export default function SettingsPage() {
           <div style={{ ...card, marginBottom: 12 }}>
             <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{t("set.qrTitle")}</div>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{t("set.qrSub")}</div>
+                <div className="ui-strong">{t("set.qrTitle")}</div>
+                <div className="ui-meta">{t("set.qrSub")}</div>
               </div>
               <input type="checkbox" checked={qrRequired} onChange={(e) => setQrRequired(e.target.checked)} style={{ width: 20, height: 20 }} />
             </label>
@@ -80,12 +80,12 @@ export default function SettingsPage() {
           <div style={{ marginTop: 20, marginBottom: 8, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: "var(--gray)", textTransform: "uppercase" }}>{t("set.devicesLocation")}</div>
           <Link href="/kiosks" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#34495e,#5d6d7e)" }}><Icon e="🖥️" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("kioskadm.title")}</div><div className="feature-sub">{t("kioskadm.subtitle")}</div></div>
+            <div className="u-flex1"><div className="feature-title">{t("kioskadm.title")}</div><div className="feature-sub">{t("kioskadm.subtitle")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
           <Link href="/geofence" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1e6091,#2980b9)" }}><Icon e="📍" size={22} color="#fff" /></div>
-            <div style={{ flex: 1 }}><div className="feature-title">{t("geo.title")}</div><div className="feature-sub">{t("geo.subtitle")}</div></div>
+            <div className="u-flex1"><div className="feature-title">{t("geo.title")}</div><div className="feature-sub">{t("geo.subtitle")}</div></div>
             <span className="feature-chev">›</span>
           </Link>
         </>

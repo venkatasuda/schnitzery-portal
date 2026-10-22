@@ -6,11 +6,12 @@ import { getStaffList, updateStaff } from "@/lib/queries/people";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import { Field } from "@/components/ui";
 
 const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier"];
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
 const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
-const TEAM_COLORS: Record<string, string> = { Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60", Cashier: "#9b59b6" };
+const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6" };
 
 export default function StaffPage() {
   const { t } = useLang();
@@ -159,26 +160,26 @@ export default function StaffPage() {
   const visible = loading || loadError ? [] : (filter === "active" ? activeStaff : formerStaff).filter(p =>
     [p.full_name, p.employee_code, p.team, teamLabel(p.team || "")].some(value => String(value || "").toLocaleLowerCase().includes(query)));
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="👥" size={22} /> {t("staff.title")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>
+      <h1 className="page-title u-row"><Icon e="👥" size={22} /> {t("staff.title")}</h1>
+      <p className="ui-lede">
         {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
       </p>
 
       {msg && <div role="status" style={{ marginBottom: 14, fontSize: 14, color: "var(--white)" }}>{msg}</div>}
 
       {resetInfo && (
-        <div style={{ ...card, marginBottom: 14, borderColor: "rgba(212,168,71,0.5)", background: "rgba(212,168,71,0.08)" }}>
-          <div style={{ fontSize: 13, color: "#d4a847", fontWeight: 600, marginBottom: 6 }}>{t("staff.resetPwFor", { name: resetInfo.name })}</div>
+        <div style={{ ...card, marginBottom: 14, borderColor: "var(--accent-line)", background: "var(--accent-soft)" }}>
+          <div style={{ fontSize: 13, color: "var(--gold-ink)", fontWeight: 600, marginBottom: 6 }}>{t("staff.resetPwFor", { name: resetInfo.name })}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <code style={{ fontSize: 18, fontWeight: 700, letterSpacing: 1, background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderRadius: 8, color: "#fff", userSelect: "all" }}>{resetInfo.temp}</code>
             <button onClick={() => { navigator.clipboard?.writeText(resetInfo.temp).catch(() => {}); }} style={editBtn}>⧉ Copy</button>
             <button onClick={() => setResetInfo(null)} style={editBtn}>{t("common.cancel")}</button>
           </div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("staff.resetPwHint")}</div>
+          <div className="ui-note">{t("staff.resetPwHint")}</div>
         </div>
       )}
 
@@ -217,7 +218,7 @@ export default function StaffPage() {
             </div>
             <Field label={t("profile.phone")}><input value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} style={input} /></Field>
             {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "var(--success)" : "var(--danger)", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="u-hstack">
               <button disabled={adding} onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
               <button onClick={createStaff} disabled={adding} style={primaryBtn}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
             </div>
@@ -244,16 +245,16 @@ export default function StaffPage() {
                 <div style={{ width: 42, height: 42, borderRadius: "50%", background: TEAM_COLORS[p.team] || "#666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", opacity: filter === "former" ? 0.55 : 1 }}>
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span style={{ fontSize: 12, color: "var(--gray)" }}>· {p.employee_code}</span>}{filter === "former" && <span style={{ fontSize: 12, color: "var(--gray)" }}> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)" }}>{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
+                <div className="u-flex1">
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
+                  <div className="ui-muted">{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
 
               {confirmRemoveId === p.id ? (
                 <div style={{ marginTop: 12, padding: 12, background: "rgba(192,57,43,0.12)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: 10 }}>
                   <div style={{ fontSize: 13, marginBottom: 10 }}>{t("staff.confirmRemove", { name: p.full_name || "—" })}</div>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div className="u-hstack">
                     <button onClick={() => setConfirmRemoveId(null)} style={editBtn}>{t("common.cancel")}</button>
                     <button onClick={() => remove(p.id)} disabled={removing} style={{ ...editBtn, background: "rgba(192,57,43,0.25)", border: "1px solid rgba(192,57,43,0.5)", color: "#fff" }}>{removing ? t("common.saving") : t("staff.remove")}</button>
                   </div>
@@ -319,9 +320,6 @@ export default function StaffPage() {
   );
 }
 
-function Field({ label, children }: any) {
-  return <label style={{ display: "block", marginBottom: 10 }}><span style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 4 }}>{label}</span>{children}</label>;
-}
 function FilterBtn({ active, onClick, children }: any) {
   return <button aria-pressed={active} onClick={onClick} style={{ minHeight: 44, padding: "9px 16px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
 }

@@ -16,7 +16,7 @@ export function CardSkeleton({ rows = 3 }: { rows?: number }) {
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0" }}>
           <Skeleton height={38} width={38} radius={19} />
-          <div style={{ flex: 1 }}>
+          <div className="u-flex1">
             <Skeleton height={13} width="55%" />
             <div style={{ height: 7 }} />
             <Skeleton height={10} width="35%" />

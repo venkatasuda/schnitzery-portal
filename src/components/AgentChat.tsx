@@ -58,7 +58,7 @@ export default function AgentChat() {
         <div ref={endRef} />
       </div>
 
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="u-hstack">
         <input
           aria-label={t("business.question")}
           maxLength={1600}

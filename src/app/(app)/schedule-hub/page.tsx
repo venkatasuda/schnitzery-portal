@@ -66,12 +66,12 @@ export default function ScheduleHubPage() {
   })();
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("common.managersOnly")}</div>;
+    return <div className="card ui-denied">{t("common.managersOnly")}</div>;
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📅" size={22} /> {t("schedhub.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("schedhub.title")}</h1>
       <div className="page-sub">{t("schedhub.subtitle")}</div>
 
       {/* quick actions */}
@@ -126,8 +126,8 @@ export default function ScheduleHubPage() {
                   <div className="card">
                     <div className="card-title">{t("schedhub.mostScheduled")}</div>
                     {(ov?.byPersonArr || []).slice(0, 6).map((p: any) => (
-                      <div key={p.name} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid rgba(128,128,128,0.1)", fontSize: 13 }}>
-                        <span style={{ color: "var(--white)" }}>{p.name}</span>
+                      <div key={p.name} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
+                        <span className="u-text">{p.name}</span>
                         <span style={{ color: "var(--gold)", fontWeight: 600 }}>{t("schedhub.shiftsCount", { n: p.count })}</span>
                       </div>
                     ))}
@@ -148,7 +148,7 @@ export default function ScheduleHubPage() {
             <div className="hub-tab-panel active workspace-grid">
               {(ov?.conflicts || []).length === 0 ? (
                 <div className="card" style={{ textAlign: "center", padding: 28 }}>
-                  <div style={{ marginBottom: 6 }}><Icon e="✅" size={28} color="var(--success)" /></div>
+                  <div className="u-mb-2"><Icon e="✅" size={28} color="var(--success)" /></div>
                   <div style={{ color: "var(--success)", fontSize: 14, fontWeight: 600 }}>{t("schedhub.noConflicts")}</div>
                   <div style={{ color: "var(--gray)", fontSize: 12, marginTop: 4 }}>{t("schedhub.noConflictsSub")}</div>
                 </div>
@@ -158,8 +158,8 @@ export default function ScheduleHubPage() {
                   {ov.conflicts.map((c: any, i: number) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < ov.conflicts.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
                       <span style={{ fontSize: 16 }}><Icon e={c.type === "Double-booked" ? "🔁" : "⚠️"} size={15} /></span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{c.name} <span style={{ color: "var(--gray)", fontWeight: 400, fontSize: 12 }}>· {dayLabel(c.day)}</span></div>
+                      <div className="u-flex1">
+                        <div className="ui-strong">{c.name} <span style={{ color: "var(--gray)", fontWeight: 400, fontSize: 12 }}>· {dayLabel(c.day)}</span></div>
                         <div style={{ fontSize: 12, color: "var(--warn)" }}>{c.type} — {c.detail}</div>
                       </div>
                     </div>
@@ -175,25 +175,25 @@ export default function ScheduleHubPage() {
             <div className="hub-tab-panel active workspace-grid">
               <Link href="/schedule/compare" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#7d3c98,#af7ac5)" }}><Icon e="📊" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("cmp.title")}</div><div className="feature-sub">{t("cmp.subtitle")}</div></div>
+                <div className="u-flex1"><div className="feature-title">{t("cmp.title")}</div><div className="feature-sub">{t("cmp.subtitle")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 
               <Link href="/schedule/shift-times" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#1f6f54,#27ae60)" }}><Icon e="⏱️" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("shiftcfg.title")}</div><div className="feature-sub">{t("shiftcfg.subtitle")}</div></div>
+                <div className="u-flex1"><div className="feature-title">{t("shiftcfg.title")}</div><div className="feature-sub">{t("shiftcfg.subtitle")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
 
               <button onClick={copyForward} disabled={copyBusy} className="feature-card" style={{ width: "100%", textAlign: "left", cursor: copyBusy ? "default" : "pointer", border: "1px solid var(--border)" }}>
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#6b2fa0,#9b59b6)" }}><Icon e="📑" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{copyBusy ? t("schedhub.copying") : t("schedhub.copyWeek")}</div><div className="feature-sub">{t("schedhub.copyWeekSub")}</div></div>
+                <div className="u-flex1"><div className="feature-title">{copyBusy ? t("schedhub.copying") : t("schedhub.copyWeek")}</div><div className="feature-sub">{t("schedhub.copyWeekSub")}</div></div>
                 <span className="feature-chev">›</span>
               </button>
 
               <Link href="/noshow?tab=missing" className="feature-card">
                 <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e="📋" size={22} color="#fff" /></div>
-                <div style={{ flex: 1 }}><div className="feature-title">{t("schedhub.availCheck")}</div><div className="feature-sub">{t("schedhub.availCheckSub")}</div></div>
+                <div className="u-flex1"><div className="feature-title">{t("schedhub.availCheck")}</div><div className="feature-sub">{t("schedhub.availCheckSub")}</div></div>
                 <span className="feature-chev">›</span>
               </Link>
             </div>
@@ -218,14 +218,14 @@ function BarRow({ label, count, max, color }: { label: string; count: number; ma
   return (
     <div style={{ padding: "7px 0" }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-        <span style={{ color: "var(--white)" }}>{label}</span>
-        <span style={{ color: "var(--gray)" }}>{count}</span>
+        <span className="u-text">{label}</span>
+        <span className="u-muted">{count}</span>
       </div>
-      <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, overflow: "hidden" }}>
+      <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: color }} />
       </div>
     </div>
   );
 }
 
-const quickBtn: React.CSSProperties = { flex: 1, textAlign: "center", padding: "12px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.18)", borderRadius: 12, color: "var(--white)", fontSize: 13, fontWeight: 600, textDecoration: "none" };
+const quickBtn: React.CSSProperties = { flex: 1, textAlign: "center", padding: "12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--white)", fontSize: 13, fontWeight: 600, textDecoration: "none" };

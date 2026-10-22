@@ -29,8 +29,8 @@ export default function LeaveCalendarPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="📆" size={22} /> Team Leave Calendar</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>Approved upcoming time off across the team.</p>
+      <h1 className="page-title u-row"><Icon e="📆" size={22} /> Team Leave Calendar</h1>
+      <p className="ui-lede">Approved upcoming time off across the team.</p>
 
       {loading ? (
         <CardSkeleton rows={3} />
@@ -43,12 +43,12 @@ export default function LeaveCalendarPage() {
             {items.map((l) => (
               <div key={l.id} style={{ ...card, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{l.users?.full_name || "Staff"}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>
+                  <div className="ui-strong">{l.users?.full_name || "Staff"}</div>
+                  <div className="ui-meta">
                     {fmtDate(l.from_date)} → {fmtDate(l.to_date)}{l.reason ? ` · ${l.reason}` : ""}
                   </div>
                 </div>
-                <div style={{ fontSize: 12, color: "#d4a847", fontWeight: 600 }}>
+                <div style={{ fontSize: 12, color: "var(--gold-ink)", fontWeight: 600 }}>
                   {daysBetween(l.from_date, l.to_date)}d
                 </div>
               </div>

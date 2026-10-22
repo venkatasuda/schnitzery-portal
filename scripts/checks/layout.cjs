@@ -27,6 +27,14 @@ for (const role of ["manager", "branch_owner", "brand_owner", "super_admin"]) {
   assert.equal(html.includes('href="/branches"'), ["brand_owner", "super_admin"].includes(role));
 }
 const layout = fs.readFileSync(path.join(root, "src/app/layout.tsx"), "utf8");
+for (const [route, section] of [["/checklist","/ops"],["/hours","/attendance-hub"],["/attendance/corrections","/attendance-hub"],["/simulator","/analytics"],["/staff/test","/staff"]]) {
+  pathname=route;
+  const html=renderToStaticMarkup(React.createElement(exported.default,{role:"manager"}));
+  const active=[...html.matchAll(/<a href="([^"]+)" class="management-nav-link active"/g)].map(m=>m[1]);
+  assert.equal(active.length,2,'One active destination in each of the desktop/mobile navs');
+  assert.ok(active.every(href=>href===section),route);
+  assert.match(renderToStaticMarkup(React.createElement(exported.ManagementLocation,{role:"manager"})),new RegExp('href="'+section+'"'));
+}
 assert.ok(layout.includes('import Script from "next/script"'));
 assert.ok(layout.includes('<Script id="theme-init" strategy="beforeInteractive"'));
 const themeScript = layout.match(/const themeScript = `([^`]+)`/)[1];

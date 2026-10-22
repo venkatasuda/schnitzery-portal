@@ -51,22 +51,22 @@ export default function NoShowPage() {
     setMissLoading(false);
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("ns.subtitle")}</p>
+      <h1 className="page-title u-row"><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
+      <p className="ui-lede">{t("ns.subtitle")}</p>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, padding: 4 }}>
+      <div className="ui-segmented" role="group">
         <TabBtn active={tab === "noshow"} onClick={() => setTab("noshow")}>{t("ns.tabNoShows")}</TabBtn>
         <TabBtn active={tab === "missing"} onClick={() => { setTab("missing"); loadMissing(); }}>{t("ns.tabMissing")}</TabBtn>
       </div>
 
       {tab === "noshow" && (
         <div style={card}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{t("ns.checkTitle")}</div>
-          <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("ns.checkSub")}</div>
+          <div className="ui-title spaced">{t("ns.checkTitle")}</div>
+          <div className="ui-sub">{t("ns.checkSub")}</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...input, flex: 1 }} />
             <button onClick={checkNoShows} disabled={nsLoading} style={{ ...primaryBtn, width: "auto", padding: "0 20px" }}>{nsLoading ? "…" : t("ns.check")}</button>
@@ -80,9 +80,9 @@ export default function NoShowPage() {
               <div>
                 <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.didNotClock", { n: noShows.length, c: rosteredCount })}</div>
                 {noShows.map((n, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>{n.name}</span>
-                    <span style={{ fontSize: 12, color: "var(--gray)" }}>{teamLabel(n.team)} · {shiftLabel(n.shift)}</span>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
+                    <span className="ui-strong">{n.name}</span>
+                    <span className="ui-muted">{teamLabel(n.team)} · {shiftLabel(n.shift)}</span>
                   </div>
                 ))}
               </div>
@@ -93,7 +93,7 @@ export default function NoShowPage() {
 
       {tab === "missing" && (
         <div style={card}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("ns.missingTitle")}</div>
+          <div className="ui-title">{t("ns.missingTitle")}</div>
           <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("ns.missingSub")}</div>
           {missLoading ? (
             <div style={{ color: "var(--gray)", fontSize: 13, textAlign: "center", padding: 16 }}>{t("common.loading")}</div>
@@ -105,7 +105,7 @@ export default function NoShowPage() {
                 <>
                   <div style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8 }}>{t("ns.notSubmittedN", { n: missing.length })}</div>
                   {missing.map((m) => (
-                    <div key={m.id} style={{ padding: "8px 0", fontSize: 14, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{m.full_name}</div>
+                    <div key={m.id} style={{ padding: "8px 0", fontSize: 14, borderBottom: "1px solid var(--border)" }}>{m.full_name}</div>
                   ))}
                 </>
               )}
@@ -122,8 +122,9 @@ export default function NoShowPage() {
   );
 }
 
-function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} style={{ flex: 1, padding: "9px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+// Segmented switch: styling from .ui-segmented (docs/DESIGN-SYSTEM.md).
+function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return <button type="button" aria-pressed={active} onClick={onClick}>{children}</button>;
 }
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 };
 const input: React.CSSProperties = { padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };

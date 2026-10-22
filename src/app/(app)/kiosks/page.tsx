@@ -46,30 +46,30 @@ export default function KiosksPage() {
     else toast(res.error || t("kioskadm.addFailed"), "error");
   }
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("kioskadm.denied")}</div>;
+  if (denied) return <div className="card ui-denied">{t("kioskadm.denied")}</div>;
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🖥️" size={22} /> {t("kioskadm.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🖥️" size={22} /> {t("kioskadm.title")}</h1>
       <div className="page-sub">{t("kioskadm.subtitle")}</div>
 
       {/* add */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder={t("kioskadm.addPlaceholder")}
-          style={{ flex: 1, padding: "11px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" }} />
+          style={{ flex: 1, padding: "11px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" }} />
         <button onClick={add} disabled={busy || !newLabel.trim()} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy || !newLabel.trim() ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("kioskadm.add")}</button>
       </div>
 
       {loading ? (
         <CardSkeleton rows={3} />
       ) : items.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("kioskadm.none")}</div>
+        <div className="card ui-empty-msg">{t("kioskadm.none")}</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="u-stack">
           {items.map((k) => (
             <div key={k.id} className="card" style={{ padding: 12, opacity: k.is_active ? 1 : 0.6 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="u-row">
+                <div className="u-grow">
                   {editId === k.id ? (
                     <input value={editLabel} onChange={(e) => setEditLabel(e.target.value)} onBlur={() => saveName(k.id)} onKeyDown={(e) => e.key === "Enter" && saveName(k.id)} autoFocus
                       style={{ width: "100%", padding: "6px 8px", background: "var(--dark3)", border: "1px solid var(--gold)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" }} />
@@ -92,10 +92,10 @@ export default function KiosksPage() {
         </div>
       )}
 
-      <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 14, lineHeight: 1.5 }}><Icon e="💡" size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} /> {t("kioskadm.revokeHint")}</div>
+      <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 14, lineHeight: 1.5 }}><Icon className="u-icon-inline" e="💡" size={13} /> {t("kioskadm.revokeHint")}</div>
       <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 14, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
     </div>
   );
 }
 
-const btn: React.CSSProperties = { flex: 1, textAlign: "center", padding: "8px 10px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 12.5, fontWeight: 600, textDecoration: "none", cursor: "pointer" };
+const btn: React.CSSProperties = { flex: 1, textAlign: "center", padding: "8px 10px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 12.5, fontWeight: 600, textDecoration: "none", cursor: "pointer" };

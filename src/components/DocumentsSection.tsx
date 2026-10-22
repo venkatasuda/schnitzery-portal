@@ -28,10 +28,10 @@ function statusBadge(eff: string, t: Tf): { label: string; color: string } {
   switch (eff) {
     case "approved":  return { label: t("docw.statusApproved"),  color: "#58d68d" };
     case "pending":   return { label: t("docw.statusPending"),   color: "#e8a35a" };
-    case "rejected":  return { label: t("docw.statusRejected"),  color: "#ec7063" };
+    case "rejected":  return { label: t("docw.statusRejected"),  color: "var(--danger)" };
     case "expiring":  return { label: t("docw.statusExpiring"),  color: "#e8a35a" };
-    case "expired":   return { label: t("docw.statusExpired"),   color: "#ec7063" };
-    default:          return { label: t("docw.statusArchived"),  color: "#9a8f8f" };
+    case "expired":   return { label: t("docw.statusExpired"),   color: "var(--danger)" };
+    default:          return { label: t("docw.statusArchived"),  color: "var(--gray)" };
   }
 }
 const fmtDate = (d?: string | null) =>
@@ -114,7 +114,7 @@ export default function DocumentsSection() {
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "22px 0 10px" }}>
-        <div className="section-label" style={{ margin: 0 }}>{t("documents.title")}</div>
+        <div className="section-label u-m0">{t("documents.title")}</div>
         <button onClick={openSheet} style={uploadBtn}>{t("documents.upload")}</button>
       </div>
 
@@ -136,8 +136,8 @@ export default function DocumentsSection() {
               <div key={type} className="card" style={{ padding: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <span style={{ fontSize: 22 }}>{iconOf(type)}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{docLabel(type)}</div>
+                  <div className="u-grow">
+                    <div className="ui-strong">{docLabel(type)}</div>
                     <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cur.file_name}</div>
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, color: badge.color, background: `${badge.color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{badge.label}</span>
@@ -149,7 +149,7 @@ export default function DocumentsSection() {
                   </div>
                 )}
                 {cur.eff === "rejected" && cur.rejection_reason && (
-                  <div style={{ fontSize: 12, color: "#ec7063", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
                     {t("docw.rejReasonLabel")} {cur.rejection_reason}
                   </div>
                 )}
@@ -167,8 +167,8 @@ export default function DocumentsSection() {
                 {histOpen && older.map((v) => {
                   const vb = statusBadge(v.eff, t);
                   return (
-                    <div key={v.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(128,128,128,0.12)" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    <div key={v.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                      <div className="u-grow">
                         <div style={{ fontSize: 12, color: "var(--white)" }}>{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></div>
                         <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
                       </div>
@@ -194,7 +194,7 @@ export default function DocumentsSection() {
                   <button key={dt.key} onClick={() => pickType(dt.key)} style={typeRow}>
                     <span style={{ fontSize: 20 }}>{dt.icon}</span>
                     <span style={{ flex: 1, textAlign: "left", fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{docLabel(dt.key)}</span>
-                    <span style={{ color: "var(--gray)" }}>›</span>
+                    <span className="u-muted">›</span>
                   </button>
                 ))}
                 <button onClick={() => setSheet(false)} style={cancelBtn}>{t("common.cancel")}</button>
@@ -206,11 +206,11 @@ export default function DocumentsSection() {
                 <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{iconOf(chosenType)} {docLabel(chosenType)}</div>
                 <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("documents.datesHint")}</div>
                 <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-                  <label style={{ flex: 1 }}>
+                  <label className="u-flex1">
                     <div style={lbl}>{t("documents.issued")}</div>
                     <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} style={input} />
                   </label>
-                  <label style={{ flex: 1 }}>
+                  <label className="u-flex1">
                     <div style={lbl}>{t("documents.expires")}</div>
                     <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={input} />
                   </label>
@@ -227,10 +227,10 @@ export default function DocumentsSection() {
   );
 }
 
-const uploadBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark3)", border: "1px solid rgba(212,168,71,0.3)", borderRadius: 20, color: "var(--action)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
-const viewBtn: React.CSSProperties = { padding: "6px 12px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
-const archiveBtn: React.CSSProperties = { padding: "6px 12px", background: "none", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--gray)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
-const typeRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 12px", marginBottom: 8, background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.15)", borderRadius: 12, cursor: "pointer" };
+const uploadBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark3)", border: "1px solid var(--accent-line)", borderRadius: 20, color: "var(--action)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const viewBtn: React.CSSProperties = { padding: "6px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
+const archiveBtn: React.CSSProperties = { padding: "6px 12px", background: "none", border: "1px solid var(--border)", borderRadius: 8, color: "var(--gray)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
+const typeRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 12px", marginBottom: 8, background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 12, cursor: "pointer" };
 const cancelBtn: React.CSSProperties = { width: "100%", padding: 12, marginTop: 8, background: "none", border: "none", color: "var(--gray)", fontSize: 14, cursor: "pointer" };
 const lbl: React.CSSProperties = { fontSize: 10, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
-const input: React.CSSProperties = { width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13 };
+const input: React.CSSProperties = { width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13 };

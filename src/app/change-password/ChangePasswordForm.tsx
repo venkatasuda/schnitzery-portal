@@ -68,14 +68,14 @@ export default function ChangePasswordForm() {
           width: "100%",
           maxWidth: 380,
           background: "#241414",
-          border: "1px solid rgba(255,255,255,0.08)",
+          border: "1px solid var(--border)",
           borderRadius: 16,
           padding: 28,
         }}
       >
         <h1
           style={{
-            color: "#d4a847",
+            color: "var(--gold-ink)",
             fontSize: 22,
             fontWeight: 700,
             margin: "0 0 4px",
@@ -84,14 +84,14 @@ export default function ChangePasswordForm() {
         >
           {t("pw.title")}
         </h1>
-        <p style={{ color: "#9a8f8f", fontSize: 13, margin: "0 0 24px", lineHeight: 1.5 }}>
+        <p style={{ color: "var(--gray)", fontSize: 13, margin: "0 0 24px", lineHeight: 1.5 }}>
           {t("pw.subtitle")}
         </p>
 
         <label style={{ color: "#cfc4c4", fontSize: 12, display: "block", marginBottom: 6 }}>
           {t("pw.newPassword")}
         </label>
-        <div style={{ position: "relative" }}>
+        <div className="u-relative">
           <input
             type={showPw ? "text" : "password"}
             value={pw}
@@ -100,7 +100,7 @@ export default function ChangePasswordForm() {
             placeholder="••••••••"
           />
           <button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? t("login.hidePassword") : t("login.showPassword")} title={showPw ? t("login.hidePassword") : t("login.showPassword")}
-            style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 6, color: "#9a8f8f", display: "flex", alignItems: "center" }}>
+            style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 6, color: "var(--gray)", display: "flex", alignItems: "center" }}>
             {showPw ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
             ) : (
@@ -112,7 +112,7 @@ export default function ChangePasswordForm() {
         <label style={{ color: "#cfc4c4", fontSize: 12, display: "block", margin: "16px 0 6px" }}>
           {t("pw.confirmPassword")}
         </label>
-        <div style={{ position: "relative" }}>
+        <div className="u-relative">
           <input
             type={showPw ? "text" : "password"}
             value={confirm}
@@ -122,7 +122,7 @@ export default function ChangePasswordForm() {
             placeholder="••••••••"
           />
           <button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? t("login.hidePassword") : t("login.showPassword")} title={showPw ? t("login.hidePassword") : t("login.showPassword")}
-            style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 6, color: "#9a8f8f", display: "flex", alignItems: "center" }}>
+            style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 6, color: "var(--gray)", display: "flex", alignItems: "center" }}>
             {showPw ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
             ) : (
@@ -139,7 +139,7 @@ export default function ChangePasswordForm() {
               background: "rgba(192,57,43,0.15)",
               border: "1px solid rgba(192,57,43,0.3)",
               borderRadius: 8,
-              color: "#ec7063",
+              color: "var(--danger)",
               fontSize: 12,
             }}
           >
@@ -173,8 +173,8 @@ export default function ChangePasswordForm() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "12px",
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.12)",
+  background: "var(--surface-2)",
+  border: "1px solid var(--border)",
   borderRadius: 8,
   color: "#fff",
   fontSize: 14,

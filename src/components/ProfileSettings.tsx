@@ -74,10 +74,10 @@ export default function ProfileSettings() {
       {/* PREFERENCES */}
       <div className="section-label">{t("settings.preferences")}</div>
       <div className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="u-between">
           <div>
             <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{t("settings.lightMode")}</div>
-            <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("settings.lightModeSub")}</div>
+            <div className="ui-muted">{t("settings.lightModeSub")}</div>
           </div>
           <button
             onClick={toggleTheme}
@@ -94,10 +94,10 @@ export default function ProfileSettings() {
       {/* NOTIFICATIONS — opt-in. Hidden entirely on devices that can't do push. */}
       {pushState !== "unsupported" && (
         <div className="card" style={{ marginTop: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="u-between">
             <div>
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--white)" }}>{t("settings.notifications")}</div>
-              <div style={{ fontSize: 12, color: "var(--gray)" }}>
+              <div className="ui-muted">
                 {pushState === "denied" ? t("settings.notificationsBlocked") : t("settings.notificationsSub")}
               </div>
             </div>
@@ -123,12 +123,12 @@ export default function ProfileSettings() {
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 10px", background: "none", border: "none", cursor: "pointer", color: "var(--white)", fontSize: 14, fontWeight: 600 }}
         >
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon e="🔒" size={14} /> {t("settings.changePassword")}</span>
-          <span style={{ color: "var(--gray)" }}>{open ? "▲" : "▼"}</span>
+          <span className="u-muted">{open ? "▲" : "▼"}</span>
         </button>
 
         {open && (
           <div style={{ padding: "6px 10px 10px" }}>
-            <div style={{ position: "relative" }}>
+            <div className="u-relative">
               <input type={showPw ? "text" : "password"} placeholder={t("settings.newPwPlaceholder")} value={pw} onChange={(e) => setPw(e.target.value)} style={{ ...inputStyle, paddingRight: 44 }} />
               <button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? t("login.hidePassword") : t("login.showPassword")} title={showPw ? t("login.hidePassword") : t("login.showPassword")} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 6, color: "var(--gray)", display: "flex", alignItems: "center" }}>
                 {showPw ? (
@@ -149,4 +149,4 @@ export default function ProfileSettings() {
   );
 }
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "11px 12px", marginBottom: 8, background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 14 };
+const inputStyle: React.CSSProperties = { width: "100%", padding: "11px 12px", marginBottom: 8, background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 14 };

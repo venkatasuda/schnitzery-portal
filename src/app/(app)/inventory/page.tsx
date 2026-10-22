@@ -18,6 +18,7 @@ import ScanToCount from "./ScanToCount";
 import StockHistory from "./StockHistory";
 import Reconciliation from "./Reconciliation";
 import NativeDialog from "@/components/NativeDialog";
+import { Field, Stat, TabButton } from "@/components/ui";
 
 const GOLD = "var(--gold-ink)";
 const BLUE = "var(--info)";
@@ -63,6 +64,7 @@ export default function InventoryPage() {
   async function load() {
     setLoading(true);
     setLoadError("");
+    try {
     const pRes = await getProducts();
     if (!pRes.ok) { setLoadError(pRes.error || t("inv.failed")); setLoading(false); return; }
     setProducts(pRes.products);
@@ -73,7 +75,8 @@ export default function InventoryPage() {
     setCounts(cMap);
     const aRes = await getOrderAlert();
     if (aRes.ok) setLowStock(aRes.lowStock); else setLoadError(aRes.error || t("inv.failed"));
-    setLoading(false);
+    } catch { setLoadError(t("inv.failed")); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
@@ -86,21 +89,21 @@ export default function InventoryPage() {
     const res = await getInventoryAnalytics(d);
     if (res.ok) setAnalytics(res); else setLoadError(res.error || t("inv.failed"));
   }
+  async function loadActiveTab() {
+    try {
+    if (tab === "deliveries") await loadDeliveries();
+    if (tab === "analytics") { await Promise.all([loadAnalytics(days), getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }), getInventoryVariance(30).then((r) => { if (r.ok) setVariance(r); })]); }
+    if (tab === "forecast") { const r = await getDepletionForecast(30, coverDays); if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }
+    } catch { setLoadError(t("inv.failed")); }
+  }
   useEffect(() => {
-    if (tab === "deliveries") loadDeliveries();
-    if (tab === "analytics") { loadAnalytics(days); getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }); getInventoryVariance(30).then((r) => { if (r.ok) setVariance(r); }); }
-    if (tab === "forecast") { getDepletionForecast(30, coverDays).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }
+    setLoadError("");
+    loadActiveTab();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   async function doSaveCount(p: any) {
-    const val = entry[inventoryKey(p)];
-    if (val === undefined || val === "") { toast(t("inv.enterCount"), "error"); return; }
-    setSavingP(p.product);
-    const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit);
-    setSavingP(null);
-    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setEntry((e) => ({ ...e, [inventoryKey(p)]: "" })); load(); }
-    else { toast(res.error || t("inv.failed"), "error"); if (res.error?.includes("Managers")) setDenied(true); }
+    await quickSave(p, entry[inventoryKey(p)] ?? "");
   }
   async function doAddProduct() {
     if (!np.category || !np.product) { toast(t("inv.catProductRequired"), "error"); return; }
@@ -140,12 +143,16 @@ export default function InventoryPage() {
     return "red";
   }
   async function quickSave(p: any, val: string) {
+    if (savingP !== null) return;
     if (val === "" || val === undefined) { toast(t("inv.enterCount"), "error"); return; }
+    if (!Number.isFinite(Number(val)) || Number(val) < 0) { toast(t("inv.failed"), "error"); return; }
     setSavingP(p.product);
+    try {
     const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit);
-    setSavingP(null);
-    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setGridSel(null); setGridVal(""); load(); }
+    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setEntry(e => ({ ...e, [inventoryKey(p)]: "" })); setGridSel(null); setGridVal(""); load().catch(() => setLoadError(t("inv.failed"))); }
     else { toast(res.error || t("inv.failed"), "error"); if (res.error?.includes("Managers")) setDenied(true); }
+    } catch { toast(t("inv.failed"), "error"); }
+    finally { setSavingP(null); }
   }
   function downloadShoppingCsv() {
     if (!lowStock.length) return;
@@ -193,7 +200,7 @@ export default function InventoryPage() {
     else toast(t("inv.failed"), "error");
   }
 
-  if (denied) return <div style={{ ...card, textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto" }}>{t("common.managersOnly")}</div>;
+  if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const categories = [...new Set(products.map((p) => p.category))];
   const shownProducts = products.filter((p) => {
@@ -209,10 +216,10 @@ export default function InventoryPage() {
 
   return (
     <div className="inventory-page">
-      {loadError && <div role="alert" style={{ ...card, color: "var(--danger)", marginBottom: 16 }}>{loadError}</div>}
+      {loadError && <div role="alert" className="workspace-error"><p>{loadError}</p><button className="btn-secondary" onClick={async () => { await load(); await loadActiveTab(); }}>{t("business.retry")}</button></div>}
       <div className="inventory-heading">
         <div>
-          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon e="📦" size={22} /> {t("inv.title")}</h1>
+          <h1 className="page-title u-row"><Icon e="📦" size={22} /> {t("inv.title")}</h1>
           <p className="page-sub">{t("inv.subtitle")}</p>
         </div>
         <div className="inventory-heading-actions">
@@ -236,18 +243,24 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <div className="hub-tabs" role="group" aria-label={t("inv.title")}>
-        <TabBtn active={tab === "count"} onClick={() => setTab("count")}>{t("inv.tabCount")}</TabBtn>
-        <TabBtn active={tab === "deliveries"} onClick={() => setTab("deliveries")}>{t("inv.tabDeliveries")}</TabBtn>
-        <TabBtn active={tab === "forecast"} onClick={() => setTab("forecast")}>{t("inventoryWorkflow.reorder")}</TabBtn>
-        <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")}>{t("inventoryWorkflow.reports")}</TabBtn>
-        <TabBtn active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabBtn>
-        <TabBtn active={tab === "history"} onClick={() => setTab("history")}>{t("stockHistory.title")}</TabBtn>
-        <TabBtn active={tab === "reconcile"} onClick={() => setTab("reconcile")}>{t("reconcile.title")}</TabBtn>
+      <div className="hub-tabs inventory-tabs" role="group" aria-label={t("inv.title")}>
+        <div className="inventory-tab-set">
+        <TabButton active={tab === "count"} onClick={() => setTab("count")}>{t("inv.tabCount")}</TabButton>
+        <TabButton active={tab === "deliveries"} onClick={() => setTab("deliveries")}>{t("inv.tabDeliveries")}</TabButton>
+        <TabButton active={tab === "forecast"} onClick={() => setTab("forecast")}>{t("inventoryWorkflow.reorder")}</TabButton>
+        </div>
+        <div className="inventory-tab-set">
+        <TabButton active={tab === "history"} onClick={() => setTab("history")}>{t("stockHistory.title")}</TabButton>
+        <TabButton active={tab === "reconcile"} onClick={() => setTab("reconcile")}>{t("reconcile.title")}</TabButton>
+        <TabButton active={tab === "analytics"} onClick={() => setTab("analytics")}>{t("inventoryWorkflow.reports")}</TabButton>
+        </div>
+        <div className="inventory-tab-set inventory-tab-admin">
+        <TabButton active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton>
+        </div>
       </div>
       <p className="inventory-task-description">{t(tab === "history" ? "stockHistory.help" : tab === "reconcile" ? "reconcile.help" : `inventoryWorkflow.${tab}Help`)}</p>
 
-      {loading ? <CardSkeleton rows={4} /> : (
+      {loading ? <CardSkeleton rows={4} /> : loadError ? null : (
         <>
           {tab === "history" && <StockHistory />}
           {tab === "reconcile" && <Reconciliation />}
@@ -257,7 +270,7 @@ export default function InventoryPage() {
               {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load()} />}
               {gridSel && (
                 <NativeDialog title={`${t("inv.count")}: ${gridSel.product}`} busy={savingP === gridSel.product} onClose={() => setGridSel(null)}>
-                    <div style={{ fontSize: 12, color: "var(--gray)" }}>{gridSel.category}</div>
+                    <div className="ui-muted">{gridSel.category}</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: "var(--white)", marginBottom: 4 }}>{gridSel.product}</div>
                     <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 14 }}>{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[inventoryKey(gridSel)] ? ` · ${t("inv.current")} ${counts[inventoryKey(gridSel)].ist}` : ""}</div>
                     <input type="number" min="0" step="any" aria-label={t("inv.count")} inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
@@ -305,7 +318,7 @@ export default function InventoryPage() {
               </div>
 
               {tab === "catalog" && showAdd && (
-                <div style={{ ...card, marginBottom: 14 }}>
+                <div className="card">
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
                     <Field label={t("inv.category")}><input value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })} style={input} placeholder={t("inv.phCategory")} /></Field>
                     <Field label={t("inv.product")}><input value={np.product} onChange={(e) => setNp({ ...np, product: e.target.value })} style={input} placeholder={t("inv.phProduct")} /></Field>
@@ -317,7 +330,7 @@ export default function InventoryPage() {
               )}
 
               {categories.length === 0 ? (
-                <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("inv.noProducts")}</div>
+                <div className="card ui-empty-msg">{t("inv.noProducts")}</div>
               ) : (
                 <>
                   {countView === "grid" && tab === "count" ? (
@@ -325,8 +338,8 @@ export default function InventoryPage() {
                       {shownProducts.length === 0 && <div className="inventory-empty">{t("inventoryWorkflow.noMatches")} <button className="btn-secondary" onClick={() => { setSearch(""); setActiveCat(""); setStatusFilter("all"); }}>{t("inventoryWorkflow.reset")}</button></div>}
                       {shownProducts.map((p) => {
                         const st = stockStatus(p);
-                        const bg = st === "green" ? "rgba(39,174,96,0.18)" : st === "amber" ? "rgba(212,168,71,0.18)" : st === "red" ? "rgba(231,76,60,0.18)" : "var(--dark2)";
-                        const bd = st === "green" ? "rgba(39,174,96,0.4)" : st === "amber" ? "rgba(212,168,71,0.4)" : st === "red" ? "rgba(231,76,60,0.4)" : "var(--border)";
+                        const bg = st === "green" ? "rgba(39,174,96,0.18)" : st === "amber" ? "var(--accent-soft)" : st === "red" ? "rgba(231,76,60,0.18)" : "var(--dark2)";
+                        const bd = st === "green" ? "rgba(39,174,96,0.4)" : st === "amber" ? "var(--accent-line)" : st === "red" ? "rgba(231,76,60,0.4)" : "var(--border)";
                         const c = counts[inventoryKey(p)];
                         return (
                           <button key={p.id} onClick={() => { setGridSel(p); setGridVal(""); }}
@@ -362,13 +375,13 @@ export default function InventoryPage() {
                         <td className="numeric" data-label={t("inv.targetCol")}>{p.soll}{p.unit ? ` ${p.unit}` : ""}</td>
                         <td data-label={t("inv.status")}><span className={`status-badge${counted ? isLow ? " low" : " good" : ""}`}>{!counted ? t("salert.notCounted") : isLow ? t("inv.lowStatus") : t("inv.atTargetStatus")}</span></td>
                         <td>
-                          {tab === "catalog" ? <button onClick={() => doRemoveProduct(p)} className="inventory-archive" aria-label={`${t("inv.removeProduct")}: ${p.product}`}>{t("inv.removeProduct")}</button> : <div className="row-actions">
+                          {tab === "catalog" ? <button onClick={() => doRemoveProduct(p)} className="inventory-archive" aria-label={`${t("inv.removeProduct")}: ${p.product}`}>{t("inv.removeProduct")}</button> : <form className="row-actions" onSubmit={event => { event.preventDefault(); doSaveCount(p); }}>
                           <input type="number" inputMode="decimal" min="0" step="any" aria-label={`${t("inv.count")}: ${p.product}${p.unit ? ` (${p.unit})` : ""}`} value={entry[inventoryKey(p)] ?? ""} onChange={(e) => setEntry({ ...entry, [inventoryKey(p)]: e.target.value })}
                             placeholder={counted ? String(counted.ist) : "0"} className="form-input quantity-input" />
-                          <button onClick={() => doSaveCount(p)} disabled={savingP === p.product} className="btn-gold">
+                          <button type="submit" disabled={savingP !== null} className="btn-gold" aria-label={`${t("inv.count")}: ${p.product}`}>
                             {savingP === p.product ? "…" : t("inv.count")}
                           </button>
-                          </div>}
+                          </form>}
                         </td>
                       </tr>
                     );
@@ -388,11 +401,11 @@ export default function InventoryPage() {
           {tab === "deliveries" && (
             <div className="inventory-delivery-grid">
               {products.length === 0 ? (
-                <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("inv.addProductsFirst")}</div>
+                <div className="card ui-empty-msg">{t("inv.addProductsFirst")}</div>
               ) : (
-                <div style={{ ...card, marginBottom: 14 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.recordDelivery")}</div>
-                  <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.recordDeliverySub")}</div>
+                <div className="card">
+                  <div className="ui-title">{t("inv.recordDelivery")}</div>
+                  <div className="ui-sub">{t("inv.recordDeliverySub")}</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
                     <Field label={t("inv.product")}>
                       <select value={del.product} onChange={(e) => setDel({ ...del, product: e.target.value })} style={input}>
@@ -416,9 +429,9 @@ export default function InventoryPage() {
               ) : deliveries.map((d) => (
                 <div key={d.id} style={{ ...card, marginBottom: 8, padding: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600 }}>{d.product} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {d.qty} {d.unit || ""}</span></div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{d.purchase_date}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
+                    <div className="u-flex1">
+                      <div className="ui-strong">{d.product} <span style={{ fontSize: 12, color: "var(--gray)", fontWeight: 400 }}>· {d.qty} {d.unit || ""}</span></div>
+                      <div className="ui-muted">{d.purchase_date}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>{eur(Number(d.cost))}</div>
                   </div>
@@ -441,10 +454,10 @@ export default function InventoryPage() {
               {(analytics?.needsReview || variance?.needsReview) && <p role="status" className="card">{t("inventoryReview.explanation")}</p>}
 
               {!analytics ? <CardSkeleton rows={4} /> : !analytics.hasPurchases && !analytics.hasCounts ? (
-                <div style={{ ...card, textAlign: "center", color: "var(--gray)", padding: 30 }}>{t("inv.noAnalytics")}</div>
+                <div className="card ui-empty-msg">{t("inv.noAnalytics")}</div>
               ) : (
                 <div className="inventory-report-grid">
-                  <div style={{ ...card, marginBottom: 14, borderColor: "rgba(212,168,71,0.3)" }}>
+                  <div style={{ ...card, marginBottom: 14, borderColor: "var(--accent-line)" }}>
                     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                       <strong>{t("inv.spentOnStock")}</strong>
                       {analytics.spendPctChange != null && (
@@ -465,14 +478,14 @@ export default function InventoryPage() {
                   </div>
 
                   <div className="inventory-report-kpis">
-                    <Kpi label={t("inv.kSpend")} value={atLeast(analytics.spendComplete, analytics.totalSpend)} color={GOLD} />
-                    <Kpi label={t("inv.kUsed")} value={atLeast(analytics.usageComplete, analytics.totalUsageEur)} color={BLUE} />
-                    <Kpi label={t("inv.kStockValue")} value={atLeast(analytics.stockComplete, analytics.stockValue)} color="var(--success)" />
+                    <Stat label={t("inv.kSpend")} value={atLeast(analytics.spendComplete, analytics.totalSpend)} color={GOLD} />
+                    <Stat label={t("inv.kUsed")} value={atLeast(analytics.usageComplete, analytics.totalUsageEur)} color={BLUE} />
+                    <Stat label={t("inv.kStockValue")} value={atLeast(analytics.stockComplete, analytics.stockValue)} color="var(--success)" />
                   </div>
 
-                  <div style={{ ...card, marginBottom: 14 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.spendVsUse")}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.spendVsUseSub")}</div>
+                  <div className="card">
+                    <div className="ui-title">{t("inv.spendVsUse")}</div>
+                    <div className="ui-sub">{t("inv.spendVsUseSub")}</div>
                     {analytics.trend.length === 0 ? (
                       <div style={{ color: "var(--gray)", fontSize: 12, textAlign: "center", padding: 20 }}>{t("inv.noTrend")}</div>
                     ) : (
@@ -493,9 +506,9 @@ export default function InventoryPage() {
                   </div>
 
                   {monthTrend.length > 0 && (
-                    <div style={{ ...card, marginBottom: 14 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.sixMonth")}</div>
-                      <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.sixMonthSub")}</div>
+                    <div className="card">
+                      <div className="ui-title">{t("inv.sixMonth")}</div>
+                      <div className="ui-sub">{t("inv.sixMonthSub")}</div>
                       <div style={{ width: "100%", height: 220 }}>
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart data={monthTrend} margin={{ top: 6, right: -12, bottom: 0, left: -18 }}>
@@ -514,16 +527,16 @@ export default function InventoryPage() {
                   )}
 
                   {variance?.hasData && variance.items.some((v: any) => v.flag === "up" || v.flag === "down") && (
-                    <div style={{ ...card, marginBottom: 14 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.variance")}</div>
-                      <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{variance.normalised ? t("inv.varianceSubNorm") : t("inv.varianceSubRaw")}</div>
+                    <div className="card">
+                      <div className="ui-title">{t("inv.variance")}</div>
+                      <div className="ui-sub">{variance.normalised ? t("inv.varianceSubNorm") : t("inv.varianceSubRaw")}</div>
                       {variance.items.filter((v: any) => v.flag === "up" || v.flag === "down").slice(0, 8).map((v: any, i: number) => {
                         const up = v.flag === "up";
                         return (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
                             <div>
-                              <div style={{ fontSize: 13, color: "var(--white)" }}>{v.product}</div>
-                              <div style={{ fontSize: 12, color: "var(--gray)" }}>€{v.prevEur} → €{v.curEur}</div>
+                              <div className="ui-body">{v.product}</div>
+                              <div className="ui-muted">€{v.prevEur} → €{v.curEur}</div>
                             </div>
                             <div style={{ fontSize: 13, fontWeight: 700, color: up ? "var(--danger)" : "var(--success)" }}>
                               {v.changePct != null ? `${v.changePct > 0 ? "▲" : "▼"} ${Math.abs(v.changePct)}%` : "—"}
@@ -535,9 +548,9 @@ export default function InventoryPage() {
                     </div>
                   )}
 
-                  <div style={{ ...card, marginBottom: 14 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{t("inv.byCategory")}</div>
-                    {analytics.byCategory.length === 0 ? <div style={{ color: "var(--gray)", fontSize: 12 }}>{t("inv.noData")}</div> :
+                  <div className="card">
+                    <div className="ui-title spaced">{t("inv.byCategory")}</div>
+                    {analytics.byCategory.length === 0 ? <div className="ui-muted">{t("inv.noData")}</div> :
                       analytics.byCategory.map((r: any, i: number) => {
                         const pct = analytics.totalSpend > 0 ? Math.round((r.eur / analytics.totalSpend) * 100) : 0;
                         return (
@@ -545,7 +558,7 @@ export default function InventoryPage() {
                             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 3 }}>
                               <span>{r.category}</span><span style={{ color: GOLD, fontWeight: 600 }}>{eur(r.eur)} · {pct}%</span>
                             </div>
-                            <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, overflow: "hidden" }}>
+                            <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 3, overflow: "hidden" }}>
                               <div style={{ width: `${pct}%`, height: "100%", background: GOLD }} />
                             </div>
                           </div>
@@ -553,9 +566,9 @@ export default function InventoryPage() {
                       })}
                   </div>
 
-                  <div style={{ ...card, marginBottom: 14 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{t("inv.topSpend")}</div>
-                    {analytics.topSpend.length === 0 ? <div style={{ color: "var(--gray)", fontSize: 12 }}>{t("inv.noData")}</div> :
+                  <div className="card">
+                    <div className="ui-title spaced">{t("inv.topSpend")}</div>
+                    {analytics.topSpend.length === 0 ? <div className="ui-muted">{t("inv.noData")}</div> :
                       analytics.topSpend.map((r: any, i: number) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
                           <span>{r.product}</span><span style={{ color: GOLD, fontWeight: 600 }}>{eur(r.eur)}</span>
@@ -564,12 +577,12 @@ export default function InventoryPage() {
                   </div>
 
                   <div style={{ ...card }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{t("inv.topUse")}</div>
+                    <div className="ui-title">{t("inv.topUse")}</div>
                     <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 10 }}>{t("inv.topUseSub")}</div>
-                    {analytics.topUsage.length === 0 ? <div style={{ color: "var(--gray)", fontSize: 12 }}>{t("inv.noUseData")}</div> :
+                    {analytics.topUsage.length === 0 ? <div className="ui-muted">{t("inv.noUseData")}</div> :
                       analytics.topUsage.map((r: any, i: number) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
-                          <span>{r.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {r.qty}</span></span>
+                          <span>{r.product} <span className="ui-muted">· {r.qty}</span></span>
                           <span style={{ color: BLUE, fontWeight: 600 }}>{eur(r.eur)}</span>
                         </div>
                       ))}
@@ -581,7 +594,7 @@ export default function InventoryPage() {
 
           {tab === "forecast" && (
             <>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("inv.forecastIntro")}</div>
+              <div className="ui-sub">{t("inv.forecastIntro")}</div>
               <Link href="/stock-alerts" className="inventory-alert-link">{t("home.stockAlerts")} →</Link>
               {lowStock.length > 0 && <details className="inventory-operation-menu">
                 <summary>{t("inventoryWorkflow.exportShortages")}</summary>
@@ -592,10 +605,10 @@ export default function InventoryPage() {
                 </div>
               </details>}
               <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center" }}>
-                <span style={{ fontSize: 12, color: "var(--gray)" }}>{t("inv.coverFor")}</span>
+                <span className="ui-muted">{t("inv.coverFor")}</span>
                 {[7, 14, 30].map((cd) => (
                   <button key={cd} onClick={() => { setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }}
-                    style={{ ...chip, background: coverDays === cd ? "rgba(212,168,71,0.15)" : "var(--dark2)", color: coverDays === cd ? "var(--gold-ink)" : "var(--gray)", borderColor: coverDays === cd ? "rgba(212,168,71,0.3)" : "var(--border)", cursor: "pointer" }}>
+                    style={{ ...chip, background: coverDays === cd ? "var(--accent-soft)" : "var(--dark2)", color: coverDays === cd ? "var(--gold-ink)" : "var(--gray)", borderColor: coverDays === cd ? "var(--accent-line)" : "var(--border)", cursor: "pointer" }}>
                     {cd}{t("inv.daysShort")}
                   </button>
                 ))}
@@ -626,20 +639,6 @@ export default function InventoryPage() {
   );
 }
 
-function Field({ label, children }: any) {
-  return <label style={{ display: "block", marginBottom: 10 }}><span style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</span>{children}</label>;
-}
-function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} aria-pressed={active} className={`hub-tab${active ? " active" : ""}`}>{children}</button>;
-}
-function Kpi({ label, value, color }: any) {
-  return (
-    <div style={{ ...card, padding: 14, textAlign: "center" }}>
-      <div style={{ fontSize: 18, fontWeight: 700, color }}>{value}</div>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, lineHeight: 1.5 }}>{label}</div>
-    </div>
-  );
-}
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 12, padding: 18 };
 const input: React.CSSProperties = { width: "100%", padding: "10px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
 const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" };

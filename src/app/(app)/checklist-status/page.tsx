@@ -47,17 +47,17 @@ export default function ChecklistStatusPage() {
 
   const Section = ({ title, items }: { title: string; items: any[] }) => (
     <div style={{ ...card, marginBottom: 12 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{title}</div>
+      <div className="ui-title spaced">{title}</div>
       {items.length === 0 ? (
-        <div style={{ fontSize: 13, color: "var(--gray)" }}>{t("checklist.noTasks")}</div>
+        <div className="ui-muted-md">{t("checklist.noTasks")}</div>
       ) : items.map((it) => (
-        <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
           <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
             background: it.done ? "#27ae60" : "transparent", border: it.done ? "none" : "2px solid rgba(236,112,99,0.55)" }}>
             {it.done && <Icon e="✓" size={13} color="#fff" />}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, color: "#fff" }}>{it.task}</div>
+          <div className="u-grow">
+            <div style={{ fontSize: 14, color: "var(--text)" }}>{it.task}</div>
             <div style={{ fontSize: 12, color: it.done ? "var(--gray)" : "var(--danger)", marginTop: 2 }}>
               {it.done
                 ? `${it.completed_by_name ? `${t("checklist.by")} ${it.completed_by_name}` : ""}${it.completed_at ? ` · ${fmtTime(it.completed_at)}` : ""}`.trim()
@@ -76,7 +76,7 @@ export default function ChecklistStatusPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
+      <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
       <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 14 }}>{t("checklist.statusSub")}</p>
 
       <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
@@ -101,8 +101,8 @@ export default function ChecklistStatusPage() {
               return (
                 <button key={d.date} onClick={() => setDate(d.date)} style={{
                   width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 8px", cursor: "pointer",
-                  background: sel ? "rgba(212,168,71,0.12)" : "transparent", border: "none", borderRadius: 8,
-                  borderBottom: "1px solid rgba(255,255,255,0.05)", textAlign: "left",
+                  background: sel ? "var(--accent-soft)" : "transparent", border: "none", borderRadius: 8,
+                  borderBottom: "1px solid var(--border)", textAlign: "left",
                 }}>
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
                   <span style={{ flex: 1, fontSize: 13, color: sel ? "#fff" : "#cfc5c5", fontWeight: sel ? 700 : 400 }}>{fmtDate(d.date)}</span>

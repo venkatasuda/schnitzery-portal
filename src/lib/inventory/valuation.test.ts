@@ -19,6 +19,18 @@ it("withholds gains/uncertain and unpriced intervals instead of counting them as
   expect(r.usage).toEqual({ value: 4, complete: false, missing: { counts: 1, prices: 1 } });
 });
 
+// Codex review C/D findings 1–2.
+it("review 1: a stocked product without a usable interval is missing, and blocks the common span", () => {
+  const r = valueUsage([iv("Oil", "2026-10-08", "2026-10-10", 5)], [buy("Oil", "2026-09-20", 10, 20)],
+    [{ product: "Oil", category: "Dry", unit: "kg" }, { product: "Rice", category: "Dry", unit: "kg" }]);
+  expect(r.usage).toEqual({ value: 10, complete: false, missing: { counts: 1 } });
+  expect(r.span).toBeNull();
+});
+it("review 2: catalogue products never counted make stock value incomplete, not zero", () => {
+  expect(valueStock([], [buy("Oil", "2026-10-01", 2, 5)], "2026-10-21", [{ product: "Oil", category: "Dry", unit: "kg" }]))
+    .toEqual({ value: 0, complete: false, missing: { counts: 1 }, priced: 0 });
+});
+
 it("has no common span when products were counted on different days", () => {
   expect(valueUsage([iv("Oil", "2026-10-01", "2026-10-05", 1), iv("Salt", "2026-10-02", "2026-10-05", 1)], []).span).toBeNull();
 });

@@ -6,10 +6,11 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import { Field } from "@/components/ui";
 
 const CATEGORIES = ["Safety", "Equipment", "Hygiene", "Customer", "Security", "Other"];
 const SEVERITIES = ["low", "medium", "high"];
-const SEV_COLOR: Record<string, string> = { low: "#3498db", medium: "#d4a847", high: "#e74c3c" };
+const SEV_COLOR: Record<string, string> = { low: "var(--info)", medium: "var(--gold-ink)", high: "var(--danger)" };
 
 export default function IncidentsPage() {
   const { t } = useLang();
@@ -58,8 +59,8 @@ export default function IncidentsPage() {
 
   return (
     <div className="workspace-page">
-      <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Icon e="🚨" size={22} /> {t("incidents.title")}</h1>
-      <p style={{ color: "var(--gray)", fontSize: 13, marginBottom: 16 }}>{t("incidents.subtitle")}</p>
+      <h1 className="page-title u-row"><Icon e="🚨" size={22} /> {t("incidents.title")}</h1>
+      <p className="ui-lede">{t("incidents.subtitle")}</p>
 
       <button onClick={() => setShowForm(!showForm)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
         {showForm ? t("common.close") : t("incidents.reportBtn")}
@@ -68,8 +69,8 @@ export default function IncidentsPage() {
       {showForm && (
         <div style={{ ...card, marginBottom: 16 }}>
           <div style={{ display: "flex", gap: 10 }}>
-            <div style={{ flex: 1 }}><Field label={t("incidents.category")}><select value={category} onChange={(e) => setCategory(e.target.value)} style={input}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select></Field></div>
-            <div style={{ flex: 1 }}><Field label={t("incidents.severity")}><select value={severity} onChange={(e) => setSeverity(e.target.value)} style={input}>{SEVERITIES.map((s) => <option key={s} value={s}>{sevLabel(s)}</option>)}</select></Field></div>
+            <div className="u-flex1"><Field label={t("incidents.category")}><select value={category} onChange={(e) => setCategory(e.target.value)} style={input}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select></Field></div>
+            <div className="u-flex1"><Field label={t("incidents.severity")}><select value={severity} onChange={(e) => setSeverity(e.target.value)} style={input}>{SEVERITIES.map((s) => <option key={s} value={s}>{sevLabel(s)}</option>)}</select></Field></div>
           </div>
           <Field label={t("incidents.whatHappened")}><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ ...input, resize: "vertical" }} placeholder={t("incidents.descPlaceholder")} /></Field>
           <button onClick={submit} disabled={posting} style={primaryBtn}>{posting ? t("incidents.reporting") : t("incidents.submitReport")}</button>
@@ -91,7 +92,7 @@ export default function IncidentsPage() {
               <span style={{ fontSize: 12, padding: "2px 10px", borderRadius: 10, background: inc.status === "open" ? "rgba(231,76,60,0.15)" : "rgba(39,174,96,0.15)", color: inc.status === "open" ? "var(--danger)" : "var(--success)" }}>{statusLabel(inc.status)}</span>
             </div>
             <div style={{ fontSize: 14, color: "var(--white)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{inc.description}</div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>
+            <div className="ui-note">
               {inc.reporter?.full_name || t("incidents.reporterFallback")} · {fmt(inc.created_at)}
               {inc.manager_note && <div style={{ color: "var(--success)", marginTop: 4 }}><Icon e="✓" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {inc.reviewed_by}: {inc.manager_note}</div>}
             </div>
@@ -114,9 +115,6 @@ export default function IncidentsPage() {
   );
 }
 
-function Field({ label, children }: any) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 6 }}>{label}</label>{children}</div>;
-}
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
 const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };

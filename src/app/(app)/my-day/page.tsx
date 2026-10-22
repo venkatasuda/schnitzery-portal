@@ -17,21 +17,21 @@ export default function MyDayPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📅" size={22} /> {t("myday.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("myday.title")}</h1>
       <div className="page-sub">{t("myday.subtitle")}</div>
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "avail" ? " active" : ""}`} onClick={() => setTab("avail")}>
-          <Icon e="📋" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabAvail")}
+          <Icon className="u-icon-inline" e="📋" size={14} /> {t("myday.tabAvail")}
         </button>
         <button className={`hub-tab${tab === "timeoff" ? " active" : ""}`} onClick={() => setTab("timeoff")}>
-          <Icon e="🌴" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabTimeOff")}
+          <Icon className="u-icon-inline" e="🌴" size={14} /> {t("myday.tabTimeOff")}
         </button>
         <button className={`hub-tab${tab === "hours" ? " active" : ""}`} onClick={() => setTab("hours")}>
-          <Icon e="⏱" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabHours")}
+          <Icon className="u-icon-inline" e="⏱" size={14} /> {t("myday.tabHours")}
         </button>
         <button className={`hub-tab${tab === "work" ? " active" : ""}`} onClick={() => setTab("work")}>
-          <Icon e="🧰" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.tabWork")}
+          <Icon className="u-icon-inline" e="🧰" size={14} /> {t("myday.tabWork")}
         </button>
       </div>
 
@@ -55,10 +55,10 @@ export default function MyDayPage() {
           {bal && (
             <div className="card" style={{ marginBottom: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--white)" }}><Icon e="🌴" size={13} style={{ verticalAlign: "-2px", marginRight: 6 }} /> {t("myday.vacationYear", { year: bal.year })}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--white)" }}><Icon className="u-icon-inline" e="🌴" size={13} /> {t("myday.vacationYear", { year: bal.year })}</span>
                 <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{t("myday.daysLeft", { n: bal.remaining })}</span>
               </div>
-              <div style={{ height: 6, background: "rgba(128,128,128,0.15)", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ width: `${bal.allowance > 0 ? Math.min(100, Math.round((bal.used / bal.allowance) * 100)) : 0}%`, height: "100%", background: "var(--gold)" }} />
               </div>
               <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6 }}>{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
@@ -125,7 +125,7 @@ function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string;
   return (
     <Link href={href} className="feature-card">
       <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
-      <div style={{ flex: 1 }}>
+      <div className="u-flex1">
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>
       </div>

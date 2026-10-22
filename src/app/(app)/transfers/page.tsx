@@ -63,12 +63,12 @@ export default function TransfersPage() {
   const pending = queue.filter((q) => q.status === "requested").length;
 
   if (!isMgr) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("xfer.managersOnly")}</div>;
+    return <div className="card ui-denied">{t("xfer.managersOnly")}</div>;
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="🔄" size={22} /> {t("xfer.title")}</div>
+      <h1 className="page-title u-row"><Icon e="🔄" size={22} /> {t("xfer.title")}</h1>
       <div className="page-sub">{t("xfer.subtitle")}</div>
 
       <div className="hub-tabs" style={{ marginTop: 12 }}>
@@ -81,14 +81,14 @@ export default function TransfersPage() {
           {tab === "request" && (
             <div>
               {!showForm ? (
-                <button onClick={() => setShowForm(true)} style={{ width: "100%", padding: 12, margin: "6px 0 14px", borderRadius: 10, background: "rgba(212,168,71,0.12)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ {t("xfer.newRequest")}</button>
+                <button onClick={() => setShowForm(true)} style={{ width: "100%", padding: 12, margin: "6px 0 14px", borderRadius: 10, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ {t("xfer.newRequest")}</button>
               ) : (
                 <div className="card" style={{ marginBottom: 14, padding: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <div className="card-title" style={{ margin: 0 }}>{t("xfer.newRequest")}</div>
+                    <div className="card-title u-m0">{t("xfer.newRequest")}</div>
                     <button onClick={resetForm} style={{ background: "none", border: "none", color: "var(--gray)", fontSize: 18, cursor: "pointer" }}>✕</button>
                   </div>
-                  <label style={{ fontSize: 12, color: "var(--gray)" }}>{t("xfer.fromBranch")}</label>
+                  <label className="ui-muted">{t("xfer.fromBranch")}</label>
                   <select value={src} onChange={(e) => setSrc(e.target.value)} style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, margin: "4px 0 12px" }}>
                     <option value="">{t("xfer.selectBranch")}</option>
                     {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -96,21 +96,21 @@ export default function TransfersPage() {
                   {!sel ? (
                     <>
                       <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("xfer.searchProduct")} style={{ width: "100%", padding: 11, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, marginBottom: 8 }} />
-                      {search && (filtered.length === 0 ? <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("xfer.noProduct")}</div> : filtered.map((p) => (
-                        <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
-                          {p.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>({p.category})</span>
+                      {search && (filtered.length === 0 ? <div className="ui-muted">{t("xfer.noProduct")}</div> : filtered.map((p) => (
+                        <button key={p.product} onClick={() => { setSel(p); setSearch(""); }} style={{ display: "block", width: "100%", textAlign: "left", padding: 10, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>
+                          {p.product} <span className="ui-muted">({p.category})</span>
                         </button>
                       )))}
                     </>
                   ) : (
                     <>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{sel.product}</span>
+                        <span className="ui-strong">{sel.product}</span>
                         <button onClick={() => setSel(null)} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("xfer.change")}</button>
                       </div>
                       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
                         <input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
-                        <span style={{ fontSize: 13, color: "var(--gray)" }}>{sel.unit || ""}</span>
+                        <span className="ui-muted-md">{sel.unit || ""}</span>
                       </div>
                       <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("xfer.notePh")} style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, marginBottom: 12 }} />
                       <button onClick={submit} disabled={busy === "req"} style={{ width: "100%", padding: 13, borderRadius: 10, background: "var(--gold)", color: "#1a1a1a", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{busy === "req" ? "…" : t("xfer.sendRequest")}</button>
@@ -119,15 +119,15 @@ export default function TransfersPage() {
                 </div>
               )}
 
-              <div className="card-title" style={{ marginBottom: 8 }}>{t("xfer.myRequests")}</div>
+              <div className="card-title u-mb-2">{t("xfer.myRequests")}</div>
               {requests.length === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("xfer.noRequests")}</div>
+                <div className="card ui-empty-msg">{t("xfer.noRequests")}</div>
               ) : requests.map((r) => (
                 <div key={r.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("xfer.from")} {r.from_branch_name || "—"} · {fmtWhen(r.created_at)}</div>
+                      <div className="ui-strong">{r.product} <span className="ui-muted">· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
+                      <div className="ui-muted">{t("xfer.from")} {r.from_branch_name || "—"} · {fmtWhen(r.created_at)}</div>
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: stColor(r.status) }}>{t("xfer.st_" + r.status)}</span>
                   </div>
@@ -145,24 +145,24 @@ export default function TransfersPage() {
           {tab === "fulfill" && (
             <div>
               {queue.length === 0 ? (
-                <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 24, fontSize: 13 }}>{t("xfer.noQueue")}</div>
+                <div className="card ui-empty-msg">{t("xfer.noQueue")}</div>
               ) : queue.map((r) => (
                 <div key={r.id} className="card" style={{ marginBottom: 8, padding: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.product} <span style={{ color: "var(--gray)", fontSize: 12 }}>· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>{t("xfer.for")} {r.to_branch_name || "—"}{r.requested_by_name ? ` · ${r.requested_by_name}` : ""}</div>
+                      <div className="ui-strong">{r.product} <span className="ui-muted">· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
+                      <div className="ui-muted">{t("xfer.for")} {r.to_branch_name || "—"}{r.requested_by_name ? ` · ${r.requested_by_name}` : ""}</div>
                       {r.note && <div style={{ fontSize: 12, color: "var(--gray)", fontStyle: "italic", marginTop: 3 }}>“{r.note}”</div>}
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: stColor(r.status) }}>{t("xfer.st_" + r.status)}</span>
                   </div>
                   {r.status === "requested" && (
                     <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <button onClick={() => act(sendTransfer, r.id, "xfer.sent")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "rgba(212,168,71,0.15)", color: "var(--gold)", border: "1px solid rgba(212,168,71,0.3)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("xfer.markSent")}</button>
+                      <button onClick={() => act(sendTransfer, r.id, "xfer.sent")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--gold)", border: "1px solid var(--accent-line)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t("xfer.markSent")}</button>
                       <button onClick={() => act(rejectTransfer, r.id, "xfer.rejected")} disabled={busy === r.id} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "transparent", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.3)", fontSize: 13, cursor: "pointer" }}>{t("xfer.reject")}</button>
                     </div>
                   )}
-                  {r.status === "sent" && <div style={{ fontSize: 12, color: "#d4a847", marginTop: 8 }}>{t("xfer.awaitingReceipt")}</div>}
+                  {r.status === "sent" && <div style={{ fontSize: 12, color: "var(--gold-ink)", marginTop: 8 }}>{t("xfer.awaitingReceipt")}</div>}
                 </div>
               ))}
             </div>

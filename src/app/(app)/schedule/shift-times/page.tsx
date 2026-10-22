@@ -42,7 +42,7 @@ export default function ShiftTimesPage() {
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="⏱️" size={22} /> {t("shiftcfg.title")}</div>
+      <h1 className="page-title u-row"><Icon e="⏱️" size={22} /> {t("shiftcfg.title")}</h1>
       <div className="page-sub">{t("shiftcfg.subtitle")}</div>
 
       {loading ? (
@@ -51,7 +51,7 @@ export default function ShiftTimesPage() {
         teams.map((team) => (
           <div key={team} style={{ marginBottom: 18 }}>
             <div className="section-label">{teamLabel(team)}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="u-stack">
               {rows.filter((r) => r.team === team).map((r) => {
                 const crosses = r.start && r.end && r.end <= r.start;
                 const isBranch = r.scope === "branch";
@@ -60,16 +60,16 @@ export default function ShiftTimesPage() {
                   <div key={r.shift} className="card" style={{ padding: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                       <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--white)" }}>{r.shift}</div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: isBranch ? "var(--action)" : "var(--gray)", background: isBranch ? "rgba(212,168,71,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: isBranch ? "var(--action)" : "var(--gray)", background: isBranch ? "var(--accent-soft)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
                         {isBranch ? t("shiftcfg.scopeBranch") : t("shiftcfg.scopeDefault")}
                       </span>
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                      <label style={{ flex: 1 }}>
+                      <label className="u-flex1">
                         <div style={lbl}>{t("shiftcfg.start")}</div>
                         <input type="time" value={r.start} onChange={(e) => edit(r.team, r.shift, "start", e.target.value)} style={input} />
                       </label>
-                      <label style={{ flex: 1 }}>
+                      <label className="u-flex1">
                         <div style={lbl}>{t("shiftcfg.end")}</div>
                         <input type="time" value={r.end} onChange={(e) => edit(r.team, r.shift, "end", e.target.value)} style={input} />
                       </label>
@@ -94,4 +94,4 @@ export default function ShiftTimesPage() {
 }
 
 const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
-const input: React.CSSProperties = { width: "100%", padding: "9px 10px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };
+const input: React.CSSProperties = { width: "100%", padding: "9px 10px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

@@ -14,6 +14,7 @@ import Icon from "@/components/Icon";
 import { getT } from "@/lib/i18n/server";
 import { ProgressRing, MiniBars, RankBars } from "@/components/dash/Charts";
 import { getWasteTrends, getWasteByBranch } from "@/lib/queries/waste";
+import { Stat } from "@/components/ui";
 
 type OrgOverview = Extract<Awaited<ReturnType<typeof getOrgOverview>>, { ok: true }>;
 type Tf = (k: string, v?: Record<string, string | number>) => string;
@@ -157,7 +158,7 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
     <>
       <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "var(--success-soft)" : "var(--dark)" }}>
         <div className="feature-icon" style={{ background: "var(--accent-soft)" }}><Icon e="🕐" size={22} color="var(--gold-ink)" /></div>
-        <div style={{ flex: 1 }}>
+        <div className="u-flex1">
           <div className="feature-title">{clockTitle}</div>
           <div className="feature-sub">{clockSub}</div>
         </div>
@@ -289,20 +290,11 @@ function OwnerDash({ t, data, waste }: { t: Tf; data: OrgOverview | null; waste?
 }
 
 // ─────────── SHARED ───────────
-function Stat({ value, label, color }: { value: string | number; label: string; color?: string }) {
-  return (
-    <div style={{ background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
-      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "var(--font-display)", color: color || "var(--white)", lineHeight: 1.05 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, lineHeight: 1.5 }}>{label}</div>
-    </div>
-  );
-}
-
 function Shortcut({ href, icon, title, sub }: { href: string; icon: string; title: string; sub: string }) {
   return (
     <Link href={href} className="feature-card">
       <div className="feature-icon" style={{ background: "var(--accent-soft)" }}><Icon e={icon} size={20} color="var(--gold-ink)" /></div>
-      <div style={{ flex: 1 }}>
+      <div className="u-flex1">
         <div className="feature-title">{title}</div>
         <div className="feature-sub">{sub}</div>
       </div>

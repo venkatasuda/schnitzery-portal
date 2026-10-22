@@ -12,7 +12,7 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 // Every team a manager can roster — not only the ones that happen to have preset
 // shift times. Teams without presets simply use a custom start/end time.
 const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"];
-const TEAM_COLORS: Record<string, string> = { Manager: "#3498db", Preparation: "#d4a847", Kitchen: "#27ae60", Cashier: "#9b59b6", Dishwashing: "#5dade2" };
+const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6", Dishwashing: "var(--info)" };
 const CUSTOM = "__custom__";
 const presetsFor = (team: string) => SHIFT_MODEL[team] || [];
 
@@ -126,18 +126,18 @@ export default function RosterPage() {
   const availableDay = (uid: string, day: string) => Array.isArray(avail[uid]?.[day]) && avail[uid][day].length > 0;
 
   if (denied) {
-    return <div className="card" style={{ textAlign: "center", color: "var(--gray)", maxWidth: 500, margin: "40px auto", padding: 30 }}>{t("roster.managersOnly")}</div>;
+    return <div className="card ui-denied">{t("roster.managersOnly")}</div>;
   }
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📋" size={22} /> {t("roster.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📋" size={22} /> {t("roster.title")}</h1>
       <div className="page-sub">{t("roster.subtitle", { week: weekLabel || "…" })}</div>
       {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
       {/* week nav + save */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="u-hstack">
           <button disabled={loading||saving} onClick={() => changeWeek(-1)} style={navBtn}>{t("shifts.prev")}</button>
           <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--action)", fontWeight: 600, padding: "0 4px" }}>
             {weekOffset === 0 ? t("roster.thisWeek") : weekOffset > 0 ? t("roster.weeksPlus", { n: weekOffset }) : t("roster.weeksMinus", { n: weekOffset })}
@@ -164,7 +164,7 @@ export default function RosterPage() {
                   <button
                     key={d}
                     onClick={() => setActiveDay(isActive ? null : d)}
-                    style={{ flex: 1, textAlign: "center", padding: "8px 2px", borderRadius: 8, border: "none", cursor: "pointer", background: isActive ? "rgba(212,168,71,0.18)" : count > 0 ? "var(--dark3)" : "transparent" }}
+                    style={{ flex: 1, textAlign: "center", padding: "8px 2px", borderRadius: 8, border: "none", cursor: "pointer", background: isActive ? "var(--accent-soft)" : count > 0 ? "var(--dark3)" : "transparent" }}
                   >
                     <div style={{ fontSize: 12, color: isActive ? "var(--action)" : "var(--gray)", fontWeight: isActive ? 700 : 500 }}>{dayLabel(d)[0]}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, marginTop: 3, color: count > 0 ? "var(--white)" : "rgba(128,128,128,0.4)" }}>{count}</div>
@@ -177,12 +177,12 @@ export default function RosterPage() {
           {/* TEAM HOURS BOARD — month-to-date worked vs monthly contract */}
           <div className="card" style={{ marginBottom: 12 }}>
             <button onClick={() => setShowHours(!showHours)} style={{ width: "100%", background: "none", border: "none", color: "var(--white)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: 0 }}>
-              <span className="card-title" style={{ margin: 0 }}>{t("roster.teamHours")}</span>
+              <span className="card-title u-m0">{t("roster.teamHours")}</span>
               <span style={{ color: "var(--gray)", fontSize: 13 }}>{showHours ? "▾" : "▸"}</span>
             </button>
             {showHours && (
               <div style={{ marginTop: 10 }}>
-                <div style={{ fontSize: 12, color: "var(--gray)", marginBottom: 12 }}>{t("roster.teamHoursSub")}</div>
+                <div className="ui-sub">{t("roster.teamHoursSub")}</div>
                 {[...staff]
                   .filter((p) => p.contractHours != null || (p.workedH || 0) > 0)
                   .map((p) => ({ ...p, pct: p.contractHours ? Math.round(((p.workedH || 0) / p.contractHours) * 100) : null }))
@@ -195,14 +195,14 @@ export default function RosterPage() {
                     return (
                       <div key={p.id} style={{ marginBottom: 10 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-                          <span style={{ color: "var(--white)" }}>{p.full_name}</span>
+                          <span className="u-text">{p.full_name}</span>
                           <span style={{ color: over ? "var(--danger)" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
                             {p.contractHours != null ? `${p.workedH || 0}/${p.contractHours}h` : `${p.workedH || 0}h`}
                             {left != null && (over ? ` · ${t("roster.over")}` : ` · ${left}${t("roster.leftShort")}`)}
                           </span>
                         </div>
                         {p.pct != null && (
-                          <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ height: 5, background: "var(--surface-2)", borderRadius: 3, overflow: "hidden" }}>
                             <div style={{ height: "100%", width: `${Math.min(100, p.pct)}%`, background: barColor, borderRadius: 3 }} />
                           </div>
                         )}
@@ -216,7 +216,7 @@ export default function RosterPage() {
             const entries = roster[day] || [];
             const isActive = activeDay === day;
             return (
-              <div key={day} className="card" style={{ marginBottom: 10, borderColor: isActive ? "rgba(212,168,71,0.3)" : undefined }}>
+              <div key={day} className="card" style={{ marginBottom: 10, borderColor: isActive ? "var(--accent-line)" : undefined }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: entries.length ? 10 : 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "var(--white)" }}>
                     {dayLabel(day)}
@@ -231,10 +231,10 @@ export default function RosterPage() {
 
                 {/* entries */}
                 {entries.map((e, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(128,128,128,0.12)" }}>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAM_COLORS[e.team] || "#888", flexShrink: 0 }} />
                     <div style={{ flex: 1, fontSize: 13, color: "var(--white)" }}>
-                      <b>{e.name}</b> <span style={{ color: "var(--gray)" }}>· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
+                      <b>{e.name}</b> <span className="u-muted">· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
                     {submitted(e.user_id) && !availableDay(e.user_id, day) && (
                       <span style={{ fontSize: 12, fontWeight: 700, color: "#e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
@@ -275,11 +275,11 @@ export default function RosterPage() {
                     </div>
                     {selShift === CUSTOM && (
                       <div style={{ flex: "1 1 180px", display: "flex", gap: 6, alignItems: "flex-end" }}>
-                        <div style={{ flex: 1 }}>
+                        <div className="u-flex1">
                           <label style={miniLbl}>{t("roster.from")}</label>
                           <input type="time" aria-label={t("roster.from")} value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={miniSelect} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div className="u-flex1">
                           <label style={miniLbl}>{t("roster.to")}</label>
                           <input type="time" aria-label={t("roster.to")} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={miniSelect} />
                         </div>
@@ -301,7 +301,7 @@ export default function RosterPage() {
   );
 }
 
-const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid rgba(128,128,128,0.2)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
+const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
 const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
 const miniLbl: React.CSSProperties = { display: "block", fontSize: 12, color: "var(--gray)", marginBottom: 4 };
-const miniSelect: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.25)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };
+const miniSelect: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

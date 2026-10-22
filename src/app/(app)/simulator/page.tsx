@@ -40,21 +40,21 @@ export default function SimulatorPage() {
   const Slider = ({ label, val, set, hint }: { label: string; val: number; set: (n: number) => void; hint: string }) => (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ fontSize: 13, color: "var(--white)" }}>{label}</span>
+        <span className="ui-body">{label}</span>
         <span style={{ fontSize: 13, fontWeight: 700, color: val === 0 ? "var(--gray)" : val > 0 ? "var(--danger)" : "var(--success)" }}>{val > 0 ? "+" : ""}{val}%</span>
       </div>
-      <input type="range" min={-20} max={40} step={1} value={val} onChange={(e) => set(Number(e.target.value))} style={{ width: "100%", accentColor: "#d4a847" }} />
-      <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 2 }}>{hint}</div>
+      <input type="range" min={-20} max={40} step={1} value={val} onChange={(e) => set(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--gold-ink)" }} />
+      <div className="ui-meta">{hint}</div>
     </div>
   );
 
   const Metric = ({ label, baseVal, simVal, color }: { label: string; baseVal: number | null; simVal: number | null; color: string }) => {
     const delta = baseVal != null && simVal != null ? Math.round((simVal - baseVal) * 10) / 10 : null;
     return (
-      <div style={{ padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 10 }}>
-        <div style={{ fontSize: 12, color: "var(--gray)" }}>{label}</div>
+      <div style={{ padding: 12, background: "var(--surface-2)", borderRadius: 10 }}>
+        <div className="ui-muted">{label}</div>
         <div style={{ fontSize: 22, fontWeight: 700, color }}>{pct(simVal)}</div>
-        <div style={{ fontSize: 12, color: "var(--gray)" }}>
+        <div className="ui-muted">
           {t("sim.was")} {pct(baseVal)}
           {delta != null && delta !== 0 && <span style={{ color: delta > 0 ? "var(--danger)" : "var(--success)", marginLeft: 4 }}>{delta > 0 ? "▲" : "▼"}{Math.abs(delta)}</span>}
         </div>
@@ -65,7 +65,7 @@ export default function SimulatorPage() {
   return (
     <div className="fade-up">
       <Link href="/summary" style={{ color: "var(--gray)", fontSize: 13, textDecoration: "none" }}>‹ {t("sim.back")}</Link>
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🎛️" size={22} /> {t("sim.title")}</div>
+      <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🎛️" size={22} /> {t("sim.title")}</h1>
       <div className="page-sub">{t("sim.subtitle")}</div>
 
       {loading ? <CardSkeleton rows={4} /> : !base || !base.hasSales ? (
@@ -89,7 +89,7 @@ export default function SimulatorPage() {
 
           <div className="card" style={{ padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <div className="card-title" style={{ margin: 0 }}>{t("sim.whatIf")}</div>
+              <div className="card-title u-m0">{t("sim.whatIf")}</div>
               <button onClick={reset} style={{ fontSize: 12, color: "var(--gray)", background: "none", border: "none", cursor: "pointer" }}>{t("sim.reset")}</button>
             </div>
             <Slider label={t("sim.ingredientCost")} val={food} set={setFood} hint={t("sim.ingredientHint")} />

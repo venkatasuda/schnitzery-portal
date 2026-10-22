@@ -45,7 +45,7 @@ export default function StatusStrip() {
   return (
     <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "2px 0 12px", WebkitOverflowScrolling: "touch" }}>
       {chips.map((c, i) => (
-        <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", flexShrink: 0, padding: "5px 11px", borderRadius: 999, background: "var(--dark3)", border: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "var(--white)" }}>
+        <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", flexShrink: 0, padding: "5px 11px", borderRadius: 999, background: "var(--dark3)", border: "1px solid var(--border)", fontSize: 12, color: "var(--white)" }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.dot, boxShadow: `0 0 6px ${c.dot}` }} />
           {c.label}
         </span>

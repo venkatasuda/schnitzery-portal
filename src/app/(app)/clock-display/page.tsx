@@ -69,22 +69,22 @@ export default function ClockDisplayPage() {
               {qrImg ? (
                 <img src={qrImg} alt="Clock QR" style={{ width: 260, height: 260, borderRadius: 16, background: "#fff", padding: 8 }} />
               ) : (
-                <div style={{ width: 260, height: 260, borderRadius: 16, background: "rgba(255,255,255,0.05)" }} />
+                <div style={{ width: 260, height: 260, borderRadius: 16, background: "var(--surface-2)" }} />
               )}
             </div>
 
             {/* CODE */}
             <div style={{ fontSize: 13, letterSpacing: 2, color: "var(--gray)", marginBottom: 6 }}>{t("cd.orEnterCode")}</div>
-            <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: 8, color: "#d4a847", fontFamily: "var(--font-body)" }}>
+            <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: 8, color: "var(--gold-ink)", fontFamily: "var(--font-body)" }}>
               {code}
             </div>
 
             {/* countdown */}
             <div style={{ marginTop: 20 }}>
-              <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: "#d4a847", transition: "width 1s linear" }} />
               </div>
-              <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>
+              <div className="ui-note">
                 {t("cd.newCodeIn", { n: secondsLeft })}
               </div>
             </div>

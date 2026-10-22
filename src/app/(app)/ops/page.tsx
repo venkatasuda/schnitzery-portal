@@ -8,6 +8,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getOpsDashboard, getOpsFilters } from "@/lib/queries/ops-dashboard";
 import { CardSkeleton } from "@/components/Skeleton";
+import { Stat } from "@/components/ui";
 
 const todayStr = () => berlinToday();
 const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
@@ -48,7 +49,7 @@ export default function OpsPage() {
     return () => clearInterval(iv);
   }, [date, load]);
 
-  if (denied) return <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 30, maxWidth: 500, margin: "40px auto" }}>{t("ops.denied")}</div>;
+  if (denied) return <div className="card ui-denied">{t("ops.denied")}</div>;
 
   const m = data?.metrics;
   const rows: any[] = data?.rows || [];
@@ -57,12 +58,12 @@ export default function OpsPage() {
     completed: { key: "ops.stCompleted", color: "#7f8c8d" },
     absent: { key: "ops.stAbsent", color: "var(--danger)" },
     not_checked_in: { key: "ops.stNotIn", color: "var(--warn)" },
-    unscheduled: { key: "ops.stUnscheduled", color: "#5dade2" },
+    unscheduled: { key: "ops.stUnscheduled", color: "var(--info)" },
   };
 
   return (
     <div className="fade-up">
-      <div className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e="📡" size={22} /> {t("ops.title")}</div>
+      <h1 className="page-title u-row"><Icon e="📡" size={22} /> {t("ops.title")}</h1>
       <div className="page-sub">{t("ops.subtitle")}{data?.asOf ? ` · ${t("ops.asOf")} ${fmtClock(data.asOf)}` : ""}</div>
 
       {/* FILTERS */}
@@ -103,13 +104,13 @@ export default function OpsPage() {
           {/* UTILIZATION */}
           <div className="card" style={{ padding: 14, marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: "var(--gray)" }}>{t("ops.utilization")}</span>
+              <span className="ui-muted-md">{t("ops.utilization")}</span>
               <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }}>{m.utilization}%</span>
             </div>
-            <div style={{ height: 8, background: "rgba(128,128,128,0.18)", borderRadius: 4, overflow: "hidden" }}>
+            <div style={{ height: 8, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
               <div style={{ width: `${m.utilization}%`, height: "100%", background: m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }} />
             </div>
-            <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 8 }}>{t("ops.scheduled")}: {m.scheduledTotal} · {t("ops.completed")}: {m.completed}</div>
+            <div className="ui-note">{t("ops.scheduled")}: {m.scheduledTotal} · {t("ops.completed")}: {m.completed}</div>
           </div>
 
           {/* WHO'S ON */}
@@ -117,14 +118,14 @@ export default function OpsPage() {
           {rows.length === 0 ? (
             <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 22, fontSize: 13 }}>{t("ops.none")}</div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div className="u-stack tight">
               {rows.map((r) => {
                 const meta = statusMeta[r.status] || statusMeta.working;
                 return (
                   <div key={r.userId + r.shift} className="card" style={{ padding: 11, borderLeft: `3px solid ${meta.color}`, display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="u-grow">
                       <div style={{ fontSize: 13, fontWeight: 600, color: "var(--white)" }}>{r.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--gray)" }}>
+                      <div className="ui-muted">
                         {r.shift ? `${teamLabel(r.team)} · ${r.shift}` : (r.team ? teamLabel(r.team) : t("ops.stUnscheduled"))}
                         {r.schedStart != null && ` · ${t("ops.sched")} ${fmtFromMs(r.schedStart)}–${fmtFromMs(r.schedEnd)}`}
                         {r.clockIn && ` · ${t("ops.actual")} ${fmtClock(r.clockIn)}–${fmtClock(r.clockOut)}`}
@@ -145,13 +146,8 @@ export default function OpsPage() {
   );
 }
 
-function Metric({ icon, value, label, color }: { icon: string; value: any; label: string; color: string }) {
-  return (
-    <div className="workspace-stat">
-      <strong style={{ color }}>{value}</strong>
-      <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon e={icon} size={16} />{label}</span>
-    </div>
-  );
-}
+const sel: React.CSSProperties = { padding: "8px 10px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 12.5, fontWeight: 600 };
 
-const sel: React.CSSProperties = { padding: "8px 10px", background: "var(--dark2)", border: "1px solid rgba(128,128,128,0.22)", borderRadius: 10, color: "var(--white)", fontSize: 12.5, fontWeight: 600 };
+function Metric({ icon, value, label, color }: { icon: string; value: any; label: string; color: string }) {
+  return <Stat label={<><Icon e={icon} size={16} /> {label}</>} value={value} color={color} />;
+}

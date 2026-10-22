@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
-import ManagementNav from "@/components/ManagementNav";
+import ManagementNav, { ManagementLocation } from "@/components/ManagementNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import AgentWidget from "@/components/AgentWidget";
 import NotificationBell from "@/components/NotificationBell";
@@ -12,12 +12,13 @@ import LanguageProvider from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import LanguageToggle from "@/components/LanguageToggle";
 import ViewToggle from "@/components/ViewToggle";
-import { getLocale } from "@/lib/i18n/server";
+import { getLocale, getT } from "@/lib/i18n/server";
 import { getViewMode } from "@/lib/viewMode";
 
 // Protected layout — header (notifications + theme toggle) + content + nav.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
+  const t = await getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -45,10 +46,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // A brand owner in "branch" mode navigates as a manager; otherwise as owner.
   // Non-HQ roles ignore viewMode entirely.
   const navRole = isHQ && viewMode === "branch" ? "manager" : role;
-  const roleLabel: Record<string, string> = {
-    staff: "Staff", manager: "Manager",
-    branch_owner: "Branch Owner", brand_owner: "Brand Owner", super_admin: "Super Admin",
-  };
 
   return (
     <LanguageProvider initialLocale={locale}>
@@ -57,22 +54,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {isManager && <ManagementNav role={navRole} />}
       <header className="app-header">
         <div>
-          <div className="brand">Schnitzery Portal</div>
-          <div className="sub">{roleLabel[role]}</div>
+          {isManager ? <ManagementLocation role={navRole} /> : <div className="brand">Schnitzery Portal</div>}
+          <div className="sub">{t(`roles.${role}`)}</div>
         </div>
         <div className="header-right">
           {isHQ && <ViewToggle mode={viewMode} />}
           <span className="header-name">{profile?.full_name || user?.email}</span>
-          {isManager && <Link href="/search" aria-label="Search" style={{ display: "inline-flex", textDecoration: "none", lineHeight: 1 }}><Icon e="🔍" size={18} /></Link>}
+          {isManager && <Link href="/search" aria-label={locale === "de" ? "Suchen" : "Search"} className="header-search"><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
           <LanguageToggle />
           <ThemeToggle />
+          <Link href="/profile" className="header-profile" aria-label={locale === "de" ? "Mein Profil" : "My profile"}>
           {profile?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
           ) : (
             <div className={`avatar${isManager ? " mgr" : ""}`} style={{ width: 32, height: 32, fontSize: 13 }}>{(profile?.full_name || user?.email || "?")[0].toUpperCase()}</div>
           )}
+          </Link>
         </div>
       </header>
 
