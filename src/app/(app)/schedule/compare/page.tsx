@@ -87,7 +87,7 @@ export default function ComparePage() {
                 <div style={{ fontSize: 34, fontWeight: 800, color: pctColor(sum.pct), lineHeight: 1 }}>{sum.pct}%</div>
                 <div style={{ fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{t("cmp.overall")}</div>
               </div>
-              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", fontSize: 12 }}>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "6px 12px", fontSize: 12 }}>
                 <Stat label={t("cmp.shifts")} value={String(sum.shifts)} />
                 <Stat label={t("cmp.noShows")} value={String(sum.noShows)} color={sum.noShows ? "var(--danger)" : undefined} />
                 <Stat label={t("cmp.late")} value={fmtMins(sum.lateMins)} />

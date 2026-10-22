@@ -56,7 +56,7 @@ export default async function HomePage() {
   let mLive: { workingNow: number; completed: number; late: number; totalMins: number } | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
-  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number } | null = null;
+  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
   let mWaste: { label: string; value: number }[] = [];
   let hqWaste: { label: string; value: number }[] = [];
 
@@ -166,7 +166,7 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
 
       <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "4px 0 14px", padding: 16 }}>
         {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
           <Stat value={`${hours?.totalHours ?? 0}h`} label={t("home.thisMonthStat")} color="var(--gold-ink)" />
           <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
           {target == null && <Stat value="—" label={t("home.ofTarget")} />}
@@ -189,7 +189,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
   live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number } | null; waste?: { label: string; value: number }[]; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
 }) {
   const missing = sched ? Math.max(0, sched.staffCount - sched.submissionCount) : 0;
   const alerts = [
@@ -225,14 +225,14 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       <section className="dashboard-panel">
         <div className="dashboard-panel-heading"><h2>{t("business.overview")}</h2><Link href="/analytics">{t("homeDashboard.details")} ›</Link></div>
         <div className="dashboard-costs">
-          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null ? "—" : `€${cost.monthSales.toLocaleString()}`}</strong></div>
-          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null ? "—" : `€${cost.invSpend.toLocaleString()}`}</strong></div>
+          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null ? "—" : `${cost.coverage?.sales.complete === false ? "≥ " : ""}€${cost.monthSales.toLocaleString()}`}</strong></div>
+          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null ? "—" : `${cost.coverage?.spend.complete === false ? "≥ " : ""}€${cost.invSpend.toLocaleString()}`}</strong></div>
         </div>
         <div className="dashboard-facts">
           <div><span>{t("home.laborPct")}</span><strong>{cost?.laborPct == null ? "—" : `${cost.laborPct}%`}</strong></div>
           <div><span>{t("home.foodCostPct")}</span><strong>{cost?.foodCostPct == null ? "—" : `${cost.foodCostPct}%`}</strong></div>
         </div>
-        <p className="dashboard-muted">{cost?.missingWageStaff ? t("business.missingWages", { n: cost.missingWageStaff }) : t("business.purchaseNote")}</p>
+        <p className="dashboard-muted">{[cost?.missingWageStaff ? t("business.missingWages", { n: cost.missingWageStaff }) : "", cost?.coverage?.sales.missing.salesDays ? t("business.missingSalesDays", { n: cost.coverage.sales.missing.salesDays }) : "", cost?.coverage?.spend.missing.costs ? t("business.missingCosts", { n: cost.coverage.spend.missing.costs }) : ""].filter(Boolean).join(" · ") || t("business.purchaseNote")}</p>
       </section>
       <section className="dashboard-panel">
         <div className="dashboard-panel-heading"><h2>{t("home.wasteTrend")}</h2><Link href="/waste">{t("homeDashboard.details")} ›</Link></div>

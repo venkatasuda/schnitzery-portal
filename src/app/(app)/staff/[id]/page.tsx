@@ -105,7 +105,7 @@ export default function StaffDetailPage() {
 
       {/* hours */}
       <div className="section-label">{t("staffd.hoursThisMonth")}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 4 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 4 }}>
         <Stat value={fmtH(hours?.workedMins || 0)} label={t("staffd.worked")} color="var(--gold)" />
         <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
         <Stat value={overPct != null ? `${overPct}%` : "—"} label={t("staffd.ofContract")} color={overPct != null && overPct > 100 ? "var(--warn)" : "var(--white)"} />
@@ -116,7 +116,7 @@ export default function StaffDetailPage() {
         <>
           <div className="section-label">{t("staffd.vacation", { year: bal.year })}</div>
           <div className="card" style={{ marginBottom: 4 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 12 }}>
               <Stat value={bal.allowance} label={t("staffd.allowance")} />
               <Stat value={bal.used} label={t("staffd.taken")} color="var(--warn)" />
               <Stat value={bal.remaining} label={t("staffd.remaining")} color="var(--gold)" />

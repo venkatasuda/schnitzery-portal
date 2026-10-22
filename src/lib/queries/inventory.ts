@@ -7,6 +7,9 @@ import { berlinToday, berlinMonth, isCalendarDate } from "@/lib/time/berlinDate"
 import { sendPushToUser } from "@/lib/push/delivery";
 import { inventoryKey, validInventoryItem } from "@/lib/inventory/identity";
 import { countDepletion } from "@/lib/inventory/reconciliation";
+import { valueStock, valueUsage } from "@/lib/inventory/valuation";
+import { figure, missingSalesDays, pctOf, spendFigure } from "@/lib/analytics/coverage";
+import { getReconciliation } from "@/lib/queries/reconciliation";
 
 // ============================================================
 // INVENTORY
@@ -254,150 +257,85 @@ export async function getDeliveries(days = 30) {
 export async function getInventoryAnalytics(days = 30) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  const since = new Date(berlinToday() + "T12:00:00Z"); since.setUTCDate(since.getUTCDate() - days);
+  const today = berlinToday();
+  const since = new Date(today + "T12:00:00Z"); since.setUTCDate(since.getUTCDate() - days);
   const sinceStr = since.toISOString().slice(0, 10);
-
-  const { data: purchases, error: purchasesError } = await readAll(supabase
-    .from("inventory_purchases")
-    .select("product, category, qty, cost, purchase_date, unit")
-    .eq("branch_id", branchId).gte("purchase_date", sinceStr).lte("purchase_date", berlinToday()).order("id"));
-  if (purchasesError) return { ok: false, error: purchasesError.message };
-  const { data: counts, error: countsError } = await readAll(supabase
-    .from("inventory_counts")
-    .select("product, ist, count_date, created_at, category, unit")
-    .eq("branch_id", branchId).gte("count_date", sinceStr).lte("count_date", berlinToday())
-    .order("count_date", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }).order("id"));
-  if (countsError) return { ok: false, error: countsError.message };
-  const transfers = await movedStock(supabase, branchId, sinceStr);
-  if (transfers.error) return { ok: false, error: transfers.error.message };
-  const reconciliationIssues = new Set((transfers.data || []).map(inventoryKey));
-  let hasUsagePairs = false;
-
-  // sales (for food cost %) + previous-window spend (for trend vs last period)
-  const { data: salesRows, error: salesRowsError } = await readAll(supabase
-    .from("daily_sales").select("amount").eq("branch_id", branchId).gte("sale_date", sinceStr).lte("sale_date", berlinToday()).order("id"));
-  if (salesRowsError) return { ok: false, error: salesRowsError.message };
-  let totalSales = 0;
-  for (const s of salesRows || []) totalSales += Number(s.amount) || 0;
-
-  const prevSince = new Date(berlinToday() + "T12:00:00Z"); prevSince.setUTCDate(prevSince.getUTCDate() - days * 2);
+  const prevSince = new Date(today + "T12:00:00Z"); prevSince.setUTCDate(prevSince.getUTCDate() - days * 2);
   const prevSinceStr = prevSince.toISOString().slice(0, 10);
-  const { data: prevPurch, error: prevPurchError } = await readAll(supabase
-    .from("inventory_purchases").select("cost").eq("branch_id", branchId)
-    .gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr).order("id"));
-  if (prevPurchError) return { ok: false, error: prevPurchError.message };
-  let prevSpend = 0;
-  for (const p of prevPurch || []) prevSpend += Number(p.cost) || 0;
 
-  const P = purchases || [];
-  const C = counts || [];
+  // Release D (docs/ANALYTICS-RELIABILITY.md): usage comes from Release C reconciliation
+  // intervals, valued at the latest delivery price on or before each count; missing
+  // data is reported, never counted as zero.
+  // ponytail: full purchase history for latest prices; bounded by readAll's 100k rows.
+  const [purchRes, histRes, countsRes, salesRes, workRes, prevRes, rec] = await Promise.all([
+    readAll(supabase.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
+      .eq("branch_id", branchId).gte("purchase_date", sinceStr).lte("purchase_date", today).order("id")),
+    readAll(supabase.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
+      .eq("branch_id", branchId).lte("purchase_date", today).order("id")),
+    readAll(supabase.from("inventory_counts").select("product, ist, count_date, created_at, category, unit")
+      .eq("branch_id", branchId).gte("count_date", sinceStr).lte("count_date", today)
+      .order("count_date").order("created_at").order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", sinceStr).lte("sale_date", today).order("id")),
+    readAll(supabase.from("attendance_logs").select("work_date, duration_mins").eq("branch_id", branchId).eq("status", "complete")
+      .gte("work_date", sinceStr).lte("work_date", today).order("id")),
+    readAll(supabase.from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr).order("id")),
+    getReconciliation(Math.min(180, Math.max(7, days))),
+  ]);
+  const failed = purchRes.error || histRes.error || countsRes.error || salesRes.error || workRes.error || prevRes.error;
+  if (failed) return { ok: false, error: failed.message };
+  if (!rec.ok && !/Manager/.test(rec.error)) return { ok: false, error: rec.error };
+  const P = purchRes.data || [], C = countsRes.data || [], S = salesRes.data || [];
 
-  // spend + unit cost (weighted avg) + purchases per product/date
-  const spendByDate: Record<string, number> = {};
-  const spendByProduct: Record<string, number> = {};
-  const spendByCategory: Record<string, number> = {};
-  const qtyByProduct: Record<string, number> = {};
-  const costByProduct: Record<string, number> = {};
-  const purchByProdDate: Record<string, Record<string, number>> = {};
-  let totalSpend = 0;
+  // Spend: deliveries without a usable cost are missing, not €0.
+  const spend = spendFigure(P);
+  const prevSpend = spendFigure(prevRes.data || []);
+  const spendByDate: Record<string, number> = {}, spendByProduct: Record<string, number> = {}, spendByCategory: Record<string, number> = {};
   for (const p of P) {
-    const d = p.purchase_date, c = Number(p.cost) || 0, q = Number(p.qty) || 0;
-    if (p.qty == null || !Number.isFinite(Number(p.qty)) || q <= 0 || p.cost == null || !Number.isFinite(Number(p.cost)) || c < 0) reconciliationIssues.add(inventoryKey(p));
-    spendByDate[d] = (spendByDate[d] || 0) + c;
+    const c = Number(p.cost); if (p.cost == null || !Number.isFinite(c) || c < 0) continue;
+    spendByDate[p.purchase_date] = (spendByDate[p.purchase_date] || 0) + c;
     spendByProduct[inventoryKey(p)] = (spendByProduct[inventoryKey(p)] || 0) + c;
     spendByCategory[p.category || "—"] = (spendByCategory[p.category || "—"] || 0) + c;
-    qtyByProduct[inventoryKey(p)] = (qtyByProduct[inventoryKey(p)] || 0) + q;
-    costByProduct[inventoryKey(p)] = (costByProduct[inventoryKey(p)] || 0) + c;
-    (purchByProdDate[inventoryKey(p)] ||= {})[d] = (purchByProdDate[inventoryKey(p)]?.[d] || 0) + q;
-    totalSpend += c;
-  }
-  const unitCost: Record<string, number> = {};
-  for (const prod of Object.keys(qtyByProduct)) {
-    unitCost[prod] = qtyByProduct[prod] > 0 && !reconciliationIssues.has(prod) ? costByProduct[prod] / qtyByProduct[prod] : NaN;
   }
 
-  // latest count per product per date
-  const countsByProduct: Record<string, { date: string; ist: number }[]> = {};
-  const byProdDate: Record<string, Record<string, number>> = {};
-  for (const c of C) {
-    (byProdDate[inventoryKey(c)] ||= {})[c.count_date] = c.ist == null ? NaN : Number(c.ist); // asc → last wins (latest)
-  }
-  for (const prod of Object.keys(byProdDate)) {
-    countsByProduct[prod] = Object.keys(byProdDate[prod]).sort()
-      .map((d) => ({ date: d, ist: byProdDate[prod][d] }));
-  }
-
-  const usageByDate: Record<string, number> = {};
-  const usageEurByDate: Record<string, number> = {};
-  const usageQtyByProduct: Record<string, number> = {};
-  const usageEurByProduct: Record<string, number> = {};
-  const purchasedBetween = (prod: string, after: string, through: string) => {
-    const m = purchByProdDate[prod] || {}; let s = 0;
-    for (const d of Object.keys(m)) if (d > after && d <= through) s += m[d];
-    return s;
+  // Sales: an open day (anyone worked) without a sales entry is missing.
+  const worked = (workRes.data || []).filter(w => Number(w.duration_mins) > 0).map(w => ({ branch_id: "b", work_date: w.work_date }));
+  const salesIn = (after: string, through: string) => {
+    const rows = S.filter(s => s.sale_date > after && s.sale_date <= through);
+    return figure(rows.reduce((n, s) => n + (Number(s.amount) || 0), 0), {
+      salesDays: missingSalesDays(worked.filter(w => w.work_date > after && w.work_date <= through), rows.map(s => ({ branch_id: "b", sale_date: s.sale_date })), today),
+    });
   };
-  for (const prod of Object.keys(countsByProduct)) {
-    const series = countsByProduct[prod];
-    if (series.length < 2) reconciliationIssues.add(prod);
-    for (let i = 0; i + 1 < series.length; i++) {
-      const a = series[i], b = series[i + 1];
-      const used = countDepletion(a.ist, purchasedBetween(prod, a.date, b.date), b.ist);
-      const uc = unitCost[prod];
-      if (used === null || !Number.isFinite(uc) || uc < 0 || reconciliationIssues.has(prod)) {
-        reconciliationIssues.add(prod); continue;
-      }
-      hasUsagePairs = true;
-      usageByDate[b.date] = (usageByDate[b.date] || 0) + used;
-      usageEurByDate[b.date] = (usageEurByDate[b.date] || 0) + used * uc;
-      usageQtyByProduct[prod] = (usageQtyByProduct[prod] || 0) + used;
-      usageEurByProduct[prod] = (usageEurByProduct[prod] || 0) + used * uc;
-    }
-  }
+  const dayBefore = new Date(Date.parse(sinceStr + "T12:00:00Z") - 86400000).toISOString().slice(0, 10);
+  const sales = salesIn(dayBefore, today); // whole window, sinceStr inclusive
 
-  // current stock value = latest count × unit cost
-  let stockValue = 0;
-  let stockPriced = Object.keys(countsByProduct).length > 0;
-  for (const prod of Object.keys(countsByProduct)) {
-    const s = countsByProduct[prod];
-    const current = s[s.length - 1].ist;
-    if (!Number.isFinite(current) || current < 0 || (current > 0 && (!Number.isFinite(unitCost[prod]) || unitCost[prod] < 0))) stockPriced = false;
-    else if (current > 0) stockValue += current * unitCost[prod];
-  }
-  const needsReview = !hasUsagePairs || reconciliationIssues.size > 0;
+  // Usage (cost of goods used) from reconciliation; null when nothing could be valued.
+  const valued = rec.ok ? valueUsage(rec.rows, histRes.data || []) : null;
+  const usage = valued && valued.products.length > 0 ? valued.usage : null;
+  const cogsPct = usage && valued?.span ? pctOf(usage, salesIn(valued.span.from, valued.span.to)) : null;
 
-  const dates = [...new Set([...Object.keys(spendByDate), ...Object.keys(usageEurByDate)])].sort();
-  const trend = dates.map((d) => ({
-    date: d.slice(5),
-    spend: Math.round((spendByDate[d] || 0) * 100) / 100,
-    usageEur: needsReview ? null : Math.round((usageEurByDate[d] || 0) * 100) / 100,
-  }));
-  const topSpend = Object.entries(spendByProduct)
-    .map(([product, eur]) => ({ product: JSON.parse(product)[1], category: JSON.parse(product)[0], eur: Math.round(eur) }))
-    .sort((a, b) => b.eur - a.eur).slice(0, 8);
-  const topUsage = Object.entries(usageEurByProduct)
-    .map(([product, eur]) => ({ product: JSON.parse(product)[1], category: JSON.parse(product)[0], eur: Math.round(eur), qty: Math.round((usageQtyByProduct[product] || 0) * 10) / 10 }))
-    .sort((a, b) => b.eur - a.eur).slice(0, 8);
-  const totalUsageEur = Object.values(usageEurByDate).reduce((s, v) => s + v, 0);
+  // Stock value: latest count per product × latest price.
+  const latest: Record<string, { product: string; category: string; unit: string; ist: number }> = {};
+  for (const c of C) latest[inventoryKey(c)] = { product: c.product, category: c.category, unit: c.unit, ist: c.ist == null ? NaN : Number(c.ist) };
+  const stock = valueStock(Object.values(latest), histRes.data || [], today);
+  const stockKnown = stock.priced > 0 || stock.complete;
 
-  const foodCostPct = totalSales > 0 ? Math.round((totalSpend / totalSales) * 1000) / 10 : null;
-  const spendPctChange = prevSpend > 0 ? Math.round(((totalSpend - prevSpend) / prevSpend) * 100) : null;
-  const byCategory = Object.entries(spendByCategory)
-    .map(([category, eur]) => ({ category, eur: Math.round(eur) }))
-    .sort((a, b) => b.eur - a.eur);
-
+  const byCategory = Object.entries(spendByCategory).map(([category, eur]) => ({ category, eur: Math.round(eur) })).sort((a, b) => b.eur - a.eur);
+  const dates = [...new Set([...Object.keys(spendByDate), ...Object.keys(valued?.byDate || {})])].sort();
   return {
     ok: true, days,
-    totalSpend: Math.round(totalSpend),
-    totalUsageEur: needsReview ? null : Math.round(totalUsageEur),
-    stockValue: stockPriced ? Math.round(stockValue) : null,
-    needsReview,
-    totalSales: Math.round(totalSales),
-    foodCostPct,
-    prevSpend: Math.round(prevSpend),
-    spendPctChange,
-    byCategory,
-    topCategory: byCategory[0] || null,
-    trend, topSpend, topUsage: needsReview ? [] : topUsage,
+    totalSpend: Math.round(spend.value), spendComplete: spend.complete, missingCosts: spend.missing.costs || 0,
+    totalUsageEur: usage ? Math.round(usage.value) : null, usageComplete: !!usage?.complete, usageMissing: usage?.missing || {},
+    stockValue: stockKnown ? Math.round(stock.value) : null, stockComplete: stock.complete,
+    needsReview: !usage?.complete,
+    totalSales: Math.round(sales.value), missingSalesDays: sales.missing.salesDays || 0,
+    foodCostPct: pctOf(spend, sales), // purchases ÷ sales — labelled "Purchase spend / sales"
+    cogsPct,                          // cost of goods used ÷ sales over the commonly counted span
+    prevSpend: Math.round(prevSpend.value),
+    spendPctChange: spend.complete && prevSpend.complete && prevSpend.value > 0 ? Math.round(((spend.value - prevSpend.value) / prevSpend.value) * 100) : null,
+    byCategory, topCategory: byCategory[0] || null,
+    trend: dates.map(d => ({ date: d.slice(5), spend: Math.round((spendByDate[d] || 0) * 100) / 100, usageEur: usage ? Math.round((valued!.byDate[d] || 0) * 100) / 100 : null })),
+    topSpend: Object.entries(spendByProduct).map(([k, eur]) => ({ product: JSON.parse(k)[1], category: JSON.parse(k)[0], eur: Math.round(eur) })).sort((a, b) => b.eur - a.eur).slice(0, 8),
+    topUsage: (valued?.products || []).slice(0, 8).map(p => ({ product: p.product, category: p.category, eur: Math.round(p.eur), qty: Math.round(p.qty * 10) / 10 })),
     hasCounts: C.length > 0, hasPurchases: P.length > 0,
   };
 }

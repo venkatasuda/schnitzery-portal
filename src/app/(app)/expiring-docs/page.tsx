@@ -88,7 +88,7 @@ export default function ExpiringDocsPage() {
       ) : (
         <>
           {/* BUCKET CARDS (tap to filter) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, marginBottom: 14 }}>
             {cards.map((c) => {
               const on = bucket === c.key;
               return (

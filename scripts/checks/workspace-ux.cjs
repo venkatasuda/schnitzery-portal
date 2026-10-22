@@ -67,9 +67,21 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
     '@/lib/pay/wages':{wageMapForBranches:async()=>({a:0})},
+    '@/lib/analytics/coverage':moduleAt('src/lib/analytics/coverage.ts',()=>({})),
     '@/lib/supabase/readAll':{readAll:async q=>({data:q.table==='attendance_logs'?[{user_id:'a',clock_in:'2026-10-01T08:00:00Z',clock_out:'2026-10-01T09:00:00Z'}]:[],error:null})},
   })[name]);
   const zeroRate=await laborQueries.getLaborSummary();
-  assert.equal(zeroRate.ok,true);assert.equal(zeroRate.withWage,1);assert.equal(zeroRate.missingWageStaff,0);assert.equal(zeroRate.recordedSalesDays,0);
+  assert.equal(zeroRate.ok,true);assert.equal(zeroRate.withWage,1);assert.equal(zeroRate.missingWageStaff,0);assert.equal(zeroRate.recordedSalesDays,0);assert.equal(zeroRate.laborPct,null,'No sales: no ratio');assert.equal(zeroRate.coverage.labor.complete,true,'A confirmed €0 wage is complete');
+  // Release D: monthly summary never prices an employee without a confirmed wage at €0.
+  const noWage=moduleAt('src/lib/queries/labor.ts',name=>({
+    '@/lib/supabase/server':{createClient:async()=>laborClient},
+    '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({ym:'2026-10',from:'2026-10-01',to:'2026-10-31',next:'2026-11-01'})},
+    '@/lib/pay/calculations':calc,
+    '@/lib/pay/wages':{wageMapForBranches:async()=>({})},
+    '@/lib/analytics/coverage':moduleAt('src/lib/analytics/coverage.ts',()=>({})),
+    '@/lib/supabase/readAll':{readAll:async q=>({data:q.table==='attendance_logs'?[{user_id:'a',work_date:'2026-10-01',clock_in:'2026-10-01T08:00:00Z',clock_out:'2026-10-01T09:00:00Z'}]:q.table==='daily_sales'?[{amount:100,sale_date:'2026-10-01'}]:q.table==='users'?[{id:'a',full_name:'A'}]:[],error:null})},
+  })[name]);
+  const month=await noWage.getMonthlySummary();
+  assert.equal(month.ok,true);assert.equal(month.complete,false);assert.equal(month.laborPct,null);assert.equal(month.rows[0].laborCost,null);assert.equal(month.coverage.labor.missing.wages,1);
   console.log('Workspace failure/search/dialog checks, labour coverage and role/input boundaries pass.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -7,6 +7,7 @@ import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches } from "@/lib/pay/wages";
+import { figure, missingSalesDays, pctOf, spendFigure } from "@/lib/analytics/coverage";
 
 // ============================================================================
 // BRANCH PERFORMANCE ANALYTICS — aggregate KPIs over a daily / weekly / monthly
@@ -220,15 +221,23 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
 
   const trend = days.map((d) => ({ day: d.slice(5), labor: h1(perDay[d].labor), attendance: pct(perDay[d].att, perDay[d].sched) }));
   const teams = Object.entries(teamMins).map(([team, m]) => ({ team, hours: h1(m) })).sort((a, b) => b.hours - a.hours);
-  const purchaseSpend = (purchases || []).reduce((sum, p) => sum + Number(p.cost), 0);
   const missingWageStaff = new Set((logs || []).filter(l => shiftMinutes(l).paidMin > 0 && wage[l.user_id] == null).map(l => l.user_id)).size;
-  if (missingWageStaff) metrics.laborCostPct = null;
+  // Release D: missing never counts as zero; percentages only on complete inputs.
+  const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0);
+  const coverage = {
+    sales: figure(totalSales, { salesDays: missingSalesDays(worked, sales || [], todayStr()) }),
+    labor: figure(laborCost, { wages: missingWageStaff }),
+    spend: spendFigure(purchases || []),
+  };
+  const purchaseSpend = coverage.spend.value;
+  metrics.laborCostPct = pctOf(coverage.labor, coverage.sales);
+  if (!coverage.sales.complete) metrics.salesPerLaborHour = null;
   const salesDays = new Set((sales || []).filter(s => s.sale_date <= todayStr()).map(s => `${s.branch_id}|${s.sale_date}`)).size;
   const elapsedDays = days.filter(d => d <= todayStr()).length * targets.length;
   const salesTrend = days.map(day => ({ day, sales: (sales || []).filter(s => s.sale_date === day).reduce((sum, s) => sum + Number(s.amount), 0), recorded: (sales || []).some(s => s.sale_date === day) }));
   return { ok: true as const, period, from, to, scope, branchCount: targets.length, metrics, trend, teams,
-    business: { purchaseSpend, wasteEntries: (waste || []).length, missingWageStaff, salesDays, elapsedDays, salesTrend,
-      purchasePct: totalSales > 0 ? Math.round(purchaseSpend / totalSales * 1000) / 10 : null } };
+    business: { purchaseSpend, wasteEntries: (waste || []).length, missingWageStaff, salesDays, elapsedDays, salesTrend, coverage,
+      purchasePct: pctOf(coverage.spend, coverage.sales) } };
 }
 
 function emptyMetrics() {
@@ -372,7 +381,7 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
     const gross = l.duration_mins || 0; if (gross <= 0) continue;
     const paid = shiftMinutes(l).paidMin;
     s.workedMins += paid; s.shifts++;
-    const w = wage[l.user_id]; if (w != null) s.cost += (paid / 60) * w;
+    const w = wage[l.user_id]; if (w != null) s.cost += (paid / 60) * w; else if (paid > 0) s.cost = NaN; // no confirmed wage: unknown, not €0
     perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] = (perDayPaid[`${l.user_id}|${l.work_date}|${l.branch_id}`] || 0) + paid;
   }
   // per-employee overtime: sum of each day's paid minutes over the branch's daily OT threshold
@@ -393,7 +402,7 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
       late: s.late, absent: s.absent,
       avgShiftHours: s.shifts > 0 ? Math.round((s.workedMins / s.shifts / 60) * 10) / 10 : 0,
       totalHours: Math.round((s.workedMins / 60) * 10) / 10,
-      cost: Math.round(s.cost * 100) / 100,
+      cost: Number.isNaN(s.cost) ? null : Math.round(s.cost * 100) / 100,
       otHours: Math.round(((otMins[id] || 0) / 60) * 10) / 10,
       scheduled: s.scheduled,
     }))
@@ -443,9 +452,9 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
   const logIx: Record<string, any> = {};
   for (const l of logs || []) logIx[`${l.branch_id}|${l.work_date}|${l.user_id}`] = l;
 
-  type B = { id: string; name: string; scheduled: number; attended: number; laborMins: number; laborCost: number };
+  type B = { id: string; name: string; scheduled: number; attended: number; laborMins: number; laborCost: number; missingWages: Set<string> };
   const map: Record<string, B> = {};
-  for (const b of branches || []) map[b.id] = { id: b.id, name: b.name, scheduled: 0, attended: 0, laborMins: 0, laborCost: 0 };
+  for (const b of branches || []) map[b.id] = { id: b.id, name: b.name, scheduled: 0, attended: 0, laborMins: 0, laborCost: 0, missingWages: new Set() };
 
   for (const br of targets) for (const d of days) {
     for (const e of sched[`${br}|${d}`] || []) {
@@ -460,7 +469,7 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
     const gross = l.duration_mins || 0; if (gross <= 0) continue;
     const paid = shiftMinutes(l).paidMin;
     b.laborMins += paid;
-    const w = wage[l.user_id]; if (w != null) b.laborCost += (paid / 60) * w;
+    const w = wage[l.user_id]; if (w != null) b.laborCost += (paid / 60) * w; else if (paid > 0) b.missingWages.add(l.user_id);
   }
 
   const rows = Object.values(map).map((b) => ({
@@ -468,6 +477,7 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
     attendancePct: b.scheduled > 0 ? Math.round((b.attended / b.scheduled) * 1000) / 10 : null,
     laborHours: h1(b.laborMins),
     laborCost: Math.round(b.laborCost),
+    missingWageStaff: b.missingWages.size, // laborCost is then a lower bound
     scheduled: b.scheduled, attended: b.attended,
   })).sort((a, b) => (b.attendancePct == null ? -1 : b.attendancePct) - (a.attendancePct == null ? -1 : a.attendancePct));
 
