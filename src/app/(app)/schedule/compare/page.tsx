@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/Toast";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -27,11 +28,15 @@ export default function ComparePage() {
   const [denied, setDenied] = useState(false);
 
   async function load(off: number) {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getScheduleComparison(mondayOf(off));
     if (!res.ok && res.error?.includes("Managers")) { setDenied(true); setLoading(false); return; }
     if (res.ok) setData(res);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(offset); }, [offset]);
 

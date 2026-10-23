@@ -30,10 +30,14 @@ export default function AnnouncementsPage() {
   const [posting, setPosting] = useState(false);
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getAnnouncements();
     if (res.ok) { setList(res.announcements); setCanPost(res.canPost); }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

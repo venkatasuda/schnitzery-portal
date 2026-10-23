@@ -38,7 +38,8 @@ export default function LoginForm() {
     }
     // Clears the throttle counters. Takes no email: the server reads the address
     // from the session we just established, so this can't reset anyone else's.
-    await finishLogin();
+    // Best effort: a failed counter reset must never keep a signed-in user on this page.
+    await finishLogin().catch(() => {});
     setLoading(false);
     // Session is set; middleware will allow the app routes now.
     router.push("/");
@@ -161,9 +162,9 @@ export default function LoginForm() {
         </button>
 
         <div style={{ marginTop: 18, textAlign: "center", fontSize: 11, color: "#7a6f6f" }}>
-          <a className="u-muted td-n" href="/privacy">Privacy</a>
+          <a className="u-muted td-n" href="/privacy">{t("misc.privacy")}</a>
           <span style={{ margin: "0 8px" }}>·</span>
-          <a className="u-muted td-n" href="/terms">Terms</a>
+          <a className="u-muted td-n" href="/terms">{t("misc.terms")}</a>
         </div>
       </div>
     </div>

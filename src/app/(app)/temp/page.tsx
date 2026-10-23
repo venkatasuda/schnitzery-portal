@@ -31,10 +31,14 @@ export default function TempPage() {
   const [nu, setNu] = useState({ name: "", kind: "fridge", min: "", max: "" });
 
   async function loadCore() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     const [u, s] = await Promise.all([getTempUnits(), getTempSummary()]);
     if (u.ok) { setUnits(u.units || []); setIsMgr(u.isManager); }
     if (s.ok) setSummary(s);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   async function loadHistory() { const r = await getTempLog(14); if (r.ok) setLogs(r.logs || []); }
   useEffect(() => { loadCore(); }, []);

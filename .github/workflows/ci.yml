@@ -81,10 +81,13 @@ jobs:
           node scripts/checks/payroll-branch-history.cjs
           node scripts/checks/stock-history.cjs
           node scripts/checks/stock-reconciliation.cjs
+          node scripts/checks/inventory-summaries.cjs
           node scripts/checks/stock-reconciliation-query.cjs
           node scripts/checks/review-c-d.cjs
           node scripts/checks/design-tokens.cjs
           node scripts/checks/a11y-static.cjs
+          node scripts/checks/loaders-safe.cjs
+          node scripts/checks/server-messages.cjs
           node scripts/checks/offline-database.cjs
           node scripts/checks/correction-integrity.cjs
       - name: Upload coverage artifact

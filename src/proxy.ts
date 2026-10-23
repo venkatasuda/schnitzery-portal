@@ -44,8 +44,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logged in + sitting on the login page → go home
-  if (user && isLoginPage) {
+  // Logged in + sitting on the login page → go home. GET only: the login form's
+  // own server action (finishLogin) POSTs to /login right after sign-in, and a
+  // redirect there makes the client throw "unexpected response" and hang.
+  if (user && isLoginPage && request.method === "GET") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
@@ -60,6 +62,8 @@ export const config = {
     // Run on all routes EXCEPT static files and Next internals. The service
     // worker, its public offline page and the web manifest must load signed-out:
     // a redirect here breaks SW registration and leaves no offline fallback.
-    "/((?!_next/static|_next/image|favicon.ico|sw\\.js$|offline\\.html$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // /monitoring is the Sentry tunnel: errors on the login page (signed out)
+    // must still reach Sentry, so it bypasses the login redirect.
+    "/((?!_next/static|_next/image|favicon.ico|monitoring$|sw\\.js$|offline\\.html$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

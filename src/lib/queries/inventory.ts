@@ -41,6 +41,39 @@ async function movedStock(db: Awaited<ReturnType<typeof createClient>>, branchId
     .in("status", ["sent", "received"]).gte("updated_at", from).order("id"));
 }
 
+type Db = Awaited<ReturnType<typeof createClient>>;
+// Report summaries (migration 20261022150000). Until it is applied, fall back to the
+// full-history read so a deploy that lands first still works.
+const missingFn = (e: { code?: string } | null) => e?.code === "PGRST202" || e?.code === "42883";
+
+async function priceHistory(db: Db, branchId: string | null, from: string, today: string) {
+  const [base, recent] = await Promise.all([
+    db.rpc("inventory_price_baseline", { p_branch: branchId, p_before: from }),
+    readAll(db.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
+      .eq("branch_id", branchId).gte("purchase_date", from).lte("purchase_date", today).order("id")),
+  ]);
+  if (missingFn(base.error)) return readAll(db.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
+    .eq("branch_id", branchId).lte("purchase_date", today).order("id"));
+  const error = base.error || recent.error;
+  return { data: error ? null : [...(base.data || []), ...(recent.data || [])], error };
+}
+
+async function latestCounts(db: Db, branchId: string | null, from: string, today: string) {
+  const cols = "product, ist, count_date, created_at, category, unit";
+  const [latest, window] = await Promise.all([
+    db.rpc("inventory_latest_counts", { p_branch: branchId }),
+    readAll(db.from("inventory_counts").select(cols).eq("branch_id", branchId).gte("count_date", from).lte("count_date", today)
+      .order("count_date").order("created_at").order("id")),
+  ]);
+  if (missingFn(latest.error)) {
+    const all = await readAll(db.from("inventory_counts").select(cols).eq("branch_id", branchId).lte("count_date", today)
+      .order("count_date").order("created_at").order("id"));
+    const rows = all.data || [];
+    return { error: all.error, latest: rows, window: rows.filter(c => c.count_date >= from) };
+  }
+  return { error: latest.error || window.error, latest: (latest.data || []) as { product: string; category: string; unit: string; ist: number | null }[], window: window.data || [] };
+}
+
 // ── Get the product catalog (master list) for my branch ──
 export async function getProducts() {
   const { supabase, user, branchId } = await getMe();
@@ -202,8 +235,13 @@ export async function notifyLowStock() {
   if (low.length === 0) return { ok: true, count: 0 };
 
   const names = low.slice(0, 5).map((l: any) => l.product).join(", ");
-  const body = low.length <= 5 ? `Low: ${names}` : `Low: ${names} +${low.length - 5} more`;
-  try { await sendPushToUser(user.id, { title: `${low.length} item(s) low on stock`, body, url: "/stock-alerts" }); } catch { /* best effort */ }
+  const more = low.length > 5 ? ` +${low.length - 5}` : "";
+  try {
+    await sendPushToUser(user.id, {
+      title: `${low.length} item(s) low on stock`, body: `Low: ${names}${more}`, url: "/stock-alerts",
+      de: { title: `${low.length} Artikel knapp`, body: `Knapp: ${names}${more}` },
+    });
+  } catch { /* best effort */ }
   return { ok: true, count: low.length };
 }
 
@@ -266,28 +304,28 @@ export async function getInventoryAnalytics(days = 30) {
   // Release D (docs/ANALYTICS-RELIABILITY.md): usage comes from Release C reconciliation
   // intervals, valued at the latest delivery price on or before each count; missing
   // data is reported, never counted as zero.
-  // ponytail: full purchase history for latest prices; bounded by readAll's 100k rows.
+  // Prices: deliveries since the earliest valued date, plus the last priced day before it
+  // per product (inventory_price_baseline) — same answer as the full history, far fewer rows.
+  const recDays = Math.min(180, Math.max(7, days));
+  const recFrom = new Date(Date.parse(today + "T12:00:00Z") - recDays * 86400000).toISOString().slice(0, 10);
+  const priceFrom = recFrom < sinceStr ? recFrom : sinceStr;
   const [purchRes, histRes, countsRes, salesRes, workRes, prevRes, rec, catalogRes] = await Promise.all([
     readAll(supabase.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
       .eq("branch_id", branchId).gte("purchase_date", sinceStr).lte("purchase_date", today).order("id")),
-    readAll(supabase.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
-      .eq("branch_id", branchId).lte("purchase_date", today).order("id")),
-    // All count history: stock value needs the latest count per product, not only this window.
-    readAll(supabase.from("inventory_counts").select("product, ist, count_date, created_at, category, unit")
-      .eq("branch_id", branchId).lte("count_date", today)
-      .order("count_date").order("created_at").order("id")),
+    priceHistory(supabase, branchId, priceFrom, today),
+    latestCounts(supabase, branchId, sinceStr, today),
     readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", sinceStr).lte("sale_date", today).order("id")),
     readAll(supabase.from("attendance_logs").select("work_date, duration_mins").eq("branch_id", branchId).eq("status", "complete")
       .gte("work_date", sinceStr).lte("work_date", today).order("id")),
     readAll(supabase.from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr).order("id")),
-    getReconciliation(Math.min(180, Math.max(7, days))),
+    getReconciliation(recDays),
     readAll(supabase.from("inventory_master").select("product, category, unit").eq("branch_id", branchId).eq("is_active", true).order("id")),
   ]);
   const failed = purchRes.error || histRes.error || countsRes.error || salesRes.error || workRes.error || prevRes.error || catalogRes.error;
   if (failed) return { ok: false, error: failed.message };
   if (!rec.ok && !/Manager/.test(rec.error)) return { ok: false, error: rec.error };
   const P = purchRes.data || [], S = salesRes.data || [];
-  const allCounts = countsRes.data || [], C = allCounts.filter(c => c.count_date >= sinceStr);
+  const C = countsRes.window, allCounts = countsRes.latest;
   // Every stock identity the branch carries must be covered (review findings 1–2).
   const required = [...(catalogRes.data || []), ...C];
 
@@ -571,6 +609,8 @@ export async function getPurchaseOrderDraft(coverDays = 7) {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", groups: [], total: 0, hasPrices: false };
 
+  // ponytail: full purchase history (only opened when drafting an order); switch to
+  // inventory_price_baseline + supplier if this page gets slow.
   const { data: purch, error: priceError } = await readAll(supabase
     .from("inventory_purchases").select("product, qty, cost, supplier, purchase_date, category, unit")
     .eq("branch_id", branchId).order("purchase_date", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).order("id"));

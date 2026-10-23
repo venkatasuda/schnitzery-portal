@@ -56,6 +56,22 @@ function scrub(value: unknown, depth = 0, seen = new WeakSet<object>()): unknown
   return out;
 }
 
+// One config for client, server and edge.
+// `??` not `||`: an explicitly empty DSN (local staging) must disable reporting,
+// not fall back to the production project.
+export const sentryOptions = {
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? "https://9939073d8a5196257e3bfdcd3dbdce79@o4511715606724608.ingest.de.sentry.io/4511715615113296",
+  tracesSampleRate: 0.1,
+  enabled: process.env.NODE_ENV === "production",
+  // Production vs preview, so alerts can target production only.
+  environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.VERCEL_ENV || "local",
+  // Never attach IP / cookies / headers automatically.
+  sendDefaultPii: false,
+  beforeSend: scrubEvent,
+  // Performance traces carry URLs, span data and breadcrumbs too.
+  beforeSendTransaction: <T>(event: T) => scrubEvent(event as unknown as ErrorEvent) as unknown as T | null,
+};
+
 export function scrubEvent(event: ErrorEvent): ErrorEvent | null {
   try {
     // Identify the user by id only — never by email, name or IP.
@@ -90,6 +106,12 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent | null {
     }
 
     if (typeof event.message === "string") event.message = scrubString(event.message);
+    if (typeof event.transaction === "string") event.transaction = scrubString(event.transaction);
+    const spans = (event as { spans?: { description?: string; data?: Record<string, unknown> }[] }).spans;
+    if (spans) for (const s of spans) {
+      if (typeof s.description === "string") s.description = scrubString(s.description);
+      if (s.data) s.data = scrub(s.data) as Record<string, unknown>;
+    }
 
     if (event.exception?.values) {
       for (const ex of event.exception.values) {

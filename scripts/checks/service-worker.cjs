@@ -34,5 +34,7 @@ async function request(path,mode='navigate',method='GET') {let pending;handlers.
  const gate=new RegExp('^'+JSON.parse(src.match(/matcher:\s*\[[\s\S]*?("\/\(\(\?![^\n]*")/)[1])+'$');
  for(const p of ['/sw.js','/offline.html','/manifest.webmanifest','/icons/icon-192.png'])ok(!gate.test(p),`proxy must not gate ${p}`);
  for(const p of ['/','/attendance','/payroll','/login','/api/agent/chat','/sw.jsx','/offline.html/x'])ok(gate.test(p),`proxy must still gate ${p}`);
- console.log('Proxy: public PWA assets bypass auth; app routes stay gated.');
+ ok(/user && isLoginPage && request\.method === "GET"/.test(src),'signed-in redirect off /login must be GET-only: the login form POSTs a server action there after sign-in');
+ ok(!gate.test('/monitoring'),'Sentry tunnel must bypass the login redirect');
+ console.log('Proxy: public PWA assets and Sentry tunnel bypass auth; app routes stay gated; login server action is not redirected.');
 }

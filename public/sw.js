@@ -130,10 +130,13 @@ self.addEventListener("fetch", (event) => {
 
 // ── Push notifications ───────────────────────────────────────────────────────
 // Shows a notification when the server pushes one. Payload shape is set by
-// sendPushToUser() in src/lib/push/actions.ts: { title, body, url }.
+// sendPushToUser() in src/lib/push/delivery.ts: { title, body, url, de? }.
+// The server does not know the recipient's language, so it sends both and the
+// device picks German when its language is German.
 self.addEventListener("push", (event) => {
   let data = { title: "Schnitzery", body: "", url: "/" };
   try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
+  if (data.de && /^de\b/i.test(self.navigator.language || "")) data = { ...data, ...data.de };
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,

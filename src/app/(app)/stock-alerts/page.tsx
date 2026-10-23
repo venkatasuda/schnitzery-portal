@@ -18,10 +18,14 @@ export default function StockAlertsPage() {
   const [notifying, setNotifying] = useState(false);
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     const r = await getStockAlerts();
     if (r.ok) { setItems(r.items || []); setLowCount(r.lowCount || 0); }
     else if (r.error?.includes("Managers")) setDenied(true);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getStaffList, updateStaff } from "@/lib/queries/people";
@@ -14,7 +15,7 @@ const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
 const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6" };
 
 export default function StaffPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const roleLabel = (k: string) => (ROLES.includes(k) ? t("roles." + k) : k);
   const contractLabel = (k: string) => (CONTRACTS.includes(k) ? t("contracts." + k) : k);
@@ -45,7 +46,7 @@ export default function StaffPage() {
     setLoading(true); setLoadError(null); setDenied(false);
     try {
       const res = await getStaffList();
-      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(res.error || t("staff.failed")); return; }
+      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(serverText(res.error ?? "", locale) || t("staff.failed")); return; }
       setStaff(res.staff);
     } catch { setLoadError(t("staff.networkErr")); }
     finally { setLoading(false); }
@@ -75,7 +76,7 @@ export default function StaffPage() {
       skills: form.skills.split(",").map((s: string) => s.trim()).filter(Boolean),
     });
     if (res.ok) { setMsg(t("staff.saved")); setEditId(null); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
     } catch { setMsg(t("staff.networkErr")); }
     finally { setSaving(false); }
   }
@@ -97,14 +98,14 @@ export default function StaffPage() {
     const res = await setActive(id, false);
     setRemoving(false);
     if (res.ok) { setConfirmRemoveId(null); setMsg(t("staff.removed")); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
   }
 
   async function reactivate(id: string) {
     setMsg(null);
     const res = await setActive(id, true);
     if (res.ok) { setMsg(t("staff.reactivated")); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
   }
 
   async function unlock(id: string) {
@@ -114,7 +115,7 @@ export default function StaffPage() {
       body: JSON.stringify({ userId: id }),
     }).then((r) => r.json()).catch(() => ({ ok: false, error: t("staff.networkErr") }));
     if (res.ok) { setMsg(t("staff.unlocked")); load(); }
-    else setMsg(res.error || t("staff.unlockFailed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.unlockFailed"));
   }
 
   async function resetPassword(id: string) {
@@ -124,7 +125,7 @@ export default function StaffPage() {
       body: JSON.stringify({ userId: id }),
     }).then((r) => r.json()).catch(() => ({ ok: false, error: t("staff.networkErr") }));
     if (res.ok) { setResetInfo({ name: res.name || "", temp: res.tempPassword }); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
   }
 
   async function createStaff() {
@@ -172,12 +173,12 @@ export default function StaffPage() {
       {msg && <div className="mb-4 t-md u-text" role="status">{msg}</div>}
 
       {resetInfo && (
-        <div style={{ ...card, marginBottom: 14, borderColor: "var(--accent-line)", background: "var(--accent-soft)" }}>
+        <div className="card ui-callout" role="status">
           <div className="t-sm tone-action fw-6 mb-2">{t("staff.resetPwFor", { name: resetInfo.name })}</div>
           <div className="d-flex ai-c gap-2 f-wrap">
-            <code style={{ fontSize: 18, fontWeight: 700, letterSpacing: 1, background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderRadius: 8, color: "#fff", userSelect: "all" }}>{resetInfo.temp}</code>
-            <button onClick={() => { navigator.clipboard?.writeText(resetInfo.temp).catch(() => {}); }} style={editBtn}>⧉ Copy</button>
-            <button onClick={() => setResetInfo(null)} style={editBtn}>{t("common.cancel")}</button>
+            <code className="ui-secret">{resetInfo.temp}</code>
+            <button onClick={() => { navigator.clipboard?.writeText(resetInfo.temp).catch(() => {}); }} className="workspace-button">⧉ {t("common.copy")}</button>
+            <button onClick={() => setResetInfo(null)} className="workspace-button">{t("common.cancel")}</button>
           </div>
           <div className="ui-note">{t("staff.resetPwHint")}</div>
         </div>
@@ -192,7 +193,7 @@ export default function StaffPage() {
       {showAdd && (
         <dialog ref={addDialog} className="workspace-dialog" aria-labelledby="add-staff-title" onCancel={(e) => { if (adding) e.preventDefault(); else setShowAdd(false); }} onClose={() => setShowAdd(false)}>
           <div>
-            <h2 id="add-staff-title" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{t("staff.addNewTitle")}</h2>
+            <h2 id="add-staff-title" className="ui-dialog-title">{t("staff.addNewTitle")}</h2>
             <div className="t-xs u-muted mb-4">{t("staff.addNewSub")}</div>
             <div className="workspace-form-grid">
               <Field label={t("staff.emailReq")}><input className="form-input" autoFocus type="email" autoComplete="off" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} placeholder="name@email.com" /></Field>
@@ -217,10 +218,10 @@ export default function StaffPage() {
               <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={addForm.contract_hours} onChange={(e) => setAddForm({ ...addForm, contract_hours: e.target.value })} /></Field>
             </div>
             <Field label={t("profile.phone")}><input className="form-input" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} /></Field>
-            {addMsg && <div style={{ fontSize: 13, color: addMsg.startsWith("✅") ? "var(--success)" : "var(--danger)", textAlign: "center", marginBottom: 10 }}>{addMsg}</div>}
+            {addMsg && <div className={`t-sm u-center mb-3 ${addMsg.startsWith("✅") ? "ui-msg-ok" : "ui-msg-err"}`} role="status">{addMsg}</div>}
             <div className="u-hstack">
-              <button disabled={adding} onClick={() => setShowAdd(false)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
-              <button className="btn-gold" onClick={createStaff} disabled={adding}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
+              <button disabled={adding} onClick={() => setShowAdd(false)} className="btn-secondary u-flex1">{t("common.cancel")}</button>
+              <button className="btn-gold u-flex1" onClick={createStaff} disabled={adding}>{adding ? t("staff.creating") : t("staff.createStaff")}</button>
             </div>
           </div>
         </dialog>
@@ -231,46 +232,46 @@ export default function StaffPage() {
 
       {!loading && !loadError && (
         <div className="workspace-toolbar" role="group" aria-label={t("staff.filters")}>
-          <input type="search" aria-label={t("staff.search")} style={{ ...input, flex: "1 1 260px", width: "auto" }} placeholder={t("staff.search")} value={search} onChange={e => { setSearch(e.target.value); setConfirmRemoveId(null); }} />
+          <input type="search" className="form-input" aria-label={t("staff.search")} placeholder={t("staff.search")} value={search} onChange={e => { setSearch(e.target.value); setConfirmRemoveId(null); }} />
           <FilterBtn active={filter === "active"} onClick={() => { setFilter("active"); setConfirmRemoveId(null); }}>{t("staff.filterActive")} ({activeStaff.length})</FilterBtn>
           <FilterBtn active={filter === "former"} onClick={() => { setFilter("former"); setConfirmRemoveId(null); }}>{t("staff.filterFormer")} ({formerStaff.length})</FilterBtn>
         </div>
       )}
 
       {visible.map((p) => (
-        <div key={p.id} style={{ ...card, marginBottom: 8 }}>
+        <div key={p.id} className="card mb-2">
           {editId !== p.id ? (
             <div>
               <div className="d-flex ai-c gap-4">
-                <div style={{ width: 42, height: 42, borderRadius: "50%", background: TEAM_COLORS[p.team] || "#666", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", opacity: filter === "former" ? 0.55 : 1 }}>
+                <div className={`ui-avatar${filter === "former" ? " muted" : ""}`} style={{ background: TEAM_COLORS[p.team] || "#666" }} aria-hidden="true">
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div className="u-flex1">
-                  <div className="t-lg fw-6">{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.35)", borderRadius: 5, padding: "1px 6px", marginLeft: 6 }}>🔒 {t("staff.locked")}</span>}</div>
+                  <div className="t-lg fw-6">{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span className="ui-tag-danger">🔒 {t("staff.locked")}</span>}</div>
                   <div className="ui-muted">{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
 
               {confirmRemoveId === p.id ? (
-                <div style={{ marginTop: 12, padding: 12, background: "rgba(192,57,43,0.12)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: 10 }}>
+                <div className="ui-confirm" role="alertdialog" aria-label={t("staff.remove")}>
                   <div className="t-sm mb-3">{t("staff.confirmRemove", { name: p.full_name || "—" })}</div>
                   <div className="u-hstack">
-                    <button onClick={() => setConfirmRemoveId(null)} style={editBtn}>{t("common.cancel")}</button>
-                    <button onClick={() => remove(p.id)} disabled={removing} style={{ ...editBtn, background: "rgba(192,57,43,0.25)", border: "1px solid rgba(192,57,43,0.5)", color: "#fff" }}>{removing ? t("common.saving") : t("staff.remove")}</button>
+                    <button onClick={() => setConfirmRemoveId(null)} className="workspace-button">{t("common.cancel")}</button>
+                    <button onClick={() => remove(p.id)} disabled={removing} className="workspace-button danger">{removing ? t("common.saving") : t("staff.remove")}</button>
                   </div>
                 </div>
               ) : (
                 <div className="workspace-toolbar mt-4">
-                  <Link href={`/staff/${p.id}`} style={{ ...editBtn, textDecoration: "none" }}>{t("staff.view")}</Link>
+                  <Link href={`/staff/${p.id}`} className="workspace-button">{t("staff.view")}</Link>
                   {filter === "active" ? (
                     <>
-                      <button onClick={() => startEdit(p)} style={editBtn}>{t("common.edit")}</button>
-                      <button onClick={() => resetPassword(p.id)} style={editBtn}>🔑 {t("staff.resetPw")}</button>
-                      {p.login_locked && <button onClick={() => unlock(p.id)} style={{ ...editBtn, color: "var(--success)" }}>🔓 {t("staff.unlock")}</button>}
-                      <button onClick={() => setConfirmRemoveId(p.id)} style={{ ...editBtn, color: "var(--danger)" }}>{t("staff.remove")}</button>
+                      <button onClick={() => startEdit(p)} className="workspace-button">{t("common.edit")}</button>
+                      <button onClick={() => resetPassword(p.id)} className="workspace-button">🔑 {t("staff.resetPw")}</button>
+                      {p.login_locked && <button onClick={() => unlock(p.id)} className="workspace-button success">🔓 {t("staff.unlock")}</button>}
+                      <button onClick={() => setConfirmRemoveId(p.id)} className="workspace-button danger">{t("staff.remove")}</button>
                     </>
                   ) : (
-                    <button onClick={() => reactivate(p.id)} style={{ ...editBtn, color: "var(--success)" }}>{t("staff.reactivate")}</button>
+                    <button onClick={() => reactivate(p.id)} className="workspace-button success">{t("staff.reactivate")}</button>
                   )}
                 </div>
               )}
@@ -299,10 +300,10 @@ export default function StaffPage() {
                 <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} placeholder="20" /></Field>
                 <Field label={t("profile.phone")}><input className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
               </div>
-              <Field label={t("profile.skillsLabel")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Grill, Cashier, Opening" /></Field>
+              <Field label={t("profile.skillsLabel")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder={t("misc.skillsPh")} /></Field>
               <div className="d-flex gap-2 mt-2">
-                <button onClick={() => setEditId(null)} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
-                <button className="btn-gold" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("common.save")}</button>
+                <button onClick={() => setEditId(null)} className="btn-secondary u-flex1">{t("common.cancel")}</button>
+                <button className="btn-gold u-flex1" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("common.save")}</button>
               </div>
             </div>
           )}
@@ -310,7 +311,7 @@ export default function StaffPage() {
       ))}
 
       {!loading && !loadError && visible.length === 0 && (
-        <div style={{ ...card, textAlign: "center", color: "var(--gray)", fontSize: 13 }}>
+        <div className="card ui-empty-msg">
           {query ? t("staff.noMatches") : filter === "active" ? t("staff.noActive") : t("staff.noFormer")}
         </div>
       )}
@@ -321,9 +322,5 @@ export default function StaffPage() {
 }
 
 function FilterBtn({ active, onClick, children }: any) {
-  return <button aria-pressed={active} onClick={onClick} style={{ minHeight: 44, padding: "9px 16px", background: active ? "var(--action)" : "transparent", color: active ? "var(--on-action)" : "var(--gray)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{children}</button>;
+  return <button aria-pressed={active} onClick={onClick} className="workspace-button">{children}</button>;
 }
-const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 14 };
-const editBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer" };
-const input: React.CSSProperties = { width: "100%", padding: "9px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { flex: 1, padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };

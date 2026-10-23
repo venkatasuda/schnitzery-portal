@@ -114,15 +114,15 @@ export default function DocumentsSection() {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "22px 0 10px" }}>
+      <div className="doc-head">
         <div className="section-label u-m0">{t("documents.title")}</div>
-        <button onClick={openSheet} style={uploadBtn}>{t("documents.upload")}</button>
+        <button onClick={openSheet} className="doc-upload">{t("documents.upload")}</button>
       </div>
 
       {loading ? (
         <CardSkeleton rows={2} />
       ) : groupKeys.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 28, fontSize: 13, lineHeight: 1.6 }}>
+        <div className="card ui-empty-msg">
           {t("documents.none")}<br />{t("documents.noneHint")}
         </div>
       ) : (
@@ -139,9 +139,9 @@ export default function DocumentsSection() {
                   <span className="t-2xl">{iconOf(type)}</span>
                   <div className="u-grow">
                     <div className="ui-strong">{docLabel(type)}</div>
-                    <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cur.file_name}</div>
+                    <div className="doc-meta u-ellipsis">{cur.file_name}</div>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: badge.color, background: `${badge.color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{badge.label}</span>
+                  <span className="doc-pill" style={{ color: badge.color }}>{badge.label}</span>
                 </div>
 
                 {cur.expiry_date && (
@@ -150,16 +150,16 @@ export default function DocumentsSection() {
                   </div>
                 )}
                 {cur.eff === "rejected" && cur.rejection_reason && (
-                  <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div className="doc-error" role="alert">
                     {t("docw.rejReasonLabel")} {cur.rejection_reason}
                   </div>
                 )}
 
                 <div className="d-flex gap-2 mt-3 ai-c">
-                  <button onClick={() => view(cur.file_path)} style={viewBtn}>{t("documents.view")}</button>
-                  <button onClick={() => archive(cur.id)} style={archiveBtn}>{t("docw.archive")}</button>
+                  <button onClick={() => view(cur.file_path)} className="doc-btn">{t("documents.view")}</button>
+                  <button onClick={() => archive(cur.id)} className="doc-btn quiet">{t("docw.archive")}</button>
                   {older.length > 0 && (
-                    <button onClick={() => toggleHist(type)} style={{ ...archiveBtn, marginLeft: "auto", color: "var(--action)" }}>
+                    <button onClick={() => toggleHist(type)} className="doc-btn quiet link">
                       {t("docw.versionHistory")} ({older.length}) {histOpen ? "▲" : "▼"}
                     </button>
                   )}
@@ -171,9 +171,9 @@ export default function DocumentsSection() {
                     <div className="d-flex ai-c gap-3 mt-2 pt-2 bt-1" key={v.id}>
                       <div className="u-grow">
                         <div className="t-xs u-text">{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></div>
-                        <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
+                        <div className="doc-meta">{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
                       </div>
-                      <button onClick={() => view(v.file_path)} style={viewBtn}>{t("documents.view")}</button>
+                      <button onClick={() => view(v.file_path)} className="doc-btn">{t("documents.view")}</button>
                     </div>
                   );
                 })}
@@ -185,41 +185,41 @@ export default function DocumentsSection() {
 
       {sheet && (
         <NativeDialog title={t("documents.uploadTitle")} busy={busy} onClose={() => setSheet(false)}>
-            <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,application/pdf,image/*" onChange={onFile} style={{ display: "none" }} />
+            <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,application/pdf,image/*" onChange={onFile} className="ui-hidden" />
 
             {stage === "type" ? (
               <>
-                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}>{t("documents.uploadTitle")}</div>
+                <div className="doc-sheet-title">{t("documents.uploadTitle")}</div>
                 <div className="t-xs u-muted mb-4">{t("documents.typeHint")}</div>
                 {DOC_TYPES.map((dt) => (
-                  <button key={dt.key} onClick={() => pickType(dt.key)} style={typeRow}>
+                  <button key={dt.key} onClick={() => pickType(dt.key)} className="doc-type">
                     <span className="t-xl">{dt.icon}</span>
                     <span className="u-flex1 u-left t-md fw-6 u-text">{docLabel(dt.key)}</span>
                     <span className="u-muted">›</span>
                   </button>
                 ))}
-                <button onClick={() => setSheet(false)} style={cancelBtn}>{t("common.cancel")}</button>
+                <button onClick={() => setSheet(false)} className="ui-link-quiet">{t("common.cancel")}</button>
               </>
             ) : busy ? (
-              <div style={{ textAlign: "center", padding: 30, color: "var(--gray)", fontSize: 13 }}><div className="spinner" style={{ margin: "0 auto 10px" }} />{t("documents.uploading")}</div>
+              <div className="ui-empty-msg" role="status"><div className="spinner mx-auto mb-3" />{t("documents.uploading")}</div>
             ) : (
               <>
-                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--white)" }}><Icon e={iconOf(chosenType)} size={16} /> {docLabel(chosenType)}</div>
+                <div className="doc-sheet-title"><Icon e={iconOf(chosenType)} size={16} /> {docLabel(chosenType)}</div>
                 <div className="t-xs u-muted mb-4">{t("documents.datesHint")}</div>
                 <div className="d-flex gap-3 mb-3">
                   <label className="u-flex1">
-                    <div style={lbl}>{t("documents.issued")}</div>
-                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} style={input} />
+                    <div className="ui-field-label">{t("documents.issued")}</div>
+                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="form-input" />
                   </label>
                   <label className="u-flex1">
-                    <div style={lbl}>{t("documents.expires")}</div>
-                    <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={input} />
+                    <div className="ui-field-label">{t("documents.expires")}</div>
+                    <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="form-input" />
                   </label>
                 </div>
                 <button className="btn-gold ui-block" onClick={() => fileRef.current?.click()}>
                   {t("documents.chooseUpload")}
                 </button>
-                <button onClick={() => setStage("type")} style={cancelBtn}>‹ {t("common.back")}</button>
+                <button onClick={() => setStage("type")} className="ui-link-quiet">‹ {t("common.back")}</button>
               </>
             )}
         </NativeDialog>
@@ -228,10 +228,3 @@ export default function DocumentsSection() {
   );
 }
 
-const uploadBtn: React.CSSProperties = { padding: "8px 16px", background: "var(--dark3)", border: "1px solid var(--accent-line)", borderRadius: 20, color: "var(--action)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
-const viewBtn: React.CSSProperties = { padding: "6px 12px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
-const archiveBtn: React.CSSProperties = { padding: "6px 12px", background: "none", border: "1px solid var(--border)", borderRadius: 8, color: "var(--gray)", fontSize: 12, fontWeight: 600, cursor: "pointer" };
-const typeRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 12px", marginBottom: 8, background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 12, cursor: "pointer" };
-const cancelBtn: React.CSSProperties = { width: "100%", padding: 12, marginTop: 8, background: "none", border: "none", color: "var(--gray)", fontSize: 14, cursor: "pointer" };
-const lbl: React.CSSProperties = { fontSize: 10, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
-const input: React.CSSProperties = { width: "100%", padding: "10px 11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13 };

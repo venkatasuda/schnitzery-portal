@@ -33,10 +33,14 @@ export default function IncidentsPage() {
   const [resolveNote, setResolveNote] = useState("");
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getIncidents();
     if (res.ok) { setList(res.incidents); setCanManage(res.canManage); }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

@@ -6,33 +6,31 @@ import Link from "next/link";
 // Honest, minimal cookie notice. The App sets only strictly-necessary cookies
 // (auth/session) and any analytics are cookieless — so this is an INFORMATIONAL
 // notice, not a tracking-consent gate. One-time dismiss, remembered locally.
+// Rendered outside LanguageProvider (root layout), so it reads the `lang` cookie itself.
 const KEY = "sch_cookie_ack";
+const TEXT = {
+  en: { body: "We use only essential cookies to keep you signed in. Usage stats, if any, are anonymous and cookieless.", privacy: "Privacy", ok: "Got it" },
+  de: { body: "Wir verwenden nur notwendige Cookies, damit du angemeldet bleibst. Nutzungsstatistiken sind, falls vorhanden, anonym und ohne Cookies.", privacy: "Datenschutz", ok: "Verstanden" },
+};
 
 export default function CookieNotice() {
-  const [show, setShow] = useState(false);
+  const [lang, setLang] = useState<"en" | "de" | null>(null);
   useEffect(() => {
-    try { if (!localStorage.getItem(KEY)) setShow(true); } catch { /* ignore */ }
+    try { if (!localStorage.getItem(KEY)) setLang(/(?:^|; )lang=de/.test(document.cookie) ? "de" : "en"); } catch { /* ignore */ }
   }, []);
-  if (!show) return null;
+  if (!lang) return null;
+  const tx = TEXT[lang];
 
   function dismiss() {
     try { localStorage.setItem(KEY, "1"); } catch { /* ignore */ }
-    setShow(false);
+    setLang(null);
   }
 
   return (
-    <div style={{ position: "fixed", left: 12, right: 12, bottom: 12, zIndex: 200, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
-      <div style={{ pointerEvents: "auto", maxWidth: 620, width: "100%", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", background: "var(--dark2, #1e1e1e)", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-        <span style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: "var(--gray-light, #aaa)", lineHeight: 1.5 }}>
-          We use only essential cookies to keep you signed in. Usage stats, if any, are anonymous and cookieless.{" "}
-          <Link href="/privacy" style={{ color: "var(--gold, #d4a847)", textDecoration: "none" }}>Privacy</Link>
-        </span>
-        <button
-          onClick={dismiss}
-          style={{ padding: "9px 18px", background: "var(--gold, #d4a847)", color: "var(--on-action)", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
-        >
-          Got it
-        </button>
+    <div className="cookie-notice" role="region" aria-label={tx.privacy}>
+      <div className="cookie-notice-card">
+        <span>{tx.body} <Link href="/privacy" className="ui-text-link">{tx.privacy}</Link></span>
+        <button className="btn-gold" onClick={dismiss}>{tx.ok}</button>
       </div>
     </div>
   );

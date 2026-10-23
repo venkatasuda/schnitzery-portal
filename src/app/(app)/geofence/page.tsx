@@ -1,5 +1,6 @@
 "use client";
 
+import { fmtDay } from "@/lib/time/berlinDate";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -11,7 +12,7 @@ import { CardSkeleton } from "@/components/Skeleton";
 type Staff = { id: string; full_name: string; role: string };
 
 export default function GeofencePage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [loading, setLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(false);
   const [branchName, setBranchName] = useState("");
@@ -29,6 +30,8 @@ export default function GeofencePage() {
   const [flags, setFlags] = useState<{ id: string; name: string; date: string; maxDistanceM: number }[]>([]);
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getGeofence();
     if (res.ok) {
@@ -42,6 +45,8 @@ export default function GeofencePage() {
       }
     }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
@@ -169,7 +174,7 @@ export default function GeofencePage() {
               <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, background: "var(--dark2)" }}>
                 <div>
                   <div className="fw-6 t-md">{f.name}</div>
-                  <div className="ui-muted">{f.date}</div>
+                  <div className="ui-muted">{fmtDay(f.date, locale)}</div>
                 </div>
                 <div className="t-sm fw-7 tone-warn"><Icon e="📍" size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("geo.away").replace("{m}", String(f.maxDistanceM))}</div>
               </div>

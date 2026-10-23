@@ -1,5 +1,6 @@
 "use client";
 
+import { useLang } from "@/components/LanguageProvider";
 import { useEffect, useRef, useState } from "react";
 
 // Camera QR scanner. Uses html5-qrcode (loaded dynamically so it never
@@ -11,6 +12,7 @@ export default function QrScanner({
   onScan: (text: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useLang();
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(true);
   const scannerRef = useRef<any>(null);
@@ -44,8 +46,8 @@ export default function QrScanner({
         if (!cancelled) {
           setError(
             e?.message?.includes("Permission") || e?.name === "NotAllowedError"
-              ? "Camera permission denied. Allow camera access, or use the code instead."
-              : "Could not start camera. Use the 6-digit code instead."
+              ? "misc.camDenied" // message key; translated at render
+              : "misc.camFailed"
           );
           setStarting(false);
         }
@@ -72,9 +74,9 @@ export default function QrScanner({
         onClick={(e) => e.stopPropagation()}
         style={{ background: "#241414", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 20, maxWidth: 340, width: "100%", textAlign: "center" }}
       >
-        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: "#fff" }}>Scan Clock QR</div>
+        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: "#fff" }}>{t("misc.scanTitle")}</div>
         <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 14 }}>
-          Point your camera at the display screen.
+          {t("misc.scanHint")}
         </div>
 
         <div
@@ -83,15 +85,15 @@ export default function QrScanner({
         />
 
         {starting && !error && (
-          <div style={{ color: "#9a8f8f", fontSize: 13, marginTop: 12 }}>Starting camera…</div>
+          <div style={{ color: "#9a8f8f", fontSize: 13, marginTop: 12 }}>{t("misc.camStarting")}</div>
         )}
-        {error && <div style={{ color: "#ec7063", fontSize: 13, marginTop: 12 }}>{error}</div>}
+        {error && <div role="alert" style={{ color: "#ec7063", fontSize: 13, marginTop: 12 }}>{t(error)}</div>}
 
         <button
           onClick={onClose}
           style={{ width: "100%", marginTop: 16, padding: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "#fff", fontSize: 14, cursor: "pointer" }}
         >
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     </div>

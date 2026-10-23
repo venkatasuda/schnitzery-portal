@@ -83,7 +83,7 @@ export default function ProfileSettings() {
             onClick={toggleTheme}
             role="switch"
             aria-checked={light}
-            aria-label="Toggle light mode"
+            aria-label={t("misc.lightMode")}
             style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: "pointer", padding: 3, background: light ? "var(--action)" : "rgba(128,128,128,0.35)", transition: "background .2s", display: "flex", justifyContent: light ? "flex-end" : "flex-start" }}
           >
             <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
@@ -106,7 +106,7 @@ export default function ProfileSettings() {
               disabled={pushBusy || pushState === "denied" || pushState === "loading"}
               role="switch"
               aria-checked={pushOn}
-              aria-label="Toggle push notifications"
+              aria-label={t("misc.pushToggle")}
               style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: pushBusy || pushState === "denied" ? "default" : "pointer", padding: 3, background: pushOn ? "var(--action)" : "rgba(128,128,128,0.35)", opacity: pushState === "denied" || pushState === "loading" ? 0.5 : 1, transition: "background .2s", display: "flex", justifyContent: pushOn ? "flex-end" : "flex-start" }}
             >
               <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />

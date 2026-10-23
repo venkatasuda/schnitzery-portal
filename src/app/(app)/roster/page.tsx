@@ -7,6 +7,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import { Field } from "@/components/ui";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // Every team a manager can roster — not only the ones that happen to have preset
@@ -139,12 +140,12 @@ export default function RosterPage() {
       <div className="d-flex jc-sb ai-c mb-4 gap-2 f-wrap">
         <div className="u-hstack">
           <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(-1)}>{t("shifts.prev")}</button>
-          <span style={{ display: "inline-flex", alignItems: "center", fontSize: 13, color: "var(--action)", fontWeight: 600, padding: "0 4px" }}>
+          <span className="roster-week" aria-live="polite">
             {weekOffset === 0 ? t("roster.thisWeek") : weekOffset > 0 ? t("roster.weeksPlus", { n: weekOffset }) : t("roster.weeksMinus", { n: weekOffset })}
           </span>
           <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
         </div>
-        <button onClick={doSave} disabled={saving||loading||!!loadError} style={{ ...primaryBtn, width: "auto", padding: "10px 24px", opacity: saving ? 0.6 : 1 }}>
+        <button className="btn-gold" onClick={doSave} disabled={saving||loading||!!loadError}>
           {saving ? t("common.saving") : t("roster.saveRoster")}
         </button>
       </div>
@@ -156,7 +157,7 @@ export default function RosterPage() {
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
           <div className="card u-mb-3">
             <div className="card-title">{t("roster.weekGlance", { n: totalAssigned })}</div>
-            <div className="d-flex jc-sb gap-1">
+            <div className="roster-strip">
               {DAYS.map((d) => {
                 const count = roster[d]?.length || 0;
                 const isActive = activeDay === d;
@@ -164,10 +165,12 @@ export default function RosterPage() {
                   <button
                     key={d}
                     onClick={() => setActiveDay(isActive ? null : d)}
-                    style={{ flex: 1, textAlign: "center", padding: "8px 2px", borderRadius: 8, border: "none", cursor: "pointer", background: isActive ? "var(--accent-soft)" : count > 0 ? "var(--dark3)" : "transparent" }}
+                    className={`${count > 0 ? "has" : ""}${isActive ? " active" : ""}`}
+                    aria-pressed={isActive}
+                    aria-label={`${dayLabel(d)}: ${t("roster.assigned", { n: count })}`}
                   >
-                    <div style={{ fontSize: 12, color: isActive ? "var(--action)" : "var(--gray)", fontWeight: isActive ? 700 : 500 }}>{dayLabel(d)[0]}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginTop: 3, color: count > 0 ? "var(--white)" : "rgba(128,128,128,0.4)" }}>{count}</div>
+                    <span>{dayLabel(d).slice(0, 2)}</span>
+                    <strong>{count}</strong>
                   </button>
                 );
               })}
@@ -176,9 +179,9 @@ export default function RosterPage() {
 
           {/* TEAM HOURS BOARD — month-to-date worked vs monthly contract */}
           <div className="card u-mb-3">
-            <button onClick={() => setShowHours(!showHours)} style={{ width: "100%", background: "none", border: "none", color: "var(--white)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: 0 }}>
+            <button className="ui-disclosure" onClick={() => setShowHours(!showHours)} aria-expanded={showHours}>
               <span className="card-title u-m0">{t("roster.teamHours")}</span>
-              <span className="u-muted t-sm">{showHours ? "▾" : "▸"}</span>
+              <span className="u-muted t-sm" aria-hidden="true">{showHours ? "▾" : "▸"}</span>
             </button>
             {showHours && (
               <div className="u-mt-3">
@@ -190,20 +193,19 @@ export default function RosterPage() {
                   .map((p) => {
                     const over = p.pct != null && p.pct > 100;
                     const near = p.pct != null && p.pct >= 85 && p.pct <= 100;
-                    const barColor = over ? "#e74c3c" : near ? "var(--action)" : "#27ae60";
                     const left = p.contractHours != null ? Math.round((p.contractHours - (p.workedH || 0)) * 10) / 10 : null;
                     return (
                       <div className="mb-3" key={p.id}>
                         <div className="d-flex jc-sb t-sm mb-1">
                           <span className="u-text">{p.full_name}</span>
-                          <span style={{ color: over ? "var(--danger)" : "var(--gray)", fontWeight: over ? 700 : 500 }}>
+                          <span className={over ? "tone-danger fw-7" : "u-muted"}>
                             {p.contractHours != null ? `${p.workedH || 0}/${p.contractHours}h` : `${p.workedH || 0}h`}
                             {left != null && (over ? ` · ${t("roster.over")}` : ` · ${left}${t("roster.leftShort")}`)}
                           </span>
                         </div>
                         {p.pct != null && (
-                          <div style={{ height: 5, background: "var(--surface-2)", borderRadius: 3, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${Math.min(100, p.pct)}%`, background: barColor, borderRadius: 3 }} />
+                          <div className={`ui-bar${over ? " over" : near ? " near" : ""}`} role="img" aria-label={`${p.pct}%`}>
+                            <span style={{ width: `${Math.min(100, p.pct)}%` }} />
                           </div>
                         )}
                       </div>
@@ -216,39 +218,38 @@ export default function RosterPage() {
             const entries = roster[day] || [];
             const isActive = activeDay === day;
             return (
-              <div key={day} className="card" style={{ marginBottom: 10, borderColor: isActive ? "var(--accent-line)" : undefined }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: entries.length ? 10 : 0 }}>
+              <div key={day} className={`card roster-day${isActive ? " active" : ""}`}>
+                <div className="roster-day-head">
                   <div className="t-lg fw-7 u-text">
                     {dayLabel(day)}
                     {entries.length > 0 && (
                       <span className="t-xs fw-6 tone-action ml-2">{t("roster.assigned", { n: entries.length })}</span>
                     )}
                   </div>
-                  <button onClick={() => setActiveDay(isActive ? null : day)} style={{ ...navBtn, fontSize: 12, padding: "6px 12px", background: isActive ? "var(--action)" : "var(--dark3)", color: isActive ? "var(--on-action)" : "var(--white)", fontWeight: 600 }}>
+                  <button className={`${isActive ? "btn-gold" : "btn-secondary"} ui-btn-sm`} onClick={() => setActiveDay(isActive ? null : day)} aria-expanded={isActive}>
                     {isActive ? t("common.close") : t("roster.add")}
                   </button>
                 </div>
 
                 {/* entries */}
                 {entries.map((e, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAM_COLORS[e.team] || "#888", flexShrink: 0 }} />
+                  <div key={i} className="roster-entry">
+                    <span className="clock-dot" style={{ color: TEAM_COLORS[e.team] || "#888" }} aria-hidden="true" />
                     <div className="u-flex1 t-sm u-text">
                       <b>{e.name}</b> <span className="u-muted">· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
                     {submitted(e.user_id) && !availableDay(e.user_id, day) && (
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#e0a32e", background: "rgba(224,163,46,0.15)", border: "1px solid rgba(224,163,46,0.35)", borderRadius: 6, padding: "2px 6px", whiteSpace: "nowrap" }}>⚠ {t("roster.notAvail")}</span>
+                      <span className="ui-tag-warn u-nowrap">⚠ {t("roster.notAvail")}</span>
                     )}
-                    <button disabled={saving} aria-label={t("roster.removeShift",{name:e.name})} onClick={() => removeEntry(day, i)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: 18, lineHeight: 1, minWidth:44, minHeight:44 }}>×</button>
+                    <button disabled={saving} aria-label={t("roster.removeShift",{name:e.name})} onClick={() => removeEntry(day, i)} className="ui-remove-btn">×</button>
                   </div>
                 ))}
 
                 {/* add form */}
                 {isActive && (
-                  <div style={{ marginTop: 12, padding: 12, background: "var(--dark3)", borderRadius: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
-                    <div style={{ flex: "1 1 140px" }}>
-                      <label className="ui-field-label">{t("roster.staff")}</label>
-                      <select className="form-input" aria-label={t("roster.staff")} value={selStaff} onChange={(e) => setSelStaff(e.target.value)}>
+                  <div className="roster-form">
+                    <Field label={t("roster.staff")}>
+                      <select className="form-input" value={selStaff} onChange={(e) => setSelStaff(e.target.value)}>
                         <option value="">{t("roster.select")}</option>
                         {[...staff].sort((a, b) => (availableDay(a.id, day) ? 0 : 1) - (availableDay(b.id, day) ? 0 : 1) || (a.full_name || "").localeCompare(b.full_name || "")).map((p) => {
                           const tag = availableDay(p.id, day) ? t("roster.avAvailable") : submitted(p.id) ? t("roster.avNot") : t("roster.avNone");
@@ -259,38 +260,30 @@ export default function RosterPage() {
                           return <option key={p.id} value={p.id}>{p.full_name} — {tag}{hrs}</option>;
                         })}
                       </select>
-                    </div>
-                    <div style={{ flex: "1 1 110px" }}>
-                      <label className="ui-field-label">{t("roster.team")}</label>
-                      <select className="form-input" aria-label={t("roster.team")} value={selTeam} onChange={(e) => { const tm = e.target.value; setSelTeam(tm); setSelShift(presetsFor(tm)[0]?.shift ?? CUSTOM); }}>
+                    </Field>
+                    <Field label={t("roster.team")}>
+                      <select className="form-input" value={selTeam} onChange={(e) => { const tm = e.target.value; setSelTeam(tm); setSelShift(presetsFor(tm)[0]?.shift ?? CUSTOM); }}>
                         {TEAMS.map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
                       </select>
-                    </div>
-                    <div style={{ flex: "1 1 110px" }}>
-                      <label className="ui-field-label">{t("roster.shift")}</label>
-                      <select className="form-input" aria-label={t("roster.shift")} value={selShift} onChange={(e) => setSelShift(e.target.value)}>
+                    </Field>
+                    <Field label={t("roster.shift")}>
+                      <select className="form-input" value={selShift} onChange={(e) => setSelShift(e.target.value)}>
                         {presetsFor(selTeam).map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time})</option>)}
                         <option value={CUSTOM}>{t("roster.customTime")}</option>
                       </select>
-                    </div>
+                    </Field>
                     {selShift === CUSTOM && (
-                      <div style={{ flex: "1 1 180px", display: "flex", gap: 6, alignItems: "flex-end" }}>
-                        <div className="u-flex1">
-                          <label className="ui-field-label">{t("roster.from")}</label>
-                          <input className="form-input" type="time" aria-label={t("roster.from")} value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
-                        </div>
-                        <div className="u-flex1">
-                          <label className="ui-field-label">{t("roster.to")}</label>
-                          <input className="form-input" type="time" aria-label={t("roster.to")} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
-                        </div>
+                      <div className="roster-times">
+                        <Field label={t("roster.from")}><input className="form-input" type="time" value={customStart} onChange={(e) => setCustomStart(e.target.value)} /></Field>
+                        <Field label={t("roster.to")}><input className="form-input" type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} /></Field>
                       </div>
                     )}
-                    <button onClick={addEntry} style={{ ...primaryBtn, width: "auto", padding: "10px 18px", flex: "0 0 auto" }}>{t("common.add")}</button>
+                    <button className="btn-gold" onClick={addEntry}>{t("common.add")}</button>
                   </div>
                 )}
 
                 {entries.length === 0 && !isActive && (
-                  <div style={{ fontSize: 12, color: "var(--gray)", marginTop: 6, opacity: 0.7 }}>{t("roster.noOne")}</div>
+                  <div className="t-xs u-muted mt-2">{t("roster.noOne")}</div>
                 )}
               </div>
             );
@@ -300,6 +293,3 @@ export default function RosterPage() {
     </div>
   );
 }
-
-const navBtn: React.CSSProperties = { padding: "8px 14px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 13, cursor: "pointer", fontWeight: 600 };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };

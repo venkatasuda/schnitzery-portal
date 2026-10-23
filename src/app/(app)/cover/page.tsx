@@ -32,12 +32,16 @@ export default function CoverPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
   async function loadAll() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     const [s, o, m, mg] = await Promise.all([getMyUpcomingShifts(), getOpenCovers(), getMyCovers(), getManagerCovers()]);
     if (s.ok) setShifts(s.shifts || []);
     if (o.ok) setOpenCovers(o.covers || []);
     if (m.ok) { setMine(m.mine || []); setClaimedByMe(m.claimed || []); }
     if (mg.ok) { setIsMgr(true); setMgrCovers(mg.covers || []); } else setIsMgr(false);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { loadAll(); }, []);
 

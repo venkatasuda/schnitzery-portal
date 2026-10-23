@@ -6,9 +6,10 @@ import { sendPushToUser } from "@/lib/push/delivery";
 
 // Fire a push without ever blocking or breaking the caller. If push isn't set
 // up (no VAPID keys, no subscriptions), sendPushToUser simply sends nothing.
-async function pushSafe(userId: string | null | undefined, title: string, body: string, url: string) {
+type Text = { title: string; body: string };
+async function pushSafe(userId: string | null | undefined, en: Text, de: Text, url: string) {
   if (!userId) return;
-  try { await sendPushToUser(userId, { title, body, url }); } catch { /* best effort */ }
+  try { await sendPushToUser(userId, { ...en, de, url }); } catch { /* best effort */ }
 }
 
 // ============================================================
@@ -109,8 +110,8 @@ export async function decideLeave(id: string, decision: "approved" | "denied") {
 
   await pushSafe(
     row?.user_id,
-    decision === "approved" ? "Time off approved" : "Time off declined",
-    decision === "approved" ? "Your time-off request was approved." : "Your time-off request was declined.",
+    decision === "approved" ? { title: "Time off approved", body: "Your time-off request was approved." } : { title: "Time off declined", body: "Your time-off request was declined." },
+    decision === "approved" ? { title: "Urlaub genehmigt", body: "Dein Urlaubsantrag wurde genehmigt." } : { title: "Urlaub abgelehnt", body: "Dein Urlaubsantrag wurde abgelehnt." },
     "/leave",
   );
   return { ok: true };
@@ -132,8 +133,8 @@ export async function decideSwap(id: string, decision: "approved" | "denied") {
 
   await pushSafe(
     row?.requester_id,
-    decision === "approved" ? "Shift swap approved" : "Shift swap declined",
-    decision === "approved" ? "Your shift-swap request was approved." : "Your shift-swap request was declined.",
+    decision === "approved" ? { title: "Shift swap approved", body: "Your shift-swap request was approved." } : { title: "Shift swap declined", body: "Your shift-swap request was declined." },
+    decision === "approved" ? { title: "Schichttausch genehmigt", body: "Dein Antrag auf Schichttausch wurde genehmigt." } : { title: "Schichttausch abgelehnt", body: "Dein Antrag auf Schichttausch wurde abgelehnt." },
     "/schedule",
   );
   return { ok: true };

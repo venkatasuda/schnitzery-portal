@@ -1,6 +1,7 @@
 "use client";
 
-import { berlinToday } from "@/lib/time/berlinDate";
+import { serverText } from "@/lib/i18n/serverMessages";
+import { berlinToday, fmtDay, fmtMonthDay } from "@/lib/time/berlinDate";
 import { inventoryKey } from "@/lib/inventory/identity";
 
 import { useEffect, useState } from "react";
@@ -25,7 +26,7 @@ const BLUE = "var(--info)";
 const TOOLTIP = { background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 } as const;
 
 export default function InventoryPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast" | "catalog" | "history" | "reconcile">("count");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -61,9 +62,11 @@ export default function InventoryPage() {
   const [variance, setVariance] = useState<any>(null);
   const [forecast, setForecast] = useState<any>(null);
   const [coverDays, setCoverDays] = useState(7);
+  const [adding, setAdding] = useState(false);
 
-  async function load() {
-    setLoading(true);
+  // quiet: refresh after an edit without swapping the list for a skeleton.
+  async function load(quiet = false) {
+    if (!quiet) setLoading(true);
     setLoadError("");
     try {
     const pRes = await getProducts();
@@ -83,18 +86,18 @@ export default function InventoryPage() {
 
   async function loadDeliveries() {
     const res = await getDeliveries(30);
-    if (res.ok) setDeliveries(res.deliveries); else setLoadError(res.error || t("inv.failed"));
+    if (res.ok) setDeliveries(res.deliveries); else setLoadError(serverText(res.error ?? "", locale) || t("inv.failed"));
   }
   async function loadAnalytics(d: number) {
     setAnalytics(null);
     const res = await getInventoryAnalytics(d);
-    if (res.ok) setAnalytics(res); else setLoadError(res.error || t("inv.failed"));
+    if (res.ok) setAnalytics(res); else setLoadError(serverText(res.error ?? "", locale) || t("inv.failed"));
   }
   async function loadActiveTab() {
     try {
     if (tab === "deliveries") await loadDeliveries();
     if (tab === "analytics") { await Promise.all([loadAnalytics(days), getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }), getInventoryVariance(30).then((r) => { if (r.ok) setVariance(r); })]); }
-    if (tab === "forecast") { const r = await getDepletionForecast(30, coverDays); if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }
+    if (tab === "forecast") { const r = await getDepletionForecast(30, coverDays); if (r.ok) setForecast(r); else setLoadError(serverText(r.error ?? "", locale) || t("inv.failed")); }
     } catch { setLoadError(t("inv.failed")); }
   }
   useEffect(() => {
@@ -108,14 +111,15 @@ export default function InventoryPage() {
   }
   async function doAddProduct() {
     if (!np.category || !np.product) { toast(t("inv.catProductRequired"), "error"); return; }
-    const res = await addProduct(np.category, np.product, Number(np.soll) || 0, np.unit);
-    if (res.ok) { toast(t("inv.productAdded"), "success"); setNp({ category: "", product: "", soll: "", unit: "" }); setShowAdd(false); load(); }
+    setAdding(true);
+    const res = await addProduct(np.category, np.product, Number(np.soll) || 0, np.unit).finally(() => setAdding(false));
+    if (res.ok) { toast(t("inv.productAdded"), "success"); setNp({ category: "", product: "", soll: "", unit: "" }); setShowAdd(false); load(true); }
     else toast(res.error || t("inv.failed"), "error");
   }
   async function doRemoveProduct(p: any) {
     if (!confirm(t("inv.confirmRemoveProduct", { name: p.product }))) return;
     const res = await removeProduct(p.id);
-    if (res.ok) { toast(t("inv.productRemoved"), "success"); load(); }
+    if (res.ok) { toast(t("inv.productRemoved"), "success"); load(true); }
     else toast(res.error || t("inv.failed"), "error");
   }
   async function doAddDelivery() {
@@ -150,7 +154,7 @@ export default function InventoryPage() {
     setSavingP(p.product);
     try {
     const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit);
-    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setEntry(e => ({ ...e, [inventoryKey(p)]: "" })); setGridSel(null); setGridVal(""); load().catch(() => setLoadError(t("inv.failed"))); }
+    if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setEntry(e => ({ ...e, [inventoryKey(p)]: "" })); setGridSel(null); setGridVal(""); load(true).catch(() => setLoadError(t("inv.failed"))); }
     else { toast(res.error || t("inv.failed"), "error"); if (res.error?.includes("Managers")) setDenied(true); }
     } catch { toast(t("inv.failed"), "error"); }
     finally { setSavingP(null); }
@@ -170,10 +174,10 @@ export default function InventoryPage() {
   function printShoppingList() {
     if (!lowStock.length) return;
     const esc = (v: any) => String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
-    const day = new Date().toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    const day = fmtDay(berlinToday(), locale);
     const rows = lowStock.map((l: any) => `<tr><td>${esc(l.product)}</td><td>${esc(l.category)}</td><td class="r">${l.ist}</td><td class="r">${l.soll}</td><td class="r b">${l.short} ${esc(l.unit || "")}</td></tr>`).join("");
     const w = window.open("", "_blank"); if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>Schnitzery Shopping List</title><style>
+    w.document.write(`<!doctype html><html><head><title>Schnitzery — ${t("misc.shoppingTitle")}</title><style>
       *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}body{margin:0;padding:16mm;color:#111}
       h1{margin:0 0 2mm}.meta{color:#666;margin-bottom:8mm;font-size:11pt}
       table{width:100%;border-collapse:collapse;font-size:11pt}th,td{padding:2.5mm 3mm;border-bottom:1px solid #ddd;text-align:left}
@@ -259,7 +263,6 @@ export default function InventoryPage() {
         <TabButton active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton>
         </div>
       </div>
-      <p className="inventory-task-description">{t(tab === "history" ? "stockHistory.help" : tab === "reconcile" ? "reconcile.help" : `inventoryWorkflow.${tab}Help`)}</p>
 
       {loading ? <CardSkeleton rows={4} /> : loadError ? null : (
         <>
@@ -268,7 +271,7 @@ export default function InventoryPage() {
           {/* ============ COUNT ============ */}
           {(tab === "count" || tab === "catalog") && (
             <>
-              {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load()} />}
+              {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load(true)} />}
               {gridSel && (
                 <NativeDialog title={`${t("inv.count")}: ${gridSel.product}`} busy={savingP === gridSel.product} onClose={() => setGridSel(null)}>
                     <div className="ui-muted">{gridSel.category}</div>
@@ -299,7 +302,7 @@ export default function InventoryPage() {
                   <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                     <option value="all">{t("inventoryWorkflow.allStatuses")}</option>
                     <option value="low">{t("inv.lowStatus")}</option>
-                    <option value="uncounted">{t("salert.notCounted")}</option>
+                    <option value="uncounted">{t("inv.notCountedStatus")}</option>
                     <option value="good">{t("inv.atTargetStatus")}</option>
                   </select>
                 </label>
@@ -326,12 +329,12 @@ export default function InventoryPage() {
                     <Field label={t("inv.target")}><input type="number" value={np.soll} onChange={(e) => setNp({ ...np, soll: e.target.value })} className="form-input" placeholder="20" /></Field>
                     <Field label={t("inv.unit")}><input value={np.unit} onChange={(e) => setNp({ ...np, unit: e.target.value })} className="form-input" placeholder={t("inv.phUnit")} /></Field>
                   </div>
-                  <button type="button" className="btn-gold ui-block" onClick={doAddProduct}>{t("inv.addProduct")}</button>
+                  <button type="button" className="btn-gold ui-block" onClick={doAddProduct} disabled={adding}>{t("inv.addProduct")}</button>
                 </div>
               )}
 
               {categories.length === 0 ? (
-                <div className="card ui-empty-msg">{t("inv.noProducts")}</div>
+                <div className="card ui-empty-msg">{t(tab === "catalog" ? "inv.noProductsCatalog" : "inv.noProducts")}</div>
               ) : (
                 <>
                   {countView === "grid" && tab === "count" ? (
@@ -372,9 +375,9 @@ export default function InventoryPage() {
                         </td>
                         <td className="numeric" data-label={t("inv.currentCol")}>{counted ? counted.ist : "—"}{counted && p.unit ? ` ${p.unit}` : ""}</td>
                         <td className="numeric" data-label={t("inv.targetCol")}>{p.soll}{p.unit ? ` ${p.unit}` : ""}</td>
-                        <td data-label={t("inv.status")}><span className={`status-badge${counted ? isLow ? " low" : " good" : ""}`}>{!counted ? t("salert.notCounted") : isLow ? t("inv.lowStatus") : t("inv.atTargetStatus")}</span></td>
-                        <td>
-                          {tab === "catalog" ? <button onClick={() => doRemoveProduct(p)} className="inventory-archive" aria-label={`${t("inv.removeProduct")}: ${p.product}`}>{t("inv.removeProduct")}</button> : <form className="row-actions" onSubmit={event => { event.preventDefault(); doSaveCount(p); }}>
+                        <td data-label={t("inv.status")}><span className={`status-badge${counted ? isLow ? " low" : " good" : ""}`}>{!counted ? t("inv.notCountedStatus") : isLow ? t("inv.lowStatus") : t("inv.atTargetStatus")}</span></td>
+                        <td className="numeric" data-label={tab === "catalog" ? t("inventoryWorkflow.actions") : undefined}>
+                          {tab === "catalog" ? <button type="button" onClick={() => doRemoveProduct(p)} className="inventory-archive" aria-label={`${t("inv.removeProduct")}: ${p.product}`}>{t("inv.removeProduct")}</button> : <form className="row-actions" onSubmit={event => { event.preventDefault(); doSaveCount(p); }}>
                           <input type="number" inputMode="decimal" min="0" step="any" aria-label={`${t("inv.count")}: ${p.product}${p.unit ? ` (${p.unit})` : ""}`} value={entry[inventoryKey(p)] ?? ""} onChange={(e) => setEntry({ ...entry, [inventoryKey(p)]: e.target.value })}
                             placeholder={counted ? String(counted.ist) : "0"} className="form-input quantity-input" />
                           <button type="submit" disabled={savingP !== null} className="btn-gold" aria-label={`${t("inv.count")}: ${p.product}`}>
@@ -428,7 +431,7 @@ export default function InventoryPage() {
                 <li key={d.id} className="ui-list-item">
                   <div className="u-grow">
                     <div className="ui-strong">{d.product} <span className="ui-muted">· {d.qty} {d.unit || ""}</span></div>
-                    <div className="ui-muted">{d.purchase_date}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
+                    <div className="ui-muted">{fmtDay(d.purchase_date, locale)}{d.supplier ? ` · ${d.supplier}` : ""}{d.note ? ` · ${d.note}` : ""}</div>
                   </div>
                   <strong className="ui-figure">{d.cost == null || d.cost === "" ? "—" : eur(Number(d.cost))}</strong>
                 </li>
@@ -480,9 +483,9 @@ export default function InventoryPage() {
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={analytics.trend} margin={{ top: 6, right: 6, bottom: 0, left: -18 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
+                            <XAxis dataKey="date" tickFormatter={(v) => fmtMonthDay(v, locale)} tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
                             <YAxis tick={{ fontSize: 12, fill: "var(--gray)" }} tickLine={false} axisLine={false} />
-                            <Tooltip contentStyle={TOOLTIP} />
+                            <Tooltip contentStyle={TOOLTIP} labelFormatter={(v) => fmtMonthDay(String(v), locale)} />
                             <Legend wrapperStyle={{ fontSize: 12 }} />
                             <Bar name={t("inv.legendSpend")} dataKey="spend" fill="var(--gold)" radius={[4, 4, 0, 0]} maxBarSize={22} />
                             <Bar name={t("inv.legendUse")} dataKey="usageEur" fill={BLUE} radius={[4, 4, 0, 0]} maxBarSize={22} />
@@ -589,7 +592,7 @@ export default function InventoryPage() {
               </details>}
               <div className="ui-toolbar">
                 <span className="ui-muted">{t("inv.coverFor")}</span>
-                <Segmented label={t("inv.coverFor")} value={String(coverDays)} onChange={(v) => { const cd = Number(v); setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }}
+                <Segmented label={t("inv.coverFor")} value={String(coverDays)} onChange={(v) => { const cd = Number(v); setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(serverText(r.error ?? "", locale) || t("inv.failed")); }); }}
                   options={[7, 14, 30].map((cd) => ({ value: String(cd), label: `${cd}${t("inv.daysShort")}` }))} />
                 <button type="button" className="btn-secondary u-push" onClick={copyOrderList}>{t("inv.copyOrder")}</button>
               </div>

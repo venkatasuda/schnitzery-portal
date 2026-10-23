@@ -37,6 +37,18 @@ export function monthRange(month = berlinMonth()) {
   return { ym: month, from: `${month}-01`, to: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10), next: new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10) };
 }
 
+// Calendar date (YYYY-MM-DD) for display: 22.10.2026 in German, 22/10/2026 in English.
+export function fmtDay(dateStr: string, locale: string): string {
+  if (!isCalendarDate(dateStr?.slice(0, 10))) return dateStr || "";
+  return new Date(dateStr.slice(0, 10) + "T12:00:00Z").toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { timeZone: "UTC" });
+}
+
+// Chart tick for an "MM-DD" key: 22.10. in German, 22/10 in English.
+export function fmtMonthDay(md: string, locale: string): string {
+  const [m, d] = String(md).split("-");
+  return !m || !d ? String(md) : locale === "de" ? `${d}.${m}.` : `${d}/${m}`;
+}
+
 // Monday (YYYY-MM-DD) of the week containing a specific date string, TZ-stable.
 // Anchored at noon UTC so it never lands on the wrong week near midnight or DST.
 // Optionally shift by whole weeks (e.g. offsetWeeks = 1 → next week).

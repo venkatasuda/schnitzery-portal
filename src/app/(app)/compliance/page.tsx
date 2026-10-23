@@ -1,5 +1,6 @@
 "use client";
 
+import { fmtDay } from "@/lib/time/berlinDate";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -11,7 +12,7 @@ import { Stat } from "@/components/ui";
 const ICON: Record<string, string> = { Break: "☕", Rest: "🌙", "Long shift": "⏱" };
 
 export default function CompliancePage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const compType = (k: string) => (["Break", "Rest", "Long shift"].includes(k) ? t("compType." + k) : k);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +66,7 @@ export default function CompliancePage() {
                     <Icon e={ICON[item.type] || "⚠️"} size={18} />
                     <div className="u-flex1">
                       <div className="ui-strong">
-                        {item.name} <span className="fw-4 t-xs u-muted">· {item.date}</span>
+                        {item.name} <span className="fw-4 t-xs u-muted">· {fmtDay(item.date, locale)}</span>
                       </div>
                       <div style={{ fontSize: 12, color: item.severity === "high" ? "var(--danger)" : "var(--warn)" }}>{compType(item.type)} — {item.detail}</div>
                     </div>

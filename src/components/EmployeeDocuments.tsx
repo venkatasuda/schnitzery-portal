@@ -88,17 +88,17 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
       {/* REQUIRED-DOC CHECKLIST */}
       <div className="section-label">{t("docw.checklist")}</div>
       <div className="card p-2 mb-2">
-        {items.map((it, i) => {
+        {items.map((it) => {
           const info = statusInfo(it.status, t);
           const color = it.status === "missing" && it.isRequired ? "#ec7063" : info.color;
           return (
-            <div key={it.docType} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", borderBottom: i < items.length - 1 ? "1px solid rgba(128,128,128,0.12)" : "none" }}>
+            <div key={it.docType} className="doc-row">
               <span className="t-xl">{iconOf(it.docType)}</span>
               <div className="u-grow">
                 <div className="t-sm fw-6 u-text">{docLabel(it.docType)}</div>
-                <div style={{ fontSize: 10, color: "var(--gray)" }}>{it.isRequired ? t("docw.required") : t("docw.optional")}</div>
+                <div className="doc-meta">{it.isRequired ? t("docw.required") : t("docw.optional")}</div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color, background: `${color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{info.label}</span>
+              <span className="doc-pill" style={{ color }}>{info.label}</span>
             </div>
           );
         })}
@@ -122,30 +122,30 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
                   <span className="t-2xl">{iconOf(type)}</span>
                   <div className="u-grow">
                     <div className="ui-strong">{docLabel(type)}</div>
-                    <div style={{ fontSize: 11, color: "var(--gray)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cur.file_name}</div>
+                    <div className="doc-meta u-ellipsis">{cur.file_name}</div>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: info.color, background: `${info.color}22`, padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{info.label}</span>
+                  <span className="doc-pill" style={{ color: info.color }}>{info.label}</span>
                 </div>
 
                 {cur.expiry_date && (
                   <div className="t-xs u-muted mt-2">{t("documents.expires")}: {fmtDate(cur.expiry_date)}</div>
                 )}
                 {cur.status === "rejected" && cur.rejection_reason && (
-                  <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 8, background: "rgba(236,112,99,0.1)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div className="doc-error" role="alert">
                     {t("docw.rejReasonLabel")} {cur.rejection_reason}
                   </div>
                 )}
 
                 <div className="d-flex gap-2 mt-3 ai-c f-wrap">
-                  <button onClick={() => view(cur.file_path)} style={btn}>{t("documents.view")}</button>
+                  <button onClick={() => view(cur.file_path)} className="doc-btn">{t("documents.view")}</button>
                   {cur.status === "pending" && (
                     <>
-                      <button onClick={() => approve(cur.id)} disabled={busy} style={{ ...btn, background: "#1e8449", borderColor: "#1e8449", color: "#fff" }}>{t("docw.approve")}</button>
-                      <button onClick={() => { setRejectId(cur.id); setReason(""); }} disabled={busy} style={{ ...btn, background: "#922b21", borderColor: "#922b21", color: "#fff" }}>{t("docw.reject")}</button>
+                      <button onClick={() => approve(cur.id)} disabled={busy} className="doc-btn approve">{t("docw.approve")}</button>
+                      <button onClick={() => { setRejectId(cur.id); setReason(""); }} disabled={busy} className="doc-btn reject">{t("docw.reject")}</button>
                     </>
                   )}
                   {older.length > 0 && (
-                    <button onClick={() => toggleHist(type)} style={{ ...btn, marginLeft: "auto", color: "var(--gold)" }}>
+                    <button onClick={() => toggleHist(type)} className="doc-btn link">
                       {t("docw.versionHistory")} ({older.length}) {histOpen ? "▲" : "▼"}
                     </button>
                   )}
@@ -157,9 +157,9 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
                     <div className="d-flex ai-c gap-3 mt-2 pt-2 bt-1" key={v.id}>
                       <div className="u-grow">
                         <div className="t-xs u-text">{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></div>
-                        <div style={{ fontSize: 10, color: "var(--gray)" }}>{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
+                        <div className="doc-meta">{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
                       </div>
-                      <button onClick={() => view(v.file_path)} style={btn}>{t("documents.view")}</button>
+                      <button onClick={() => view(v.file_path)} className="doc-btn">{t("documents.view")}</button>
                     </div>
                   );
                 })}
@@ -177,8 +177,8 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
             <textarea className="form-input" autoFocus aria-label={t("docw.rejectReason")} value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder={t("docw.rejectReasonPlaceholder")}
               />
             <div className="d-flex gap-2 mt-4">
-              <button disabled={busy} onClick={() => setRejectId(null)} style={{ ...btn, flex: 1 }}>{t("common.cancel")}</button>
-              <button onClick={doReject} disabled={busy || !reason.trim()} style={{ ...btn, flex: 1, background: "#922b21", borderColor: "#922b21", color: "#fff", opacity: !reason.trim() ? 0.5 : 1 }}>{t("docw.confirmReject")}</button>
+              <button disabled={busy} onClick={() => setRejectId(null)} className="doc-btn u-flex1">{t("common.cancel")}</button>
+              <button onClick={doReject} disabled={busy || !reason.trim()} className="doc-btn reject u-flex1">{t("docw.confirmReject")}</button>
             </div>
         </NativeDialog>
       )}
@@ -186,4 +186,3 @@ export default function EmployeeDocuments({ userId }: { userId: string }) {
   );
 }
 
-const btn: React.CSSProperties = { padding: "7px 13px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 12, fontWeight: 600, cursor: "pointer" };

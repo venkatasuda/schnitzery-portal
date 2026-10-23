@@ -21,7 +21,7 @@ async function ui(page, result) {
     if(name.startsWith('./'))return {__esModule:true,default:()=>null};
     if(name==='@/components/LanguageProvider')return {useLang:()=>({t:k=>k})};
     if(name==='next/link')return {__esModule:true,default:({href,children,...rest})=>React.createElement('a',{href,...rest},children)};
-    if(name==='@/components/Toast')return {toast(){}};
+    if(name==='@/lib/i18n/serverMessages')return{serverText:m=>m};if(name==='@/components/Toast')return {toast(){}};
     if(name==='@/components/ui')return moduleAt('src/components/ui.tsx',require); // real kit, not a stub
     if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null,Skeleton:()=>null};
     return require(name);

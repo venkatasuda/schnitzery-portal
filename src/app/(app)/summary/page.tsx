@@ -37,11 +37,15 @@ export default function SummaryPage() {
   const [denied, setDenied] = useState(false);
 
   async function load(m: string) {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getMonthlySummary(m);
     if (res.ok) setData(res);
     else if (res.error?.includes("Managers")) { setDenied(true); setLoading(false); return; }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(month); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [month]);
 

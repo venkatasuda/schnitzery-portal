@@ -1,5 +1,7 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
+import { toast } from "@/components/Toast";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -16,7 +18,7 @@ const TEAM_COLORS: Record<string, string> = {
 };
 
 export default function SchedulePage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
   const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const [tab, setTab] = useState<"my" | "request" | "mine">("my");
@@ -35,11 +37,15 @@ export default function SchedulePage() {
   const [mySwaps, setMySwaps] = useState<any[]>([]);
 
   async function loadShifts(offset: number) {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const ws = await getWeekStart(offset);
     const res = await getMyShifts(ws);
     if (res.ok) { setShifts(res.shifts || []); setWeekStart(res.weekStart || ""); }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
 
   useEffect(() => {
@@ -64,7 +70,7 @@ export default function SchedulePage() {
     setSwapMsg(null);
     const r = await submitSwap(myDay, otherId, otherDay);
     if (r.ok) { setSwapMsg(t("shifts.swapSubmitted")); setMyDay(""); setOtherId(""); setOtherDay(""); }
-    else setSwapMsg(r.error || t("shifts.swapFailed"));
+    else setSwapMsg(serverText(r.error ?? "", locale) || t("shifts.swapFailed"));
   }
 
   const weekLabel = (() => {

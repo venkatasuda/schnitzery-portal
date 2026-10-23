@@ -1,5 +1,6 @@
 "use client";
 
+import { fmtDay } from "@/lib/time/berlinDate";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -8,7 +9,7 @@ import { getShiftConflicts } from "@/lib/queries/shift-conflicts";
 import { CardSkeleton } from "@/components/Skeleton";
 
 export default function ConflictsPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [d, setD] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
@@ -44,7 +45,7 @@ export default function ConflictsPage() {
                 <Icon e="👤" size={18} />
                 <div className="u-flex1">
                   <div className="fw-7 u-text">{c.name}</div>
-                  <div className="ui-muted">{c.date}{c.crossBranch ? ` · ${t("conf.crossBranch")}` : ""}</div>
+                  <div className="ui-muted">{fmtDay(c.date, locale)}{c.crossBranch ? ` · ${t("conf.crossBranch")}` : ""}</div>
                 </div>
                 <span className="u-muted">›</span>
               </Link>

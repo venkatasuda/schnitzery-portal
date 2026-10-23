@@ -1,5 +1,7 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
+import { toast } from "@/components/Toast";
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -7,7 +9,7 @@ import { getStaffForNotes, addNote, getNotes } from "@/lib/queries/operations";
 import { Field } from "@/components/ui";
 
 export default function NotesPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [notes, setNotes] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +24,8 @@ export default function NotesPage() {
   const [posting, setPosting] = useState(false);
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const sRes = await getStaffForNotes();
     if (!sRes.ok) { if (sRes.error?.includes("Managers")) setDenied(true); setLoading(false); return; }
@@ -29,6 +33,8 @@ export default function NotesPage() {
     const nRes = await getNotes();
     if (nRes.ok) setNotes(nRes.notes);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
@@ -38,7 +44,7 @@ export default function NotesPage() {
     const res = await addNote(userId, note, isRec);
     setPosting(false);
     if (res.ok) { setMsg(t("notes.saved")); setNote(""); setUserId(""); setIsRec(false); load(); }
-    else setMsg(res.error || t("notes.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("notes.failed"));
   }
 
   if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLang } from "@/components/LanguageProvider";
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { setAvatarUrl } from "@/lib/queries/documents";
@@ -9,6 +10,7 @@ import { toast } from "@/components/Toast";
 // button to pick + upload a new image to the 'avatars' storage bucket.
 export default function AvatarUpload({ currentUrl, name, isManager }: { currentUrl: string | null; name: string | null; isManager: boolean }) {
   const [url, setUrl] = useState<string | null>(currentUrl);
+  const { t } = useLang();
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const initial = (name || "?")[0].toUpperCase();
@@ -16,7 +18,7 @@ export default function AvatarUpload({ currentUrl, name, isManager }: { currentU
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast("Image must be under 5 MB.", "error"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast(t("misc.imageTooBig"), "error"); return; }
     setBusy(true);
     try {
       const supabase = createClient();
@@ -31,9 +33,9 @@ export default function AvatarUpload({ currentUrl, name, isManager }: { currentU
       const res = await setAvatarUrl(publicUrl);
       if (!res.ok) throw new Error(res.error || "Save failed");
       setUrl(publicUrl + "?t=" + Date.now()); // cache-bust
-      toast("Photo updated.", "success");
+      toast(t("misc.photoUpdated"), "success");
     } catch (err: any) {
-      toast("Upload failed: " + (err?.message || "unknown error"), "error");
+      toast(t("misc.photoFailed"), "error"); console.error(err);
     }
     setBusy(false);
     if (inputRef.current) inputRef.current.value = "";
@@ -43,14 +45,14 @@ export default function AvatarUpload({ currentUrl, name, isManager }: { currentU
     <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="avatar" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", display: "block" }} />
+        <img src={url} alt={t("misc.yourPhoto")} style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", display: "block" }} />
       ) : (
         <div className={`avatar${isManager ? " mgr" : ""}`} style={{ width: 64, height: 64, fontSize: 26 }}>{initial}</div>
       )}
       <button
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        aria-label="Change photo"
+        aria-label={t("misc.changePhoto")}
         style={{ position: "absolute", bottom: -2, right: -2, width: 24, height: 24, borderRadius: "50%", background: "var(--action)", border: "2px solid var(--dark)", color: "var(--on-action)", fontSize: 11, cursor: busy ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
       >
         {busy ? "…" : "📷"}
