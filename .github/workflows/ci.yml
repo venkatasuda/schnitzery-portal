@@ -24,8 +24,8 @@ jobs:
     name: Lint (advisory)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 20, cache: npm }
       - run: npm ci --ignore-scripts
       - run: npm run lint
@@ -35,8 +35,8 @@ jobs:
     name: Type-check (blocking)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 20, cache: npm }
       - run: npm ci --ignore-scripts
       - run: npx tsc --noEmit
@@ -45,8 +45,8 @@ jobs:
     name: Unit tests + coverage (blocking)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 20, cache: npm }
       - run: npm ci --ignore-scripts
       - run: npm test -- --coverage
@@ -92,15 +92,15 @@ jobs:
           node scripts/checks/correction-integrity.cjs
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with: { name: coverage, path: coverage/, retention-days: 7, if-no-files-found: ignore }
 
   build:
     name: Production build (blocking)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 20, cache: npm }
       - run: npm ci --ignore-scripts
       - run: npm run build
@@ -114,8 +114,8 @@ jobs:
     name: Dependency audit (advisory)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 20, cache: npm }
       - run: npm ci --ignore-scripts
       - run: npm audit --audit-level=high
