@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/Toast";
 import { useEffect, useState } from "react";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getChecklistOversight } from "@/lib/queries/operations";
@@ -20,11 +21,15 @@ export default function ChecklistStatusPage() {
   const [err, setErr] = useState<string | null>(null);
 
   async function load(d: string) {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true); setErr(null);
     const res = await getChecklistOversight(d);
     if (res.ok) { setTasks(res.tasks); setSummary({ done: res.done, total: res.total }); }
     else { setTasks([]); setSummary({ done: 0, total: 0 }); setErr(res.error || ""); }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(date); }, [date]);
 

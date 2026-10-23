@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getStaffList, updateStaff } from "@/lib/queries/people";
@@ -14,7 +15,7 @@ const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
 const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6" };
 
 export default function StaffPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const roleLabel = (k: string) => (ROLES.includes(k) ? t("roles." + k) : k);
   const contractLabel = (k: string) => (CONTRACTS.includes(k) ? t("contracts." + k) : k);
@@ -45,7 +46,7 @@ export default function StaffPage() {
     setLoading(true); setLoadError(null); setDenied(false);
     try {
       const res = await getStaffList();
-      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(res.error || t("staff.failed")); return; }
+      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(serverText(res.error ?? "", locale) || t("staff.failed")); return; }
       setStaff(res.staff);
     } catch { setLoadError(t("staff.networkErr")); }
     finally { setLoading(false); }
@@ -75,7 +76,7 @@ export default function StaffPage() {
       skills: form.skills.split(",").map((s: string) => s.trim()).filter(Boolean),
     });
     if (res.ok) { setMsg(t("staff.saved")); setEditId(null); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
     } catch { setMsg(t("staff.networkErr")); }
     finally { setSaving(false); }
   }
@@ -97,14 +98,14 @@ export default function StaffPage() {
     const res = await setActive(id, false);
     setRemoving(false);
     if (res.ok) { setConfirmRemoveId(null); setMsg(t("staff.removed")); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
   }
 
   async function reactivate(id: string) {
     setMsg(null);
     const res = await setActive(id, true);
     if (res.ok) { setMsg(t("staff.reactivated")); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
   }
 
   async function unlock(id: string) {
@@ -114,7 +115,7 @@ export default function StaffPage() {
       body: JSON.stringify({ userId: id }),
     }).then((r) => r.json()).catch(() => ({ ok: false, error: t("staff.networkErr") }));
     if (res.ok) { setMsg(t("staff.unlocked")); load(); }
-    else setMsg(res.error || t("staff.unlockFailed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.unlockFailed"));
   }
 
   async function resetPassword(id: string) {
@@ -124,7 +125,7 @@ export default function StaffPage() {
       body: JSON.stringify({ userId: id }),
     }).then((r) => r.json()).catch(() => ({ ok: false, error: t("staff.networkErr") }));
     if (res.ok) { setResetInfo({ name: res.name || "", temp: res.tempPassword }); load(); }
-    else setMsg(res.error || t("staff.failed"));
+    else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
   }
 
   async function createStaff() {
@@ -299,7 +300,7 @@ export default function StaffPage() {
                 <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} placeholder="20" /></Field>
                 <Field label={t("profile.phone")}><input className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
               </div>
-              <Field label={t("profile.skillsLabel")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Grill, Cashier, Opening" /></Field>
+              <Field label={t("profile.skillsLabel")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder={t("misc.skillsPh")} /></Field>
               <div className="d-flex gap-2 mt-2">
                 <button onClick={() => setEditId(null)} className="btn-secondary u-flex1">{t("common.cancel")}</button>
                 <button className="btn-gold u-flex1" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("common.save")}</button>

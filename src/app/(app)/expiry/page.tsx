@@ -26,11 +26,15 @@ export default function ExpiryPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
   async function loadAll() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     const [p, b, s] = await Promise.all([getBatchProducts(), getBatches(), getExpirySummary()]);
     if (p.ok) setProducts(p.products || []);
     if (b.ok) setBatches(b.batches || []);
     if (s.ok) setSummary(s);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { loadAll(); }, []);
 

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { expect, type Browser, type Page } from "@playwright/test";
+import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
 // Safety: these tests create and delete records. They may only ever touch the
 // local staging stack, never Vercel or the production Supabase project.
@@ -44,10 +44,15 @@ export function admin() {
 export const BRANCH = { A: "10000000-0000-4000-8000-000000000001", B: "10000000-0000-4000-8000-000000000002" };
 export const unique = (label: string) => `E2E ${label} ${Date.now().toString(36)}`;
 
+// Contexts opened by signIn; closed after each test so earlier pages stop polling the server.
+export const openContexts: BrowserContext[] = [];
+
 // Signed-in page in its own context (separate cookies per person), English UI.
 export async function signIn(browser: Browser, who: Account, opts: { geo?: boolean } = {}): Promise<Page> {
   const context = await browser.newContext(opts.geo ? { permissions: ["geolocation"], geolocation: { latitude: 48.7758, longitude: 9.1829 } } : {});
+  openContexts.push(context);
   await context.addCookies([{ name: "lang", value: "en", url: BASE_URL }]);
+  await context.addInitScript(() => localStorage.setItem("sch_cookie_ack", "1")); // cookie notice covers bottom buttons
   const page = await context.newPage();
   await page.goto("/login");
   await page.getByLabel("Email").fill(who.email);

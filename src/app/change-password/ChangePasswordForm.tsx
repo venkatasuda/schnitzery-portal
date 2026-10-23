@@ -29,7 +29,8 @@ export default function ChangePasswordForm() {
     setLoading(true);
 
     // 1) Update the Supabase Auth password.
-    const { error: updErr } = await supabase.auth.updateUser({ password: pw });
+    const { error: updErr } = await supabase.auth.updateUser({ password: pw })
+      .catch(() => ({ error: { message: t("pw.failed") } }));
     if (updErr) {
       setLoading(false);
       setError(updErr.message || t("pw.failed"));
@@ -43,7 +44,9 @@ export default function ChangePasswordForm() {
     //    they live in user_pay. See PRODUCTION-AUDIT.md item 18.)
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase.from("users").update({ must_change_password: false }).eq("id", user.id);
+      // If the flag isn't cleared the gate sends the user straight back here, so say so.
+      const { error: flagErr } = await supabase.from("users").update({ must_change_password: false }).eq("id", user.id);
+      if (flagErr) { setLoading(false); setError(t("pw.failed")); return; }
     }
 
     setLoading(false);

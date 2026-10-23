@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinMonth } from "@/lib/time/berlinDate";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -16,7 +17,7 @@ const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "
 const htmlText = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export default function PayrollExportPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [month, setMonth] = useState(() => berlinMonth());
   const [rows, setRows] = useState<any[]>([]);
   const [totals, setTotals] = useState<any>({});
@@ -43,7 +44,7 @@ export default function PayrollExportPage() {
       if (r.ok) {
         setRows(r.rows || []); setTotals(r.totals || {});
         setSettings(r.settings); setDraft(r.settings); setRun(r.run); setReadiness(r.readiness); setRevision(r.revision); setHistory(r.history);
-      } else { setError(r.error || "Payroll unavailable."); if (r.error?.includes("Managers")) setDenied(true); }
+      } else { setError(serverText(r.error ?? "", locale) || "Payroll unavailable."); if (r.error?.includes("Managers")) setDenied(true); }
     } catch (e) { if (id === request.current) setError(e instanceof Error ? e.message : "Payroll unavailable."); }
     finally { if (id === request.current) setLoading(false); }
   }, [month, approvalId]);

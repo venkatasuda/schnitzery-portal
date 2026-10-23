@@ -1,7 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
-import { account, admin, BRANCH, expectToast, signIn, unique } from "./local";
+import { account, admin, BRANCH, expectToast, openContexts, signIn, unique } from "./local";
 
 // The five flows the restaurants run every day. Each test cleans up what it creates.
+
+test.afterEach(async () => { for (const c of openContexts.splice(0)) await c.close(); });
+// Leftovers from runs that died before their own cleanup (synthetic local data only).
+test.beforeAll(async () => { await admin().from("inventory_master").update({ is_active: false }).like("product", "E2E %").eq("is_active", true); });
 
 async function addCatalogProduct(page: Page, product: string) {
   await page.goto("/inventory");
@@ -26,10 +30,11 @@ async function removeCatalogProduct(page: Page, product: string) {
 test("staff clock in and clock out", async ({ browser }) => {
   const page = await signIn(browser, account("staff"), { geo: true });
   await page.goto("/attendance");
-  const clockOut = page.getByRole("button", { name: /Clock Out/ });
-  // A previous failed run may have left the shift open; close it first.
-  if (await clockOut.isVisible().catch(() => false)) { await clockOut.click(); await expectToast(page, /Clocked out/); }
-  await page.getByRole("button", { name: /Clock In Now/ }).click();
+  const clockOut = page.getByRole("button", { name: /Clock Out/ }), clockIn = page.getByRole("button", { name: /Clock In Now/ });
+  await expect(clockIn.or(clockOut)).toBeVisible(); // wait for the status to load
+  // A previous run may have left a shift open; close it first.
+  if (await clockOut.isVisible()) { await clockOut.click(); await expectToast(page, /Clocked out/); }
+  await clockIn.click();
   await expectToast(page, /Clocked in/);
   await expect(clockOut).toBeEnabled();
   await clockOut.click();
@@ -62,7 +67,7 @@ test("manager saves the roster", async ({ browser }) => {
   const save = page.getByRole("button", { name: "Save roster" });
   await expect(save).toBeEnabled();
   await page.getByRole("button", { name: "+ Add" }).first().click();
-  await page.getByLabel("Staff", { exact: true }).selectOption(staffId);
+  await page.getByRole("combobox", { name: /^Staff/ }).selectOption(staffId);
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await save.click();
   await expectToast(page, "Roster saved");
@@ -80,7 +85,8 @@ test("transfer between branches: request, send, receive", async ({ browser }) =>
   const supplier = await signIn(browser, account("manager", "B"));
   const requester = await signIn(browser, account("manager", "A"));
   const product = unique("Transfer");
-  await addCatalogProduct(supplier, product);
+  // The request form lists the REQUESTER's catalogue (you ask for what you stock).
+  await addCatalogProduct(requester, product);
   try {
     await requester.goto("/transfers");
     await requester.getByRole("button", { name: /New request/ }).click();
@@ -103,7 +109,7 @@ test("transfer between branches: request, send, receive", async ({ browser }) =>
     await sent.getByRole("button", { name: "Confirm received" }).click();
     await expect(sent).toContainText("Received");
   } finally {
-    await removeCatalogProduct(supplier, product);
+    await removeCatalogProduct(requester, product);
   }
 });
 

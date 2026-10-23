@@ -39,7 +39,7 @@ export default function LabelsPage() {
       </div>`).join("");
     const w = window.open("", "_blank");
     if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>Schnitzery labels</title><style>
+    w.document.write(`<!doctype html><html><head><title>Schnitzery — ${t("misc.labelsTitle")}</title><style>
       *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}
       body{margin:0;padding:10mm}
       .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm}

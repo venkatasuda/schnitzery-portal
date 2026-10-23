@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { fmtMonthDay } from "@/lib/time/berlinDate";
@@ -53,7 +54,7 @@ export default function AnalyticsPage() {
       if (id !== requestId.current) return;
       if (r.ok) setData(r);
       else if (r.error?.includes("Managers")) setDenied(true);
-      else setError(r.error || t("assistant.error"));
+      else setError(serverText(r.error ?? "", locale) || t("assistant.error"));
       setLoading(false);
     }).catch(() => { if (id === requestId.current) { setError(t("assistant.error")); setLoading(false); } });
     if (view === "workforce") getStaffPerformance({ period, date: anchor, branchId: scope?.canPickBranch ? branch : null }).then((r) => { if (id === requestId.current) { setStaff(r.ok ? r.rows : []); setSwaps(r.ok ? (r.swapCount || 0) : 0); } }).catch(() => { if (id === requestId.current) setStaff([]); });
@@ -237,7 +238,7 @@ export default function AnalyticsPage() {
                         </td>
                         <td className="u-right">
                           <div className="tone-action fw-6">{s.cost ? `€${s.cost.toFixed(0)}` : "—"}</div>
-                          {s.otHours > 0 && <div className="t-xs tone-warn">+{s.otHours}h OT</div>}
+                          {s.otHours > 0 && <div className="t-xs tone-warn">+{s.otHours}h {t("misc.otShort")}</div>}
                         </td>
                       </tr>
                     );

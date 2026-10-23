@@ -19,7 +19,7 @@ const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString([
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" }) : "—";
 
 export default function AttendanceHubPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const [tab, setTab] = useState<Tab>("live");
   const [denied, setDenied] = useState(false);
@@ -29,6 +29,7 @@ export default function AttendanceHubPage() {
   // ── LIVE ──
   const [date, setDate] = useState("");
   const [rows, setRows] = useState<any[]>([]);
+  const [forgotten, setForgotten] = useState<{ id: string; name: string; clock_in: string }[]>([]);
   const [stats, setStats] = useState({ workingNow: 0, completed: 0, late: 0, totalMins: 0 });
   const [liveLoading, setLiveLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -52,7 +53,7 @@ export default function AttendanceHubPage() {
       const res=await getLiveAttendance(d||undefined);
       if(serial!==requests.current.live)return;
       if(!res.ok){if(res.error?.includes("Managers"))setDenied(true);throw Error();}
-      setRows(res.rows||[]);
+      setRows(res.rows||[]); setForgotten(res.forgotten||[]);
       setStats({workingNow:res.workingNow||0,completed:res.completed||0,late:res.late||0,totalMins:res.totalMins||0});
     }catch{if(serial===requests.current.live)setReadError(true);}
     finally{if(serial===requests.current.live)setLiveLoading(false);}
@@ -134,6 +135,18 @@ export default function AttendanceHubPage() {
       {/* ───────── LIVE ───────── */}
       {tab === "live" && !readError && (
         <div className="hub-tab-panel active">
+          {forgotten.length > 0 && (
+            <div className="card ui-banner danger" role="alert">
+              <Icon e="⚠" size={18} color="var(--danger)" />
+              <div className="ui-banner-body">
+                <strong>{t("ahub.forgottenTitle", { n: forgotten.length })}</strong>
+                <div className="ui-muted">{t("ahub.forgottenHint")}</div>
+                <ul className="ui-plain-list">
+                  {forgotten.map((f) => <li key={f.id}>{f.name} · {t("ahub.forgottenSince", { when: new Date(f.clock_in).toLocaleString(locale === "de" ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
           <div className="workspace-stats">
             <Stat value={stats.workingNow} label={t("home.statWorking")} color="var(--success)" />
             <Stat value={stats.completed} label={t("ahub.completed")} color="var(--white)" />

@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/Toast";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -33,10 +34,14 @@ export default function NotificationsPage() {
   const [cat, setCat] = useState<"all" | "mine" | "team" | "system">("all");
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getNotificationHistory(150);
     if (res.ok) setItems(res.items || []);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

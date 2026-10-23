@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinToday, mondayOfDate, monthRange } from "@/lib/time/berlinDate";
 
 import { useEffect, useState, useRef } from "react";
@@ -246,7 +247,7 @@ export default function AttendancePage() {
         setMessage(codeMode === "out" ? t("att.outQR") : t("att.inQR"));
         await refresh().catch(() => setMessage(t("att.couldNotLoad")));
       } else {
-        setMessage(res.error || t("att.qrFailed"));
+        setMessage(serverText(res.error ?? "", locale) || t("att.qrFailed"));
       }
     } catch {
       await saveForSync(action, codeFromQR(payload));
@@ -288,6 +289,8 @@ export default function AttendancePage() {
   });
   if (session?.clock_out) timeline.push({ label: t("att.tlClockOut"), time: fmtTime(session.clock_out), color: "var(--danger)" });
 
+  // ponytail: 14h mirrors STALE_OPEN_MS in live-attendance.ts; move to settings if branches differ.
+  const stale = clockedIn && !!session?.clock_in && Date.now() - new Date(session.clock_in).getTime() > 14 * 3600_000;
   const statusLabel = onBreak ? t("att.statusOnBreak") : clockedIn ? t("att.statusWorking") : t("att.statusNotIn");
 
   return (
@@ -317,6 +320,15 @@ export default function AttendancePage() {
                 {clockedIn ? (onBreak ? t("att.subOnBreak") : t("att.subWorking")) : t("att.subReady")}
               </div>
             </div>
+
+            {/* FORGOTTEN CLOCK-OUT: open > 14h → the stopwatch is meaningless, say why */}
+            {stale && (
+              <div className="ui-confirm mb-4" role="alert">
+                <div className="fw-7 mb-1">{t("att.staleTitle", { when: new Date(session.clock_in).toLocaleString(locale === "de" ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}</div>
+                <div className="t-sm mb-2">{t("att.staleHint")}</div>
+                <Link href="/attendance/corrections" className="ui-text-link fw-6">{t("att.staleFix")} →</Link>
+              </div>
+            )}
 
             {/* STOPWATCH */}
             <div className="clock-timer">

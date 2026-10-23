@@ -30,6 +30,8 @@ export default function GeofencePage() {
   const [flags, setFlags] = useState<{ id: string; name: string; date: string; maxDistanceM: number }[]>([]);
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getGeofence();
     if (res.ok) {
@@ -43,6 +45,8 @@ export default function GeofencePage() {
       }
     }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

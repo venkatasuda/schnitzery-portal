@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { toast } from "@/components/Toast";
@@ -37,7 +38,7 @@ export default function Reconciliation() {
   useEffect(() => {
     let active = true;
     setLoading(true); setError(null);
-    getReconciliation(days, branch).then(r => { if (!active) return; if (r.ok) setRows(r.rows); else setError(r.error); })
+    getReconciliation(days, branch).then(r => { if (!active) return; if (r.ok) setRows(r.rows); else setError(serverText(r.error ?? "", locale)); })
       .catch(() => { if (active) setError("failed"); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [days, retry, branch]);

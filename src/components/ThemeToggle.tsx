@@ -1,5 +1,6 @@
 "use client";
 
+import { useLang } from "@/components/LanguageProvider";
 import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
 
@@ -7,6 +8,7 @@ import Icon from "@/components/Icon";
 // A tiny inline script in the root layout applies the saved theme before paint
 // (no flash), so this component just keeps the button in sync and handles taps.
 export default function ThemeToggle() {
+  const { t } = useLang();
   const [light, setLight] = useState(false);
 
   useEffect(() => {
@@ -28,8 +30,8 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       className="theme-btn"
-      title={light ? "Switch to dark mode" : "Switch to light mode"}
-      aria-label="Toggle light or dark mode"
+      aria-label={t("misc.themeToggle")}
+      aria-pressed={light}
     >
       <Icon e={light ? "🌙" : "☀️"} size={18} />
     </button>

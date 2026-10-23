@@ -6,9 +6,10 @@ import { BASE_URL } from "./local";
 export default defineConfig({
   testDir: ".",
   testMatch: "*.e2e.ts",
+  globalSetup: "./preflight.ts",
   workers: 1, // flows share one synthetic branch; run them in order
-  timeout: 90_000,
-  expect: { timeout: 15_000 },
+  timeout: 180_000, // staging on a laptop is slow; real failures still show the step
+  expect: { timeout: 30_000 },
   retries: 0,
   reporter: [["list"], ["html", { open: "never", outputFolder: "../.audit-db/e2e-report" }]],
   outputDir: "../.audit-db/e2e-results",

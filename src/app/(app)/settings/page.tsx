@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -7,7 +8,7 @@ import Icon from "@/components/Icon";
 import { getBranchSettings, saveBranchSettings } from "@/lib/queries/admin";
 
 export default function SettingsPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [qrRequired, setQrRequired] = useState(false);
   const [gpsMode, setGpsMode] = useState("off");
   const [loading, setLoading] = useState(true);
@@ -20,7 +21,7 @@ export default function SettingsPage() {
     setLoading(true); setLoadError(null); setDenied(false);
     try {
       const res = await getBranchSettings();
-      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(res.error || t("set.failed")); return; }
+      if (!res.ok) { if (res.error?.includes("Managers")) setDenied(true); else setLoadError(serverText(res.error ?? "", locale) || t("set.failed")); return; }
       setQrRequired(!!res.settings.qr_required);
       setGpsMode(res.settings.gps_mode || "off");
     } catch { setLoadError(t("staff.networkErr")); }

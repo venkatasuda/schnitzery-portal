@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinToday, fmtDay, fmtMonthDay } from "@/lib/time/berlinDate";
 import { inventoryKey } from "@/lib/inventory/identity";
 
@@ -85,18 +86,18 @@ export default function InventoryPage() {
 
   async function loadDeliveries() {
     const res = await getDeliveries(30);
-    if (res.ok) setDeliveries(res.deliveries); else setLoadError(res.error || t("inv.failed"));
+    if (res.ok) setDeliveries(res.deliveries); else setLoadError(serverText(res.error ?? "", locale) || t("inv.failed"));
   }
   async function loadAnalytics(d: number) {
     setAnalytics(null);
     const res = await getInventoryAnalytics(d);
-    if (res.ok) setAnalytics(res); else setLoadError(res.error || t("inv.failed"));
+    if (res.ok) setAnalytics(res); else setLoadError(serverText(res.error ?? "", locale) || t("inv.failed"));
   }
   async function loadActiveTab() {
     try {
     if (tab === "deliveries") await loadDeliveries();
     if (tab === "analytics") { await Promise.all([loadAnalytics(days), getInventoryTrend(6).then((r) => { if (r.ok) setMonthTrend(r.trend); }), getInventoryVariance(30).then((r) => { if (r.ok) setVariance(r); })]); }
-    if (tab === "forecast") { const r = await getDepletionForecast(30, coverDays); if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }
+    if (tab === "forecast") { const r = await getDepletionForecast(30, coverDays); if (r.ok) setForecast(r); else setLoadError(serverText(r.error ?? "", locale) || t("inv.failed")); }
     } catch { setLoadError(t("inv.failed")); }
   }
   useEffect(() => {
@@ -176,7 +177,7 @@ export default function InventoryPage() {
     const day = fmtDay(berlinToday(), locale);
     const rows = lowStock.map((l: any) => `<tr><td>${esc(l.product)}</td><td>${esc(l.category)}</td><td class="r">${l.ist}</td><td class="r">${l.soll}</td><td class="r b">${l.short} ${esc(l.unit || "")}</td></tr>`).join("");
     const w = window.open("", "_blank"); if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>Schnitzery Shopping List</title><style>
+    w.document.write(`<!doctype html><html><head><title>Schnitzery — ${t("misc.shoppingTitle")}</title><style>
       *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}body{margin:0;padding:16mm;color:#111}
       h1{margin:0 0 2mm}.meta{color:#666;margin-bottom:8mm;font-size:11pt}
       table{width:100%;border-collapse:collapse;font-size:11pt}th,td{padding:2.5mm 3mm;border-bottom:1px solid #ddd;text-align:left}
@@ -262,7 +263,6 @@ export default function InventoryPage() {
         <TabButton active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton>
         </div>
       </div>
-      <p className="inventory-task-description">{t(tab === "history" ? "stockHistory.help" : tab === "reconcile" ? "reconcile.help" : `inventoryWorkflow.${tab}Help`)}</p>
 
       {loading ? <CardSkeleton rows={4} /> : loadError ? null : (
         <>
@@ -592,7 +592,7 @@ export default function InventoryPage() {
               </details>}
               <div className="ui-toolbar">
                 <span className="ui-muted">{t("inv.coverFor")}</span>
-                <Segmented label={t("inv.coverFor")} value={String(coverDays)} onChange={(v) => { const cd = Number(v); setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(r.error || t("inv.failed")); }); }}
+                <Segmented label={t("inv.coverFor")} value={String(coverDays)} onChange={(v) => { const cd = Number(v); setCoverDays(cd); getDepletionForecast(30, cd).then((r) => { if (r.ok) setForecast(r); else setLoadError(serverText(r.error ?? "", locale) || t("inv.failed")); }); }}
                   options={[7, 14, 30].map((cd) => ({ value: String(cd), label: `${cd}${t("inv.daysShort")}` }))} />
                 <button type="button" className="btn-secondary u-push" onClick={copyOrderList}>{t("inv.copyOrder")}</button>
               </div>

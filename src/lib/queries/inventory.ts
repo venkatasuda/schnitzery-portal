@@ -235,8 +235,13 @@ export async function notifyLowStock() {
   if (low.length === 0) return { ok: true, count: 0 };
 
   const names = low.slice(0, 5).map((l: any) => l.product).join(", ");
-  const body = low.length <= 5 ? `Low: ${names}` : `Low: ${names} +${low.length - 5} more`;
-  try { await sendPushToUser(user.id, { title: `${low.length} item(s) low on stock`, body, url: "/stock-alerts" }); } catch { /* best effort */ }
+  const more = low.length > 5 ? ` +${low.length - 5}` : "";
+  try {
+    await sendPushToUser(user.id, {
+      title: `${low.length} item(s) low on stock`, body: `Low: ${names}${more}`, url: "/stock-alerts",
+      de: { title: `${low.length} Artikel knapp`, body: `Knapp: ${names}${more}` },
+    });
+  } catch { /* best effort */ }
   return { ok: true, count: low.length };
 }
 

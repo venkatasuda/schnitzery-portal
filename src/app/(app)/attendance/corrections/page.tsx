@@ -45,11 +45,15 @@ export default function CorrectionsPage() {
   const [loading, setLoading] = useState(true);
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const [h, m] = await Promise.all([getMyHistory(), listMyCorrections()]);
     if ((h as any).ok) setHistory((h as any).sessions || []);
     if (m.ok) setMine(m.items || []);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

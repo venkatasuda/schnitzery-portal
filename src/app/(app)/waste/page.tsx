@@ -29,12 +29,16 @@ export default function WastePage() {
   const [busy, setBusy] = useState(false);
 
   async function loadAll() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     const [p, e, s, tr] = await Promise.all([getWasteProducts(), getWasteLog(14), getWasteSummary(7), getWasteTrends(6)]);
     if (p.ok) setProducts(p.products || []);
     if (e.ok) setEntries(e.entries || []);
     if (s.ok) setSummary(s);
     setTrends(tr.ok ? tr : null); // ok:false for non-managers — card simply won't render
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { loadAll(); }, []);
 

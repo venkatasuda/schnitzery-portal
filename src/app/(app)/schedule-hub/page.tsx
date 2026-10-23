@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
@@ -12,7 +13,7 @@ import Icon from "@/components/Icon";
 type Tab = "roster" | "insights" | "conflicts" | "tools";
 
 export default function ScheduleHubPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
   const dayLabel = (k: string) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(String(k).toLowerCase()) ? t("days." + String(k).toLowerCase()) : k);
   const [tab, setTab] = useState<Tab>("roster");
@@ -30,7 +31,7 @@ export default function ScheduleHubPage() {
     const res = await getScheduleOverview();
     if (res.ok) setOv(res);
     else if (res.error?.includes("Managers")) setDenied(true);
-    else setError(res.error || t("common.error"));
+    else setError(serverText(res.error ?? "", locale) || t("common.error"));
     } catch { setError(t("common.error")); }
     finally { setLoading(false); }
   }
@@ -160,7 +161,7 @@ export default function ScheduleHubPage() {
                       <span className="t-lg"><Icon e={c.type === "Double-booked" ? "🔁" : "⚠️"} size={15} /></span>
                       <div className="u-flex1">
                         <div className="ui-strong">{c.name} <span className="u-muted fw-4 t-xs">· {dayLabel(c.day)}</span></div>
-                        <div className="t-xs tone-warn">{c.type} — {c.detail}</div>
+                        <div className="t-xs tone-warn">{c.type === "Double-booked" ? `${t("schedhub.cDouble")} — ${t("schedhub.cDoubleDetail")}` : c.type === "Unavailable" ? `${t("schedhub.cUnavail")} — ${t("schedhub.cUnavailDetail")}` : `${c.type} — ${c.detail}`}</div>
                       </div>
                     </div>
                   ))}

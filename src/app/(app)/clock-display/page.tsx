@@ -1,5 +1,6 @@
 "use client";
 
+import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useState, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -8,7 +9,7 @@ import { getCurrentClockCode } from "@/lib/queries/clockcode";
 // MANAGER DISPLAY — show this on a tablet/screen at the restaurant.
 // Staff scan the QR or type the 6-digit code to clock in/out.
 export default function ClockDisplayPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [code, setCode] = useState("------");
   const [qrPayload, setQrPayload] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(30);
@@ -25,7 +26,7 @@ export default function ClockDisplayPage() {
       setRotateSeconds(res.rotateSeconds ?? 30);
       setError(null);
     } else {
-      setError(res.error || t("cd.couldNotLoad"));
+      setError(serverText(res.error ?? "", locale) || t("cd.couldNotLoad"));
     }
   }
 
@@ -67,7 +68,7 @@ export default function ClockDisplayPage() {
             {/* QR */}
             <div className="d-flex jc-c mb-6">
               {qrImg ? (
-                <img src={qrImg} alt="Clock QR" style={{ width: 260, height: 260, borderRadius: 16, background: "#fff", padding: 8 }} />
+                <img src={qrImg} alt={t("misc.clockQr")} style={{ width: 260, height: 260, borderRadius: 16, background: "#fff", padding: 8 }} />
               ) : (
                 <div style={{ width: 260, height: 260, borderRadius: 16, background: "var(--surface-2)" }} />
               )}

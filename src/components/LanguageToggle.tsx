@@ -5,7 +5,7 @@ import type { Locale } from "@/lib/i18n";
 
 // Small EN | DE switch. Place in the header or Profile settings.
 export default function LanguageToggle() {
-  const { locale, setLocale } = useLang();
+  const { t, locale, setLocale } = useLang();
   const opt = (l: Locale, label: string, name: string) => (
     <button
       onClick={() => l !== locale && setLocale(l)}
@@ -26,7 +26,7 @@ export default function LanguageToggle() {
     </button>
   );
   return (
-    <div role="group" aria-label="Language" style={{ display: "inline-flex", gap: 2, padding: 2, background: "var(--dark3)", borderRadius: 8, border: "1px solid var(--border)" }}>
+    <div role="group" aria-label={t("misc.language")} style={{ display: "inline-flex", gap: 2, padding: 2, background: "var(--dark3)", borderRadius: 8, border: "1px solid var(--border)" }}>
       {opt("en", "EN", "English")}
       {opt("de", "DE", "Deutsch")}
     </div>

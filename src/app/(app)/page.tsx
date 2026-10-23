@@ -111,7 +111,7 @@ export default async function HomePage() {
         )}
         <div>
           <div className="profile-name">{greeting}, {firstName}<span className="mgr-badge">{t("roles." + role)}</span></div>
-          <div className="profile-sub">{profile?.team || t("roles." + role)} · Schnitzery Stuttgart</div>
+          <div className="profile-sub">{profile?.team || t("roles." + role)}</div>
         </div>
       </div>
 

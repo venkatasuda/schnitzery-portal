@@ -20,10 +20,14 @@ export default function LeavePage() {
   const [loading, setLoading] = useState(false);
 
   async function loadMine() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getMyLeave();
     if (res.ok) setRequests(res.requests);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
 
   useEffect(() => { loadMine(); }, []);

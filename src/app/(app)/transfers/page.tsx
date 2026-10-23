@@ -9,14 +9,15 @@ import {
   getTransferBranches, getTransferProducts, requestTransfer, getMyRequests, getFulfillQueue,
   sendTransfer, rejectTransfer, cancelTransfer, receiveTransfer,
 } from "@/lib/queries/transfer";
-import { Badge, Field, PageHeader, Panel, TabButton } from "@/components/ui";
+import { Badge, ErrorState, Field, PageHeader, Panel, TabButton } from "@/components/ui";
 
-const fmtWhen = (iso: string) => { try { return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch { return iso; } };
+const fmtWhen = (iso: string, locale: string) => { try { return new Date(iso).toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { day: "numeric", month: "short", timeZone: "Europe/Berlin" }); } catch { return iso; } };
 
 export default function TransfersPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [tab, setTab] = useState<"request" | "fulfill">("request");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [isMgr, setIsMgr] = useState(true);
 
   const [branches, setBranches] = useState<any[]>([]);
@@ -32,13 +33,18 @@ export default function TransfersPage() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
+  // A thrown server action (network drop, 503) must end in an error state, not an endless skeleton.
   async function loadAll() {
-    const [b, p, r, q] = await Promise.all([getTransferBranches(), getTransferProducts(), getMyRequests(), getFulfillQueue()]);
-    if (b.ok) { setBranches(b.branches || []); setIsMgr(true); } else if (b.error?.includes("Managers")) setIsMgr(false);
-    if (p.ok) setProducts(p.products || []);
-    if (r.ok) setRequests(r.requests || []);
-    if (q.ok) setQueue(q.requests || []);
-    setLoading(false);
+    setLoadError(false);
+    try {
+      const [b, p, r, q] = await Promise.all([getTransferBranches(), getTransferProducts(), getMyRequests(), getFulfillQueue()]);
+      if (b.ok) { setBranches(b.branches || []); setIsMgr(true); } else if (b.error?.includes("Managers")) setIsMgr(false);
+      if (p.ok) setProducts(p.products || []);
+      if (r.ok) setRequests(r.requests || []);
+      if (q.ok) setQueue(q.requests || []);
+      if (![b, p, r, q].every((x) => x.ok) && !b.error?.includes("Managers")) setLoadError(true);
+    } catch { setLoadError(true); }
+    finally { setLoading(false); }
   }
   useEffect(() => { loadAll(); }, []);
 
@@ -49,13 +55,13 @@ export default function TransfersPage() {
     if (!sel) { toast(t("xfer.pickProduct"), "error"); return; }
     if (!(Number(qty) > 0)) { toast(t("xfer.enterQty"), "error"); return; }
     setBusy("req");
-    const r = await requestTransfer(src, sel.product, sel.category, Number(qty), sel.unit, note);
+    const r = await requestTransfer(src, sel.product, sel.category, Number(qty), sel.unit, note).catch(() => ({ ok: false as const, error: t("xfer.failed") }));
     setBusy(null);
     if (r.ok) { toast(t("xfer.requested"), "success"); resetForm(); loadAll(); } else toast(r.error || t("xfer.failed"), "error");
   }
   async function act(fn: (id: string) => Promise<any>, id: string, okMsg: string) {
     setBusy(id);
-    const r = await fn(id); setBusy(null);
+    const r = await fn(id).catch(() => ({ ok: false, error: t("xfer.failed") })); setBusy(null);
     if (r.ok) { toast(t(okMsg), "success"); loadAll(); } else toast(r.error || t("xfer.failed"), "error");
   }
 
@@ -76,7 +82,7 @@ export default function TransfersPage() {
         <TabButton active={tab === "fulfill"} onClick={() => setTab("fulfill")}>{t("xfer.tabFulfill")}{pending ? ` (${pending})` : ""}</TabButton>
       </div>
 
-      {loading ? <CardSkeleton rows={4} /> : (
+      {loading ? <CardSkeleton rows={4} /> : loadError ? <ErrorState message={t("xfer.failed")} onRetry={() => { setLoading(true); loadAll(); }} retryLabel={t("business.retry")} /> : (
         <>
           {tab === "request" && (
             <div>
@@ -124,7 +130,7 @@ export default function TransfersPage() {
                   <div className="ui-item-head">
                     <div>
                       <div className="ui-strong">{r.product} <span className="ui-muted">· {r.qty}{r.unit ? " " + r.unit : ""}</span></div>
-                      <div className="ui-muted">{t("xfer.from")} {r.from_branch_name || "—"} · {fmtWhen(r.created_at)}</div>
+                      <div className="ui-muted">{t("xfer.from")} {r.from_branch_name || "—"} · {fmtWhen(r.created_at, locale)}</div>
                     </div>
                     <Badge tone={stTone(r.status)}>{t("xfer.st_" + r.status)}</Badge>
                   </div>

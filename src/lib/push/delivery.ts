@@ -4,7 +4,8 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function sendPushToUser(
   userId: string,
-  payload: { title: string; body: string; url?: string },
+  // `de`: German text; the service worker shows it on German-language devices.
+  payload: { title: string; body: string; url?: string; de?: { title: string; body: string } },
 ): Promise<{ ok: boolean; sent: number }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

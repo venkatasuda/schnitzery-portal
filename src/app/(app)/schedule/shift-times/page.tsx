@@ -18,10 +18,14 @@ export default function ShiftTimesPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await getShiftTimes();
     if (res.ok) setRows((res.items as Row[]).map((r) => ({ ...r })));
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

@@ -46,8 +46,8 @@ export default function ProfilePage() {
     try {
     const skills = skillsText.split(",").map((s) => s.trim()).filter(Boolean);
     const res = await updateMyProfile({ full_name: fullName, phone, skills });
-    if (res.ok) { toast("Profile updated", "success"); setEditing(false); load(); }
-    else toast(res.error || "Failed to update.", "error");
+    if (res.ok) { toast(t("misc.profileUpdated"), "success"); setEditing(false); load(); }
+    else toast(res.error || t("misc.profileFailed"), "error");
     } catch { toast(t("staff.networkErr"), "error"); }
     finally { setSaving(false); }
   }

@@ -19,11 +19,15 @@ export default function KiosksPage() {
   const [editLabel, setEditLabel] = useState("");
 
   async function load() {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const res = await listKiosks();
     if (!res.ok && res.error?.includes("Managers")) { setDenied(true); setLoading(false); return; }
     if (res.ok) setItems(res.items || []);
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 

@@ -19,10 +19,14 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
 
   async function load(cd: number) {
+    // A failed request must end the skeleton and say so, not spin forever.
+    try {
     setLoading(true);
     const r = await getPurchaseOrderDraft(cd);
     if (r.ok) { setGroups((r.groups || []).map((g: any) => ({ ...g, items: g.items.map((it: any) => ({ ...it })) }))); setHasPrices(r.hasPrices); }
     setLoading(false);
+    } catch { toast(t("common.loadFailed"), "error"); }
+    finally { setLoading(false); }
   }
   useEffect(() => { load(coverDays); /* eslint-disable-next-line */ }, []);
 
@@ -73,7 +77,7 @@ export default function OrderPage() {
         ${hasPrices ? `<div class="sub">${t("po.subtotal")}: <b>${eur(subtotal(g))}</b></div>` : ""}</div>`;
     }).join("");
     const w = window.open("", "_blank"); if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>Schnitzery Purchase Order</title><style>
+    w.document.write(`<!doctype html><html><head><title>Schnitzery — ${t("misc.poTitle")}</title><style>
       *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}body{margin:0;padding:16mm;color:#111}
       h1{margin:0 0 2mm}.meta{color:#666;margin-bottom:8mm;font-size:11pt}
       .po{margin-bottom:10mm;page-break-inside:avoid}h2{font-size:13pt;border-bottom:2px solid #333;padding-bottom:2mm}

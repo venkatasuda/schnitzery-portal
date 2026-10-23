@@ -34,6 +34,9 @@ function monthBounds(ym: string) {
 }
 
 // ── LIVE: the day's roster for the branch ──
+// Open longer than this = treat as a forgotten clock-out (longest legal shift is 10h + breaks).
+const STALE_OPEN_MS = 14 * 60 * 60 * 1000;
+
 export async function getLiveAttendance(date?: string) {
   const { supabase, user, branchId, role } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
@@ -48,8 +51,17 @@ export async function getLiveAttendance(date?: string) {
     .order("clock_in", { ascending: true });
   if (error) return { ok: false, error: error.message };
 
+  // Shifts still open after 14h are almost always a forgotten clock-out. They sit on an
+  // earlier work_date (so "today" never shows them) and stay out of payroll until closed.
+  const staleBefore = new Date(Date.now() - STALE_OPEN_MS).toISOString();
+  const { data: staleData, error: staleError } = await supabase
+    .from("attendance_logs").select("id, user_id, clock_in")
+    .eq("branch_id", branchId).in("status", ["active", "on-break"]).lt("clock_in", staleBefore)
+    .order("clock_in", { ascending: true }).limit(50);
+  if (staleError) return { ok: false, error: staleError.message };
+
   const logs = data || [];
-  const ids = Array.from(new Set(logs.map((l) => l.user_id)));
+  const ids = Array.from(new Set([...logs, ...(staleData || [])].map((l) => l.user_id)));
   const names: Record<string, { full_name: string; team: string }> = {};
   if (ids.length) {
     const { data: us } = await supabase.from("users").select("id, full_name, team").in("id", ids);
@@ -69,7 +81,9 @@ export async function getLiveAttendance(date?: string) {
   const late = rows.filter((r) => (r.late_mins || 0) > 0).length;
   const totalMins = rows.reduce((s, r) => s + (r.duration_mins || 0), 0);
 
-  return { ok: true, date: day, rows, workingNow, completed, late, totalMins };
+  const forgotten = (staleData || []).map((l) => ({ id: l.id, name: names[l.user_id]?.full_name || "Unknown", clock_in: l.clock_in }));
+
+  return { ok: true, date: day, rows, workingNow, completed, late, totalMins, forgotten };
 }
 
 // ── OVERTIME: monthly contract vs actual, per staff + long shifts ──

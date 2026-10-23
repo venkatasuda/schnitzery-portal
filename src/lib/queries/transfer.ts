@@ -35,9 +35,10 @@ export async function getTransferBranches() {
 export async function getTransferProducts() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", products: [] };
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("inventory_master").select("product, category, unit, is_active")
     .eq("branch_id", branchId).eq("is_active", true).order("product");
+  if (error) return { ok: false, error: error.message, products: [] };
   return { ok: true, products: data || [] };
 }
 

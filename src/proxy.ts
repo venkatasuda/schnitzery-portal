@@ -44,8 +44,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logged in + sitting on the login page → go home
-  if (user && isLoginPage) {
+  // Logged in + sitting on the login page → go home. GET only: the login form's
+  // own server action (finishLogin) POSTs to /login right after sign-in, and a
+  // redirect there makes the client throw "unexpected response" and hang.
+  if (user && isLoginPage && request.method === "GET") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
