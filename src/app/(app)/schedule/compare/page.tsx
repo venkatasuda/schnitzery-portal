@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { toast } from "@/components/Toast";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -16,8 +17,8 @@ function mondayOf(offset: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 const fmtMins = (m: number) => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), mm = m % 60; return h ? `${h}h ${mm}m` : `${mm}m`; };
-const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
-const fmtDay = (d: string) => new Date(d + "T12:00:00").toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" });
+const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
+const fmtDay = (d: string) => new Date(d + "T12:00:00").toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" });
 const pctColor = (p: number) => (p >= 95 ? "var(--success)" : p >= 80 ? "var(--warn)" : "var(--danger)");
 
 export default function ComparePage() {
@@ -50,7 +51,7 @@ export default function ComparePage() {
   };
   const weekLabel = (() => {
     const s = new Date(mondayOf(offset) + "T12:00:00"); const e = new Date(s); e.setDate(e.getDate() + 6);
-    const f = (d: Date) => d.toLocaleDateString([], { day: "2-digit", month: "short" });
+    const f = (d: Date) => d.toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
     return `${f(s)} – ${f(e)}`;
   })();
 

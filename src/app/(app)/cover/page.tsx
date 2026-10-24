@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -11,7 +12,7 @@ import {
 } from "@/lib/queries/cover";
 
 const fmtDate = (wd: string) => {
-  try { return new Date(wd + "T12:00:00Z").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); }
+  try { return new Date(wd + "T12:00:00Z").toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", weekday: "short", day: "numeric", month: "short" }); }
   catch { return wd; }
 };
 

@@ -66,3 +66,26 @@ export async function signIn(browser: Browser, who: Account, opts: { geo?: boole
 export async function expectToast(page: Page, text: string | RegExp) {
   await expect(page.getByText(text).first()).toBeVisible();
 }
+
+export async function addCatalogProduct(page: Page, product: string) {
+  await page.goto("/inventory?view=catalog");
+  await page.getByRole("button", { name: "Add product", exact: true }).click();
+  const dialog=page.getByRole("dialog",{name:"Product settings"});
+  await dialog.getByLabel("Product name",{exact:true}).fill(product);
+  await dialog.getByLabel("Category",{exact:true}).fill("E2E");
+  await dialog.getByLabel(/^Stock unit/).fill("kg");
+  await dialog.getByLabel("Target quantity",{exact:true}).fill("10");
+  await dialog.getByRole("button",{name:"Save",exact:true}).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("row").filter({hasText:product})).toBeVisible();
+}
+
+export async function removeCatalogProduct(page: Page, product: string) {
+  await page.goto("/inventory?view=catalog");
+  await page.getByRole("row").filter({hasText:product}).getByRole("button",{name:"Edit",exact:true}).click();
+  const dialog=page.getByRole("dialog",{name:"Product settings"});
+  await dialog.getByLabel("Active",{exact:true}).uncheck();
+  await dialog.getByRole("button",{name:"Save",exact:true}).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("row").filter({hasText:product})).toHaveCount(0);
+}

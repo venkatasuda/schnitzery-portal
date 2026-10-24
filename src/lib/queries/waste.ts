@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { inventoryKey } from "@/lib/inventory/identity";
 import { berlinToday } from "@/lib/time/berlinDate";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 function isOwner(r?: string | null) {
   return ["brand_owner", "super_admin"].includes(r || "");
@@ -26,7 +27,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
@@ -76,16 +77,11 @@ export async function logWaste(product: string, category: string, qty: number, u
 }
 
 export async function deleteWaste(id: string) {
-  const { supabase, user, profile } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-  // logger can delete own; managers can delete any in their branch (RLS allows own; managers use service path not needed here)
-  const { error } = await supabase.from("waste_log").delete().eq("id", id);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
+  return { ok: false, error: "A manager correction with a reason is required." };
 }
 
 export async function getWasteLog(days = 14) {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", entries: [] };
   const anchor = new Date(berlinToday() + "T12:00:00Z").getTime();
   const from = new Date(anchor - days * 86400000).toISOString().slice(0, 10);
@@ -97,7 +93,7 @@ export async function getWasteLog(days = 14) {
   const entries = (data || []).map((e: any) => ({
     ...e, value: price[inventoryKey(e)] != null ? Math.round(price[inventoryKey(e)] * Number(e.qty) * 100) / 100 : null,
   }));
-  return { ok: true, entries };
+  return { ok: true, entries, canCorrect: isManager(profile?.role) };
 }
 
 // ── HQ: waste value BY BRANCH (brand owner / super admin only) ───────────────

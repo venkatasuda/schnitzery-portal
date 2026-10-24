@@ -8,7 +8,7 @@ import { useLang } from "@/components/LanguageProvider";
 function navigationGroups(owner: boolean) {
   return [
     { label: "workspace.operations", items: [
-      { href: "/", label: "workspace.dashboard", icon: LayoutDashboard, routes: ["/"] },
+      { href: "/", label: "workspace.dashboard", icon: LayoutDashboard, routes: ["/", "/my-branches", "/targets"] },
       ...(owner ? [{ href: "/branches", label: "nav.branches", icon: Building2, routes: ["/branches", "/overview"] }] : []),
       { href: "/inventory", label: "nav.inventory", icon: Package, routes: ["/inventory", "/stock-alerts", "/waste", "/expiry", "/transfers", "/labels"] },
       { href: "/ops", label: "home.dailyOps", icon: ClipboardCheck, routes: ["/ops", "/temp", "/checklist-status", "/checklist", "/incidents", "/announcements"] },

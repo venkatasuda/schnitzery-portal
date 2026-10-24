@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -62,7 +63,7 @@ export default function ScheduleHubPage() {
     if (!ov?.weekStart) return "";
     const start = new Date(ov.weekStart);
     const end = new Date(start); end.setDate(end.getDate() + 6);
-    const f = (d: Date) => d.toLocaleDateString([], { day: "2-digit", month: "short" });
+    const f = (d: Date) => d.toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
     return `${f(start)} – ${f(end)}`;
   })();
 

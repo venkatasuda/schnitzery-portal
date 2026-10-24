@@ -65,6 +65,9 @@ jobs:
           node scripts/checks/action-contrast.cjs
           node scripts/checks/approvals-ui.cjs
           node scripts/checks/workspace-ux.cjs
+          node scripts/checks/order-draft.cjs
+            node scripts/checks/count-sessions.cjs
+            node scripts/checks/inventory-operations.cjs
           node scripts/checks/stock-history-ui.cjs
           node scripts/checks/layout.cjs
           node scripts/checks/dashboard.cjs
@@ -88,6 +91,8 @@ jobs:
           node scripts/checks/a11y-static.cjs
           node scripts/checks/loaders-safe.cjs
           node scripts/checks/server-messages.cjs
+          node scripts/checks/multi-branch-access.cjs
+          node scripts/checks/branch-targets.cjs
           node scripts/checks/offline-database.cjs
           node scripts/checks/correction-integrity.cjs
       - name: Upload coverage artifact

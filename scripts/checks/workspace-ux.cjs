@@ -4,20 +4,27 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
-function moduleAt(file, resolve) {
+function moduleAt(file, resolve, url = 'http://schnitzery.localhost:3100/inventory?view=count') {
   const exports = {};
+  const location = new URL(url);
+  const window = { location, addEventListener(){}, removeEventListener(){}, history:{replaceState(_state,_title,url){location.href=String(url);},pushState(_state,_title,url){location.href=String(url);}} };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText,
-    { exports, require: resolve, URL, setTimeout, console });
+    { exports, require: resolve, URL, URLSearchParams, window, crypto:require('node:crypto').webcrypto, setTimeout, console });
   return exports;
 }
-async function ui(page, result) {
+async function ui(page, result, url) {
   const states=[], effects=[]; let cursor=0, initial=true;
-  const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(value){return {current:value};}};
-  const component=moduleAt(`src/app/(app)/${page}/page.tsx`, name=>{
+  const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(value){const i=cursor++;if(initial)states[i]={current:value};return states[i];}};
+  const component=moduleAt(`src/app/(app)/${page}/page.tsx`, function resolve(name){
     if(name==='react')return hooks;
-    if(name==='@/lib/time/berlinDate')return {berlinToday:()=> '2026-10-13'};
-    if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:(_target,key)=>async(...args)=>{if(result instanceof Error)throw result; return typeof result==='function'?result(key,args):result;}});
+    if(name==='recharts')return new Proxy({}, {get:()=>()=>null});
+    if(name==='@/lib/time/berlinDate')return {...moduleAt('src/lib/time/berlinDate.ts',require),berlinToday:()=> '2026-10-13'};
+    if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:(_target,key)=>async(...args)=>{if(result instanceof Error)throw result;if(key==='getInventoryContext')return {ok:true,branch:{id:'branch',name:'Test branch'},countDate:'2026-10-13'}; return typeof result==='function'?result(key,args):result;}});
     if(name==='@/lib/inventory/identity')return moduleAt('src/lib/inventory/identity.ts',require);
+    if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
+    if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
+    if(name==='@/lib/inventory/orderDraft')return moduleAt('src/lib/inventory/orderDraft.ts',()=>moduleAt('src/lib/analytics/coverage.ts',require));
+    if(name==='@/components/InventoryNav')return moduleAt('src/components/InventoryNav.tsx',resolve);
     if(name.startsWith('./'))return {__esModule:true,default:()=>null};
     if(name==='@/components/LanguageProvider')return {useLang:()=>({t:k=>k})};
     if(name==='next/link')return {__esModule:true,default:({href,children,...rest})=>React.createElement('a',{href,...rest},children)};
@@ -25,7 +32,7 @@ async function ui(page, result) {
     if(name==='@/components/ui')return moduleAt('src/components/ui.tsx',require); // real kit, not a stub
     if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null,Skeleton:()=>null};
     return require(name);
-  }).default;
+  },url).default;
   component(); for(const effect of effects) effect(); await new Promise(r=>setImmediate(r)); initial=false;
   return {render(){cursor=0;return renderToStaticMarkup(component());},tree(){cursor=0;return component();}};
 }
@@ -75,7 +82,7 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
   const client={auth:{getUser:async()=>({data:{user:{id:'caller'}}})},from(table){
     const q={select:()=>q,eq:()=>q,single:async()=>({data:{role,branch_id:branch}}),maybeSingle:async()=>{reads++;return {data:null,error};},upsert:async input=>{writes++;assert.equal(input.branch_id,branch);return {error:null};},insert:async()=>({error:null})};return q;
   }};
-  const admin=moduleAt('src/lib/queries/admin.ts',name=>name==='@/lib/supabase/server'?{createClient:async()=>client}:{});
+  const admin=moduleAt('src/lib/queries/admin.ts',name=>name==='@/lib/supabase/server'?{createClient:async()=>client}:name==='@/lib/activeBranch'?{activeBranchFor:async(_db,p)=>p?.branch_id??null}:{});
   assert.equal((await admin.getBranchSettings()).ok,false);assert.equal((await admin.saveBranchSettings(false,'off')).ok,false);assert.equal(reads+writes,0);
   for(role of ['manager','branch_owner','brand_owner','super_admin']){
     error={message:'Database unavailable'};assert.equal((await admin.getBranchSettings()).ok,false);
@@ -88,6 +95,7 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
   const calc=moduleAt('src/lib/pay/calculations.ts',require);
   const laborQueries=moduleAt('src/lib/queries/labor.ts',name=>({
     '@/lib/supabase/server':{createClient:async()=>laborClient},
+    '@/lib/activeBranch':{activeBranchFor:async(_db,p)=>p?.branch_id??null},
     '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
     '@/lib/pay/wages':{wageMapForBranches:async()=>({a:0})},
@@ -99,6 +107,7 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
   // Release D: monthly summary never prices an employee without a confirmed wage at €0.
   const noWage=moduleAt('src/lib/queries/labor.ts',name=>({
     '@/lib/supabase/server':{createClient:async()=>laborClient},
+    '@/lib/activeBranch':{activeBranchFor:async(_db,p)=>p?.branch_id??null},
     '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({ym:'2026-10',from:'2026-10-01',to:'2026-10-31',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
     '@/lib/pay/wages':{wageMapForBranches:async()=>({})},

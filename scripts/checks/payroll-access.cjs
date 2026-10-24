@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
@@ -13,6 +14,7 @@ const exportsObject = {};
 const imports = {
   '@supabase/supabase-js': {},
   '@/lib/supabase/server': { createClient: async () => client },
+  '@/lib/activeBranch': AB,
   '@/lib/supabase/readAll': {}, '@/lib/pay/wages': {}, '@/lib/pay/calculations': {},
   '@/lib/time/berlinDate': { berlinMonth: () => '2026-10', monthRange: month => {
     if (typeof month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw Error('Invalid month');

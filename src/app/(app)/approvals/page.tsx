@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect, useRef } from "react";
 import { getPendingApprovals, decideLeave, decideSwap } from "@/lib/queries/leave";
 import { getAttendanceApprovals, setAttendanceApproval } from "@/lib/queries/live-attendance";
@@ -14,8 +15,8 @@ type Item = { kind: Kind; id: string; icon: string; name: string; detail: string
 type Filter = "all" | Kind;
 
 const fmtH = (m: number | null | undefined) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
-const fmtD = (d?: string | null) => (d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short" }) : "—");
-const fmtT = (v?: string | null) => (v ? new Date(v).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
+const fmtD = (d?: string | null) => (d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" }) : "—");
+const fmtT = (v?: string | null) => (v ? new Date(v).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
 
 const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
 

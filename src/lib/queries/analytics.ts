@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday, mondayOfDate } from "@/lib/time/berlinDate";
+import { activeBranchFor } from "@/lib/activeBranch";
+import { getLocale } from "@/lib/i18n/server";
 
 // Aggregates branch attendance into chart-ready series:
 //  • hours per week (last 8 weeks)   • hours by weekday   • hours by team
@@ -13,7 +15,7 @@ async function getMgr() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null, branchId: null };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
@@ -22,6 +24,7 @@ const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const toH = (m: number) => Math.round((m / 60) * 10) / 10;
 
 export async function getAnalytics() {
+  const dateLocale = (await getLocale()) === "de" ? "de-DE" : "en-GB";
   const { supabase, user, role, branchId } = await getMgr();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
@@ -65,7 +68,7 @@ export async function getAnalytics() {
     if (d >= monthStart) { monthMins += mins; monthShifts++; }
   }
 
-  const weekly = weekKeys.map((k) => ({ week: new Date(k).toLocaleDateString([], { day: "2-digit", month: "short" }), hours: toH(weekMap[k]) }));
+  const weekly = weekKeys.map((k) => ({ week: new Date(`${k.slice(0, 10)}T12:00:00Z`).toLocaleDateString(dateLocale, { timeZone: "Europe/Berlin", day: "2-digit", month: "short" }), hours: toH(weekMap[k]) }));
   const daily = [1, 2, 3, 4, 5, 6, 0].map((idx) => ({ day: DOW[idx], hours: toH(byDay[idx]) }));
   const teams = Object.entries(byTeam).map(([team, m]) => ({ team, hours: toH(m) })).sort((a, b) => b.hours - a.hours);
   const lateRate = totalShifts > 0 ? Math.round((lateShifts / totalShifts) * 100) : 0;

@@ -3,6 +3,7 @@
 import { validInventoryItem } from "@/lib/inventory/identity";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 async function getMe() {
   const supabase = await createClient();
@@ -10,7 +11,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
@@ -72,8 +73,9 @@ export async function requestTransfer(sourceBranchId: string, product: string, c
 export async function getMyRequests() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", requests: [] };
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("stock_transfers").select("*").eq("to_branch_id", branchId).order("created_at", { ascending: false }).limit(60);
+  if(error)return {ok:false,error:error.message,requests:[]};
   return { ok: true, requests: data || [] };
 }
 
@@ -81,8 +83,9 @@ export async function getMyRequests() {
 export async function getFulfillQueue() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", requests: [] };
-  const { data } = await supabase
-    .from("stock_transfers").select("*").eq("from_branch_id", branchId).in("status", ["requested", "sent"]).order("created_at", { ascending: false }).limit(60);
+  const { data, error } = await supabase
+    .from("stock_transfers").select("*").eq("from_branch_id", branchId).order("created_at", { ascending: false }).limit(60);
+  if(error)return {ok:false,error:error.message,requests:[]};
   return { ok: true, requests: data || [] };
 }
 
@@ -107,4 +110,4 @@ async function transition(id: string, side: "from" | "to", allowedFrom: string[]
 export async function sendTransfer(id: string) { return transition(id, "from", ["requested"], "sent"); }
 export async function rejectTransfer(id: string) { return transition(id, "from", ["requested"], "rejected"); }
 export async function cancelTransfer(id: string) { return transition(id, "to", ["requested"], "cancelled"); }
-export async function receiveTransfer(id: string) { return transition(id, "to", ["sent"], "received"); }
+export async function receiveTransfer(id: string) { return {ok:false,error:"Record the actual received quantity in transfer details."}; }

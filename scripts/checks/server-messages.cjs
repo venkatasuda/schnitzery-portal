@@ -7,7 +7,7 @@ const missing = new Set();
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {
     const p = path.join(d, e.name);
     if (e.isDirectory()) walk(p);
-    else if (p.endsWith(".ts")) for (const m of fs.readFileSync(p, "utf8").matchAll(/error: "([^"]+)"/g)) if (!map.includes(JSON.stringify(m[1]) + ":")) missing.add(m[1]);
+    else if (p.endsWith(".ts")) for (const m of fs.readFileSync(p, "utf8").matchAll(/error: "([^"]+)"/g)) if (!/^[a-z_]+$/.test(m[1]) && !map.includes(JSON.stringify(m[1]) + ":")) missing.add(m[1]); // lowercase codes are translated by the page
   }
 })("src/lib/queries");
 assert.deepEqual([...missing], [], "Add German for these server messages in serverMessages.ts:\n" + [...missing].join("\n"));

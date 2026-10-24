@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // GEOFENCE QUERIES — branch location, radius, mode, and the
@@ -16,7 +17,7 @@ async function getMe() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, role: null as string | null, branchId: null as string | null };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 
 export type GeofenceMode = "off" | "warn" | "required";

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { canActOnUser, isManagerRole } from "@/lib/auth/rank";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // SECURE SERVER ROUTE — clear a login lock.
@@ -19,6 +20,8 @@ export async function POST(request: Request) {
 
   const { data: me } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
+  // Active branch from the header picker, validated against the caller's access.
+  const meBranch = me ? await activeBranchFor(supabase, me) : null;
   if (!me || !isManagerRole(me.role)) {
     return NextResponse.json({ ok: false, error: "Managers only." }, { status: 403 });
   }
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
   if (!target) return NextResponse.json({ ok: false, error: "Staff member not found." }, { status: 404 });
 
   const gate = canActOnUser({
-    meRole: me.role, meBranchId: me.branch_id,
+    meRole: me.role, meBranchId: meBranch,
     targetRole: target.role, targetBranchId: target.branch_id,
   });
   if (!gate.ok) return NextResponse.json({ ok: false, error: gate.error }, { status: gate.status });

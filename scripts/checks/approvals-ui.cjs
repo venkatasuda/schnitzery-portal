@@ -27,6 +27,7 @@ async function renderAfterLoad(fail) {
   }).outputText, {
     exports,
     require(name) {
+      if(name==='@/lib/format')return {appLocale:()=>'en-GB',formatEur:(n)=>n==null?'—':'€'+n};
       if (name === 'react') return hooks;
       if (name.startsWith('@/lib/queries/')) return new Proxy({}, { get: () => async () => result });
       if (name === '@/components/LanguageProvider') return { useLang: () => ({ locale: 'en', t: key => key }) };

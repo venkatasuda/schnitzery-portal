@@ -1,4 +1,5 @@
 "use client";
+import InventoryNav from "@/components/InventoryNav";
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -61,6 +62,7 @@ export default function StockAlertsPage() {
 
   return (
     <div className="fade-up">
+      <InventoryNav active="purchasing" />
       <h1 className="page-title u-row"><Icon e="📦" size={22} /> {t("salert.title")}</h1>
       <div className="page-sub">{t("salert.subtitle")}</div>
 

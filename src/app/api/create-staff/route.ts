@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { canCreateRole } from "@/lib/auth/rank";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // SECURE SERVER ROUTE — creates a staff login + users row.
@@ -36,6 +37,8 @@ export async function POST(request: Request) {
   }
   const { data: me } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
+  // Active branch from the header picker, validated against the caller's access.
+  const meBranch = me ? await activeBranchFor(supabase, me) : null;
 
   if (!me || !["manager", "branch_owner", "brand_owner", "super_admin"].includes(me.role)) {
     return NextResponse.json({ ok: false, error: "Managers only." }, { status: 403 });
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
   if (!canCreateRole(me.role, newRole)) {
     return NextResponse.json({ ok: false, error: "You're not allowed to create that role." }, { status: 403 });
   }
-  if (!me.branch_id) return NextResponse.json({ ok: false, error: "A branch must be assigned before creating staff." }, { status: 400 });
+  if (!meBranch) return NextResponse.json({ ok: false, error: "A branch must be assigned before creating staff." }, { status: 400 });
 
   // 3. Admin client (service-role key — server only)
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -91,10 +94,10 @@ export async function POST(request: Request) {
   // single branch, add a unique index + retry if it ever bites.
   let code = typeof employee_code === "string" ? employee_code.trim() : "";
   if (!code) {
-    const { data: br } = await admin.from("branches").select("code, name").eq("id", me.branch_id).single();
+    const { data: br } = await admin.from("branches").select("code, name").eq("id", meBranch).single();
     const prefix = ((br?.code || (br?.name || "EMP").replace(/[^A-Za-z]/g, "").slice(0, 3)) || "EMP").toUpperCase();
     const { data: existing } = await admin
-      .from("users").select("employee_code").eq("branch_id", me.branch_id).ilike("employee_code", `${prefix}-%`);
+      .from("users").select("employee_code").eq("branch_id", meBranch).ilike("employee_code", `${prefix}-%`);
     let max = 0;
     for (const r of existing || []) {
       const m = /-(\d+)\s*$/.exec(r.employee_code || "");
@@ -128,7 +131,7 @@ export async function POST(request: Request) {
     contract_type: contract_type || null,
     contract_hours: contract_hours == null || contract_hours === "" || Number.isNaN(Number(contract_hours)) ? null : Number(contract_hours),
     phone: phone || null,
-    branch_id: me.branch_id,
+    branch_id: meBranch,
     status: "active",
   });
   if (rowErr) {

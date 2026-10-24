@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -21,7 +22,7 @@ function statusInfo(eff: string, t: Tf): { label: string; color: string } {
   }
 }
 const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) : "";
+  d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", year: "numeric" }) : "";
 
 type Bucket = "all" | "30" | "60" | "90" | "expired" | "pending" | "missing";
 

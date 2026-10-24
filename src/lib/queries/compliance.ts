@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { activeBranchFor } from "@/lib/activeBranch";
+import { getLocale } from "@/lib/i18n/server";
 
 // German ArbZG compliance, checked against ACTUAL clock-in/out + breaks
 // (last 14 days). Flags: insufficient break on long shifts, <11h rest
@@ -13,7 +15,7 @@ async function getMgr() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null, branchId: null };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
@@ -29,11 +31,14 @@ function breakMinutes(breaks: Array<{ start: string; end: string | null }>): num
   }
   return Math.round(m);
 }
-const dlabel = (d: string) => new Date(d).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" });
+// Labels and explanations follow the app language (cookie), not the server's locale.
+const dlabel = (d: string, de: boolean) => new Date(`${d.slice(0, 10)}T12:00:00Z`).toLocaleDateString(de ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" });
 const h1 = (mins: number) => Math.round((mins / 60) * 10) / 10;
+const dn = (n: number) => n.toLocaleString("de-DE"); // 40,7 not 40.7 in German text
 
 export async function getCompliance() {
   const { supabase, user, role, branchId } = await getMgr();
+  const de = (await getLocale()) === "de";
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
 
@@ -63,11 +68,11 @@ export async function getCompliance() {
     if (net > 360) {
       const required = net > 540 ? 45 : 30;
       if (brk < required) {
-        violations.push({ name, date: dlabel(l.work_date), type: "Break", severity: "high", detail: `${h1(net)}h worked, only ${brk}min break — needs ${required}min` });
+        violations.push({ name, date: dlabel(l.work_date, de), type: "Break", severity: "high", detail: de ? `${dn(h1(net))} Std. gearbeitet, nur ${brk} Min. Pause — nötig sind ${required} Min.` : `${h1(net)}h worked, only ${brk}min break — needs ${required}min` });
       }
     }
     if (net > 600) {
-      violations.push({ name, date: dlabel(l.work_date), type: "Long shift", severity: "med", detail: `${h1(net)}h worked — legal max is 10h/day` });
+      violations.push({ name, date: dlabel(l.work_date, de), type: "Long shift", severity: "med", detail: de ? `${dn(h1(net))} Std. gearbeitet — gesetzlich max. 10 Std./Tag` : `${h1(net)}h worked — legal max is 10h/day` });
     }
     if (!byUser[l.user_id]) byUser[l.user_id] = [];
     byUser[l.user_id].push(l);
@@ -81,7 +86,7 @@ export async function getCompliance() {
       if (prevOut && nextIn) {
         const gapH = (nextIn - prevOut) / 3600000;
         if (gapH >= 0 && gapH < 11) {
-          violations.push({ name: nameOf[uid] || "Unknown", date: dlabel(arr[i].work_date), type: "Rest", severity: "high", detail: `Only ${Math.round(gapH * 10) / 10}h rest before this shift — needs 11h` });
+          violations.push({ name: nameOf[uid] || "Unknown", date: dlabel(arr[i].work_date, de), type: "Rest", severity: "high", detail: de ? `Nur ${dn(Math.round(gapH * 10) / 10)} Std. Ruhezeit vor dieser Schicht — nötig sind 11 Std.` : `Only ${Math.round(gapH * 10) / 10}h rest before this shift — needs 11h` });
         }
       }
     }

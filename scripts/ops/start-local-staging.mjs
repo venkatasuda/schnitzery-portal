@@ -26,7 +26,7 @@ if (!process.argv.includes("--check")) {
   const args = fast ? ["start", "--hostname", "::1", "--port", "3100"] : ["dev", "--webpack", "--hostname", "::1", "--port", "3100"];
   if (fast) {
     console.log("Building the staging copy (one-off, a few minutes)…");
-    const build = spawnSync(process.execPath, [next, "build"], { cwd: app, stdio: "inherit", env: { ...process.env, ...config, NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1", SENTRY_DSN: "", NEXT_PUBLIC_SENTRY_DSN: "", SENTRY_AUTH_TOKEN: "" } });
+    const build = spawnSync(process.execPath, [next, "build", "--webpack"], { cwd: app, stdio: "inherit", env: { ...process.env, ...config, NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1", SENTRY_DSN: "", NEXT_PUBLIC_SENTRY_DSN: "", SENTRY_AUTH_TOKEN: "" } });
     if (build.status !== 0) { process.exitCode = build.status ?? 1; throw Error("Staging build failed."); }
   }
   const child = spawn(process.execPath, [next, ...args], {

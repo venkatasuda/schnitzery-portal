@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
 
 import { useState, useEffect, useRef } from "react";
@@ -15,8 +16,8 @@ import { Stat } from "@/components/ui";
 type Tab = "live" | "approval" | "overtime" | "noshow" | "offline";
 
 const fmtH = (mins: number) => `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
-const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
-const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" }) : "—";
+const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—";
+const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" }) : "—";
 
 export default function AttendanceHubPage() {
   const { t, locale } = useLang();

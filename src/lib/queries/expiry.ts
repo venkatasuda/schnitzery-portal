@@ -3,6 +3,7 @@
 import { validInventoryItem } from "@/lib/inventory/identity";
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 async function getMe() {
   const supabase = await createClient();
@@ -10,7 +11,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 
 const daysBetween = (a: string, b: string) =>

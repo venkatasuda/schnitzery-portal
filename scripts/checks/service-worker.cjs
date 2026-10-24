@@ -36,5 +36,7 @@ async function request(path,mode='navigate',method='GET') {let pending;handlers.
  for(const p of ['/','/attendance','/payroll','/login','/api/agent/chat','/sw.jsx','/offline.html/x'])ok(gate.test(p),`proxy must still gate ${p}`);
  ok(/user && isLoginPage && request\.method === "GET"/.test(src),'signed-in redirect off /login must be GET-only: the login form POSTs a server action there after sign-in');
  ok(!gate.test('/monitoring'),'Sentry tunnel must bypass the login redirect');
+ ok(!gate.test('/api/cron/weekly-summary'),'Cron routes authenticate with CRON_SECRET, not a login');
+ ok(gate.test('/api/agent/chat'),'Other API routes stay behind the login');
  console.log('Proxy: public PWA assets and Sentry tunnel bypass auth; app routes stay gated; login server action is not redirected.');
 }

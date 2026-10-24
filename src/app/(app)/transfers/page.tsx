@@ -1,4 +1,6 @@
 "use client";
+import InventoryNav from "@/components/InventoryNav";
+import MovementDetails from "@/components/inventory/MovementDetails";
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -7,13 +9,14 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
   getTransferBranches, getTransferProducts, requestTransfer, getMyRequests, getFulfillQueue,
-  sendTransfer, rejectTransfer, cancelTransfer, receiveTransfer,
+  sendTransfer, rejectTransfer, cancelTransfer,
 } from "@/lib/queries/transfer";
 import { Badge, ErrorState, Field, PageHeader, Panel, TabButton } from "@/components/ui";
 
 const fmtWhen = (iso: string, locale: string) => { try { return new Date(iso).toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { day: "numeric", month: "short", timeZone: "Europe/Berlin" }); } catch { return iso; } };
 
 export default function TransfersPage() {
+  const [detail,setDetail]=useState<string|null>(null);
   const { t, locale } = useLang();
   const [tab, setTab] = useState<"request" | "fulfill">("request");
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,8 @@ export default function TransfersPage() {
 
   return (
     <div className="fade-up">
+      <InventoryNav active="movements" />
+      {detail&&<MovementDetails kind="transfer" id={detail} onClose={()=>setDetail(null)} onSaved={loadAll}/>}
       <PageHeader icon={<Icon e="🔄" size={22} />} title={t("xfer.title")} subtitle={t("xfer.subtitle")} />
 
       <div className="hub-tabs" role="group" aria-label={t("xfer.title")}>
@@ -134,9 +139,10 @@ export default function TransfersPage() {
                     </div>
                     <Badge tone={stTone(r.status)}>{t("xfer.st_" + r.status)}</Badge>
                   </div>
+                  <button className="btn-secondary" onClick={()=>setDetail(r.id)}>{t("inventoryOps.movementDetails")}</button>
                   {(r.status === "requested" || r.status === "sent") && (
                     <div className="ui-row-actions">
-                      {r.status === "sent" && <button type="button" className="btn-gold" onClick={() => act(receiveTransfer, r.id, "xfer.received")} disabled={busy === r.id}>{t("xfer.confirmReceived")}</button>}
+                      {r.status === "sent" && <button type="button" className="btn-gold" onClick={() => setDetail(r.id)} disabled={busy === r.id}>{t("inventoryOps.actualReceived")}</button>}
                       {r.status === "requested" && <button type="button" className="btn-quiet-danger" onClick={() => act(cancelTransfer, r.id, "xfer.cancelled")} disabled={busy === r.id}>{t("xfer.cancel")}</button>}
                     </div>
                   )}
@@ -166,6 +172,7 @@ export default function TransfersPage() {
                     </div>
                   )}
                   {r.status === "sent" && <div className="ui-note tone-warn">{t("xfer.awaitingReceipt")}</div>}
+                  <button className="btn-secondary" onClick={()=>setDetail(r.id)}>{t("inventoryOps.movementDetails")}</button>
                 </div>
               ))}
             </div>

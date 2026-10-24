@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { berlinDateOf, reconcileIntervals, reviewSnapshot, sameSnapshot, transferMoves, type ReviewSnapshot, type StockMove, type TransferEvent, type TransferRow } from "@/lib/inventory/reconciliation";
+import { activeBranchFor, accessibleBranchIds } from "@/lib/activeBranch";
 
 // Release C: per product, every pair of consecutive counts in the period, explained
 // by deliveries, transfers and waste. Runs entirely under the caller's RLS.
@@ -12,10 +13,9 @@ const MANAGERS = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const productKey = (r: { category?: string | null; product: string }) => JSON.stringify([r.category || "", r.product]);
 const num = (v: unknown) => (v == null ? NaN : Number(v));
 
-const OWNERS = ["brand_owner", "super_admin"];
 
-// branchId: HQ (brand owner / super admin) may pick any branch it can read; everyone
-// else always gets their own branch. RLS still decides what rows come back.
+// Default: the active branch (header picker). An explicit branchId must be one this
+// user may access (home + linked; HQ: all). RLS still decides what rows come back.
 export async function getReconciliation(days = 90, branchId?: string | null) {
   if (!Number.isInteger(days) || days < 7 || days > 180) return { ok: false as const, error: "Invalid period." };
   const db = await createClient();
@@ -23,11 +23,9 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
   if (!user) return { ok: false as const, error: "Not logged in." };
   const { data: profile } = await db.from("users").select("role,branch_id").eq("id", user.id).single();
   if (!MANAGERS.includes(profile?.role)) return { ok: false as const, error: "Manager access with a branch is required." };
-  let branch = profile?.branch_id as string | undefined;
+  let branch = (await activeBranchFor(db, profile)) ?? undefined;
   if (branchId && branchId !== branch) {
-    if (!OWNERS.includes(profile?.role)) return { ok: false as const, error: "Manager access with a branch is required." };
-    const { data: picked } = await db.from("branches").select("id").eq("id", branchId).maybeSingle();
-    if (!picked) return { ok: false as const, error: "Branch access denied." };
+    if (!(await accessibleBranchIds(db)).includes(branchId)) return { ok: false as const, error: "Branch access denied." };
     branch = branchId;
   }
   if (!branch) return { ok: false as const, error: "Manager access with a branch is required." };
@@ -39,7 +37,7 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
     readAll(db.from("inventory_purchases").select("product,category,unit,qty,purchase_date").eq("branch_id", branch).gte("purchase_date", from).order("id")),
     readAll(db.from("waste_log").select("product,category,unit,qty,work_date").eq("branch_id", branch).gte("work_date", from).order("id")),
     // Anything that moved in the period, plus older transfers still in transit.
-    readAll(db.from("stock_transfers").select("id,product,category,unit,qty,status,from_branch_id,to_branch_id,created_at")
+    readAll(db.from("stock_transfers").select("id,product,category,unit,qty,received_qty,status,from_branch_id,to_branch_id,created_at")
       .or(`from_branch_id.eq.${branch},to_branch_id.eq.${branch}`).in("status", ["sent", "received"])
       .or(`updated_at.gte.${from},status.eq.sent`).order("id")),
     readAll(db.from("stock_reconciliation_reviews").select("from_count_id,to_count_id,note,figures,reviewed_by,created_at").eq("branch_id", branch).order("id")),

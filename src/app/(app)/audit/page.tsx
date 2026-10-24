@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -23,7 +24,7 @@ export default function AuditPage() {
 
   if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
-  const fmt = (iso: string) => new Date(iso).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  const fmt = (iso: string) => new Date(iso).toLocaleString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="workspace-page">

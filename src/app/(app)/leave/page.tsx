@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { submitLeave, getMyLeave } from "@/lib/queries/leave";
 import { toast } from "@/components/Toast";
@@ -43,7 +44,7 @@ export default function LeavePage() {
     } else toast(res.error || t("leave.failSubmit"), "error");
   }
 
-  const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", year: "numeric" }) : "—";
   const statusStyle = (s: string) => ({
     fontSize: 12, padding: "3px 10px", borderRadius: 12,
     background: s === "approved" ? "rgba(39,174,96,0.15)" : s === "denied" ? "rgba(231,76,60,0.15)" : "var(--accent-soft)",

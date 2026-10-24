@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getNextWeekStart } from "@/lib/queries/availability";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // SCHEDULE OVERVIEW — powers the manager Schedule hub:
@@ -19,7 +20,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, role: null };
   const { data: profile } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, role: profile?.role ?? null };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, role: profile?.role ?? null };
 }
 
 function isManager(role?: string | null) {

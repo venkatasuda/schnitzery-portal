@@ -5,6 +5,7 @@ import { readAll } from "@/lib/supabase/readAll";
 import { createClient } from "@/lib/supabase/server";
 import { monthRange } from "@/lib/time/berlinDate";
 import { shiftMinutes } from "@/lib/pay/calculations";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // TIME & PAY — all computed from attendance_logs (no new tables)
@@ -18,7 +19,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("id, full_name, role, branch_id, contract_hours").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");

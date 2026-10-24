@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { berlinToday, berlinMonday, mondayOfDate } from "@/lib/time/berlinDate";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 async function getMe() {
   const supabase = await createClient();
@@ -10,7 +11,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
@@ -23,7 +24,7 @@ const shiftTime = (team: string, shift: string) => SHIFT_MODEL[team]?.find((s) =
 
 // ── STAFF: my upcoming shifts (this week + next), with any active cover request marked ──
 export async function getMyUpcomingShifts() {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in.", shifts: [] };
   const today = berlinToday();
   const weeks = [berlinMonday(), berlinMonday(1)];
@@ -60,7 +61,7 @@ export async function getMyUpcomingShifts() {
 }
 
 export async function requestCover(work_date: string, day: string, team: string, shift: string, reason: string) {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in." };
   if (!work_date || !team || !shift) return { ok: false, error: "Missing shift details." };
   const { data: dupe } = await supabase
@@ -78,7 +79,7 @@ export async function requestCover(work_date: string, day: string, team: string,
 
 // ── STAFF: open requests from others (claimable) ──
 export async function getOpenCovers() {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in.", covers: [] };
   const today = berlinToday();
   const { data } = await supabase
@@ -114,7 +115,7 @@ export async function cancelCover(id: string) {
 
 // ── STAFF: my own requests + shifts I've offered to cover ──
 export async function getMyCovers() {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in.", mine: [], claimed: [] };
   const { data: mine } = await supabase
     .from("cover_requests").select("*, claimer:claimer_id (full_name)")

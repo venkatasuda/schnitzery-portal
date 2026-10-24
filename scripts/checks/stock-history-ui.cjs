@@ -1,11 +1,12 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
-function load(file,resolve){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText,{exports,require:resolve});return exports;}
+function load(file,resolve){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText,{exports,require:resolve,window:{location:{search:''}},URLSearchParams});return exports;}
 (async()=>{
   let role='manager',loggedIn=true,dbError=false;const calls=[];
   const events=Array.from({length:101},(_,i)=>({id:200-i}));
   const chain=new Proxy({}, {get:(_,key)=>key==='then'?resolve=>resolve({data:dbError?null:events,error:dbError?{}:null}):(...args)=>{calls.push([key,...args]);return chain;}});
-  const query=load('src/lib/queries/stock-history.ts',()=>({createClient:async()=>({auth:{getUser:async()=>({data:{user:loggedIn?{id:'manager'}:null}})},from:table=>{calls.push(['from',table]);return table==='users'?{select:()=>({eq:()=>({single:async()=>({data:{role,branch_id:'own-branch'}})})})}:chain;}})})).getStockHistory;
+  const query=load('src/lib/queries/stock-history.ts',n=>n.endsWith('/activeBranch')?AB:({createClient:async()=>({auth:{getUser:async()=>({data:{user:loggedIn?{id:'manager'}:null}})},from:table=>{calls.push(['from',table]);return table==='users'?{select:()=>({eq:()=>({single:async()=>({data:{role,branch_id:'own-branch'}})})})}:chain;}})})).getStockHistory;
   for(const args of [['fake'],['all',-1],['all',NaN],['all',1.5]])assert.equal((await query(...args)).ok,false);
   assert.equal(calls.length,0,'Invalid filters fail before database access');
   role='staff';assert.equal((await query()).ok,false);assert.ok(!calls.some(c=>c[1]==='stock_events'));
@@ -20,6 +21,7 @@ function load(file,resolve){const exports={};vm.runInNewContext(ts.transpileModu
       if(name==='react')return hooks;
       if(name.includes('LanguageProvider'))return{useLang:()=>({t:k=>k,locale:'en'})};
       if(name.includes('stock-history'))return{getStockHistory:async()=>{if(response instanceof Error)throw response;return response;}};
+      if(name.includes('MovementDetails'))return{__esModule:true,default:()=>null};
       return require(name);
     }).default;
     component();effects.forEach(fn=>fn());await new Promise(r=>setImmediate(r));initial=false;cursor=0;

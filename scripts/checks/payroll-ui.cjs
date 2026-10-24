@@ -1,5 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
 const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+const fmt={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/format.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports:fmt,Intl});
 const ui={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/components/ui.tsx','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,{exports:ui,require});
 async function render(result,report=false){
   let reportHtml='';
@@ -12,7 +13,7 @@ async function render(result,report=false){
       if(name==='@/lib/queries/payroll')return{getPayrollSummary:async()=>result};
       if(name==='@/components/LanguageProvider')return{useLang:()=>({t:key=>key})};
       if(name==='@/lib/i18n/serverMessages')return{serverText:m=>m};if(name==='@/components/Toast')return{toast(){}};if(name==='@/components/Skeleton')return{CardSkeleton:()=>null};
-      if(name==='@/components/ui')return ui;if(name==='@/components/Icon')return{__esModule:true,default:()=>null};
+      if(name==='@/lib/format')return fmt;if(name==='@/components/ui')return ui;if(name==='@/components/Icon')return{__esModule:true,default:()=>null};
       if(name==='next/link')return{__esModule:true,default:props=>React.createElement('a',props)};return require(name);}});
   exports.default();for(const effect of effects)effect();await new Promise(resolve=>setImmediate(resolve));initial=false;cursor=0;
   const tree=exports.default();

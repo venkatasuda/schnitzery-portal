@@ -4,6 +4,7 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "A manager correction with a reason is required.": "Eine Korrektur durch die Leitung mit Begründung ist erforderlich.",
   "A rejection reason is required.": "Bitte einen Ablehnungsgrund angeben.",
   "Already actioned. Refresh the transfer.": "Bereits bearbeitet. Bitte den Transfer neu laden.",
   "Already actioned.": "Bereits bearbeitet.",

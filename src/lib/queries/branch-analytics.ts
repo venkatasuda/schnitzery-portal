@@ -8,6 +8,7 @@ import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches } from "@/lib/pay/wages";
 import { figure, missingSalesDays, pctOf, spendFigure } from "@/lib/analytics/coverage";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================================
 // BRANCH PERFORMANCE ANALYTICS — aggregate KPIs over a daily / weekly / monthly
@@ -70,7 +71,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, role: null as string | null, branchId: null as string | null };
   const { data: p, error: pError } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
   if (pError) return { ok: false as const, error: pError.message };
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 
 export async function getAnalyticsScope() {
@@ -426,7 +427,9 @@ export async function getBranchComparison(opts: { period?: "weekly" | "monthly";
   const { supabase, user, role } = await getMe();
   const blank = { ok: false as const, period, ...windowFor(period, date), rows: [] as any[] };
   if (!user) return { ...blank, error: "Not logged in." };
-  if (!OWNER.includes(role ?? "")) return { ...blank, error: "Owners only." };
+  // HQ sees every branch; managers/branch owners linked to several branches compare
+  // their own (RLS limits "branches" to accessible_branch_ids()).
+  if (!MGR.includes(role ?? "")) return { ...blank, error: "Managers only." };
 
   const { data: branches, error: branchesError } = await readAll(supabase.from("branches").select("id, name").order("name").order("id"));
   if (branchesError) return { ...blank, ok: false as const, error: branchesError.message };

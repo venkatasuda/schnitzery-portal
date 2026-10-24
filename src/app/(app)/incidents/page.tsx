@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { reportIncident, getIncidents, resolveIncident } from "@/lib/queries/operations";
 import { toast } from "@/components/Toast";
@@ -59,7 +60,7 @@ export default function IncidentsPage() {
     else toast(res.error || t("incidents.failResolve"), "error");
   }
 
-  const fmt = (iso: string) => new Date(iso).toLocaleDateString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="workspace-page">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import { pushText, type WeeklyPayload } from "@/lib/owner/weeklySummary";
 import Icon from "@/components/Icon";
 import { getManagerAlerts } from "@/lib/queries/alerts";
 import { getMyNotifications, markAllNotificationsRead } from "@/lib/queries/notifications";
@@ -38,12 +39,14 @@ const NOTIF: Record<string, { key: string; icon: string; href: string }> = {
   sync_failure:        { key: "notif.syncFailure",       icon: "🔄", href: "/ops" },
   attendance_anomaly:  { key: "notif.attendanceAnomaly", icon: "⚠️", href: "/ops" },
   system_error:        { key: "notif.systemError",       icon: "🛠️", href: "/" },
+  // owner
+  weekly_summary:      { key: "notif.weeklySummary",     icon: "📊", href: "/" },
 };
 
 const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
 
 export default function NotificationBell() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const docLabel = (k: string) => t("documents.type_" + (DOC_TYPE_KEYS.includes(k) ? k : "other"));
   const [open, setOpen] = useState(false);
   const [ops, setOps] = useState<any[]>([]);
@@ -90,6 +93,9 @@ export default function NotificationBell() {
       if (n.type === "doc_rejected") return n.message ? `${label}: ${n.message}` : label;
       if (n.type === "doc_pending") return n.message ? `${label} · ${n.message}` : label;
       return label;
+    }
+    if (n.type === "weekly_summary") {
+      try { return pushText(JSON.parse(n.message) as WeeklyPayload, locale === "de" ? "de" : "en").body; } catch { return ""; }
     }
     return n.message || "";   // phase-7 types carry human text in message
   }

@@ -11,7 +11,8 @@ import ToastHost from "@/components/Toast";
 import LanguageProvider from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import LanguageToggle from "@/components/LanguageToggle";
-import ViewToggle from "@/components/ViewToggle";
+import BranchPicker from "@/components/BranchPicker";
+import { activeBranchFor, branchChoices } from "@/lib/activeBranch";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { getViewMode } from "@/lib/viewMode";
 
@@ -27,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from("users")
-    .select("full_name, role, avatar_url, must_change_password")
+    .select("full_name, role, branch_id, avatar_url, must_change_password")
     .eq("id", user.id)
     .single();
 
@@ -46,6 +47,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // A brand owner in "branch" mode navigates as a manager; otherwise as owner.
   // Non-HQ roles ignore viewMode entirely.
   const navRole = isHQ && viewMode === "branch" ? "manager" : role;
+  // Branch picker: brand owners always (HQ + branches); managers/owners with 2+ branches.
+  const branches = isManager ? await branchChoices(supabase) : [];
+  const showPicker = isHQ || branches.length > 1;
+  const activeBranch = showPicker ? (isHQ && viewMode === "hq" ? "hq" : await activeBranchFor(supabase, { role, branch_id: profile?.branch_id })) : null;
 
   return (
     <LanguageProvider initialLocale={locale}>
@@ -58,7 +63,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="sub">{t(`roles.${role}`)}</div>
         </div>
         <div className="header-right">
-          {isHQ && <ViewToggle mode={viewMode} />}
+          {showPicker && <BranchPicker branches={branches} current={activeBranch ?? ""} hq={isHQ} />}
           <span className="header-name">{profile?.full_name || user?.email}</span>
           {isManager && <Link href="/search" aria-label={locale === "de" ? "Suchen" : "Search"} className="header-search"><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />

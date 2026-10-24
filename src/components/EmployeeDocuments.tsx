@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { getRequiredChecklist, listEmployeeDocuments, approveDocument, rejectDocument, getDocumentUrl } from "@/lib/queries/documents";
 import { toast } from "@/components/Toast";
@@ -27,7 +28,7 @@ function statusInfo(status: string, t: Tf): { label: string; color: string } {
   }
 }
 const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) : "";
+  d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", year: "numeric" }) : "";
 
 export default function EmployeeDocuments({ userId }: { userId: string }) {
   const { t } = useLang();

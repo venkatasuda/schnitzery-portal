@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { toast } from "@/components/Toast";
 import { useEffect, useState } from "react";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -42,10 +43,10 @@ export default function ChecklistStatusPage() {
 
   const fmtTime = (ts: string | null) => {
     if (!ts) return "";
-    try { return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); } catch { return ""; }
+    try { return new Date(ts).toLocaleTimeString(appLocale(), { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); } catch { return ""; }
   };
   const fmtDate = (d: string) => {
-    try { return new Date(d + "T12:00:00Z").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", timeZone: "Europe/Berlin" }); } catch { return d; }
+    try { return new Date(d + "T12:00:00Z").toLocaleDateString(appLocale(), { weekday: "short", month: "short", day: "numeric", timeZone: "Europe/Berlin" }); } catch { return d; }
   };
   const dayColor = (done: number, total: number) =>
     total === 0 ? "var(--gray)" : done === total ? "var(--success)" : done === 0 ? "var(--danger)" : "#d4a847";

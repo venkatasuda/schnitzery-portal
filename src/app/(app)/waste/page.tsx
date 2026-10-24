@@ -1,25 +1,29 @@
 "use client";
+import { formatEur, appLocale } from "@/lib/format";
+import InventoryNav from "@/components/InventoryNav";
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
-import { getWasteProducts, logWaste, getWasteLog, getWasteSummary, getWasteTrends, deleteWaste } from "@/lib/queries/waste";
+import { getWasteProducts, logWaste, getWasteLog, getWasteSummary, getWasteTrends } from "@/lib/queries/waste";
+import MovementDetails from "@/components/inventory/MovementDetails";
 import { PageHeader, Panel } from "@/components/ui";
 
 const REASONS = ["spoiled", "dropped", "overcooked", "expired", "other"];
 const REASON_EMOJI: Record<string, string> = { spoiled: "🦠", dropped: "💥", overcooked: "🔥", expired: "📅", other: "🗑️" };
-const eur = (n: number) => "€" + (Math.round((n || 0) * 100) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtWhen = (iso: string) => { try { return new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return iso; } };
+const fmtWhen = (iso: string) => { try { return new Date(iso).toLocaleString(appLocale(), { timeZone: "Europe/Berlin", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return iso; } };
 
 export default function WastePage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const eur = (n: number) => formatEur((n || 0), locale, 2);
   const [products, setProducts] = useState<any[]>([]);
   const [entries, setEntries] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [trends, setTrends] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [canCorrect,setCanCorrect]=useState(false),[detail,setDetail]=useState<string|null>(null);
 
   const [search, setSearch] = useState("");
   const [sel, setSel] = useState<any>(null);
@@ -33,7 +37,7 @@ export default function WastePage() {
     try {
     const [p, e, s, tr] = await Promise.all([getWasteProducts(), getWasteLog(14), getWasteSummary(7), getWasteTrends(6)]);
     if (p.ok) setProducts(p.products || []);
-    if (e.ok) setEntries(e.entries || []);
+    if (e.ok) {setEntries(e.entries || []);setCanCorrect(!!e.canCorrect);}
     if (s.ok) setSummary(s);
     setTrends(tr.ok ? tr : null); // ok:false for non-managers — card simply won't render
     setLoading(false);
@@ -54,16 +58,13 @@ export default function WastePage() {
       loadAll();
     } else toast(r.error || t("waste.failed"), "error");
   }
-  async function remove(id: string) {
-    if (!confirm(t("waste.confirmDelete"))) return;
-    const r = await deleteWaste(id);
-    if (r.ok) { toast(t("waste.deleted"), "success"); loadAll(); } else toast(r.error || t("waste.failed"), "error");
-  }
 
   const filtered = products.filter((p) => p.product.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
 
   return (
     <div className="fade-up">
+      <InventoryNav active="movements" />
+      {detail&&<MovementDetails kind="waste" id={detail} onClose={()=>setDetail(null)} onSaved={loadAll}/>}
       <PageHeader icon={<Icon e="🗑️" size={22} />} title={t("waste.title")} subtitle={t("waste.subtitle")} />
 
       {summary && summary.count > 0 && (
@@ -168,7 +169,7 @@ export default function WastePage() {
           </div>
           <div className="u-row">
             {e.value != null && <span className="ui-figure tone-danger">{eur(e.value)}</span>}
-            <button className="ui-icon-btn" type="button" aria-label={t("common.delete")} onClick={() => remove(e.id)}><Icon e="✕" size={16} /></button>
+            {canCorrect&&<button className="btn-secondary" type="button" onClick={() => setDetail(e.id)}>{t("inventoryOps.correct")}</button>}
           </div>
         </div>
       ))}

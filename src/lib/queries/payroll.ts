@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { berlinMonth, monthRange } from "@/lib/time/berlinDate";
 import { classifyShift, shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================================
 // PAYROLL ENGINE — per-employee monthly hour breakdown for a branch.
@@ -47,7 +48,7 @@ async function getMgr() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null as string | null, branchId: null as string | null, name: null as string | null };
   const { data: p } = await supabase.from("users").select("role, branch_id, full_name").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null, name: p?.full_name ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null, name: p?.full_name ?? null };
 }
 function thisMonth() { return berlinMonth(); }
 export async function getPayrollSettings() {

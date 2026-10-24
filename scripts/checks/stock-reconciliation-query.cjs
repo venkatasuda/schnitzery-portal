@@ -17,7 +17,7 @@ const chain=table=>{const q=new Proxy({}, {get:(_,k)=>{
   if(k==='maybeSingle')return async()=>({data:table==='branches'&&calls.some(c=>c[0]==='branches'&&c[1]==='eq'&&c[3]==='hq-visible')?{id:'hq-visible'}:null,error:null});
   return (...a)=>{calls.push([table,k,...a]);return q;};}});return q;};
 const db={auth:{getUser:async()=>({data:{user:{id:'me'}}})},from:t=>t==='users'?{select:()=>({eq:()=>({single:async()=>({data:{role,branch_id:'own'}})})})}:chain(t)};
-const q=load('src/lib/queries/reconciliation.ts',n=>n.endsWith('/readAll')?readAll:n.endsWith('/server')?{createClient:async()=>db}:n.endsWith('berlinDate')?{berlinToday:()=>'2026-10-21'}:n.endsWith('inventory/reconciliation')?lib:n==='@supabase/supabase-js'?admin:(()=>{throw Error(n);})());
+const q=load('src/lib/queries/reconciliation.ts',n=>n.endsWith('/activeBranch')?{activeBranchFor:async(_d,p)=>p?.branch_id??null,accessibleBranchIds:async()=>role==='manager'?['own']:['own','hq-visible']}:n.endsWith('/readAll')?readAll:n.endsWith('/server')?{createClient:async()=>db}:n.endsWith('berlinDate')?{berlinToday:()=>'2026-10-21'}:n.endsWith('inventory/reconciliation')?lib:n==='@supabase/supabase-js'?admin:(()=>{throw Error(n);})());
 (async()=>{
   for(const d of [0,6,181,1.5,NaN])assert.equal((await q.getReconciliation(d)).ok,false);
   assert.equal(calls.length,0,'Invalid periods fail before database access');

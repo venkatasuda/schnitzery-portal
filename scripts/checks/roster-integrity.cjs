@@ -1,9 +1,11 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 let role='manager',people=[{id:'employee',full_name:'Real name'}],changed={id:'roster',roster_data:{}},writes=[];
 const chain=table=>{let mutation=false;const q=new Proxy({}, {get:(_,method)=>{
  if(method==='then')return (resolve,reject)=>Promise.resolve({data:table==='users'?people:changed,error:null}).then(resolve,reject);
  return (...args)=>{if(['insert','update'].includes(method)){mutation=true;writes.push([table,method,...args]);}if(mutation&&['eq','is'].includes(method))writes.push([method,...args]);if(method==='single')return Promise.resolve({data:{role,branch_id:'branch'},error:null});return q;};}});return q;};
 const out={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/schedule.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:out,require:n=>{
+ if(n.endsWith('/activeBranch'))return AB;
  if(n.endsWith('/server'))return {createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from:chain})};
  if(n.endsWith('schedule-constants'))return {DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],SHIFT_MODEL:{Kitchen:[{shift:'Morning'}]}};
  if(n.endsWith('berlinDate'))return {isCalendarDate:d=>/^\d{4}-\d{2}-\d{2}$/.test(d)};

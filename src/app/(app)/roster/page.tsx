@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useEffect, useRef, useState } from "react";
 import { getRoster, saveRoster, getWeekStart } from "@/lib/queries/schedule";
 import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
@@ -116,7 +117,7 @@ export default function RosterPage() {
     if (!weekStart) return "";
     const start = new Date(weekStart);
     const end = new Date(start); end.setDate(end.getDate() + 6);
-    const f = (d: Date) => d.toLocaleDateString([], { day: "2-digit", month: "short" });
+    const f = (d: Date) => d.toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
     return `${f(start)} – ${f(end)}`;
   })();
 

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { account, admin, BRANCH, expectToast, openContexts, signIn, unique } from "./local";
+import { account, addCatalogProduct, removeCatalogProduct, admin, BRANCH, expectToast, openContexts, signIn, unique } from "./local";
 
 // The five flows the restaurants run every day. Each test cleans up what it creates.
 
@@ -7,25 +7,6 @@ test.afterEach(async () => { for (const c of openContexts.splice(0)) await c.clo
 // Leftovers from runs that died before their own cleanup (synthetic local data only).
 test.beforeAll(async () => { await admin().from("inventory_master").update({ is_active: false }).like("product", "E2E %").eq("is_active", true); });
 
-async function addCatalogProduct(page: Page, product: string) {
-  await page.goto("/inventory");
-  await page.getByRole("button", { name: "Catalog" }).click();
-  await page.getByRole("button", { name: /Add Product to Catalog/ }).click();
-  await page.getByLabel("Category", { exact: true }).fill("E2E");
-  await page.getByLabel("Product", { exact: true }).fill(product);
-  await page.getByLabel(/^Target/).fill("10");
-  await page.getByLabel("Unit", { exact: true }).fill("kg");
-  await page.getByRole("button", { name: "Add Product", exact: true }).click();
-  await expectToast(page, "Product added");
-}
-
-async function removeCatalogProduct(page: Page, product: string) {
-  await page.goto("/inventory");
-  await page.getByRole("button", { name: "Catalog" }).click();
-  page.once("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: `Remove product: ${product}` }).click();
-  await expectToast(page, "Product removed");
-}
 
 test("staff clock in and clock out", async ({ browser }) => {
   const page = await signIn(browser, account("staff"), { geo: true });
@@ -106,7 +87,12 @@ test("transfer between branches: request, send, receive", async ({ browser }) =>
 
     await requester.reload();
     const sent = requester.locator(".card, li, tr").filter({ hasText: product }).first();
-    await sent.getByRole("button", { name: "Confirm received" }).click();
+    await sent.getByRole("button", { name: "Actual received quantity" }).click();
+    const receipt=requester.getByRole("dialog",{name:"Movement details"});
+    await receipt.getByLabel("Actual received quantity",{exact:true}).fill("2");
+    requester.once("dialog",d=>d.accept());
+    await receipt.getByRole("button",{name:"Confirm receipt",exact:true}).click();
+    await expect(receipt).toBeHidden();
     await expect(sent).toContainText("Received");
   } finally {
     await removeCatalogProduct(requester, product);

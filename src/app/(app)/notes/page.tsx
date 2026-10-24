@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { toast } from "@/components/Toast";
 import { useEffect, useState } from "react";
@@ -50,7 +51,7 @@ export default function NotesPage() {
   if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const shown = tab === "recognition" ? notes.filter((n) => n.isRecognition) : notes;
-  const fmt = (iso: string) => new Date(iso).toLocaleDateString([], { day: "2-digit", month: "short" });
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
 
   return (
     <div className="workspace-page">

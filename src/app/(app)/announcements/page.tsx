@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { getAnnouncements, postAnnouncement, togglePin, deleteAnnouncement } from "@/lib/queries/announcements";
 import { toast } from "@/components/Toast";
@@ -72,7 +73,7 @@ export default function AnnouncementsPage() {
     const diffH = Math.floor((now.getTime() - d.getTime()) / 3600000);
     if (diffH < 1) return t("announcements.justNow");
     if (diffH < 24) return t("announcements.hoursAgo", { h: diffH });
-    return d.toLocaleDateString([], { day: "2-digit", month: "short" });
+    return d.toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
   };
 
   return (

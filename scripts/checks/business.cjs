@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
@@ -30,6 +31,7 @@ const sb = { auth: { getUser: async () => ({ data: { user: { id: 'manager' } } }
 } };
 const api = load('src/lib/queries/branch-analytics.ts', {
   '@/lib/supabase/server': { createClient: async () => sb },
+  '@/lib/activeBranch': AB,
   '@/lib/supabase/readAll': { readAll: async q => await q },
   '@/lib/time/berlinDate': { berlinToday: () => '2026-10-11', isCalendarDate: d => /^2026-10-\d\d$/.test(d) },
   '@/lib/queries/schedule-constants': { DAYS: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'], SHIFT_MODEL: {} },

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { DAYS } from "@/lib/queries/schedule-constants";
 import { getShiftTimes } from "@/lib/queries/shift-times";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const TZ = "Europe/Berlin"; // Stuttgart wall-clock for shift times
@@ -48,7 +49,7 @@ export async function getScheduleComparison(weekStart: string) {
   if (!user) return { ok: false, error: "Not logged in." };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
   if (!MGR.includes(p?.role || "")) return { ok: false, error: "Managers only." };
-  const branchId = p?.branch_id;
+  const branchId = await activeBranchFor(supabase, p);
   if (!branchId) return { ok: false, error: "No branch assigned." };
 
   // 1) roster for the week
