@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { getLocale } from "@/lib/i18n/server";
+import { readAll } from "@/lib/supabase/readAll";
+import { IMPLAUSIBLE_SHIFT_MIN } from "@/lib/pay/calculations";
 
 // German ArbZG compliance, checked against ACTUAL clock-in/out + breaks
 // (last 14 days). Flags: insufficient break on long shifts, <11h rest
@@ -49,9 +51,10 @@ export async function getCompliance() {
   const nameOf: Record<string, string> = {};
   for (const s of staff || []) nameOf[s.id] = s.full_name;
 
-  const { data: logs } = await supabase
+  const { data: logs, error: logsError } = await readAll(supabase
     .from("attendance_logs").select("user_id, work_date, clock_in, clock_out, breaks")
-    .eq("branch_id", branchId).gte("work_date", sinceStr).eq("status", "complete").order("clock_in");
+    .eq("branch_id", branchId).gte("work_date", sinceStr).eq("status", "complete").order("clock_in").order("id"));
+  if (logsError) return { ok: false, error: logsError.message }; // never report "no issues" on a failed read
 
   const violations: { name: string; date: string; type: string; detail: string; severity: "high" | "med" }[] = [];
   const byUser: Record<string, any[]> = {};
@@ -64,6 +67,12 @@ export async function getCompliance() {
     const brk = breakMinutes(parseBreaks(l.breaks));
     const net = grossMin - brk;
     const name = nameOf[l.user_id] || "Unknown";
+    // 16h+ = forgotten clock-out, not real work: one "check the clock-out" item, and the
+    // shift stays out of the rest-time check below (its end time is wrong).
+    if (grossMin > IMPLAUSIBLE_SHIFT_MIN) {
+      violations.push({ name, date: dlabel(l.work_date, de), type: "Clock-out", severity: "high", detail: de ? `${dn(h1(grossMin))} Std. erfasst – Ausstempeln vergessen? Zeit korrigieren` : `${h1(grossMin)}h recorded — forgotten clock-out? Correct the time` });
+      continue;
+    }
 
     if (net > 360) {
       const required = net > 540 ? 45 : 30;

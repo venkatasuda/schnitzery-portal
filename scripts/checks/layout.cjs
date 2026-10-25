@@ -29,10 +29,11 @@ for (const role of ["manager", "branch_owner", "brand_owner", "super_admin"]) {
 const layout = fs.readFileSync(path.join(root, "src/app/layout.tsx"), "utf8");
 for (const [route, section] of [["/checklist","/ops"],["/hours","/attendance-hub"],["/attendance/corrections","/attendance-hub"],["/simulator","/analytics"],["/staff/test","/staff"]]) {
   pathname=route;
-  const html=renderToStaticMarkup(React.createElement(exported.default,{role:"manager"}));
-  const active=[...html.matchAll(/<a href="([^"]+)" class="management-nav-link active"/g)].map(m=>m[1]);
-  assert.equal(active.length,2,'One active destination in each of the desktop/mobile navs');
-  assert.ok(active.every(href=>href===section),route);
+  for (const mobile of [false,true]) {
+    const html=renderToStaticMarkup(React.createElement(exported.default,{role:"manager",mobile}));
+    const active=[...html.matchAll(/<a href="([^"]+)" class="management-nav-link active"/g)].map(m=>m[1]);
+    assert.deepEqual(active,[section],`${route}: one active destination in ${mobile?'mobile':'desktop'} navigation`);
+  }
   assert.match(renderToStaticMarkup(React.createElement(exported.ManagementLocation,{role:"manager"})),new RegExp('href="'+section+'"'));
 }
 assert.ok(layout.includes('import Script from "next/script"'));

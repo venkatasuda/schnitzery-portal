@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
 // Safety: these tests create and delete records. They may only ever touch the
@@ -46,6 +47,22 @@ export const unique = (label: string) => `E2E ${label} ${Date.now().toString(36)
 
 // Contexts opened by signIn; closed after each test so earlier pages stop polling the server.
 export const openContexts: BrowserContext[] = [];
+
+// Presentation tests authenticate through the local API, then exercise real protected pages.
+// Login-form behavior remains covered by the workflow tests using signIn below.
+export async function authenticatedPage(browser: Browser, who: Account): Promise<Page> {
+  const env=stagingEnv(),url=env.NEXT_PUBLIC_SUPABASE_URL||"";
+  if(!/^http:\/\/(127\.0\.0\.1|localhost):55321\/?$/.test(url))throw new Error("Refusing non-local authentication");
+  const cookies=new Map<string,string>();
+  const auth=createServerClient(url,env.NEXT_PUBLIC_SUPABASE_ANON_KEY,{cookies:{getAll:()=>[...cookies].map(([name,value])=>({name,value})),setAll:values=>{for(const c of values)cookies.set(c.name,c.value);}}});
+  const result=await auth.auth.signInWithPassword({email:who.email,password:who.password});
+  if(result.error)throw new Error(`Synthetic ${who.role} authentication failed`);
+  const context=await browser.newContext();openContexts.push(context);
+  await context.addCookies([...cookies].map(([name,value])=>({name,value,url:BASE_URL})));
+  await context.addCookies([{name:"lang",value:"en",url:BASE_URL}]);
+  await context.addInitScript(()=>localStorage.setItem("sch_cookie_ack","1"));
+  return context.newPage();
+}
 
 // Signed-in page in its own context (separate cookies per person), English UI.
 export async function signIn(browser: Browser, who: Account, opts: { geo?: boolean } = {}): Promise<Page> {

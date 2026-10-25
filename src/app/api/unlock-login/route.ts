@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { canActOnUser, isManagerRole } from "@/lib/auth/rank";
 import { activeBranchFor } from "@/lib/activeBranch";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // ============================================================
 // SECURE SERVER ROUTE — clear a login lock.
 // A login is hard-locked after too many failed attempts (see
@@ -29,6 +31,7 @@ export async function POST(request: Request) {
   // 2. Parse input.
   let body: any;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 }); }
+  if (!body || typeof body !== "object" || Array.isArray(body) || typeof body.userId !== "string" || !UUID.test(body.userId)) return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 });
   const { userId } = body as { userId?: string };
   if (!userId) return NextResponse.json({ ok: false, error: "Missing userId." }, { status: 400 });
 
@@ -42,7 +45,7 @@ export async function POST(request: Request) {
 
   // 4. Load target + authorize (own branch, never above your rank).
   const { data: target } = await admin
-    .from("users").select("role, branch_id, email").eq("id", userId).single();
+    .from("users").select("role, branch_id, email, status").eq("id", userId).single();
   if (!target) return NextResponse.json({ ok: false, error: "Staff member not found." }, { status: 404 });
 
   const gate = canActOnUser({
@@ -55,6 +58,12 @@ export async function POST(request: Request) {
   //    attempts rather than being re-locked by leftover rows in the window.
   const { error: upErr } = await admin.from("users").update({ login_locked: false }).eq("id", userId);
   if (upErr) return NextResponse.json({ ok: false, error: upErr.message }, { status: 400 });
+  // A lock also bans the auth user for the throttle window (loginThrottle.ts); lift it,
+  // but never for a deactivated person (their ban is the deactivation).
+  if (target.status === "active") {
+    const { error: banErr } = await admin.auth.admin.updateUserById(userId, { ban_duration: "none" });
+    if (banErr) return NextResponse.json({ ok: false, error: banErr.message }, { status: 400 });
+  }
   if (target.email) {
     await admin.from("auth_throttle").delete().eq("identifier", String(target.email).trim().toLowerCase());
   }

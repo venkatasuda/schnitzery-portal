@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { sendPushToUser } from "@/lib/push/delivery";
+import { readAll } from "@/lib/supabase/readAll";
 import { mondayOfDate, berlinToday } from "@/lib/time/berlinDate";
 import { summarise, pushText, type BranchWeek } from "@/lib/owner/weeklySummary";
 
@@ -40,11 +41,12 @@ export async function GET(req: Request) {
   if (!allIds.length) return NextResponse.json({ ok: true, sent: 0 });
 
   const [sales, logs, purch, pending, corr] = await Promise.all([
-    db.from("daily_sales").select("branch_id, sale_date, amount").in("branch_id", allIds).gte("sale_date", prev).lte("sale_date", weekEnd),
-    db.from("attendance_logs").select("branch_id, duration_mins").in("branch_id", allIds).eq("status", "complete").gte("work_date", week).lte("work_date", weekEnd),
-    db.from("inventory_purchases").select("branch_id, cost").in("branch_id", allIds).gte("purchase_date", week).lte("purchase_date", weekEnd),
-    db.from("attendance_logs").select("branch_id").in("branch_id", allIds).eq("status", "complete").or("approval_status.is.null,approval_status.eq.pending"),
-    db.from("attendance_corrections").select("branch_id").in("branch_id", allIds).eq("status", "pending"),
+    // readAll: Supabase returns at most 1,000 rows per request; page through all of them.
+    readAll(db.from("daily_sales").select("branch_id, sale_date, amount").in("branch_id", allIds).gte("sale_date", prev).lte("sale_date", weekEnd).order("id")),
+    readAll(db.from("attendance_logs").select("branch_id, duration_mins").in("branch_id", allIds).eq("status", "complete").gte("work_date", week).lte("work_date", weekEnd).order("id")),
+    readAll(db.from("inventory_purchases").select("branch_id, cost").in("branch_id", allIds).gte("purchase_date", week).lte("purchase_date", weekEnd).order("id")),
+    readAll(db.from("attendance_logs").select("branch_id").in("branch_id", allIds).eq("status", "complete").or("approval_status.is.null,approval_status.eq.pending").order("id")),
+    readAll(db.from("attendance_corrections").select("branch_id").in("branch_id", allIds).eq("status", "pending").order("id")),
   ]);
   if (sales.error || logs.error || purch.error || pending.error || corr.error) return NextResponse.json({ ok: false, error: "Read failed." }, { status: 500 });
   // ponytail: one read per table for all branches (fine for tens of branches); move to a SQL rollup if it grows.

@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { BRANCH_COOKIE, MULTI_BRANCH_ROLES, accessibleBranchIds } from "@/lib/activeBranch";
 
@@ -18,7 +18,10 @@ export async function setActiveBranch(choice: string) {
   const { data: me } = await db.from("users").select("role").eq("id", user.id).single();
   if (!MULTI_BRANCH_ROLES.includes(me?.role ?? "")) return { ok: false as const, error: "Managers only." };
   const store = await cookies();
-  const opts = { path: "/", maxAge: YEAR, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production" };
+  // Secure only over HTTPS (Vercel sets x-forwarded-proto). A Secure cookie sent over plain
+  // http (local staging) is silently dropped by the browser and the switch would do nothing.
+  const https = ((await headers()).get("x-forwarded-proto") ?? "").split(",")[0].trim() === "https";
+  const opts = { path: "/", maxAge: YEAR, sameSite: "lax" as const, secure: https };
   if (choice === "hq") {
     if (!HQ.includes(me!.role)) return { ok: false as const, error: "Owners only." };
     store.set("sz_view", "hq", opts);

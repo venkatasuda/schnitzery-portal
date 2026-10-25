@@ -62,7 +62,7 @@ export default async function HomePage() {
   let staffClockedIn = false, staffOnBreak = false;
   let org: OrgOverview | null = null;
   let mOps: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null = null;
-  let mLive: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number } | null = null;
+  let mLive: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null = null;
   let mTargets: Targets | null = null, mCanEditTargets = false;
   let mFlash: { yesterday: { date: string; sales: number | null; hours: number }; lastWeek: { date: string; sales: number | null; hours: number } } | null = null;
   let mInsights: Insights | null = null;
@@ -92,7 +92,7 @@ export default async function HomePage() {
     if ((wRes as any).ok) mWaste = ((wRes as any).weeks || []).map((w: any) => ({ label: String(w.weekStart).slice(5), value: w.wasteValue }));
     if (stRes.ok) { staffClockedIn = stRes.clockedIn || false; staffOnBreak = stRes.onBreak || false; }
     if (dRes.ok) mOps = dRes.stats ?? null;
-    if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0, forgotten: (liveRes as { forgotten?: unknown[] }).forgotten?.length || 0 };
+    if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0, forgotten: (liveRes as { forgotten?: unknown[] }).forgotten?.length || 0, suspect: (liveRes as { suspect?: number }).suspect || 0 };
     if (otRes.ok) mOt = { totalWorkedMins: otRes.totalWorkedMins || 0, totalOvertimeMins: otRes.totalOvertimeMins || 0, peopleOver: otRes.peopleOver || 0 };
     if (schedRes.ok) mSched = { submissionCount: schedRes.submissionCount || 0, staffCount: schedRes.staffCount || 0, rosterExists: schedRes.rosterExists || false };
   } else {
@@ -209,7 +209,7 @@ function StaffDash({ hours, clockedIn, onBreak, t, locale }: {
 function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, t, locale }: {
   locale: string;
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
-  live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number } | null;
+  live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
   clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
@@ -221,6 +221,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     ...(ops?.lowStock ? [{ href: "/inventory", icon: "📦", text: t("home.lowStock", { n: ops.lowStock }), tone: "warn" }] : []),
     ...(missing ? [{ href: "/noshow", icon: "📋", text: t("home.notSubmitted", { n: missing }), tone: "warn" }] : []),
     ...(live?.forgotten ? [{ href: "/attendance-hub", icon: "⏰", text: t("cockpit.forgotten", { n: live.forgotten }), tone: "danger" }] : []),
+    ...(live?.suspect ? [{ href: "/approvals", icon: "⚠", text: t("cockpit.suspect", { n: live.suspect }), tone: "danger" }] : []),
     ...(cost?.coverage?.sales.missing.salesDays ? [{ href: "/labor", icon: "💶", text: t("cockpit.salesMissingAlert", { n: cost.coverage.sales.missing.salesDays }), tone: "warn" }] : []),
   ];
   return <div className="dashboard-layout">

@@ -98,7 +98,7 @@ export function reconcileIntervals(counts: StockCount[], moves: StockMove[], unu
 }
 
 // Transfer legs for one branch, timed from the stock_events journal.
-export type TransferRow = { id: string; from_branch_id: string; to_branch_id: string; status: string; qty: number; unit?: string | null; created_at: string };
+export type TransferRow = { id: string; from_branch_id: string; to_branch_id: string; status: string; qty: number; received_qty?: number | null; unit?: string | null; created_at: string };
 export type TransferEvent = { source_id: string; operation: string; before_status: string | null; after_status: string | null; recorded_at: string };
 export const berlinDateOf = (iso: string) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
@@ -114,7 +114,8 @@ export function transferMoves(branchId: string, t: TransferRow, events: Transfer
   const moves: StockMove[] = [];
   if (t.from_branch_id === branchId) moves.push(sent ? { ...base, kind: "sent", date: berlinDateOf(sent.recorded_at) } : { ...base, kind: "sent", ...legacy });
   if (t.to_branch_id === branchId) {
-    if (t.status === "received") moves.push(received ? { ...base, kind: "received", date: berlinDateOf(received.recorded_at) } : { ...base, kind: "received", ...legacy });
+    const actual = { ...base, qty: t.received_qty == null ? base.qty : Number(t.received_qty) };
+    if (t.status === "received") moves.push(received ? { ...actual, kind: "received", date: berlinDateOf(received.recorded_at) } : { ...actual, kind: "received", ...legacy });
     if (sent || t.status === "sent") moves.push({ ...base, kind: "incoming", date: sent ? berlinDateOf(sent.recorded_at) : legacy.date,
       ...(t.status === "received" ? { until: received ? berlinDateOf(received.recorded_at) : legacy.until } : {}) });
   }

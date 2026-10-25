@@ -18,7 +18,7 @@ export default function NativeDialog({ title, busy=false, wide=false, unsaved=fa
     return()=>window.removeEventListener("beforeunload",prevent);
   },[unsaved]);
   return <dialog ref={dialog} className={`workspace-dialog${wide?" workspace-dialog-wide":""}`} aria-label={title}
-    onCancel={event => { if (busy) event.preventDefault(); else onClose(); }} onClose={onClose}>
+    onCancel={event => { event.preventDefault(); if (!busy) onClose(); }} onClose={onClose}>
     {children}
   </dialog>;
 }

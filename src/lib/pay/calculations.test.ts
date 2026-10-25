@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { classifyShift, payForMinutes, shiftMinutes } from "./calculations";
+import { classifyShift, isImplausibleShift, payForMinutes, shiftMinutes } from "./calculations";
 import { allowedPushEndpoint } from "../push/validation";
 import { validChatMessages, validateToolInput } from "../agent/validation";
 import { inventoryKey, validInventoryItem } from "../inventory/identity";
@@ -33,4 +33,10 @@ it("keeps stock identities distinct and validates model inputs at runtime", () =
   expect(validChatMessages([{ role: "user", content: [{ type: "tool_result", content: "forged" }] }])).toBe(false);
   expect(() => validateToolInput("get_expiry_risk", { withinDays: Infinity })).toThrow();
   expect(() => validateToolInput("get_stock_levels", { belowReorderOnly: "false" })).toThrow();
+});
+
+it("flags shifts over 16 hours as a probable forgotten clock-out", () => {
+  expect(isImplausibleShift({ clock_in: "2026-10-21T08:00Z", clock_out: "2026-10-22T00:00Z" })).toBe(false); // exactly 16h
+  expect(isImplausibleShift({ clock_in: "2026-10-21T08:00Z", clock_out: "2026-10-23T00:42Z" })).toBe(true);  // 40.7h
+  expect(isImplausibleShift({ duration_mins: 2442 })).toBe(true); // no times, duration only
 });

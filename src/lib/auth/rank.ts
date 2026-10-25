@@ -30,7 +30,7 @@ export function isManagerRole(role?: string | null): boolean {
 const CREATE_ROLES: Record<string, readonly string[]> = {
   manager: ["staff", "kiosk"],
   branch_owner: ["staff", "kiosk", "manager"],
-  brand_owner: ["staff", "kiosk", "manager", "branch_owner", "brand_owner"],
+  brand_owner: ["staff", "kiosk", "manager", "branch_owner"], // a second brand owner only via super admin
   super_admin: Object.keys(RANK),
 };
 
@@ -52,10 +52,10 @@ export type ActorResult = { ok: true } | { ok: false; error: string; status: 403
 // Rules, in order:
 //   1. You must be a manager or above.
 //   2. Unless you are a brand owner / super admin, the target must be in your branch.
-//   3. Unless you are a brand owner / super admin, the target must rank STRICTLY
-//      BELOW you. Equal rank is refused on purpose: otherwise one compromised
-//      manager account could deactivate every other manager and lock a branch's
-//      entire management team out.
+//   3. The target must rank STRICTLY BELOW you (super admin excepted). Equal rank
+//      is refused on purpose: otherwise one compromised manager account could
+//      deactivate every other manager, and one brand owner could reset another
+//      brand owner's password and take the account over.
 export function canActOnUser({ meRole, meBranchId, targetRole, targetBranchId }: ActorCheck): ActorResult {
   if (!isManagerRole(meRole)) {
     return { ok: false, error: "Managers only.", status: 403 };
@@ -64,14 +64,14 @@ export function canActOnUser({ meRole, meBranchId, targetRole, targetBranchId }:
   if (!Object.prototype.hasOwnProperty.call(RANK, targetRole || "") || rankOf(targetRole) > rankOf(meRole)) {
     return { ok: false, error: "You can't act on a higher or unknown role.", status: 403 };
   }
+  if (meRole !== "super_admin" && rankOf(targetRole) >= rankOf(meRole)) {
+    return { ok: false, error: "You can't remove someone at or above your role.", status: 403 };
+  }
   const isOwner = CROSS_BRANCH_ROLES.includes(meRole || "");
   if (isOwner) return { ok: true };
 
   if (!meBranchId || targetBranchId !== meBranchId) {
     return { ok: false, error: "You can only manage staff in your own branch.", status: 403 };
-  }
-  if (rankOf(targetRole) >= rankOf(meRole)) {
-    return { ok: false, error: "You can't remove someone at or above your role.", status: 403 };
   }
   return { ok: true };
 }

@@ -1,0 +1,15 @@
+.audit-db/
+.env*
+*.passwords.txt
+*.roster.csv
+team.passwords.txt
+rotated.passwords.txt
+deliverables/
+Staff-Credentials.html
+Schnitzery-Portal-Package.html
+infra/terraform/*.tfstate*
+infra/terraform/terraform.tfvars
+infra/terraform/.terraform/
+graphify-out/
+.next/
+node_modules/

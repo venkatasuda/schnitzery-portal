@@ -9,6 +9,10 @@ import { monthRange, isCalendarDate, berlinToday } from "@/lib/time/berlinDate";
 import { shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches, setWage } from "@/lib/pay/wages";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { rankOf } from "@/lib/auth/rank";
+
+// Sanity cap per day: a typo like 1e15 would otherwise wreck every percentage and chart.
+const MAX_DAILY_SALES = 1_000_000;
 
 // Labor cost = Σ(hours worked × hourly wage). Labor cost % = labor ÷ sales.
 // Managers enter daily sales + each person's wage. All branch-scoped, manager-only.
@@ -95,7 +99,7 @@ export async function setDailySales(saleDate: string, amount: number) {
   const { supabase, user, role, branchId } = await getMgr();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
-  if (!isCalendarDate(saleDate) || saleDate > berlinToday() || !Number.isFinite(amount) || amount < 0) return { ok: false, error: "Invalid sales date or amount." };
+  if (!isCalendarDate(saleDate) || saleDate > berlinToday() || !Number.isFinite(amount) || amount < 0 || amount > MAX_DAILY_SALES) return { ok: false, error: "Invalid sales date or amount." };
   const { error } = await supabase
     .from("daily_sales")
     .upsert({ branch_id: branchId, sale_date: saleDate, amount }, { onConflict: "branch_id,sale_date" });
@@ -112,7 +116,7 @@ export async function importDailySales(rows: { date: string; amount: number }[])
   if (!branchId) return { ok: false as const, error: "No branch." };
   const today = berlinToday();
   if (!Array.isArray(rows) || rows.length === 0 || rows.length > 400 || new Set(rows.map((r) => r?.date)).size !== rows.length
-    || !rows.every((r) => r && isCalendarDate(r.date) && r.date <= today && typeof r.amount === "number" && Number.isFinite(r.amount) && r.amount >= 0)) {
+    || !rows.every((r) => r && isCalendarDate(r.date) && r.date <= today && typeof r.amount === "number" && Number.isFinite(r.amount) && r.amount >= 0 && r.amount <= MAX_DAILY_SALES)) {
     return { ok: false as const, error: "Invalid sales date or amount." };
   }
   const { error } = await supabase.from("daily_sales")
@@ -157,8 +161,10 @@ export async function setStaffWage(userId: string, wage: number, effectiveFrom: 
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
   if (!isCalendarDate(effectiveFrom) || effectiveFrom < "2000-01-01" || effectiveFrom > berlinToday() || !Number.isFinite(wage) || wage < 0) return { ok: false, error: "Enter a valid wage and its actual effective date." };
-  const { data: tgt } = await supabase.from("users").select("branch_id").eq("id", userId).single();
+  if (userId === user.id) return { ok: false, error: "You can't set your own wage." };
+  const { data: tgt } = await supabase.from("users").select("branch_id, role").eq("id", userId).single();
   if (!tgt || tgt.branch_id !== branchId) return { ok: false, error: "Not in your branch." };
+  if (role !== "super_admin" && rankOf(tgt.role) >= rankOf(role)) return { ok: false, error: "You can only change people ranked below you." };
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return { ok: false, error: "Wage history is not configured." };

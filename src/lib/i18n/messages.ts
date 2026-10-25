@@ -145,7 +145,7 @@ export const messages = {
       title: "This month vs. target", sales: "Sales", labour: "Labour % of sales", purchase: "Purchases % of sales", prime: "Prime cost %",
       monthToDate: "Month to date", salesMissing: "{n} day(s) without sales", incomplete: "Inputs incomplete", noTarget: "No target set", target: "Target {n}%",
       setTargets: "Set targets", editTargets: "Edit targets", flash: "Yesterday", flashSales: "Sales", flashHours: "Hours worked", vsLastWeek: "vs. same day last week", enterSales: "Enter sales",
-      forgotten: "{n} shift(s) still open — forgotten clock-out?", salesMissingAlert: "Sales missing for {n} day(s) this month",
+      forgotten: "{n} shift(s) still open — forgotten clock-out?", suspect: "{n} shift(s) over 16 h — correct the clock-out before approving", salesMissingAlert: "Sales missing for {n} day(s) this month",
     },
     insights: {
       nextWeek: "Next week (forecast)", roster: "Roster", weekOf: "Week of {d}", noRoster: "No roster for next week yet. Plan it to see the expected labour cost.",
@@ -250,14 +250,14 @@ export const messages = {
     },
     login: {
       subtitle: "Sign in to your account", email: "Email", password: "Password", showPassword: "Show password", hidePassword: "Hide password", tooManyAttempts: "Too many attempts. Please wait {min} min and try again.", locked: "This login is locked after too many failed attempts. Ask your manager to unlock it.",
-      signIn: "Sign In", signingIn: "Signing in…",
+      signIn: "Sign In", signingIn: "Signing in…", invalid: "Email or password is wrong.", failed: "Sign-in failed. Check your connection and try again.",
     },
     approvals: {
       title: "Approvals", subtitle: "Everything needing your decision · one place",
       tabAll: "All", tabLeave: "Leave", tabSwaps: "Swaps", tabTime: "Time",
       nothing: "Nothing to approve", caughtUp: "You're all caught up.", back: "‹ Back to dashboard",
       approved: "Approved.", rejected: "Rejected.", actionFailed: "Action failed.", someone: "Someone",
-      timeOff: "Time off", swap: "Swap", with: "with", mLate: "m late", overtime: "overtime",
+      timeOff: "Time off", swap: "Swap", with: "with", mLate: "m late", overtime: "overtime", suspect: "over 16 h — clock-out forgotten? Correct it first",
     },
     inv: {
       status: "Status", lowStatus: "Below target", atTargetStatus: "At target", notCountedStatus: "Not counted today",
@@ -787,7 +787,7 @@ export const messages = {
       ruleMax: "⏱ Daily max: 10h of working time per day.",
       ruleNote: "Restaurants are exempt from Sunday-rest rules (§10), so Sunday work isn't flagged. This is guidance, not legal advice.",
     },
-    compType: { Break: "Break", Rest: "Rest", "Long shift": "Long shift" },
+    compType: { Break: "Break", Rest: "Rest", "Long shift": "Long shift", "Clock-out": "Clock-out?" },
     ahub: {
       forgottenTitle: "{n} shift(s) still open for more than 14 hours", forgottenHint: "Probably a forgotten clock-out. Open shifts are left out of payroll until closed: ask the person to clock out and request a correction with the real end time.", forgottenSince: "clocked in {when}",
       subtitle: "Live · approvals · overtime · no-shows",
@@ -1011,7 +1011,7 @@ export const messages = {
       title: "Dieser Monat vs. Ziel", sales: "Umsatz", labour: "Personal in % vom Umsatz", purchase: "Einkauf in % vom Umsatz", prime: "Prime Cost %",
       monthToDate: "Monat bis heute", salesMissing: "{n} Tag(e) ohne Umsatz", incomplete: "Angaben unvollständig", noTarget: "Kein Ziel gesetzt", target: "Ziel {n} %",
       setTargets: "Ziele festlegen", editTargets: "Ziele ändern", flash: "Gestern", flashSales: "Umsatz", flashHours: "Gearbeitete Stunden", vsLastWeek: "ggü. gleichem Tag letzte Woche", enterSales: "Umsatz eintragen",
-      forgotten: "{n} Schicht(en) noch offen – Ausstempeln vergessen?", salesMissingAlert: "Umsatz fehlt für {n} Tag(e) in diesem Monat",
+      forgotten: "{n} Schicht(en) noch offen – Ausstempeln vergessen?", suspect: "{n} Schicht(en) über 16 Std. – Ausstempelzeit vor dem Genehmigen korrigieren", salesMissingAlert: "Umsatz fehlt für {n} Tag(e) in diesem Monat",
     },
     insights: {
       nextWeek: "Nächste Woche (Prognose)", roster: "Dienstplan", weekOf: "Woche ab {d}", noRoster: "Noch kein Dienstplan für nächste Woche. Plane ihn, um die erwarteten Personalkosten zu sehen.",
@@ -1116,14 +1116,14 @@ export const messages = {
     },
     login: {
       subtitle: "Melde dich bei deinem Konto an", email: "E-Mail", password: "Passwort", showPassword: "Passwort anzeigen", hidePassword: "Passwort verbergen", tooManyAttempts: "Zu viele Versuche. Bitte {min} Min. warten und erneut versuchen.", locked: "Dieser Login ist nach zu vielen Fehlversuchen gesperrt. Bitte einen Manager um Entsperrung bitten.",
-      signIn: "Anmelden", signingIn: "Anmeldung…",
+      signIn: "Anmelden", signingIn: "Anmeldung…", invalid: "E-Mail oder Passwort ist falsch.", failed: "Anmeldung fehlgeschlagen. Verbindung prüfen und erneut versuchen.",
     },
     approvals: {
       title: "Genehmigungen", subtitle: "Alles, was deine Entscheidung braucht · an einem Ort",
       tabAll: "Alle", tabLeave: "Urlaub", tabSwaps: "Tausch", tabTime: "Zeit",
       nothing: "Nichts zu genehmigen", caughtUp: "Alles erledigt.", back: "‹ Zurück zur Übersicht",
       approved: "Genehmigt.", rejected: "Abgelehnt.", actionFailed: "Aktion fehlgeschlagen.", someone: "Jemand",
-      timeOff: "Urlaub", swap: "Tausch", with: "mit", mLate: " Min. zu spät", overtime: "Überstunden",
+      timeOff: "Urlaub", swap: "Tausch", with: "mit", mLate: " Min. zu spät", overtime: "Überstunden", suspect: "über 16 Std. – Ausstempeln vergessen? Erst korrigieren",
     },
     inv: {
       status: "Status", lowStatus: "Unter Zielbestand", atTargetStatus: "Zielbestand erreicht", notCountedStatus: "Heute nicht gezählt",
@@ -1653,7 +1653,7 @@ export const messages = {
       ruleMax: "⏱ Tagesmaximum: 10 Std. Arbeitszeit pro Tag.",
       ruleNote: "Restaurants sind von der Sonntagsruhe (§10) ausgenommen, daher wird Sonntagsarbeit nicht markiert. Dies ist eine Orientierung, keine Rechtsberatung.",
     },
-    compType: { Break: "Pause", Rest: "Ruhezeit", "Long shift": "Lange Schicht" },
+    compType: { Break: "Pause", Rest: "Ruhezeit", "Long shift": "Lange Schicht", "Clock-out": "Ausstempeln?" },
     ahub: {
       forgottenTitle: "{n} Schicht(en) seit über 14 Stunden offen", forgottenHint: "Vermutlich vergessen auszustempeln. Offene Schichten fehlen in der Lohnabrechnung, bis sie geschlossen sind: Person ausstempeln lassen und eine Korrektur mit der echten Endzeit beantragen.", forgottenSince: "eingestempelt {when}",
       subtitle: "Live · Genehmigungen · Überstunden · No-Shows",

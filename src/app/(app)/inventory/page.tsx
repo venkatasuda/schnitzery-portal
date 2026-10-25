@@ -9,7 +9,7 @@ import Link from "next/link";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
-  getProducts, getCounts, saveCount, addProduct, removeProduct, getOrderAlert,
+  getProducts, getCounts, getInventoryContext, saveCount, getOrderAlert,
   addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend, getInventoryVariance, getDepletionForecast,
 } from "@/lib/queries/inventory";
 import { useLang } from "@/components/LanguageProvider";
@@ -19,6 +19,8 @@ import ScanToCount from "./ScanToCount";
 import StockHistory from "./StockHistory";
 import Reconciliation from "./Reconciliation";
 import NativeDialog from "@/components/NativeDialog";
+import InventoryNav, { type InventoryArea } from "@/components/InventoryNav";
+import Products from "@/components/inventory/Products";
 import { EmptyState, Field, Panel, Segmented, Stat, TabButton } from "@/components/ui";
 
 const GOLD = "var(--gold-ink)";
@@ -27,9 +29,12 @@ const TOOLTIP = { background: "var(--surface-2)", border: "1px solid var(--borde
 
 export default function InventoryPage() {
   const { t, locale } = useLang();
-  const [tab, setTab] = useState<"count" | "deliveries" | "analytics" | "forecast" | "catalog" | "history" | "reconcile">("count");
+  type View = "overview" | "count" | "deliveries" | "analytics" | "forecast" | "catalog" | "history" | "reconcile" | "movements";
+  const [tab, setTab] = useState<View>("overview");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [context, setContext] = useState<{ branch: { id: string; name: string }; countDate: string } | null>(null);
+  const [locationReady, setLocationReady] = useState(false);
 
   // shared catalog
   const [products, setProducts] = useState<any[]>([]);
@@ -46,8 +51,6 @@ export default function InventoryPage() {
   const [activeCat, setActiveCat] = useState<string>("");
   const [entry, setEntry] = useState<Record<string, string>>({});
   const [savingP, setSavingP] = useState<string | null>(null);
-  const [showAdd, setShowAdd] = useState(false);
-  const [np, setNp] = useState({ category: "", product: "", soll: "", unit: "" });
 
   // DELIVERIES tab
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -62,20 +65,24 @@ export default function InventoryPage() {
   const [variance, setVariance] = useState<any>(null);
   const [forecast, setForecast] = useState<any>(null);
   const [coverDays, setCoverDays] = useState(7);
-  const [adding, setAdding] = useState(false);
 
   // quiet: refresh after an edit without swapping the list for a skeleton.
   async function load(quiet = false) {
     if (!quiet) setLoading(true);
     setLoadError("");
     try {
-    const pRes = await getProducts();
+    const [pRes, scope] = await Promise.all([getProducts(), getInventoryContext()]);
+    if (!scope.ok) { setLoadError(t("inventoryWorkspace.scopeFailed")); return; }
+    setContext(scope);
     if (!pRes.ok) { setLoadError(pRes.error || t("inv.failed")); setLoading(false); return; }
     setProducts(pRes.products);
     const cRes = await getCounts();
     if (!cRes.ok) { setLoadError(cRes.error || t("inv.failed")); setLoading(false); return; }
     const cMap: Record<string, any> = {};
-    for (const c of (cRes.counts || [])) cMap[inventoryKey(c)] = c;
+    for (const c of (cRes.counts || [])) {
+      if (c.ist != null && String(c.ist).trim() !== "" && Number.isFinite(Number(c.ist)) && Number(c.ist) >= 0) cMap[inventoryKey(c)] = c;
+    }
+    if (cRes.date) setContext({ ...scope, countDate: cRes.date });
     setCounts(cMap);
     const aRes = await getOrderAlert();
     if (aRes.ok) setLowStock(aRes.lowStock); else setLoadError(aRes.error || t("inv.failed"));
@@ -83,6 +90,42 @@ export default function InventoryPage() {
     finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    const restore = () => {
+      const query = new URLSearchParams(window.location.search);
+      const view = query.get("view") || "overview";
+      setTab((["overview", "count", "deliveries", "analytics", "forecast", "catalog", "history", "reconcile", "movements"] as string[]).includes(view) ? view as View : "overview");
+      setSearch(query.get("q") || ""); setActiveCat(query.get("category") || "");
+      const status = query.get("status") || "all";
+      setStatusFilter(["all", "low", "uncounted", "good"].includes(status) ? status : "all");
+    };
+    restore(); setLocationReady(true);
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, []);
+  useEffect(() => {
+    if (!locationReady) return;
+    const url = new URL(window.location.href);
+    for (const [key, value] of [["view", tab], ["q", search], ["category", activeCat], ["status", statusFilter === "all" ? "" : statusFilter]]) {
+      if (value) url.searchParams.set(key, value); else url.searchParams.delete(key);
+    }
+    window.history.replaceState(null, "", url);
+  }, [locationReady, tab, search, activeCat, statusFilter]);
+  function navigate(view: string, status?: string) {
+    if (!(["overview", "count", "deliveries", "analytics", "forecast", "catalog", "history", "reconcile", "movements"] as string[]).includes(view)) return;
+    if (Object.values(entry).some(value => value !== "") && !confirm(t("inventoryWorkspace.unsaved"))) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", view);
+    if (status) {
+      url.searchParams.set("status", status);
+      url.searchParams.delete("q");
+      url.searchParams.delete("category");
+    }
+    window.history.pushState(null, "", url);
+    setTab(view as View);
+    if (status) { setStatusFilter(status); setSearch(""); setActiveCat(""); }
+  }
 
   async function loadDeliveries() {
     const res = await getDeliveries(30);
@@ -109,19 +152,6 @@ export default function InventoryPage() {
   async function doSaveCount(p: any) {
     await quickSave(p, entry[inventoryKey(p)] ?? "");
   }
-  async function doAddProduct() {
-    if (!np.category || !np.product) { toast(t("inv.catProductRequired"), "error"); return; }
-    setAdding(true);
-    const res = await addProduct(np.category, np.product, Number(np.soll) || 0, np.unit).finally(() => setAdding(false));
-    if (res.ok) { toast(t("inv.productAdded"), "success"); setNp({ category: "", product: "", soll: "", unit: "" }); setShowAdd(false); load(true); }
-    else toast(res.error || t("inv.failed"), "error");
-  }
-  async function doRemoveProduct(p: any) {
-    if (!confirm(t("inv.confirmRemoveProduct", { name: p.product }))) return;
-    const res = await removeProduct(p.id);
-    if (res.ok) { toast(t("inv.productRemoved"), "success"); load(true); }
-    else toast(res.error || t("inv.failed"), "error");
-  }
   async function doAddDelivery() {
     if (!del.product) { toast(t("inv.pickProduct"), "error"); return; }
     if (del.qty.trim() === "" || del.cost.trim() === "") { toast(t("inv.enterQtyCost"), "error"); return; }
@@ -142,7 +172,7 @@ export default function InventoryPage() {
     const ist = c ? Number(c.ist) : null;
     const soll = Number(p.soll) || 0;
     if (ist === null) return "none";
-    if (soll <= 0) return ist > 0 ? "green" : "red";
+    if (soll <= 0) return "green";
     if (ist >= soll) return "green";
     if (ist >= soll * 0.5) return "amber";
     return "red";
@@ -153,7 +183,7 @@ export default function InventoryPage() {
     if (!Number.isFinite(Number(val)) || Number(val) < 0) { toast(t("inv.failed"), "error"); return; }
     setSavingP(p.product);
     try {
-    const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit);
+    const res = await saveCount(p.product, p.category, Number(val), Number(p.soll), p.unit, context?.branch.id);
     if (res.ok) { toast(`${p.product} ${t("inv.countedToast")}`, "success"); setEntry(e => ({ ...e, [inventoryKey(p)]: "" })); setGridSel(null); setGridVal(""); load(true).catch(() => setLoadError(t("inv.failed"))); }
     else { toast(res.error || t("inv.failed"), "error"); if (res.error?.includes("Managers")) setDenied(true); }
     } catch { toast(t("inv.failed"), "error"); }
@@ -184,7 +214,7 @@ export default function InventoryPage() {
       th{border-bottom:2px solid #333}.r{text-align:right}.b{font-weight:700}tr:nth-child(even){background:#f7f7f7}
     </style></head><body>
       <h1>Schnitzery — ${esc(t("inv.shoppingHdr"))}</h1><div class="meta">${day} · ${lowStock.length} ${esc(t("inv.itemsShort"))}</div>
-      <table><thead><tr><th>${esc(t("inv.product"))}</th><th>${esc(t("inv.category"))}</th><th class="r">${esc(t("inv.currentCol"))}</th><th class="r">${esc(t("inv.targetCol"))}</th><th class="r">${esc(t("inv.buyCol"))}</th></tr></thead>
+      <table><thead><tr><th>${esc(t("inv.product"))}</th><th>${esc(t("inv.category"))}</th><th class="r">${esc(t("inventoryWorkspace.countedQuantity"))}</th><th class="r">${esc(t("inv.targetCol"))}</th><th class="r">${esc(t("inv.buyCol"))}</th></tr></thead>
       <tbody>${rows}</tbody></table>
       <script>window.onload=function(){window.print()}</script></body></html>`);
     w.document.close();
@@ -218,65 +248,68 @@ export default function InventoryPage() {
   const eur = (n: number | null | undefined) => n == null || !Number.isFinite(n) ? "—" : `€${Math.round(n).toLocaleString()}`;
   // Release D: an incomplete figure shows only its known part, marked as a lower bound.
   const atLeast = (complete: boolean | undefined, n: number | null | undefined) => (n != null && complete === false ? "≥ " : "") + eur(n);
+  const area: InventoryArea = tab === "overview" ? "overview" : ["count", "catalog"].includes(tab) ? "stock" : ["forecast", "deliveries"].includes(tab) ? "purchasing" : ["movements", "history"].includes(tab) ? "movements" : "reports";
+  const countedProducts = products.filter(p => counts[inventoryKey(p)]).length;
+  const belowTarget = products.filter(p => counts[inventoryKey(p)] && Number(counts[inventoryKey(p)].ist) < Number(p.soll)).length;
 
   return (
     <div className="inventory-page">
+      <InventoryNav active={area} onNavigate={navigate} />
       {loadError && <div role="alert" className="workspace-error"><p>{loadError}</p><button className="btn-secondary" onClick={async () => { await load(); await loadActiveTab(); }}>{t("business.retry")}</button></div>}
       <div className="inventory-heading">
         <div>
           <h1 className="page-title u-row"><Icon e="📦" size={22} /> {t("inv.title")}</h1>
-          <p className="page-sub">{t("inv.subtitle")}</p>
+          <p className="page-sub">{context ? `${context.branch.name}${tab === "count" || tab === "overview" ? ` · ${t("inventoryWorkspace.countDate", { date: fmtDay(context.countDate, locale) })}` : ""}` : t("common.loading")}</p>
         </div>
         <div className="inventory-heading-actions">
-        {tab === "count" && <button className="btn-gold" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button>}
-        {tab === "catalog" && <button className="btn-gold" onClick={() => setShowAdd(!showAdd)} aria-expanded={showAdd}>{showAdd ? t("common.close") : t("inv.addToCatalog")}</button>}
-        {(tab === "forecast" || tab === "analytics") && <Link href="/inventory/order" className="btn-gold"><Icon e="🧾" size={16} />{t("inv.buildOrder")}</Link>}
-      <details className="inventory-operation-menu">
-        <summary><Icon e="🔄" size={16} /> {t("inventoryWorkflow.movements")}</summary>
-        <nav className="inventory-links" aria-label={t("inventoryWorkflow.movements")}>
-        {[
-          { href: "/waste", icon: "🗑️", label: t("home.wasteLog") },
-          { href: "/expiry", icon: "📅", label: t("home.expiry") },
-          { href: "/transfers", icon: "🔄", label: t("home.transfers") },
-        ].map((l) => (
-          <Link key={l.href} href={l.href}>
-            <Icon e={l.icon} size={14} /> {l.label}
-          </Link>
-        ))}
-        </nav>
-      </details>
+        {tab === "overview" && <button className="btn-gold" onClick={() => navigate("count")}>{t("inventoryWorkspace.openCount")}</button>}
+        {tab === "count" && <><Link href="/inventory/counts" className="btn-gold">{t("countSession.title")}</Link><button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button></>}
+        {tab === "forecast" && <><Link href="/inventory/purchasing?new=1" className="btn-gold">{t("inventoryOps.newOrder")}</Link><Link href="/inventory/order" className="btn-secondary">{t("orderDraft.title")}</Link></>}
         </div>
       </div>
 
-      <div className="hub-tabs inventory-tabs" role="group" aria-label={t("inv.title")}>
-        <div className="inventory-tab-set">
-        <TabButton active={tab === "count"} onClick={() => setTab("count")}>{t("inv.tabCount")}</TabButton>
-        <TabButton active={tab === "deliveries"} onClick={() => setTab("deliveries")}>{t("inv.tabDeliveries")}</TabButton>
-        <TabButton active={tab === "forecast"} onClick={() => setTab("forecast")}>{t("inventoryWorkflow.reorder")}</TabButton>
-        </div>
-        <div className="inventory-tab-set">
-        <TabButton active={tab === "history"} onClick={() => setTab("history")}>{t("stockHistory.title")}</TabButton>
-        <TabButton active={tab === "reconcile"} onClick={() => setTab("reconcile")}>{t("reconcile.title")}</TabButton>
-        <TabButton active={tab === "analytics"} onClick={() => setTab("analytics")}>{t("inventoryWorkflow.reports")}</TabButton>
-        </div>
-        <div className="inventory-tab-set inventory-tab-admin">
-        <TabButton active={tab === "catalog"} onClick={() => setTab("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton>
-        </div>
-      </div>
+      {area !== "overview" && <div className="hub-tabs inventory-subnav" role="group" aria-label={t(`inventoryWorkspace.${area}`)}>
+        {area === "stock" && <><TabButton active={tab === "count"} onClick={() => navigate("count")}>{t("inv.tabCount")}</TabButton><TabButton active={tab === "catalog"} onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton><Link className="hub-tab" href="/expiry">{t("home.expiry")}</Link><Link className="hub-tab" href="/labels">{t("scan.labels")}</Link></>}
+        {area === "purchasing" && <><TabButton active={tab === "forecast"} onClick={() => navigate("forecast")}>{t("inventoryWorkflow.reorder")}</TabButton><Link className="hub-tab" href="/inventory/purchasing">{t("inventoryOps.orders")}</Link><TabButton active={tab === "deliveries"} onClick={() => navigate("deliveries")}>{t("inv.tabDeliveries")}</TabButton></>}
+        {area === "movements" && <><TabButton active={tab === "movements"} onClick={() => navigate("movements")}>{t("inventoryWorkspace.workflows")}</TabButton><TabButton active={tab === "history"} onClick={() => navigate("history")}>{t("stockHistory.title")}</TabButton></>}
+        {area === "reports" && <><TabButton active={tab === "analytics"} onClick={() => navigate("analytics")}>{t("inventoryWorkflow.reports")}</TabButton><TabButton active={tab === "reconcile"} onClick={() => navigate("reconcile")}>{t("reconcile.title")}</TabButton></>}
+      </div>}
 
       {loading ? <CardSkeleton rows={4} /> : loadError ? null : (
         <>
+          {tab === "overview" && <>
+            <div className="inventory-work-summary">
+              <button onClick={() => navigate("count")}><span>{t("inventoryWorkspace.countProgress")}</span><strong>{countedProducts} / {products.length}</strong><small>{t("inventoryWorkspace.physicalCounts")}</small></button>
+              <button onClick={() => navigate("count", "uncounted")}><span>{t("inventoryWorkspace.needsCount")}</span><strong>{products.length - countedProducts}</strong><small>{t("inventoryWorkspace.noZero")}</small></button>
+              <button onClick={() => navigate("count", "low")}><span>{t("inventoryWorkspace.belowTarget")}</span><strong>{belowTarget}</strong><small>{t("inventoryWorkspace.snapshotNote")}</small></button>
+            </div>
+            <Panel title={t("inventoryWorkspace.dailyWork")}>
+              <div className="inventory-task-grid">
+                <Link className="inventory-task" href="/inventory/counts"><strong>{t("countSession.title")}</strong><span>{t("countSession.help")}</span></Link>
+                <Link className="inventory-task" href="/inventory/purchasing"><strong>{t("inventoryOps.receive")}</strong><span>{t("inventoryWorkspace.receivingHelp")}</span></Link>
+                <button className="inventory-task" onClick={() => navigate("forecast")}><strong>{t("inventoryWorkflow.reorder")}</strong><span>{t("inventoryWorkspace.reorderHelp")}</span></button>
+                <Link className="inventory-task" href="/expiry"><strong>{t("home.expiry")}</strong><span>{t("inventoryWorkspace.expiryHelp")}</span></Link>
+                <button className="inventory-task" onClick={() => navigate("reconcile")}><strong>{t("reconcile.title")}</strong><span>{t("inventoryWorkspace.reviewHelp")}</span></button>
+              </div>
+            </Panel>
+          </>}
+          {tab === "movements" && <Panel title={t("inventoryWorkspace.movements")}><div className="inventory-task-grid">
+            <Link className="inventory-task" href="/transfers"><strong>{t("home.transfers")}</strong><span>{t("inventoryWorkspace.transferHelp")}</span></Link>
+            <Link className="inventory-task" href="/waste"><strong>{t("home.wasteLog")}</strong><span>{t("inventoryWorkspace.wasteHelp")}</span></Link>
+            <button className="inventory-task" onClick={() => navigate("history")}><strong>{t("stockHistory.title")}</strong><span>{t("inventoryWorkspace.historyHelp")}</span></button>
+          </div></Panel>}
           {tab === "history" && <StockHistory />}
           {tab === "reconcile" && <Reconciliation />}
           {/* ============ COUNT ============ */}
-          {(tab === "count" || tab === "catalog") && (
+          {tab === "catalog" && <Products onChanged={()=>load(true)} />}
+          {tab === "count" && (
             <>
-              {showScan && <ScanToCount products={products} onClose={() => setShowScan(false)} onSaved={() => load(true)} />}
+              {showScan && <ScanToCount branchId={context?.branch.id} products={products} onClose={() => setShowScan(false)} onSaved={() => load(true)} />}
               {gridSel && (
                 <NativeDialog title={`${t("inv.count")}: ${gridSel.product}`} busy={savingP === gridSel.product} onClose={() => setGridSel(null)}>
                     <div className="ui-muted">{gridSel.category}</div>
                     <div className="ui-dialog-title">{gridSel.product}</div>
-                    <div className="ui-sub">{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[inventoryKey(gridSel)] ? ` · ${t("inv.current")} ${counts[inventoryKey(gridSel)].ist}` : ""}</div>
+                    <div className="ui-sub">{t("inv.targetShort")} {gridSel.soll}{gridSel.unit ? ` ${gridSel.unit}` : ""}{counts[inventoryKey(gridSel)] ? ` · ${t("inventoryWorkspace.countedQuantity")} ${counts[inventoryKey(gridSel)].ist}` : ""}</div>
                     <input type="number" min="0" step="any" aria-label={t("inv.count")} inputMode="decimal" autoFocus value={gridVal} onChange={(e) => setGridVal(e.target.value)} placeholder={t("inv.count")}
                       className="form-input ui-big-input" />
                     <div className="ui-actions">
@@ -312,29 +345,15 @@ export default function InventoryPage() {
                   <button className={countView === "grid" ? "active" : ""} aria-pressed={countView === "grid"} onClick={() => setCountView("grid")}>{t("inv.viewGrid")}</button>
                 </div>
                 </>}
-                {tab === "catalog" && <>
-                    <Link href="/labels" className="btn-secondary">{t("scan.labels")}</Link>
-                </>}
               </div>
               <div className="inventory-result-bar">
                 <span>{t("inventoryWorkflow.results", { n: shownProducts.length, total: products.length })}</span>
                 {tab === "count" && <Link href="/stock-alerts">{t("home.stockAlerts")} →</Link>}
               </div>
 
-              {tab === "catalog" && showAdd && (
-                <div className="card">
-                  <div className="ui-form-grid">
-                    <Field label={t("inv.category")}><input value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })} className="form-input" placeholder={t("inv.phCategory")} /></Field>
-                    <Field label={t("inv.product")}><input value={np.product} onChange={(e) => setNp({ ...np, product: e.target.value })} className="form-input" placeholder={t("inv.phProduct")} /></Field>
-                    <Field label={t("inv.target")}><input type="number" value={np.soll} onChange={(e) => setNp({ ...np, soll: e.target.value })} className="form-input" placeholder="20" /></Field>
-                    <Field label={t("inv.unit")}><input value={np.unit} onChange={(e) => setNp({ ...np, unit: e.target.value })} className="form-input" placeholder={t("inv.phUnit")} /></Field>
-                  </div>
-                  <button type="button" className="btn-gold ui-block" onClick={doAddProduct} disabled={adding}>{t("inv.addProduct")}</button>
-                </div>
-              )}
 
               {categories.length === 0 ? (
-                <div className="card ui-empty-msg">{t(tab === "catalog" ? "inv.noProductsCatalog" : "inv.noProducts")}</div>
+                <div className="card ui-empty-msg">{t("inv.noProducts")}</div>
               ) : (
                 <>
                   {countView === "grid" && tab === "count" ? (
@@ -358,10 +377,10 @@ export default function InventoryPage() {
                   <table className="data-table inventory-table">
                     <thead><tr>
                       <th scope="col">{t("inv.product")}</th>
-                      <th scope="col" className="numeric">{t("inv.currentCol")}</th>
+                      <th scope="col" className="numeric">{t("inventoryWorkspace.countedQuantity")}</th>
                       <th scope="col" className="numeric">{t("inv.targetCol")}</th>
                       <th scope="col">{t("inv.status")}</th>
-                      <th scope="col" className="numeric">{tab === "catalog" ? t("inventoryWorkflow.actions") : t("inv.count")}</th>
+                      <th scope="col" className="numeric">{t("inv.count")}</th>
                     </tr></thead>
                     <tbody>
                   {shownProducts.map((p) => {
@@ -373,17 +392,17 @@ export default function InventoryPage() {
                           <div className="u-semibold">{p.product}</div>
                           <div className="muted">{p.category}{p.unit ? ` · ${p.unit}` : ""}</div>
                         </td>
-                        <td className="numeric" data-label={t("inv.currentCol")}>{counted ? counted.ist : "—"}{counted && p.unit ? ` ${p.unit}` : ""}</td>
+                        <td className="numeric" data-label={t("inventoryWorkspace.countedQuantity")}>{counted ? counted.ist : "—"}{counted && p.unit ? ` ${p.unit}` : ""}</td>
                         <td className="numeric" data-label={t("inv.targetCol")}>{p.soll}{p.unit ? ` ${p.unit}` : ""}</td>
                         <td data-label={t("inv.status")}><span className={`status-badge${counted ? isLow ? " low" : " good" : ""}`}>{!counted ? t("inv.notCountedStatus") : isLow ? t("inv.lowStatus") : t("inv.atTargetStatus")}</span></td>
-                        <td className="numeric" data-label={tab === "catalog" ? t("inventoryWorkflow.actions") : undefined}>
-                          {tab === "catalog" ? <button type="button" onClick={() => doRemoveProduct(p)} className="inventory-archive" aria-label={`${t("inv.removeProduct")}: ${p.product}`}>{t("inv.removeProduct")}</button> : <form className="row-actions" onSubmit={event => { event.preventDefault(); doSaveCount(p); }}>
+                        <td className="numeric">
+                          <form className="row-actions" onSubmit={event => { event.preventDefault(); doSaveCount(p); }}>
                           <input type="number" inputMode="decimal" min="0" step="any" aria-label={`${t("inv.count")}: ${p.product}${p.unit ? ` (${p.unit})` : ""}`} value={entry[inventoryKey(p)] ?? ""} onChange={(e) => setEntry({ ...entry, [inventoryKey(p)]: e.target.value })}
                             placeholder={counted ? String(counted.ist) : "0"} className="form-input quantity-input" />
                           <button type="submit" disabled={savingP !== null} className="btn-gold" aria-label={`${t("inv.count")}: ${p.product}`}>
                             {savingP === p.product ? "…" : t("inv.count")}
                           </button>
-                          </form>}
+                          </form>
                         </td>
                       </tr>
                     );
@@ -402,6 +421,7 @@ export default function InventoryPage() {
           {/* ============ DELIVERIES ============ */}
           {tab === "deliveries" && (
             <div className="inventory-delivery-grid">
+              <p className="ui-note">{t("inventoryOps.quickDeliveryHelp")} <Link href="/inventory/purchasing">{t("inventoryOps.orders")}</Link></p>
               {products.length === 0 ? (
                 <div className="card ui-empty-msg">{t("inv.addProductsFirst")}</div>
               ) : (

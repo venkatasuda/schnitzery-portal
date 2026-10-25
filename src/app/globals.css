@@ -402,9 +402,8 @@ html.light .btn-gold { color: #fff; }
   .management-shell { padding-left: 0; }
   .management-shell .app-header { padding: 12px 16px; }
   .management-shell .screen-wrap { padding: 24px 16px 48px; }
-  .management-mobile-nav { display: block; background: var(--dark); border-bottom: 1px solid var(--border); padding: 10px 16px; }
-  .management-mobile-nav summary { min-height: 44px; align-content: center; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .management-mobile-nav nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding-top: 16px; }
+  .management-mobile-nav { display: flex; flex: 0 0 auto; }
+  .management-mobile-nav nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 16px; }
 }
 .inventory-toolbar { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .inventory-toolbar a { text-decoration: none; }
@@ -914,3 +913,68 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .inventory-receipt summary { cursor: pointer; font-weight: 600; }
 .inventory-scanner { display: grid; gap: 16px; justify-items: center; padding: 16px 0; }
 .inventory-scanner-reader { width: 100%; max-width: 340px; border-radius: 12px; overflow: hidden; }
+
+/* Shared responsive chrome: one toolbar, with secondary preferences in a popover. */
+.app-header { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 16px; }
+.header-leading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.header-context { min-width: 0; }
+.header-context .workspace-location { flex-wrap: nowrap; overflow: hidden; }
+.header-context .workspace-location > strong, .header-context .workspace-location > a,
+.header-context .brand { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.header-context .workspace-location > span { flex-shrink: 0; }
+.header-right { grid-column: 3; flex-wrap: nowrap; gap: 6px; }
+.header-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.header-branch { grid-column: 2; min-width: 0; }
+.header-branch .branch-picker { border-radius: 8px; min-width: 0; max-width: 240px; }
+.header-branch .branch-picker select { min-width: 0; width: 100%; }
+.header-control, .app-header .theme-btn, .header-search, .header-profile {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; min-width: 44px; padding: 0; flex-shrink: 0;
+  border: 1px solid transparent; border-radius: 8px; background: transparent;
+  color: var(--gray-light); cursor: pointer;
+}
+.header-control:hover, .app-header .theme-btn:hover, .header-search:hover, .header-profile:hover {
+  background: var(--dark2); border-color: var(--border);
+}
+.header-control:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 2px; }
+.language-switch { display: inline-flex; gap: 2px; padding: 2px; background: var(--dark2); border-radius: 8px; border: 1px solid var(--border); }
+.language-option { min-width: 44px; min-height: 44px; padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--gray); font: 700 12px var(--font-body); cursor: pointer; }
+.language-option[aria-pressed="true"] { background: var(--action); color: var(--on-action); cursor: default; }
+.header-preferences-panel, .management-menu-panel {
+  position: fixed; inset: 76px 16px auto auto; margin: 0;
+  width: min(320px, calc(100vw - 32px)); max-height: calc(100dvh - 96px); overflow-y: auto;
+  padding: 20px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--dark); color: var(--white); box-shadow: 0 12px 36px rgb(0 0 0 / 16%);
+}
+.header-preferences-panel::backdrop, .management-menu-panel::backdrop { background: transparent; }
+.header-preferences-panel > strong { display: block; margin-bottom: 16px; font-size: 14px; }
+.header-preference-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 13px; }
+.header-preference-row + .header-preference-row { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.management-menu-title { display: block; margin-bottom: 16px; }
+@media (max-width: 600px) {
+  .inventory-order-list, .inventory-order-list tbody { display: block; }
+  .inventory-order-list thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .inventory-order-list tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 16px; border-bottom: 1px solid var(--border); }
+  .inventory-order-list tbody tr:last-child { border-bottom: 0; }
+  .inventory-order-list tbody td { padding: 0; border: 0; min-width: 0; overflow-wrap: anywhere; }
+  .inventory-order-list td:first-child { grid-column: 1; grid-row: 1; font-weight: 700; }
+  .inventory-order-list td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; color: var(--gray); }
+  .inventory-order-list td:nth-child(3) { grid-column: 2; grid-row: 1; }
+  .inventory-order-list td:nth-child(4) { grid-column: 1; grid-row: 3; color: var(--gray); font-size: 12px; }
+  .inventory-order-list td:nth-child(4)::before { content: attr(data-label) ": "; }
+  .inventory-order-list td:nth-child(5) { grid-column: 2; grid-row: 3; text-align: right; }
+}
+.notification-panel { position: absolute; right: 0; top: 52px; width: 340px; max-width: calc(100vw - 24px); background: var(--dark); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 36px rgb(0 0 0 / 16%); z-index: 200; overflow: hidden; }
+@media (max-width: 1200px) { .app-header .header-name { display: none; } }
+@media (max-width: 1000px) {
+  .app-header, .management-shell .app-header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; min-height: 64px; }
+  .header-right, .management-shell .header-right { grid-column: 2; grid-row: 1; flex-wrap: nowrap; gap: 2px; }
+  .header-branch { grid-column: 1 / -1; grid-row: 2; }
+  .header-branch .branch-picker { width: 100%; max-width: none; }
+  .header-branch .branch-picker select { max-width: none; }
+  .header-context .workspace-location > span { display: none; }
+  .header-context .sub { display: none; }
+  .management-menu-panel { inset: 72px 12px auto; width: auto; max-height: calc(100dvh - 88px); }
+  .header-preferences-panel { inset: 72px 12px auto auto; }
+  .notification-panel { position: fixed; inset: 72px 12px auto; width: auto; max-width: none; }
+}

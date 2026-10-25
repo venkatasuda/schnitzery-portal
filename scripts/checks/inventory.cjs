@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -14,6 +15,7 @@ vm.runInNewContext(ts.transpileModule(source, {
 }).outputText, {
   exports: exported,
   require: (name) => {
+    if (name === "@/lib/activeBranch") return AB;
     if (name === "react") return { ...React, useEffect: () => {}, useState: (initial) => {
       const key = names[index++];
       return [Object.hasOwn(state, key) ? state[key] : initial, () => {}];
@@ -22,20 +24,22 @@ vm.runInNewContext(ts.transpileModule(source, {
     if (name === "react/jsx-runtime") return require(name);
     if (name === "next/link") return { __esModule: true, default: ({ children, ...props }) => React.createElement("a", props, children) };
     if (name === "@/components/LanguageProvider") return { useLang: () => ({ t: (key) => key }) };
+    if (name === "@/components/inventory/Products") return {__esModule:true,default:()=>React.createElement('section',{'data-testid':'product-catalog'})};
     return new Proxy({ __esModule: true }, { get: (_, key) => key === "__esModule" ? true : () => null });
   },
 });
 const products = [{ id: "butter", product: "Butter", category: "Dairy", soll: 10 }, { id: "rice", product: "Rice", category: "Dry goods", soll: 20 }, { id: "oil", product: "Oil", category: "Dry goods", soll: 3 }];
 const counts = { '["Dairy","Butter",""]': { ist: 2 }, '["Dry goods","Rice",""]': { ist: 20 } };
 function render(overrides = {}) {
-  state = { loading: false, products, counts, ...overrides }; index = 0;
+  state = { loading: false, tab: "count", products, counts, ...overrides }; index = 0;
   return renderToStaticMarkup(React.createElement(exported.default));
 }
 const count = render();
 assert.ok(count.includes("Butter") && count.includes("Rice") && count.includes("Oil"));
 assert.ok(!count.includes("inv.removeProduct"));
 assert.ok(!count.includes("inventory-summary"));
-assert.ok(render({ tab: "catalog" }).includes("inv.removeProduct"));
+assert.ok(render({ tab: "catalog" }).includes('data-testid="product-catalog"'));
+assert.ok(!render({ tab: "catalog" }).includes("inv.removeProduct"),'Catalogue uses the full product editor, not the legacy destructive row action');
 assert.ok(!render({ tab: "catalog" }).includes("scan.scanToCount"));
 assert.ok(render({ search: "  RICE " }).includes("Rice"));
 assert.ok(!render({ search: "rice" }).includes("Butter"));

@@ -38,6 +38,19 @@ async function ui(page, result, url) {
 }
 function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray(tree.props?.children)){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
+  // Escape must respect the owner's discard confirmation instead of closing natively.
+  const NativeDialog=moduleAt('src/components/NativeDialog.tsx',name=>name==='react'?{...React,useRef:()=>({current:null}),useEffect(){}}:require(name)).default;
+  let cancelled=false,closeCalls=0;
+  NativeDialog({title:'Draft',onClose:()=>closeCalls++,children:null}).props.onCancel({preventDefault(){cancelled=true;}});
+  assert.equal(cancelled,true);assert.equal(closeCalls,1);
+  NativeDialog({title:'Draft',busy:true,onClose:()=>closeCalls++,children:null}).props.onCancel({preventDefault(){}});
+  assert.equal(closeCalls,1,'Busy dialogs cannot be dismissed with Escape');
+  const Nav=moduleAt('src/components/ManagementNav.tsx',name=>name==='next/navigation'?{usePathname:()=>'/inventory'}:name==='next/link'?{__esModule:true,default:({children,...props})=>React.createElement('a',props,children)}:name==='@/components/LanguageProvider'?{useLang:()=>({t:key=>key})}:require(name)).default;
+  assert.match(renderToStaticMarkup(Nav({role:'manager'})),/management-sidebar/);
+  const mobile=Nav({role:'manager',mobile:true});
+  assert.match(renderToStaticMarkup(mobile),/popoverTarget="management-menu"/i);
+  const menu=find(mobile,e=>e.props?.id==='management-menu');assert.equal(menu.props.popover,'auto');
+  let hidden=false;menu.props.onClick({target:{closest:()=>({})},currentTarget:{hidePopover(){hidden=true;}}});assert.equal(hidden,true,'Navigation closes the mobile menu');
   // Exercise the actual count form, including keyboard submit and failed-save retry.
   let attempts=0;
   const product={id:'oil',product:'Oil',category:'Dry goods',unit:'L',soll:10};
@@ -46,6 +59,10 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     return {ok:true,products:[product],counts:[{...product,ist:5}],lowStock:[]};
   });
   assert.match(inventory.render(),/Oil/);
+  const zeroTarget=await ui('inventory',{ok:true,products:[{...product,soll:0}],counts:[{...product,soll:0,ist:0}],lowStock:[]});
+  const gridToggle=find(zeroTarget.tree(),e=>e.type==='button'&&e.props.children==='inv.viewGrid');
+  assert.ok(gridToggle,'Grid control is available');gridToggle.props.onClick();
+  assert.match(zeroTarget.render(),/inv-tile green/,'Zero stock meets a zero target in grid and list');
   find(inventory.tree(),e=>e.type==='input'&&e.props.type==='number').props.onChange({target:{value:'7'}});
   assert.equal(find(inventory.tree(),e=>e.type==='input'&&e.props.type==='number').props.value,'7');
   assert.equal(find(inventory.tree(),e=>e.type==='button'&&e.props.type==='submit').props.disabled,false);
@@ -96,6 +113,7 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
   const laborQueries=moduleAt('src/lib/queries/labor.ts',name=>({
     '@/lib/supabase/server':{createClient:async()=>laborClient},
     '@/lib/activeBranch':{activeBranchFor:async(_db,p)=>p?.branch_id??null},
+    '@/lib/auth/rank':{rankOf:r=>({super_admin:5,brand_owner:4,branch_owner:3,manager:2,staff:1})[r]||0},
     '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
     '@/lib/pay/wages':{wageMapForBranches:async()=>({a:0})},
@@ -108,6 +126,7 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
   const noWage=moduleAt('src/lib/queries/labor.ts',name=>({
     '@/lib/supabase/server':{createClient:async()=>laborClient},
     '@/lib/activeBranch':{activeBranchFor:async(_db,p)=>p?.branch_id??null},
+    '@/lib/auth/rank':{rankOf:r=>({super_admin:5,brand_owner:4,branch_owner:3,manager:2,staff:1})[r]||0},
     '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({ym:'2026-10',from:'2026-10-01',to:'2026-10-31',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
     '@/lib/pay/wages':{wageMapForBranches:async()=>({})},

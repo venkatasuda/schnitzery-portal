@@ -104,6 +104,8 @@ export async function setLeaveAllowance(userId: string, days: number) {
   const { supabase, user, role, branchId } = await getMe();
   if (!user) return { ok: false as const, error: "Not logged in." };
   if (!isManager(role)) return { ok: false as const, error: "Managers only." };
+  if (userId === user.id) return { ok: false as const, error: "You can't change your own contract details." };
+  if (typeof days !== "number" || !Number.isFinite(days) || days < 0 || days > 366) return { ok: false as const, error: "Enter a valid level." };
   const { data: tgt } = await supabase.from("users").select("branch_id").eq("id", userId).single();
   if (!tgt || tgt.branch_id !== branchId) return { ok: false as const, error: "Not in your branch." };
   const { error } = await supabase.from("users").update({ annual_leave_days: days }).eq("id", userId);

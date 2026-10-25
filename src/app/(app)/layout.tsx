@@ -58,17 +58,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <a href="#main-content" className="skip-link">{locale === "de" ? "Zum Inhalt" : "Skip to content"}</a>
       {isManager && <ManagementNav role={navRole} />}
       <header className="app-header">
-        <div>
+        <div className="header-leading">
+          {isManager && <ManagementNav role={navRole} mobile />}
+          <div className="header-context">
           {isManager ? <ManagementLocation role={navRole} /> : <div className="brand">Schnitzery Portal</div>}
           <div className="sub">{t(`roles.${role}`)}</div>
+          </div>
         </div>
+        {/* key: remount when the active branch changes elsewhere (e.g. "Open" on All my branches) */}
+        {showPicker && <div className="header-branch"><BranchPicker key={activeBranch ?? ""} branches={branches} current={activeBranch ?? ""} hq={isHQ} /></div>}
         <div className="header-right">
-          {showPicker && <BranchPicker branches={branches} current={activeBranch ?? ""} hq={isHQ} />}
           <span className="header-name">{profile?.full_name || user?.email}</span>
           {isManager && <Link href="/search" aria-label={locale === "de" ? "Suchen" : "Search"} className="header-search"><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
-          <LanguageToggle />
-          <ThemeToggle />
+          <button type="button" className="header-control" popoverTarget="display-preferences" aria-label={locale === "de" ? "Sprache und Darstellung" : "Language and appearance"} title={locale === "de" ? "Sprache und Darstellung" : "Language and appearance"}><Icon e="⚙️" size={20} /></button>
+          <div id="display-preferences" popover="auto" className="header-preferences-panel">
+            <strong>{locale === "de" ? "Sprache und Darstellung" : "Language and appearance"}</strong>
+            <div className="header-preference-row"><span>{t("misc.language")}</span><LanguageToggle /></div>
+            <div className="header-preference-row"><span>{locale === "de" ? "Hell / Dunkel" : "Light / dark"}</span><ThemeToggle /></div>
+          </div>
           <Link href="/profile" className="header-profile" aria-label={locale === "de" ? "Mein Profil" : "My profile"}>
           {profile?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element

@@ -17,7 +17,7 @@ function load(file, mocks, expose = '', env = {}) {
   const session = { auth: { getUser: async () => ({ data: { user: { id: 'caller' } } }) }, from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: { role: 'branch_owner', branch_id: 'branch' } }) }) }) }) };
   const admin = { auth: { admin: { createUser: async () => ({ data: { user: { id: 'created' } } }), deleteUser: async () => ({}) } }, from: () => ({ upsert: async row => { createdRoles.push(row.role); return {}; } }) };
   const rank = load('src/lib/auth/rank.ts', {});
-  const route = load('src/app/api/create-staff/route.ts', { '@/lib/auth/rank': rank, '@/lib/supabase/server': { createClient: async () => session }, '@supabase/supabase-js': { createClient: () => admin }, 'next/server': { NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) } } });
+  const route = load('src/app/api/create-staff/route.ts', { '@/lib/auth/rank': rank, '@/lib/activeBranch': {activeBranchFor:async()=> 'branch'}, '@/lib/supabase/server': { createClient: async () => session }, '@supabase/supabase-js': { createClient: () => admin }, 'next/server': { NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) } } });
   const result = await route.POST({ json: async () => ({ email: 'audit@example.invalid', password: 'Audit-only!9876', role: 'super_admin', employee_code: 'AUDIT' }) });
   assert.equal(result.status, 403);
   assert.deepEqual(createdRoles, []);

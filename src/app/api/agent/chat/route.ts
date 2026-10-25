@@ -220,6 +220,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ ok: true, reply: "I couldn't finish that — try a narrower question." });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || "Assistant error." }, { status: 502 });
+    console.error("agent chat failed:", e?.message || e); // detail stays in the server log
+    return NextResponse.json({ ok: false, error: "Assistant error. Try again." }, { status: 502 });
   }
 }

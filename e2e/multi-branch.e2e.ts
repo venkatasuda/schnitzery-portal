@@ -34,7 +34,10 @@ test("linked manager switches branch and works in it", async ({ browser }) => {
 });
 
 test("a forged branch cookie falls back to the home branch", async ({ browser }) => {
-  const page = await signIn(browser, account("manager", "B")); // not linked to A
+  const mgrB = account("manager", "B");
+  // Make sure manager B is NOT linked to branch A (a manual test may have linked them).
+  await admin().from("user_branches").delete().eq("user_id", mgrB.user_id).eq("branch_id", BRANCH.A);
+  const page = await signIn(browser, mgrB);
   await page.context().addCookies([{ name: "sch_branch", value: BRANCH.A, url: page.url() }]);
   await page.goto("/inventory");
   const product = unique("Forged");

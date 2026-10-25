@@ -53,7 +53,7 @@ export default function ApprovalsPage() {
       out.push({ kind: "swap", id: s.id, icon: "🔄", name: (s as any).requester?.full_name || t("approvals.someone"), detail: `${t("approvals.swap")} · ${dayLabel(s.my_day)} ↔ ${dayLabel(s.their_day)}${other ? ` ${t("approvals.with")} ${other}` : ""}` });
     }
     for (const r of (att.ok && att.rows) || []) {
-      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${(r.late_mins || 0) > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.overtime ? ` · ${t("approvals.overtime")}` : ""}` });
+      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${(r.late_mins || 0) > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.suspect ? ` · ⚠ ${t("approvals.suspect")}` : r.overtime ? ` · ${t("approvals.overtime")}` : ""}` });
     }
     for (const c of (corr.ok && (corr as any).items) || []) {
       const req = `${fmtT(c.requested_clock_in)} → ${fmtT(c.requested_clock_out)}`;

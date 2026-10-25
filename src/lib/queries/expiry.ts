@@ -4,6 +4,7 @@ import { validInventoryItem } from "@/lib/inventory/identity";
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { uuid } from "@/lib/inventory/operations";
 
 async function getMe() {
   const supabase = await createClient();
@@ -77,16 +78,18 @@ export async function getExpirySummary() {
 }
 
 export async function markBatchUsed(id: string) {
+  if (!uuid(id)) return { ok: false, error: "Pick a batch." };
   const { supabase, user } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
-  const { error } = await supabase.from("stock_batches").update({ status: "used" }).eq("id", id);
+  const { error } = await supabase.rpc("use_batch_atomic", { p_id: id });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
 
 // discard a batch → mark discarded AND record it in the waste log (reason = expired)
 export async function discardBatch(id: string) {
-  const { supabase, user, branchId, profile } = await getMe();
+  if (!uuid(id)) return { ok: false, error: "Pick a batch." };
+  const { supabase, user } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   const { error } = await supabase.rpc("discard_batch_atomic", { p_id: id });
   if (error) return { ok: false, error: error.message };

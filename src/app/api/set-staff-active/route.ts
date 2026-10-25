@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { canActOnUser, isManagerRole } from "@/lib/auth/rank";
 import { activeBranchFor } from "@/lib/activeBranch";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // ============================================================
 // SECURE SERVER ROUTE — deactivate ("remove") or reactivate a
 // staff member. Removing sets status=inactive AND bans their
@@ -33,6 +35,7 @@ export async function POST(request: Request) {
   // 2. Parse input.
   let body: any;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 }); }
+  if (!body || typeof body !== "object" || Array.isArray(body) || typeof body.userId !== "string" || !UUID.test(body.userId)) return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 });
   const { userId, active } = body as { userId?: string; active?: boolean };
   if (!userId || typeof active !== "boolean") {
     return NextResponse.json({ ok: false, error: "Missing userId or active flag." }, { status: 400 });
