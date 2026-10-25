@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef } from "react";
 
-export default function NativeDialog({ title, busy=false, onClose, children }: {
-  title: string; busy?: boolean; onClose: () => void; children: React.ReactNode;
+export default function NativeDialog({ title, busy=false, wide=false, unsaved=false, onClose, children }: {
+  title: string; busy?: boolean; wide?: boolean; unsaved?: boolean; onClose: () => void; children: React.ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger=useRef<HTMLElement|null>(null);
@@ -11,8 +11,14 @@ export default function NativeDialog({ title, busy=false, onClose, children }: {
     dialog.current?.showModal();
     return()=>{if(trigger.current?.isConnected)trigger.current.focus();};
   }, []);
-  return <dialog ref={dialog} className="workspace-dialog" aria-label={title}
-    onCancel={event => { if (busy) event.preventDefault(); else onClose(); }} onClose={onClose}>
+  useEffect(()=>{
+    if(!unsaved)return;
+    const prevent=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};
+    window.addEventListener("beforeunload",prevent);
+    return()=>window.removeEventListener("beforeunload",prevent);
+  },[unsaved]);
+  return <dialog ref={dialog} className={`workspace-dialog${wide?" workspace-dialog-wide":""}`} aria-label={title}
+    onCancel={event => { event.preventDefault(); if (!busy) onClose(); }} onClose={onClose}>
     {children}
   </dialog>;
 }

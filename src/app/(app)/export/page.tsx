@@ -1,5 +1,6 @@
 "use client";
 
+import { formatEur } from "@/lib/format";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinMonth } from "@/lib/time/berlinDate";
 
@@ -12,12 +13,12 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Field, Stat, StatGrid } from "@/components/ui";
 
-const eur = (n: number | null) => (n == null ? "—" : `€${n.toFixed(2)}`);
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "");
 const htmlText = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export default function PayrollExportPage() {
   const { t, locale } = useLang();
+  const eur = (n: number | null) => formatEur(n, locale, 2);
   const [month, setMonth] = useState(() => berlinMonth());
   const [rows, setRows] = useState<any[]>([]);
   const [totals, setTotals] = useState<any>({});

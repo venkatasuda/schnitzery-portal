@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { toast } from "@/components/Toast";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -57,7 +58,7 @@ export default function NotificationsPage() {
     if (min < 60) return `${min}m`;
     const h = Math.round(min / 60); if (h < 24) return `${h}h`;
     const d = Math.round(h / 24); if (d < 7) return `${d}d`;
-    return new Date(iso).toLocaleDateString([], { day: "2-digit", month: "short" });
+    return new Date(iso).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
   }
   function groupOf(iso: string) {
     const d = new Date(iso); const now = new Date();

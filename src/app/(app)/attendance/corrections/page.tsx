@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -18,8 +19,8 @@ const TYPES = [
 const needsIn = (tp: string) => tp === "forgot_in" || tp === "missing" || tp === "incorrect";
 const needsOut = (tp: string) => tp === "forgot_out" || tp === "missing" || tp === "incorrect";
 
-const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) : "");
-const fmtTime = (t?: string | null) => (t ? new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
+const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", year: "numeric" }) : "");
+const fmtTime = (t?: string | null) => (t ? new Date(t).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
 const toTimeInput = (ts?: string | null) => (ts ? new Date(ts).toTimeString().slice(0, 5) : "");
 const iso = (date: string, time: string) => {
   if (!date || !time) return null;

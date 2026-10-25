@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { activeBranchFor } from "@/lib/activeBranch";
+import { rankOf } from "@/lib/auth/rank";
 
 // ============================================================
 // PEOPLE & PROFILE
@@ -14,7 +16,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("*").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
@@ -82,7 +84,7 @@ export async function updateStaff(staffId: string, fields: {
   contract_type?: string; contract_hours?: number | null;
   phone?: string; role?: string; status?: string; skills?: string[];
 }) {
-  const { supabase, user, profile } = await getMe();
+  const { supabase, user, profile, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
   const callerRole = profile?.role || "";
@@ -97,15 +99,23 @@ export async function updateStaff(staffId: string, fields: {
   const { data: target } = await supabase
     .from("users").select("id, branch_id, role").eq("id", staffId).single();
   if (!target) return { ok: false, error: "Staff member not found." };
-  if (!isOwner && target.branch_id !== profile?.branch_id) {
+  if (!isOwner && target.branch_id !== branchId) {
     return { ok: false, error: "You can only manage staff in your own branch." };
+  }
+  // Same rules as the database guard (migration 20261024200000): your own row only for
+  // contact details; other people only when they rank strictly below you.
+  if (staffId === user.id && (fields.employee_code !== undefined || fields.contract_type !== undefined || fields.contract_hours !== undefined)) {
+    return { ok: false, error: "You can't change your own contract details." };
+  }
+  if (staffId !== user.id && callerRole !== "super_admin" && rankOf(target.role) >= rankOf(callerRole)) {
+    return { ok: false, error: "You can only change people ranked below you." };
   }
 
   // Role assignment: a caller can only assign roles within their authority.
   const ASSIGNABLE: Record<string, string[]> = {
     manager: ["staff", "manager"],
     branch_owner: ["staff", "manager"],
-    brand_owner: ["staff", "manager", "branch_owner", "brand_owner"],
+    brand_owner: ["staff", "manager", "branch_owner"],
     super_admin: ["staff", "manager", "branch_owner", "brand_owner", "super_admin"],
   };
   if (fields.role !== undefined && !(ASSIGNABLE[callerRole] || []).includes(fields.role)) {

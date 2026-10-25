@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPct, formatEur, appLocale } from "@/lib/format";
 import { berlinToday } from "@/lib/time/berlinDate";
 
 import { useState, useEffect } from "react";
@@ -7,14 +8,15 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getLaborSummary, setDailySales, getRecentSales, getStaffWages, setStaffWage } from "@/lib/queries/labor";
+import SalesImport from "@/components/SalesImport";
 import { toast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
 
-const eur = (n: number) => "€" + (n || 0).toLocaleString("de-DE");
 const today = () => berlinToday();
 
 export default function LaborPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const eur = (n: number) => formatEur((n || 0), locale, "auto");
   const [sum, setSum] = useState<any>(null);
   const [sales, setSales] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
@@ -89,13 +91,13 @@ export default function LaborPage() {
         <div className="card u-center mb-4">
           <div style={{ fontSize: 12, color: "var(--gray)", letterSpacing: 1, textTransform: "uppercase" }}>{t("lab.laborPct")}</div>
           <div style={{ fontSize: 46, fontWeight: 800, fontFamily: "var(--font-display)", color: pctColor, lineHeight: 1.1 }}>
-            {pct == null ? "—" : `${pct}%`}
+            {formatPct(pct, locale)}
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: 22, marginTop: 8, fontSize: 13, color: "var(--gray)" }}>
             <span>{t("lab.labor")} <b className="u-text">{sum?.missingWageStaff ? "—" : eur(sum?.laborCost || 0)}</b></span>
             <span>{t("lab.sales")} <b className="u-text">{sum?.recordedSalesDays ? eur(sum.monthSales) : "—"}</b></span>
           </div>
-          {pct == null && <div className="ui-note">{t("lab.enterToCalc")}</div>}
+          {pct == null && !sum?.missingWageStaff && <div className="ui-note">{t("lab.enterToCalc")}</div>}
           {!!sum?.missingWageStaff && <p className="tone-warn" role="status">{t("lab.missingWageCost")}</p>}
           {pct != null && <div style={{ fontSize: 12, color: pctColor, marginTop: 8 }}>{pct <= 30 ? t("lab.healthy") : pct <= 35 ? t("lab.watchIt") : t("lab.high")} · {t("lab.typicalTarget")}</div>}
         </div>
@@ -119,11 +121,13 @@ export default function LaborPage() {
         </div>
       </div>
 
+      <SalesImport onDone={loadAll} />
+
       {sales.length > 0 && (
         <div className="card p-2 mb-2">
           {sales.map((s, i) => (
             <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 6px", borderBottom: i < sales.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none", fontSize: 13 }}>
-              <span className="u-muted">{new Date(s.sale_date).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" })}</span>
+              <span className="u-muted">{new Date(s.sale_date).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" })}</span>
               <span className="ui-strong-inline">{eur(Number(s.amount))}</span>
             </div>
           ))}
@@ -156,7 +160,7 @@ export default function LaborPage() {
               <button onClick={() => saveWage(p.id)} disabled={!wageDates[p.id] || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: !wageDates[p.id] ? "var(--dark3)" : "var(--action)", color: !wageDates[p.id] ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: !wageDates[p.id] ? "default" : "pointer" }}>
                 {savingWage === p.id ? t("common.saving") : t("lab.set")}
               </button>
-              {!!p.history?.length && <details style={{ flexBasis: "100%", fontSize: 14 }}><summary>{t("lab.history")}</summary><ul>{p.history.map((h: any) => <li key={h.id}>{h.effective_from || t("lab.unconfirmedDate")} · {h.hourly_wage == null ? "—" : eur(Number(h.hourly_wage))} · {t("lab.recorded")} {new Date(h.recorded_at).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" })}</li>)}</ul></details>}
+              {!!p.history?.length && <details style={{ flexBasis: "100%", fontSize: 14 }}><summary>{t("lab.history")}</summary><ul>{p.history.map((h: any) => <li key={h.id}>{h.effective_from || t("lab.unconfirmedDate")} · {h.hourly_wage == null ? "—" : eur(Number(h.hourly_wage))} · {t("lab.recorded")} {new Date(h.recorded_at).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin" })}</li>)}</ul></details>}
             </div>
           ))}
           {sum && sum.withWage < sum.staffCount && (

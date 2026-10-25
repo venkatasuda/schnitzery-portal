@@ -21,6 +21,13 @@ import * as Sentry from "@sentry/nextjs";
 // repeat. Clearing is now only reachable through finishLogin(), which first
 // verifies the caller actually holds a valid session for that address.
 // Keep it that way — do not export the raw clear.
+//
+// Since 2026-10-24 (docs/security/ATTACK-REVIEW-2026-10-24.md, A1/A2) the whole sign-in
+// runs here, on the server: signIn() is the only export. The old
+// browser flow (check → sign in from the browser → recordFail) could be skipped by
+// posting to Supabase Auth directly, and recordFail(email) let anyone lock any account.
+// A lock now also bans the auth user for the window, so Supabase Auth itself refuses
+// the password even when someone bypasses this app.
 // ============================================================================
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
@@ -80,7 +87,7 @@ function retryAfterFrom(oldest: number | null): number {
 // ── Call BEFORE attempting sign-in ──────────────────────────────────────────
 // Returns only { blocked, retryAfter }. It deliberately does NOT report how many
 // attempts remain — that told an attacker exactly how much room they had left.
-export async function checkLogin(email: string): Promise<{ blocked: boolean; retryAfter?: number; locked?: boolean }> {
+async function checkLogin(email: string): Promise<{ blocked: boolean; retryAfter?: number; locked?: boolean }> {
   const id = norm(email);
   const ipKey = await clientIpKey();
   try {
@@ -120,7 +127,7 @@ export async function checkLogin(email: string): Promise<{ blocked: boolean; ret
 }
 
 // ── Call AFTER a failed sign-in ─────────────────────────────────────────────
-export async function recordFail(email: string): Promise<void> {
+async function recordFail(email: string): Promise<void> {
   const id = norm(email);
   const ipKey = await clientIpKey();
   try {
@@ -140,7 +147,9 @@ export async function recordFail(email: string): Promise<void> {
     if (id) {
       const { n } = await countSince(id);
       if (n >= MAX_EMAIL) {
-        await a.from("users").update({ login_locked: true }).eq("email", id);
+        const { data: u } = await a.from("users").update({ login_locked: true }).eq("email", id).select("id").maybeSingle();
+        // Enforced by Supabase Auth too, so a direct API sign-in is refused for the window.
+        if (u?.id) await a.auth.admin.updateUserById(u.id, { ban_duration: `${Math.ceil(WINDOW_MS / 60000)}m` });
       }
     }
   } catch (err) {
@@ -152,7 +161,7 @@ export async function recordFail(email: string): Promise<void> {
 // Takes no email argument on purpose: the address is read from the session the
 // caller just established, so this cannot be used to clear someone else's
 // counter. If the caller is not actually signed in, it does nothing.
-export async function finishLogin(): Promise<{ ok: boolean }> {
+async function finishLogin(): Promise<{ ok: boolean }> {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -166,4 +175,23 @@ export async function finishLogin(): Promise<{ ok: boolean }> {
     Sentry.captureException(err, { tags: { area: "loginThrottle", op: "finishLogin" } });
     return { ok: false };
   }
+}
+
+type SignInResult = { ok: true } | { ok: false; code: "locked" | "throttled" | "invalid" | "bad"; retryAfter?: number };
+
+// The one public entry point for password sign-in. Runs the throttle, the sign-in and
+// the bookkeeping on the server, so none of the steps can be skipped from a browser.
+export async function signIn(email: unknown, password: unknown): Promise<SignInResult> {
+  if (typeof email !== "string" || typeof password !== "string" || !email.trim() || !password
+    || email.length > 254 || password.length > 200) return { ok: false, code: "bad" };
+  const gate = await checkLogin(email);
+  if (gate.blocked) return { ok: false, code: gate.locked ? "locked" : "throttled", retryAfter: gate.retryAfter };
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({ email: norm(email), password });
+  if (error || !data.user) {
+    await recordFail(email);
+    return { ok: false, code: "invalid" }; // never echo Supabase's message (no account probing)
+  }
+  await finishLogin();
+  return { ok: true };
 }

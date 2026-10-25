@@ -8,6 +8,11 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { monthRange, isCalendarDate, berlinToday } from "@/lib/time/berlinDate";
 import { shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches, setWage } from "@/lib/pay/wages";
+import { activeBranchFor } from "@/lib/activeBranch";
+import { rankOf } from "@/lib/auth/rank";
+
+// Sanity cap per day: a typo like 1e15 would otherwise wreck every percentage and chart.
+const MAX_DAILY_SALES = 1_000_000;
 
 // Labor cost = Σ(hours worked × hourly wage). Labor cost % = labor ÷ sales.
 // Managers enter daily sales + each person's wage. All branch-scoped, manager-only.
@@ -17,7 +22,7 @@ async function getMgr() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null, branchId: null };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
@@ -63,15 +68,17 @@ export async function getLaborSummary() {
     .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first).lt("purchase_date", next).lte("purchase_date", berlinToday()).order("id"));
   if (purchErr) return { ok: false, error: purchErr.message };
   // Release D: missing sales days, wages or delivery costs are never zero; ratios need complete inputs.
-  const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0).map(l => ({ branch_id: branchId, work_date: l.work_date }));
+  const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0).map(l => ({ branch_id: branchId ?? "", work_date: l.work_date }));
   const coverage = {
-    sales: figure(monthSales, { salesDays: missingSalesDays(worked, (sales || []).map(s => ({ branch_id: branchId, sale_date: s.sale_date })), berlinToday()) }),
+    sales: figure(monthSales, { salesDays: missingSalesDays(worked, (sales || []).map(s => ({ branch_id: branchId ?? "", sale_date: s.sale_date })), berlinToday()) }),
     labor: figure(laborCost, { wages: missingWageStaff }),
     spend: spendFigure(purch || []),
   };
   const monthInvSpend = coverage.spend.value;
-  const laborPct = pctOf(coverage.labor, coverage.sales);
-  const foodCostPct = pctOf(coverage.spend, coverage.sales); // purchases ÷ sales, labelled as such
+  // Nothing recorded is "unknown", not 0%: sales with no clocked hours / no purchase entries
+  // means the data is missing, so the ratio stays hidden ("—").
+  const laborPct = worked.length ? pctOf(coverage.labor, coverage.sales) : null;
+  const foodCostPct = (purch || []).length ? pctOf(coverage.spend, coverage.sales) : null; // purchases ÷ sales, labelled as such
 
   return {
     ok: true,
@@ -92,12 +99,30 @@ export async function setDailySales(saleDate: string, amount: number) {
   const { supabase, user, role, branchId } = await getMgr();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
-  if (!isCalendarDate(saleDate) || saleDate > berlinToday() || !Number.isFinite(amount) || amount < 0) return { ok: false, error: "Invalid sales date or amount." };
+  if (!isCalendarDate(saleDate) || saleDate > berlinToday() || !Number.isFinite(amount) || amount < 0 || amount > MAX_DAILY_SALES) return { ok: false, error: "Invalid sales date or amount." };
   const { error } = await supabase
     .from("daily_sales")
     .upsert({ branch_id: branchId, sale_date: saleDate, amount }, { onConflict: "branch_id,sale_date" });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
+}
+
+// Till CSV import (parsed in the browser by lib/sales/parseSalesCsv): one upsert per
+// day, same rules as manual entry. Re-importing a day overwrites it, never doubles it.
+export async function importDailySales(rows: { date: string; amount: number }[]) {
+  const { supabase, user, role, branchId } = await getMgr();
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (!isManager(role)) return { ok: false as const, error: "Managers only." };
+  if (!branchId) return { ok: false as const, error: "No branch." };
+  const today = berlinToday();
+  if (!Array.isArray(rows) || rows.length === 0 || rows.length > 400 || new Set(rows.map((r) => r?.date)).size !== rows.length
+    || !rows.every((r) => r && isCalendarDate(r.date) && r.date <= today && typeof r.amount === "number" && Number.isFinite(r.amount) && r.amount >= 0 && r.amount <= MAX_DAILY_SALES)) {
+    return { ok: false as const, error: "Invalid sales date or amount." };
+  }
+  const { error } = await supabase.from("daily_sales")
+    .upsert(rows.map((r) => ({ branch_id: branchId, sale_date: r.date, amount: r.amount })), { onConflict: "branch_id,sale_date" });
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const, count: rows.length };
 }
 
 export async function getRecentSales() {
@@ -136,8 +161,10 @@ export async function setStaffWage(userId: string, wage: number, effectiveFrom: 
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(role)) return { ok: false, error: "Managers only." };
   if (!isCalendarDate(effectiveFrom) || effectiveFrom < "2000-01-01" || effectiveFrom > berlinToday() || !Number.isFinite(wage) || wage < 0) return { ok: false, error: "Enter a valid wage and its actual effective date." };
-  const { data: tgt } = await supabase.from("users").select("branch_id").eq("id", userId).single();
+  if (userId === user.id) return { ok: false, error: "You can't set your own wage." };
+  const { data: tgt } = await supabase.from("users").select("branch_id, role").eq("id", userId).single();
   if (!tgt || tgt.branch_id !== branchId) return { ok: false, error: "Not in your branch." };
+  if (role !== "super_admin" && rankOf(tgt.role) >= rankOf(role)) return { ok: false, error: "You can only change people ranked below you." };
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return { ok: false, error: "Wage history is not configured." };
@@ -214,14 +241,14 @@ export async function getMonthlySummary(month?: string) {
 
   const totalHours = Math.round((totalMins / 60) * 10) / 10;
   // Release D: ratios only on complete inputs (wages, delivery costs, sales on every open day).
-  const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0).map(l => ({ branch_id: branchId, work_date: l.work_date }));
+  const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0).map(l => ({ branch_id: branchId ?? "", work_date: l.work_date }));
   const coverage = {
-    sales: figure(monthSales, { salesDays: missingSalesDays(worked, (sales || []).map(s => ({ branch_id: branchId, sale_date: s.sale_date })), berlinToday()) }),
+    sales: figure(monthSales, { salesDays: missingSalesDays(worked, (sales || []).map(s => ({ branch_id: branchId ?? "", sale_date: s.sale_date })), berlinToday()) }),
     labor: figure(laborCost, { wages: missingWage }),
     spend,
   };
-  const laborPct = pctOf(coverage.labor, coverage.sales);
-  const foodPct = pctOf(coverage.spend, coverage.sales);
+  const laborPct = worked.length ? pctOf(coverage.labor, coverage.sales) : null; // no hours recorded ≠ 0%
+  const foodPct = (purch || []).length ? pctOf(coverage.spend, coverage.sales) : null; // no purchases recorded ≠ 0%
   const primePct = (laborPct != null && foodPct != null) ? Math.round((laborPct + foodPct) * 10) / 10 : null;
   const lateRate = shifts > 0 ? Math.round((lateShifts / shifts) * 1000) / 10 : null;
 

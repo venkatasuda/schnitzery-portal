@@ -1,5 +1,6 @@
 "use client";
 
+import { formatEur, formatPct } from "@/lib/format";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -9,28 +10,27 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Stat } from "@/components/ui";
 
-const eur = (n: number) => "€" + (n || 0).toLocaleString("de-DE");
 
 // Declared at module scope, NOT inside the page component. A component created
 // during render is a brand-new component type on every render, so React
 // unmounts and remounts it each time — losing any state and costing DOM work.
 const csvCell = (s: any) => `"${String(s ?? "").replace(/"/g, '""')}"`;
 
-function lastMonths(n: number) {
+function lastMonths(n: number, locale: string) {
   const out: { value: string; label: string }[] = [];
   const now = new Date();
-  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   for (let i = 0; i < n; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    out.push({ value: v, label: `${MON[d.getMonth()]} ${d.getFullYear()}` });
+    out.push({ value: v, label: d.toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { month: "short", year: "numeric" }) });
   }
   return out;
 }
 
 export default function SummaryPage() {
-  const { t } = useLang();
-  const months = lastMonths(6);
+  const { t, locale } = useLang();
+  const eur = (n: number) => formatEur((n || 0), locale, "auto");
+  const months = lastMonths(6, locale);
   const [month, setMonth] = useState(months[0].value);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +48,44 @@ export default function SummaryPage() {
     finally { setLoading(false); }
   }
   useEffect(() => { load(month); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [month]);
+
+  // Monthly profit-and-loss sheet for the owner / tax advisor (browser print → PDF).
+  // Incomplete figures are printed as "≥" with the reason, never as final amounts.
+  function printReport() {
+    if (!data) return;
+    const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+    const cov = data.coverage || {};
+    const eur = (v: number | null | undefined, complete = true) => v == null ? "—" : `${complete ? "" : "≥ "}${new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v)}`;
+    const pct = (v: number | null | undefined) => formatPct(v, locale);
+    const sales = data.sales ?? null, labour = data.laborCost ?? null, purch = data.foodSpend ?? null;
+    const complete = cov.sales?.complete !== false && cov.labor?.complete !== false && cov.spend?.complete !== false;
+    const rest = sales != null && labour != null && purch != null ? sales - labour - purch : null;
+    const rows: [string, string, boolean?][] = [
+      [t("summary.sales"), eur(sales, cov.sales?.complete !== false)],
+      [t("summary.labourCost"), cov.labor?.complete === false && !labour ? "—" : eur(labour, cov.labor?.complete !== false)], // no wages at all → unknown, not "≥ 0 €"
+      [t("summary.purchases"), eur(purch, cov.spend?.complete !== false)],
+      [t("summary.afterPrime"), complete ? eur(rest) : "—", true],
+      [t("summary.laborPct"), pct(data.laborPct)], [t("summary.foodPct"), pct(data.foodPct)], [t("summary.primePct"), pct(data.primePct)],
+    ];
+    const notes = [
+      cov.sales?.missing?.salesDays ? t("business.missingSalesDays", { n: cov.sales.missing.salesDays }) : "",
+      cov.labor?.missing?.wages ? t("business.missingWages", { n: cov.labor.missing.wages }) : "",
+      cov.spend?.missing?.costs ? t("business.missingCosts", { n: cov.spend.missing.costs }) : "",
+    ].filter(Boolean);
+    const monthName = months.find((m) => m.value === data.month)?.label ?? data.month;
+    const w = window.open("", "_blank");
+    if (!w) { toast(t("common.loadFailed"), "error"); return; }
+    w.document.write(`<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><title>Schnitzery — ${esc(t("summary.reportTitle"))} ${esc(monthName)}</title><style>
+      body{font-family:Arial,sans-serif;color:#222;padding:32px;max-width:640px}h1{font-size:20px;margin:0 0 4px}.m{color:#666;margin-bottom:20px}
+      table{border-collapse:collapse;width:100%}td{padding:8px 10px;border-bottom:1px solid #ddd}td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+      tr.b td{font-weight:bold;border-top:2px solid #222}.n{margin-top:18px;font-size:12px;color:#8a5a00}.f{margin-top:28px;font-size:11px;color:#666}</style></head><body>
+      <h1>Schnitzery — ${esc(t("summary.reportTitle"))}</h1><div class="m">${esc(monthName)}</div>
+      <table>${rows.map(([k, v, b]) => `<tr${b ? ' class="b"' : ""}><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("")}</table>
+      ${notes.length ? `<div class="n">⚠ ${notes.map(esc).join("<br>⚠ ")}</div>` : ""}
+      <div class="f">${esc(t("summary.reportNote"))}</div>
+      <script>window.onload=function(){window.print()}</script></body></html>`);
+    w.document.close();
+  }
 
   function downloadCsv() {
     if (!data) return;
@@ -98,11 +136,14 @@ export default function SummaryPage() {
         <span className="u-muted">›</span>
       </Link>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, margin: "12px 0 14px", flexWrap: "wrap" }}>
-        <select aria-label={t("summary.month")} value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14 }}>
+      <div className="ui-toolbar mb-4">
+        <select aria-label={t("summary.month")} value={month} onChange={(e) => setMonth(e.target.value)} className="form-select ui-input-sm">
           {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
-        <button onClick={downloadCsv} disabled={!data} style={{ padding: "9px 14px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--gold-ink)", border: "1px solid var(--accent-line)", fontSize: 13, fontWeight: 600, cursor: data ? "pointer" : "default" }}>{t("summary.downloadCsv")}</button>
+        <div className="d-flex gap-2">
+          <button className="btn-secondary" onClick={downloadCsv} disabled={!data}>{t("summary.downloadCsv")}</button>
+          <button className="btn-gold" onClick={printReport} disabled={!data}>{t("summary.printPdf")}</button>
+        </div>
       </div>
 
       {loading ? (
@@ -122,12 +163,12 @@ export default function SummaryPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginBottom: 8 }}>
             <Stat label={t("summary.sales")} value={eur(data.sales)} />
-            <Stat label={t("summary.primePct")} value={data.primePct != null ? `${data.primePct}%` : "—"} color={primeColor} sub={t("summary.primeNote")} />
-            <Stat label={t("summary.laborPct")} value={data.laborPct != null ? `${data.laborPct}%` : "—"} sub={(data.coverage.labor.complete ? "" : "≥ ") + eur(data.laborCost)} />
-            <Stat label={t("summary.foodPct")} value={data.foodPct != null ? `${data.foodPct}%` : "—"} sub={(data.coverage.spend.complete ? "" : "≥ ") + eur(data.foodSpend)} />
-            <Stat label={t("summary.overtime")} value={`${data.overtimeHrs}h`} />
-            <Stat label={t("summary.lateRate")} value={data.lateRate != null ? `${data.lateRate}%` : "—"} />
-            <Stat label={t("summary.totalHours")} value={`${data.totalHours}h`} />
+            <Stat label={t("summary.primePct")} value={formatPct(data.primePct, locale)} color={primeColor} sub={t("summary.primeNote")} />
+            <Stat label={t("summary.laborPct")} value={formatPct(data.laborPct, locale)} sub={(data.coverage.labor.complete ? "" : "≥ ") + eur(data.laborCost)} />
+            <Stat label={t("summary.foodPct")} value={formatPct(data.foodPct, locale)} sub={(data.coverage.spend.complete ? "" : "≥ ") + eur(data.foodSpend)} />
+            <Stat label={t("summary.overtime")} value={`${Number(data.overtimeHrs).toLocaleString(locale === "de" ? "de-DE" : "en-GB")} h`} />
+            <Stat label={t("summary.lateRate")} value={formatPct(data.lateRate, locale)} />
+            <Stat label={t("summary.totalHours")} value={`${Number(data.totalHours).toLocaleString(locale === "de" ? "de-DE" : "en-GB")} h`} />
             <Stat label={t("summary.shifts")} value={String(data.shifts)} />
           </div>
 

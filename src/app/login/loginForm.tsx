@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { useLang } from "@/components/LanguageProvider";
-import { checkLogin, recordFail, finishLogin } from "@/lib/queries/loginThrottle";
+import { signIn } from "@/lib/queries/loginThrottle";
 
 export default function LoginForm() {
   const { t } = useLang();
   const router = useRouter();
-  const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,26 +18,17 @@ export default function LoginForm() {
   async function handleLogin() {
     setError(null);
     setLoading(true);
-    // server-side lockout check (can't be bypassed by refreshing)
-    const gate = await checkLogin(email);
-    if (gate.blocked) {
+    // Throttle, sign-in and lock all run on the server (loginThrottle.signIn); the
+    // session cookie comes back with the response.
+    const res = await signIn(email, password).catch(() => null);
+    if (!res || !res.ok) {
       setLoading(false);
-      setError(gate.locked
-        ? t("login.locked")
-        : t("login.tooManyAttempts", { min: Math.ceil((gate.retryAfter || 60) / 60) }));
+      setError(!res ? t("login.failed")
+        : res.code === "locked" ? t("login.locked")
+        : res.code === "throttled" ? t("login.tooManyAttempts", { min: Math.ceil((res.retryAfter || 60) / 60) })
+        : t("login.invalid"));
       return;
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      await recordFail(email);
-      setLoading(false);
-      setError(error.message);
-      return;
-    }
-    // Clears the throttle counters. Takes no email: the server reads the address
-    // from the session we just established, so this can't reset anyone else's.
-    // Best effort: a failed counter reset must never keep a signed-in user on this page.
-    await finishLogin().catch(() => {});
     setLoading(false);
     // Session is set; middleware will allow the app routes now.
     router.push("/");

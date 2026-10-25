@@ -1,4 +1,6 @@
 "use client";
+import { appLocale } from "@/lib/format";
+import InventoryNav from "@/components/InventoryNav";
 import { inventoryKey } from "@/lib/inventory/identity";
 
 import { useState, useEffect } from "react";
@@ -8,7 +10,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getBatchProducts, addBatch, getBatches, getExpirySummary, markBatchUsed, discardBatch } from "@/lib/queries/expiry";
 
-const fmtDate = (d: string) => { try { return new Date(d + "T12:00:00Z").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); } catch { return d; } };
+const fmtDate = (d: string) => { try { return new Date(d + "T12:00:00Z").toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "numeric", month: "short", year: "numeric" }); } catch { return d; } };
 
 export default function ExpiryPage() {
   const { t } = useLang();
@@ -82,6 +84,7 @@ export default function ExpiryPage() {
 
   return (
     <div className="fade-up">
+      <InventoryNav active="stock" />
       <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("expiry.title")}</h1>
       <div className="page-sub">{t("expiry.subtitle")}</div>
 

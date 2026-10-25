@@ -5,8 +5,9 @@ import { useLang } from "@/components/LanguageProvider";
 import { toast } from "@/components/Toast";
 import { saveCount } from "@/lib/queries/inventory";
 import Icon from "@/components/Icon";
+import NativeDialog from "@/components/NativeDialog";
 
-export default function ScanToCount({ products, onClose, onSaved }: { products: any[]; onClose: () => void; onSaved: () => void }) {
+export default function ScanToCount({ products, branchId, onClose, onSaved }: { products: any[]; branchId?: string; onClose: () => void; onSaved: () => void }) {
   const { t } = useLang();
   const scannerRef = useRef<any>(null);
   const [scanned, setScanned] = useState<any>(null);
@@ -52,48 +53,51 @@ export default function ScanToCount({ products, onClose, onSaved }: { products: 
     if (!scanned) return;
     if (count === "") { toast(t("scan.enterCount"), "error"); return; }
     setSaving(true);
-    const r = await saveCount(scanned.product, scanned.category, Number(count), Number(scanned.soll), scanned.unit);
-    setSaving(false);
+    try {
+    const r = await saveCount(scanned.product, scanned.category, Number(count), Number(scanned.soll), scanned.unit, branchId);
     if (r.ok) { toast(t("scan.saved", { p: scanned.product }), "success"); onSaved(); scanNext(); }
     else toast(r.error || t("scan.failed"), "error");
+    } catch { setErr(t("scan.failed")); }
+    finally { setSaving(false); }
   }
   function scanNext() { setScanned(null); setCount(""); setErr(""); startScanner(); }
   function close() { stopScanner(); onClose(); }
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.94)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
-      <div style={{ padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{t("scan.title")}</span>
-        <button type="button" aria-label={t("common.close")} onClick={close} style={{ color: "#fff", background: "none", border: "none", fontSize: 24, cursor: "pointer", lineHeight: 1 }}><Icon e="✕" size={20} /></button>
+    <NativeDialog title={t("scan.title")} busy={saving} onClose={close}>
+      <div className="u-between">
+        <h2>{t("scan.title")}</h2>
+        <button className="ui-icon-btn" disabled={saving} type="button" aria-label={t("common.close")} onClick={close}><Icon e="✕" size={20} /></button>
       </div>
 
       {!scanned ? (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div id="scan-reader" style={{ width: "100%", maxWidth: 340, borderRadius: 12, overflow: "hidden" }} />
+        <div className="inventory-scanner">
+          <label>{t("inventoryOps.manualProduct")}<select className="form-select" value="" onChange={e=>{const p=products.find(p=>p.id===e.target.value);if(p){stopScanner();setScanned(p);setCount("");}}}><option value="">—</option>{products.map(p=><option key={p.id} value={p.id}>{p.product} · {p.unit||"—"}</option>)}</select></label>
+          <div id="scan-reader" className="inventory-scanner-reader" />
           {err ? (
             <>
-              <div style={{ color: "#ec7063", marginTop: 18, textAlign: "center", fontSize: 14 }}>{err}</div>
-              <button onClick={scanNext} style={{ marginTop: 14, padding: "10px 18px", borderRadius: 8, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>{t("scan.tryAgain")}</button>
+              <div role="alert" className="tone-danger">{err}</div>
+              <button className="btn-secondary" onClick={scanNext}>{t("scan.tryAgain")}</button>
             </>
           ) : (
-            <div style={{ color: "#9a8f8f", marginTop: 18, textAlign: "center", fontSize: 13 }}>{t("scan.aim")}</div>
+            <p className="muted">{t("scan.aim")}</p>
           )}
         </div>
       ) : (
-        <div style={{ flex: 1, padding: 20 }}>
-          <div style={{ background: "#1c1010", borderRadius: 14, padding: 20, border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div style={{ fontSize: 12, color: "#9a8f8f" }}>{scanned.category}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{scanned.product}</div>
-            <div style={{ fontSize: 12, color: "#9a8f8f", marginBottom: 16 }}>{t("scan.target")}: {scanned.soll} {scanned.unit || ""}</div>
-            <input aria-label={t("scan.countPh")} type="number" inputMode="decimal" autoFocus value={count} onChange={(e) => setCount(e.target.value)} placeholder={t("scan.countPh")}
-              style={{ width: "100%", padding: 16, fontSize: 22, textAlign: "center", borderRadius: 12, background: "#241414", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", fontWeight: 700 }} />
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button onClick={save} disabled={saving} style={{ flex: 1, padding: 15, borderRadius: 12, background: "#d4a847", color: "#1a1a1a", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{saving ? "…" : t("scan.saveNext")}</button>
-              <button onClick={scanNext} style={{ padding: "15px 18px", borderRadius: 12, background: "transparent", color: "#9a8f8f", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer" }}>{t("scan.skip")}</button>
+        <div>
+          <div className="card">
+            <p className="muted">{scanned.category}</p>
+            <h3>{scanned.product}</h3>
+            <p className="muted">{t("scan.target")}: {scanned.soll} {scanned.unit || ""}</p>
+            {err&&<p role="alert" className="tone-danger">{err}</p>}
+            <input className="form-input ui-big-input" aria-label={t("scan.countPh")} type="number" min="0" step="any" inputMode="decimal" autoFocus value={count} onChange={(e) => setCount(e.target.value)} placeholder={t("scan.countPh")} />
+            <div className="row-actions">
+              <button className="btn-gold" onClick={save} disabled={saving}>{saving ? "…" : t("scan.saveNext")}</button>
+              <button className="btn-secondary" disabled={saving} onClick={scanNext}>{t("scan.skip")}</button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </NativeDialog>
   );
 }

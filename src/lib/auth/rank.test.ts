@@ -76,10 +76,10 @@ describe("canActOnUser", () => {
     if (!r.ok) expect(r.error).toMatch(/own branch/);
   });
 
-  it("lets owners reach across branches, including equal rank", () => {
+  it("lets owners reach across branches, but never an equal rank", () => {
     expect(check("brand_owner", "staff", A, B).ok).toBe(true);
     expect(check("brand_owner", "branch_owner", A, B).ok).toBe(true);
-    expect(check("brand_owner", "brand_owner", A, B).ok).toBe(true);
+    expect(check("brand_owner", "brand_owner", A, B).ok).toBe(false); // no co-owner takeover
     expect(check("super_admin", "super_admin", A, B).ok).toBe(true);
   });
 
@@ -102,5 +102,6 @@ it("prevents account creation above the actor's authority", () => {
   expect(canCreateRole("manager", "manager")).toBe(false);
   expect(canCreateRole("branch_owner", "manager")).toBe(true);
   expect(canCreateRole("brand_owner", "super_admin")).toBe(false);
+  expect(canCreateRole("brand_owner", "brand_owner")).toBe(false);
   expect(check("brand_owner", "super_admin").ok).toBe(false);
 });

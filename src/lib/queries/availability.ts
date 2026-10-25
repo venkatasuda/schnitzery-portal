@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { berlinMonday, mondayOfDate, berlinWeekdayIndex } from "@/lib/time/berlinDate";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // AVAILABILITY + manager MISSING/NO-SHOW checks
@@ -17,7 +18,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
@@ -42,7 +43,7 @@ export async function getMyAvailability(weekStart?: string) {
 
 // ── STAFF: save availability (upsert by user + week) ──
 export async function saveAvailability(weekStart: string, days: any) {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in." };
   if (!branchId) return { ok: false, error: "No branch assigned." };
 

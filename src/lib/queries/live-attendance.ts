@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { readAll } from "@/lib/supabase/readAll";
 import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
+import { activeBranchFor } from "@/lib/activeBranch";
+import { IMPLAUSIBLE_SHIFT_MIN, isImplausibleShift } from "@/lib/pay/calculations";
 
 // ============================================================
 // LIVE ATTENDANCE + OVERTIME + APPROVALS — manager/owner views.
@@ -15,7 +17,7 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, role: null };
   const { data: profile } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, role: profile?.role ?? null };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, role: profile?.role ?? null };
 }
 
 function isManager(role?: string | null) {
@@ -60,6 +62,14 @@ export async function getLiveAttendance(date?: string) {
     .order("clock_in", { ascending: true }).limit(50);
   if (staleError) return { ok: false, error: staleError.message };
 
+  // Closed shifts over 16h that nobody has reviewed yet: a clock-out was forgotten and
+  // fixed late (or by the system). They block approval until corrected (see below).
+  const { count: suspect, error: suspectError } = await supabase
+    .from("attendance_logs").select("id", { count: "exact", head: true })
+    .eq("branch_id", branchId).eq("status", "complete").gt("duration_mins", IMPLAUSIBLE_SHIFT_MIN)
+    .or("approval_status.is.null,approval_status.eq.pending");
+  if (suspectError) return { ok: false, error: suspectError.message };
+
   const logs = data || [];
   const ids = Array.from(new Set([...logs, ...(staleData || [])].map((l) => l.user_id)));
   const names: Record<string, { full_name: string; team: string }> = {};
@@ -83,7 +93,7 @@ export async function getLiveAttendance(date?: string) {
 
   const forgotten = (staleData || []).map((l) => ({ id: l.id, name: names[l.user_id]?.full_name || "Unknown", clock_in: l.clock_in }));
 
-  return { ok: true, date: day, rows, workingNow, completed, late, totalMins, forgotten };
+  return { ok: true, date: day, rows, workingNow, completed, late, totalMins, forgotten, suspect: suspect || 0 };
 }
 
 // ── OVERTIME: monthly contract vs actual, per staff + long shifts ──
@@ -97,12 +107,12 @@ export async function getMonthlyOvertime(month?: string) {
   const ym = month || thisMonth();
   const { start, next } = monthBounds(ym);
 
-  const { data: logs, error } = await supabase
+  const { data: logs, error } = await readAll(supabase
     .from("attendance_logs")
     .select("user_id, duration_mins, work_date, status")
     .eq("branch_id", branchId)
     .gte("work_date", start)
-    .lt("work_date", next);
+    .lt("work_date", next).order("id")); // > 1,000 shifts a month must not be cut off
   if (error) return { ok: false, error: error.message };
 
   const { data: staff } = await supabase
@@ -196,6 +206,7 @@ export async function getAttendanceApprovals() {
     work_date: l.work_date, clock_in: l.clock_in, clock_out: l.clock_out,
     duration_mins: l.duration_mins, late_mins: l.late_mins || 0,
     overtime: (l.duration_mins || 0) > LONG_SHIFT_MIN,
+    suspect: isImplausibleShift(l), // probable forgotten clock-out: correct before approving
   }));
 
   return { ok: true, rows };
@@ -207,6 +218,15 @@ export async function setAttendanceApproval(logId: string, status: "approved" | 
   if (!isManager(role)) return { ok: false, error: "Managers only." };
   if (!branchId) return { ok: false, error: "No branch." };
   if (typeof logId !== "string" || !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(logId) || !["approved", "rejected"].includes(status)) return { ok: false, error: "Invalid attendance decision." };
+
+  // A 16h+ shift is a forgotten clock-out until proven otherwise: it may be rejected,
+  // but approving it would pay the wrong hours. Fix the time with a correction first.
+  const { data: log, error: readError } = await supabase.from("attendance_logs")
+    .select("user_id, clock_in, clock_out, duration_mins").eq("id", logId).eq("branch_id", branchId).maybeSingle();
+  if (readError) return { ok: false, error: readError.message };
+  // Nobody decides about their own shift (the database refuses it too), except the top role.
+  if (log?.user_id === user.id && !["brand_owner", "super_admin"].includes(role || "")) return { ok: false, error: "You cannot edit or approve your own shifts." };
+  if (status === "approved" && log && isImplausibleShift(log)) return { ok: false, error: "Over 16 hours: correct the clock-out time before approving." };
 
   const { data, error } = await supabase
     .from("attendance_logs").update({ approval_status: status }).eq("id", logId).eq("branch_id", branchId).eq("status", "complete")

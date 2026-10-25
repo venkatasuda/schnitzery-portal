@@ -4,6 +4,7 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "A manager correction with a reason is required.": "Eine Korrektur durch die Leitung mit Begründung ist erforderlich.",
   "A rejection reason is required.": "Bitte einen Ablehnungsgrund angeben.",
   "Already actioned. Refresh the transfer.": "Bereits bearbeitet. Bitte den Transfer neu laden.",
   "Already actioned.": "Bereits bearbeitet.",
@@ -68,6 +69,15 @@ const DE: Record<string, string> = {
   "Owners only.": "Nur für Inhaber.",
   "Payroll approval is not configured.": "Lohnfreigabe ist nicht eingerichtet.",
   "Payroll changed; reload and review before approval.": "Lohndaten haben sich geändert – neu laden und vor der Freigabe prüfen.",
+  "Over 16 hours: correct the clock-out time before approving.": "Über 16 Stunden: zuerst die Ausstempelzeit korrigieren, dann genehmigen.",
+  "You can't change your own contract details.": "Deine eigenen Vertragsdaten kannst du nicht ändern.",
+  "You can only change people ranked below you.": "Du kannst nur Personen unterhalb deiner Rolle ändern.",
+  "You can't set your own wage.": "Deinen eigenen Lohn kannst du nicht festlegen.",
+  "You cannot edit or approve your own shifts.": "Eigene Schichten kannst du nicht bearbeiten oder genehmigen.",
+  "You cannot decide your own request.": "Über deine eigene Anfrage kannst du nicht entscheiden.",
+  "You cannot change your own role, branch, contract, leave allowance, status, email or lock.": "Rolle, Filiale, Vertrag, Urlaubsanspruch, Status, E-Mail oder Sperre kannst du bei dir selbst nicht ändern.",
+  "You can only move people into your own branches.": "Du kannst Personen nur in deine eigenen Filialen versetzen.",
+  "Pick a batch.": "Charge wählen.",
   "Pick a date.": "Datum wählen.",
   "Pick a person and write a note.": "Person wählen und Notiz schreiben.",
   "Pick a product.": "Produkt wählen.",

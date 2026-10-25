@@ -1,15 +1,16 @@
 "use client";
 
+import { formatEur } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getWasteByBranch } from "@/lib/queries/waste";
 
-const eur = (n: number) => "€" + (Math.round((n || 0) * 100) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function WasteByBranchPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const eur = (n: number) => formatEur((n || 0), locale, 2);
   const [data, setData] = useState<any>(null);
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);

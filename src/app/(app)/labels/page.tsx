@@ -1,4 +1,5 @@
 "use client";
+import InventoryNav from "@/components/InventoryNav";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -55,6 +56,7 @@ export default function LabelsPage() {
 
   return (
     <div className="fade-up">
+      <InventoryNav active="stock" />
       <Link href="/inventory" style={{ color: "var(--gray)", fontSize: 13, textDecoration: "none" }}>‹ {t("labels.back")}</Link>
       <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🏷️" size={22} /> {t("labels.title")}</h1>
       <div className="page-sub">{t("labels.subtitle")}</div>

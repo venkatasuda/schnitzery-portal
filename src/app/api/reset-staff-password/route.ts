@@ -3,6 +3,9 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { canActOnUser, isManagerRole } from "@/lib/auth/rank";
+import { activeBranchFor } from "@/lib/activeBranch";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ============================================================
 // SECURE SERVER ROUTE — reset a staff member's password.
@@ -22,6 +25,8 @@ export async function POST(request: Request) {
 
   const { data: me } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
+  // Active branch from the header picker, validated against the caller's access.
+  const meBranch = me ? await activeBranchFor(supabase, me) : null;
   if (!me || !isManagerRole(me.role)) {
     return NextResponse.json({ ok: false, error: "Managers only." }, { status: 403 });
   }
@@ -29,6 +34,7 @@ export async function POST(request: Request) {
   // 2. Parse input.
   let body: any;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 }); }
+  if (!body || typeof body !== "object" || Array.isArray(body) || typeof body.userId !== "string" || !UUID.test(body.userId)) return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 });
   const { userId } = body as { userId?: string };
   if (!userId) return NextResponse.json({ ok: false, error: "Missing userId." }, { status: 400 });
   if (userId === user.id) {
@@ -45,18 +51,19 @@ export async function POST(request: Request) {
 
   // 4. Load target + authorize (own branch, never above your rank).
   const { data: target } = await admin
-    .from("users").select("role, branch_id, full_name").eq("id", userId).single();
+    .from("users").select("role, branch_id, full_name, status").eq("id", userId).single();
   if (!target) return NextResponse.json({ ok: false, error: "Staff member not found." }, { status: 404 });
 
   const gate = canActOnUser({
-    meRole: me.role, meBranchId: me.branch_id,
+    meRole: me.role, meBranchId: meBranch,
     targetRole: target.role, targetBranchId: target.branch_id,
   });
   if (!gate.ok) return NextResponse.json({ ok: false, error: gate.error }, { status: gate.status });
 
   // 5. Generate a readable one-time temp password and set it.
   const temp = "Sz-" + randomBytes(5).toString("base64url"); // ~10 chars, e.g. Sz-Xa9kQ2
-  const { error: pwErr } = await admin.auth.admin.updateUserById(userId, { password: temp });
+  // Also lifts a login-lock ban (never the ban of a deactivated person).
+  const { error: pwErr } = await admin.auth.admin.updateUserById(userId, target.status === "active" ? { password: temp, ban_duration: "none" } : { password: temp });
   if (pwErr) return NextResponse.json({ ok: false, error: pwErr.message }, { status: 400 });
 
   // 6. Force them to set their own on next login, and lift any lockout.

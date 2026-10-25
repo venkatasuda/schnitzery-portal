@@ -8,8 +8,10 @@ import { sendPushToUser } from "@/lib/push/delivery";
 import { inventoryKey, validInventoryItem } from "@/lib/inventory/identity";
 import { countDepletion } from "@/lib/inventory/reconciliation";
 import { valueStock, valueUsage } from "@/lib/inventory/valuation";
-import { figure, missingSalesDays, pctOf, spendFigure } from "@/lib/analytics/coverage";
+import { figure, latestPrice, missingSalesDays, pctOf, spendFigure } from "@/lib/analytics/coverage";
+import { orderLineCost, orderSummary } from "@/lib/inventory/orderDraft";
 import { getReconciliation } from "@/lib/queries/reconciliation";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // INVENTORY
@@ -26,12 +28,20 @@ async function getMe() {
   if (!user) return { supabase, user: null, branchId: null, profile: null };
   const { data: profile } = await supabase
     .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
 function todayStr() { return berlinToday(); }
+
+export async function getInventoryContext() {
+  const { supabase, user, branchId } = await getMe();
+  if (!user || !branchId) return { ok: false as const };
+  const { data, error } = await supabase.from("branches").select("id,name").eq("id", branchId).single();
+  if (error || !data) return { ok: false as const };
+  return { ok: true as const, branch: data, countDate: todayStr() };
+}
 
 // Status timestamps cannot reconstruct when each transfer leg moved stock.
 // Withhold affected estimates until movement timing can be reconciled.
@@ -135,10 +145,11 @@ export async function getCounts(date?: string) {
 }
 
 // ── Save a stock count for a product ──
-export async function saveCount(product: string, category: string, ist: number, soll: number, unit: string) {
+export async function saveCount(product: string, category: string, ist: number, soll: number, unit: string, expectedBranch?: string) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  if(expectedBranch && expectedBranch!==branchId)return{ok:false,error:"Branch changed. Refresh before counting."};
   if (!branchId || !category || !validInventoryItem({ product, category, unit }) || ![ist, soll].every(n => Number.isFinite(n) && n >= 0)) return { ok: false, error: "Enter valid stock quantities." };
   const { error } = await supabase.from("inventory_counts").insert({
     branch_id: branchId,
@@ -529,7 +540,7 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
       .eq("branch_id", branchId).gte("count_date", fetchFrom).lte("count_date", berlinToday()).order("count_date").order("created_at").order("id").order("id")),
     readAll(supabase.from("inventory_purchases").select("product, purchase_date, qty, category, unit")
       .eq("branch_id", branchId).gte("purchase_date", fetchFrom).lte("purchase_date", berlinToday()).order("id")),
-    readAll(supabase.from("inventory_master").select("product, category, soll, unit, is_active")
+    readAll(supabase.from("inventory_master").select("id, product, category, soll, unit, is_active, reorder_point, reorder_qty, supplier_id, supplier:inventory_suppliers(name,lead_days,is_active)")
       .eq("branch_id", branchId).eq("is_active", true).order("id")),
     movedStock(supabase, branchId, fetchFrom),
   ]);
@@ -550,7 +561,8 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
     meta[inventoryKey(c)] = { category: c.category, soll: Number(c.soll) || 0, unit: c.unit };
   }
   for (const m of prodRes.data || []) {
-    meta[inventoryKey(m)] = { category: m.category, soll: Number(m.soll) || 0, unit: m.unit };
+    const supplier=Array.isArray(m.supplier)?m.supplier[0]:m.supplier;
+    meta[inventoryKey(m)] = { category: m.category, soll: Number(m.soll) || 0, unit: m.unit, id:m.id, reorderPoint:m.reorder_point,reorderQty:m.reorder_qty,supplierId:m.supplier_id,supplierName:supplier?.is_active?supplier.name:null,leadDays:supplier?.is_active?Number(supplier.lead_days)||0:0 };
   }
 
   const purchasedBetween = (prod: string, after: string, through: string) => {
@@ -581,12 +593,16 @@ export async function getDepletionForecast(windowDays = 30, coverDays = 7) {
     const countDate = series[series.length - 1].date;
     const stale = (anchor - Date.parse(countDate + "T12:00:00Z")) / dayMs > 1;
     const daysLeft = !needsReview && !stale && usageRate > 0 ? Math.round((current / usageRate) * 10) / 10 : null;
-    const suggested = needsReview || stale ? 0 : usageRate > 0
-      ? Math.max(0, Math.ceil(usageRate * coverDays - current))
+    const baseSuggestion = needsReview || stale ? 0 : usageRate > 0
+      ? Math.max(0, Math.ceil(usageRate * Math.max(coverDays,meta[prod]?.leadDays||0) - current))
       : Math.max(0, Math.round((soll - current) * 10) / 10);
+    const point=meta[prod]?.reorderPoint;
+    const triggered=point==null?baseSuggestion>0:current<=Number(point);
+    const suggested=needsReview||stale||!triggered?0:Math.max(baseSuggestion,Number(meta[prod]?.reorderQty)||0);
 
     items.push({
       product: JSON.parse(prod)[1], category: meta[prod]?.category || "", unit: meta[prod]?.unit || "",
+      product_id:meta[prod]?.id,supplier_id:meta[prod]?.supplierId,supplier_name:meta[prod]?.supplierName,reorderPoint:point??null,
       countDate, stale, observedDays, needsReview,
       current: Number.isFinite(current) ? Math.round(current * 10) / 10 : null, soll,
       usageRate: needsReview ? null : Math.round(usageRate * 100) / 100, daysLeft, suggested,
@@ -613,23 +629,22 @@ export async function getPurchaseOrderDraft(coverDays = 7) {
   // inventory_price_baseline + supplier if this page gets slow.
   const { data: purch, error: priceError } = await readAll(supabase
     .from("inventory_purchases").select("product, qty, cost, supplier, purchase_date, category, unit")
-    .eq("branch_id", branchId).order("purchase_date", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).order("id"));
+    .eq("branch_id", branchId).lte("purchase_date", todayStr()).order("purchase_date", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).order("id"));
 
   if (priceError) return { ok: false, error: priceError.message, groups: [], total: 0, hasPrices: false };
-  const priceInfo: Record<string, { unitPrice: number; supplier: string }> = {};
+  const purchases: Record<string, NonNullable<typeof purch>> = {};
   for (const p of purch || []) {
-    if (!priceInfo[inventoryKey(p)] && Number(p.qty) > 0) {
-      priceInfo[inventoryKey(p)] = { unitPrice: Number(p.cost) / Number(p.qty), supplier: p.supplier || "" };
-    }
+    (purchases[inventoryKey(p)] ||= []).push(p);
   }
 
   const items = suggested.map((x: any) => {
-    const pi = priceInfo[inventoryKey(x)];
-    const unitPrice = pi ? Math.round(pi.unitPrice * 100) / 100 : null;
+    const history = purchases[inventoryKey(x)] || [];
+    const unitPrice = latestPrice(history, todayStr());
+    const delivery = history.find(p => latestPrice([p], todayStr()) != null);
+    const supplier = x.supplier_name || delivery?.supplier || "";
     return {
       product: x.product, category: x.category, qty: x.suggested, unit: x.unit || "",
-      unitPrice, lineCost: unitPrice != null ? Math.round(unitPrice * x.suggested * 100) / 100 : null,
-      supplier: pi?.supplier || "",
+      unitPrice, lineCost: orderLineCost({ unitPrice, qty: x.suggested }), supplier, priceDate: delivery?.purchase_date || null,
     };
   });
 
@@ -637,10 +652,10 @@ export async function getPurchaseOrderDraft(coverDays = 7) {
   for (const it of items) { const key = it.supplier || "__none"; (bySupplier[key] ||= []).push(it); }
   const groups = Object.keys(bySupplier).map((sup) => {
     const list = bySupplier[sup];
-    const subtotal = Math.round(list.reduce((s, it) => s + (it.lineCost || 0), 0) * 100) / 100;
-    return { supplier: sup === "__none" ? "" : sup, items: list, subtotal };
+    const summary = orderSummary(list);
+    return { supplier: sup === "__none" ? "" : sup, items: list, subtotal: summary.value, complete: summary.complete, missingPrices: summary.missingPrices };
   }).sort((a, b) => b.subtotal - a.subtotal);
 
-  const total = Math.round(groups.reduce((s, g) => s + g.subtotal, 0) * 100) / 100;
-  return { ok: true, groups, total, hasPrices: items.some((i: any) => i.unitPrice != null) };
+  const summary = orderSummary(items);
+  return { ok: true, groups, total: summary.value, complete: summary.complete, missingPrices: summary.missingPrices, hasPrices: items.some((i: any) => i.unitPrice != null) };
 }

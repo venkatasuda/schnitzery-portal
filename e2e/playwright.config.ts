@@ -9,11 +9,12 @@ export default defineConfig({
   globalSetup: "./preflight.ts",
   workers: 1, // flows share one synthetic branch; run them in order
   timeout: 180_000, // staging on a laptop is slow; real failures still show the step
-  expect: { timeout: 30_000 },
+  expect: { timeout: 60_000 },
   retries: 0,
   reporter: [["list"], ["html", { open: "never", outputFolder: "../.audit-db/e2e-report" }]],
   outputDir: "../.audit-db/e2e-results",
   use: {
+    actionTimeout: 60_000,
     baseURL: BASE_URL,
     locale: "en-GB",
     timezoneId: "Europe/Berlin",

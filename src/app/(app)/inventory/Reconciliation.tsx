@@ -6,6 +6,8 @@ import { useLang } from "@/components/LanguageProvider";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { EmptyState, ErrorState, Segmented } from "@/components/ui";
+import NativeDialog from "@/components/NativeDialog";
+import Link from "next/link";
 import { addReconciliationReview, getReconciliation } from "@/lib/queries/reconciliation";
 import { getAnalyticsScope } from "@/lib/queries/branch-analytics";
 import { reviewSnapshot, sameSnapshot, type ReviewSnapshot } from "@/lib/inventory/reconciliation";
@@ -37,6 +39,7 @@ export default function Reconciliation() {
 
   useEffect(() => {
     let active = true;
+    setOpen(null);setNote("");
     setLoading(true); setError(null);
     getReconciliation(days, branch).then(r => { if (!active) return; if (r.ok) setRows(r.rows); else setError(serverText(r.error ?? "", locale)); })
       .catch(() => { if (active) setError("failed"); }).finally(() => { if (active) setLoading(false); });
@@ -47,6 +50,7 @@ export default function Reconciliation() {
   const d = (s: string) => new Date(`${s}T12:00:00Z`).toLocaleDateString(loc, { timeZone: "UTC", day: "2-digit", month: "2-digit" });
   const needs = (r: Row) => FLAGGED.includes(r.status) && (!r.review || changedSince(r));
   const shown = all ? rows : rows.filter(needs);
+  const detail = rows.find(r=>`${r.fromId}|${r.toId}`===open);
 
   async function save(r: Row) {
     setSaving(true);
@@ -74,33 +78,32 @@ export default function Reconciliation() {
       : loading ? <div role="status" aria-label={t("common.loading")}><CardSkeleton rows={3} /></div>
       : shown.length === 0 ? <EmptyState title={t(all ? "reconcile.emptyAll" : "reconcile.empty")} />
       : <div className="table-scroll" tabIndex={0} role="region" aria-label={t("reconcile.title")}><table className="data-table">
-        <thead><tr>{["product", "interval", "opening", "delivered", "transfers", "waste", "closing", "used", "status", "review"].map(k =>
+        <thead><tr>{["product", "interval", "used", "status", "review"].map(k =>
           <th scope="col" key={k} className={["opening", "delivered", "transfers", "waste", "closing", "used"].includes(k) ? "numeric" : undefined}>{t(`reconcile.${k}`)}</th>)}</tr></thead>
         <tbody>{shown.map(r => {
           const key = `${r.fromId}|${r.toId}`, changed = changedSince(r);
           return <tr key={key}>
             <td><strong>{r.product}</strong><div className="page-sub">{r.category}{r.unit ? ` · ${r.unit}` : ""}</div></td>
             <td>{d(r.from)} → {d(r.to)}</td>
-            <td className="numeric">{n(r.opening)}</td>
-            <td className="numeric">+{n(r.delivered)}</td>
-            <td className="numeric">+{n(r.received)} / −{n(r.sent)}</td>
-            <td className="numeric">−{n(r.wasted)}</td>
-            <td className="numeric">{n(r.closing)}</td>
             <td className="numeric"><strong>{n(r.used)}</strong></td>
             <td><span className={`status-badge ${{ gain: "low", unusual: "warn", ok: "good", uncertain: "" }[r.status]}`}>{t(`reconcile.${r.status}`)}</span>
-              {r.reasons.length > 0 && <ul className="page-sub">{r.reasons.map(x => <li key={x}>{t(`reconcile.${x}`)}</li>)}</ul>}</td>
+              </td>
             <td>
-              {r.review && <p><strong>{t("reconcile.reviewedOn")} {new Date(r.review.created_at).toLocaleDateString(loc, { timeZone: "Europe/Berlin" })}:</strong> {r.review.note}
-                {changed && <span role="note" className="page-sub"> · {t("reconcile.changed")}</span>}</p>}
-              {FLAGGED.includes(r.status) && (!r.review || changed) && (open === key
-                ? <div>
-                    <textarea aria-label={`${t("reconcile.noteLabel")}: ${r.product}`} className="form-input" autoFocus maxLength={500} rows={2} value={note} placeholder={t("reconcile.notePlaceholder")} onChange={e => setNote(e.target.value)} />
-                    <div className="row-actions"><button className="btn-gold" disabled={saving || note.trim().length < 3} onClick={() => save(r)}>{t("reconcile.save")}</button>
-                    <button className="btn-secondary" onClick={() => { setOpen(null); setNote(""); }}>{t("common.cancel")}</button></div></div>
-                : <button className="btn-secondary" onClick={() => { setOpen(key); setNote(""); }}>{t("reconcile.markReviewed")}</button>)}
+              {r.review&&<span className="muted">{t(changed?"reconcile.changed":"reconcile.reviewedOn")}</span>}
+              <button className="btn-secondary" onClick={()=>{setOpen(key);setNote("");}}>{t("inventoryOps.openDetails")}</button>
             </td>
           </tr>;
         })}</tbody>
       </table></div>}
+    {detail&&<NativeDialog title={`${t("reconcile.title")}: ${detail.product}`} busy={saving} onClose={()=>setOpen(null)}>
+      <h2>{detail.product} · {detail.unit||"—"}</h2><p>{d(detail.from)} → {d(detail.to)}</p><p>{t("reconcile.note")}</p>
+      <dl className="inventory-detail-grid">{(["opening","delivered","received","sent","wasted","closing","expected","used"] as const).map(key=><div key={key}><dt>{t(key==="received"||key==="sent"?`inventoryOps.${key}`:key==="expected"?"inventoryOps.expectedBalance":`reconcile.${key==="wasted"?"waste":key}`)}</dt><dd>{n(detail[key])} {detail.unit}</dd></div>)}</dl>
+      {detail.reasons.length>0&&<ul>{detail.reasons.map(reason=><li key={reason}>{t(`reconcile.${reason}`)}</li>)}</ul>}
+      <Link className="btn-secondary" href={`/inventory?view=history&historyProduct=${encodeURIComponent(detail.product)}`}>{t("inventoryOps.inspectMovements")}</Link>
+      <details><summary>{t("inventoryOps.evidence")}</summary><p>{detail.fromId} → {detail.toId}</p></details>
+      {detail.review&&<p>{t("reconcile.reviewedOn")} {new Date(detail.review.created_at).toLocaleString(loc,{timeZone:"Europe/Berlin"})}: {detail.review.note}{changedSince(detail)&&` · ${t("reconcile.changed")}`}</p>}
+      {FLAGGED.includes(detail.status)&&(!detail.review||changedSince(detail))&&<><textarea aria-label={t("reconcile.noteLabel")} className="form-input" maxLength={500} rows={3} value={note} placeholder={t("reconcile.notePlaceholder")} onChange={e=>setNote(e.target.value)}/><button className="btn-gold" disabled={saving||note.trim().length<3} onClick={()=>save(detail)}>{t("reconcile.save")}</button></>}
+      <button className="btn-secondary" disabled={saving} onClick={()=>setOpen(null)}>{t("common.close")}</button>
+    </NativeDialog>}
   </section>;
 }

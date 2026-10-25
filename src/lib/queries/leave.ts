@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { sendPushToUser } from "@/lib/push/delivery";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // Fire a push without ever blocking or breaking the caller. If push isn't set
 // up (no VAPID keys, no subscriptions), sendPushToUser simply sends nothing.
@@ -29,7 +30,7 @@ async function getMe() {
     .select("id, full_name, role, branch_id")
     .eq("id", user.id)
     .single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 
 function isManager(role?: string | null) {
@@ -38,7 +39,7 @@ function isManager(role?: string | null) {
 
 // ── STAFF: submit a leave request ──
 export async function submitLeave(fromDate: string, toDate: string, reason: string) {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in." };
   if (!branchId) return { ok: false, error: "No branch assigned." };
   if (!fromDate || !toDate) return { ok: false, error: "Pick both dates." };

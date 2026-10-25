@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // Vacation (Urlaub) balance: allowance − Werktage taken (from approved leave
 // this year) = remaining. Per BUrlG §3, leave is counted in Werktage — every
@@ -74,7 +75,7 @@ async function getMe() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null, branchId: null };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
@@ -103,6 +104,8 @@ export async function setLeaveAllowance(userId: string, days: number) {
   const { supabase, user, role, branchId } = await getMe();
   if (!user) return { ok: false as const, error: "Not logged in." };
   if (!isManager(role)) return { ok: false as const, error: "Managers only." };
+  if (userId === user.id) return { ok: false as const, error: "You can't change your own contract details." };
+  if (typeof days !== "number" || !Number.isFinite(days) || days < 0 || days > 366) return { ok: false as const, error: "Enter a valid level." };
   const { data: tgt } = await supabase.from("users").select("branch_id").eq("id", userId).single();
   if (!tgt || tgt.branch_id !== branchId) return { ok: false as const, error: "Not in your branch." };
   const { error } = await supabase.from("users").update({ annual_leave_days: days }).eq("id", userId);

@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinToday, mondayOfDate, monthRange } from "@/lib/time/berlinDate";
 
@@ -263,7 +264,7 @@ export default function AttendancePage() {
   });
   const tt = hms(elapsed);
   const fmtTime = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
+    iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—";
   const fmtDate = (d: string) =>
     d ? new Date(d).toLocaleDateString(dateLocale, { weekday: "short", day: "2-digit", month: "short" }) : "—";
   const fmtDur = (min: number | null) =>

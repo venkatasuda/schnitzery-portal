@@ -1,4 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 const actor='00000000-0000-0000-0000-000000000001',log='00000000-0000-0000-0000-000000000002';
 let role='manager',emptyUpdate=false,nameFailure=false,updatedFilters,inserted;
 const tables={users:[{id:actor,full_name:'Manager'},{id:'employee',full_name:'Employee',team:'Kitchen'}],attendance_logs:[...Array.from({length:100},(_,i)=>({id:'recent'+i,branch_id:'branch',status:'complete',work_date:'2026-09-01',approval_status:'approved'})),{id:log,user_id:'employee',branch_id:'branch',status:'complete',work_date:'2026-01-01',approval_status:'pending'}]};
@@ -10,7 +11,8 @@ const client={auth:{getUser:async()=>({data:{user:{id:actor}}})},from(table){
     then:(resolve,reject)=>Promise.resolve({data:rows(),error:table==='users'&&nameFailure?{message:'Names unavailable'}:null}).then(resolve,reject)};return q;
 }};
 function load(file,imports){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,Date,Set,URL,require:name=>imports[name]});return exports;}
-const imports={'@/lib/supabase/server':{createClient:async()=>client},'@/lib/supabase/readAll':{readAll:async q=>await q},'@/lib/time/berlinDate':{berlinToday:()=> '2026-10-12',berlinMonth:()=> '2026-10',isCalendarDate:d=>typeof d==='string'&&/^2026-09-\d\d$/.test(d)}};
+const imports={'@/lib/activeBranch':AB,'@/lib/supabase/server':{createClient:async()=>client},'@/lib/supabase/readAll':{readAll:async q=>await q},'@/lib/time/berlinDate':{berlinToday:()=> '2026-10-12',berlinMonth:()=> '2026-10',isCalendarDate:d=>typeof d==='string'&&/^2026-09-\d\d$/.test(d)}};
+imports['@/lib/pay/calculations']=load('src/lib/pay/calculations.ts',{});
 const api=load('src/lib/queries/live-attendance.ts',imports),corrections=load('src/lib/queries/corrections.ts',imports);
 (async()=>{
   let result=await api.getAttendanceApprovals();assert.equal(result.ok,true);assert.equal(result.rows.length,1);assert.equal(result.rows[0].id,log,'Old pending shift must remain visible behind more than 80 approved shifts');
@@ -18,6 +20,10 @@ const api=load('src/lib/queries/live-attendance.ts',imports),corrections=load('s
   result=await api.getAttendanceApprovals();assert.equal(result.rows.length,101,'Do not silently cap a filtered pending queue at 80');
   nameFailure=true;assert.equal((await api.getAttendanceApprovals()).ok,false);nameFailure=false;
   assert.equal((await api.setAttendanceApproval(log,'approved')).ok,true);assert.ok(updatedFilters.some(([k,v])=>k==='branch_id'&&v==='branch'));assert.ok(updatedFilters.some(([k])=>k==='pending'));
+  const longLog='00000000-0000-0000-0000-000000000003';tables.attendance_logs.push({id:longLog,user_id:'employee',branch_id:'branch',status:'complete',work_date:'2026-01-02',approval_status:'pending',clock_in:'2026-01-02T08:00:00Z',clock_out:'2026-01-04T00:42:00Z'});
+  assert.equal((await api.getAttendanceApprovals()).rows.find(r=>r.id===longLog).suspect,true,'16h+ shift is flagged as a forgotten clock-out');
+  assert.match((await api.setAttendanceApproval(longLog,'approved')).error||'',/16 hours/,'16h+ shift cannot be approved before correction');
+  assert.equal((await api.setAttendanceApproval(longLog,'rejected')).ok,true,'16h+ shift can still be rejected');
   emptyUpdate=true;assert.equal((await api.setAttendanceApproval(log,'approved')).ok,false);
   assert.equal((await api.setAttendanceApproval(log,'other')).ok,false);
   role='staff';assert.equal((await api.getAttendanceApprovals()).ok,false);assert.equal((await api.setAttendanceApproval(log,'approved')).ok,false);

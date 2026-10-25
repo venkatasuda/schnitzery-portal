@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { canActOnUser, isManagerRole } from "@/lib/auth/rank";
+import { activeBranchFor } from "@/lib/activeBranch";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ============================================================
 // SECURE SERVER ROUTE — deactivate ("remove") or reactivate a
@@ -23,6 +26,8 @@ export async function POST(request: Request) {
 
   const { data: me } = await supabase
     .from("users").select("role, branch_id").eq("id", user.id).single();
+  // Active branch from the header picker, validated against the caller's access.
+  const meBranch = me ? await activeBranchFor(supabase, me) : null;
   if (!me || !isManagerRole(me.role)) {
     return NextResponse.json({ ok: false, error: "Managers only." }, { status: 403 });
   }
@@ -30,6 +35,7 @@ export async function POST(request: Request) {
   // 2. Parse input.
   let body: any;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 }); }
+  if (!body || typeof body !== "object" || Array.isArray(body) || typeof body.userId !== "string" || !UUID.test(body.userId)) return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 });
   const { userId, active } = body as { userId?: string; active?: boolean };
   if (!userId || typeof active !== "boolean") {
     return NextResponse.json({ ok: false, error: "Missing userId or active flag." }, { status: 400 });
@@ -55,7 +61,7 @@ export async function POST(request: Request) {
   // unit-tested. Equal rank is refused on purpose — see rank.test.ts.
   const gate = canActOnUser({
     meRole: me.role,
-    meBranchId: me.branch_id,
+    meBranchId: meBranch,
     targetRole: target.role,
     targetBranchId: target.branch_id,
   });

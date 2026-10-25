@@ -1,150 +1,108 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
-import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
-import { getPurchaseOrderDraft } from "@/lib/queries/inventory";
+import InventoryNav from "@/components/InventoryNav";
+import { EmptyState, ErrorState, PageHeader, Panel, Segmented } from "@/components/ui";
+import { getInventoryContext, getPurchaseOrderDraft } from "@/lib/queries/inventory";
+import { orderLineCost, orderSummary } from "@/lib/inventory/orderDraft";
+import { berlinToday, fmtDay } from "@/lib/time/berlinDate";
 
-const eur = (n: number) => "€" + (Math.round((n || 0) * 100) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const today = () => new Date().toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+type Item = { product: string; category: string; qty: number | string; unit: string; unitPrice: number | null; priceDate?: string | null };
+type Group = { supplier: string; items: Item[] };
 
 export default function OrderPage() {
-  const { t } = useLang();
-  const [groups, setGroups] = useState<any[]>([]);
+  const { t, locale } = useLang();
+  const [groups, setGroups] = useState<Group[]>([]);
   const [coverDays, setCoverDays] = useState(7);
-  const [hasPrices, setHasPrices] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [error, setError] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [branchName, setBranchName] = useState("");
+  const request = useRef(0);
+  const eur = (n: number, unit = false) => new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: unit ? 4 : 2 }).format(n);
   async function load(cd: number) {
-    // A failed request must end the skeleton and say so, not spin forever.
+    const id = ++request.current;
+    setLoading(true); setError(false); setGroups([]); setDirty(false);
     try {
-    setLoading(true);
-    const r = await getPurchaseOrderDraft(cd);
-    if (r.ok) { setGroups((r.groups || []).map((g: any) => ({ ...g, items: g.items.map((it: any) => ({ ...it })) }))); setHasPrices(r.hasPrices); }
-    setLoading(false);
-    } catch { toast(t("common.loadFailed"), "error"); }
-    finally { setLoading(false); }
+      const [result, context] = await Promise.all([getPurchaseOrderDraft(cd), getInventoryContext()]);
+      if (id !== request.current) return;
+      if (!result.ok || !context.ok) { setError(true); return; }
+      setBranchName(context.branch.name);
+      setGroups(result.groups.map(g => ({ supplier: g.supplier, items: g.items.map(it => ({ ...it })) })));
+    } catch { if (id === request.current) setError(true); }
+    finally { if (id === request.current) setLoading(false); }
   }
-  useEffect(() => { load(coverDays); /* eslint-disable-next-line */ }, []);
-
-  function setQty(gi: number, ii: number, v: string) {
-    setGroups((gs) => gs.map((g, gx) => gx !== gi ? g : {
-      ...g,
-      items: g.items.map((it: any, ix: number) => ix !== ii ? it : {
-        ...it, qty: v, lineCost: it.unitPrice != null ? Math.round(it.unitPrice * Number(v || 0) * 100) / 100 : null,
-      }),
-    }));
+  useEffect(() => { load(coverDays); return () => { request.current++; }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [coverDays]);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  function setQty(gi: number, ii: number, value: string) {
+    setDirty(true);
+    setGroups(old => old.map((group, index) => index !== gi ? group : { ...group, items: group.items.map((item, i) => i !== ii ? item : { ...item, qty: value }) }));
   }
   function removeItem(gi: number, ii: number) {
-    setGroups((gs) => gs.map((g, gx) => gx !== gi ? g : { ...g, items: g.items.filter((_: any, ix: number) => ix !== ii) }).filter((g) => g.items.length > 0));
+    setDirty(true);
+    setGroups(old => old.map((group, index) => index !== gi ? group : { ...group, items: group.items.filter((_, i) => i !== ii) }).filter(group => group.items.length));
   }
-
-  const subtotal = (g: any) => g.items.reduce((s: number, it: any) => s + (it.lineCost || 0), 0);
-  const grandTotal = groups.reduce((s, g) => s + subtotal(g), 0);
-
-  function groupText(g: any) {
-    const lines = g.items.filter((it: any) => Number(it.qty) > 0).map((it: any) =>
-      `• ${it.product}: ${it.qty}${it.unit ? " " + it.unit : ""}${it.lineCost != null ? ` (${eur(it.lineCost)})` : ""}`);
-    const head = `Schnitzery — ${t("po.title")} · ${today()}`;
-    const sup = g.supplier ? `\n${t("po.supplier")}: ${g.supplier}` : "";
-    const tot = hasPrices ? `\n${t("po.subtotal")}: ${eur(subtotal(g))}` : "";
-    return `${head}${sup}\n\n${lines.join("\n")}${tot}`;
+  const summary = orderSummary(groups.flatMap(g => g.items));
+  const exportable = !loading && !error && summary.selected > 0 && summary.invalidQuantities === 0;
+  const amount = (items: Item[]) => {
+    const s = orderSummary(items);
+    return `${t(s.complete ? "po.subtotal" : "orderDraft.knownAmount")}: ${s.complete ? "" : "≥ "}${eur(s.value)}${s.missingPrices ? ` · ${t("orderDraft.missingPrices", { n: s.missingPrices })}` : ""}`;
+  };
+  function groupText(group: Group) {
+    return [t("orderDraft.title"), `${branchName} · ${fmtDay(berlinToday(), locale)}`, t("orderDraft.notice"), `${t("po.supplier")}: ${group.supplier || t("po.noSupplier")}`,
+      ...group.items.filter(it => Number(it.qty) > 0).map(it => `${it.product}: ${it.qty} ${it.unit} · ${orderLineCost(it) == null ? t("po.noPrice") : eur(orderLineCost(it)!)}`), amount(group.items)].join("\n");
   }
-  function copyGroup(g: any) {
-    const txt = groupText(g);
-    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(txt).then(() => toast(t("po.copied"), "success")).catch(() => toast(t("po.failed"), "error"));
-    else toast(t("po.failed"), "error");
+  async function copy(group: Group) {
+    try { await navigator.clipboard.writeText(groupText(group)); toast(t("po.copied"), "success"); }
+    catch { toast(t("po.failed"), "error"); }
   }
-  function emailGroup(g: any) {
-    const subject = encodeURIComponent(`Schnitzery ${t("po.title")} — ${g.supplier || ""} ${today()}`);
-    const body = encodeURIComponent(groupText(g));
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  function print() {
+    const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+    const win = window.open("", "_blank");
+    if (!win) { toast(t("orderDraft.printBlocked"), "error"); return; }
+    win.document.write(`<!doctype html><html lang="${locale}"><head><title>${esc(t("orderDraft.title"))}</title><style>body{font:14px system-ui;color:#111;padding:24px}pre{font:inherit;white-space:pre-wrap;line-height:1.8}section{break-inside:avoid;border-bottom:1px solid #ccc;padding:16px 0}</style></head><body>${groups.filter(g => orderSummary(g.items).selected > 0).map(g => `<section><pre>${esc(groupText(g))}</pre></section>`).join("")}<p>${esc(amount(groups.flatMap(g => g.items)))}</p><script>window.onload=()=>window.print()</script></body></html>`);
+    win.document.close();
   }
-
-  function printAll() {
-    const esc = (s: any) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
-    const sections = groups.map((g) => {
-      const rows = g.items.filter((it: any) => Number(it.qty) > 0).map((it: any) => `
-        <tr><td>${esc(it.product)}</td><td class="r">${esc(it.qty)} ${esc(it.unit)}</td>
-        <td class="r">${it.unitPrice != null ? eur(it.unitPrice) : "—"}</td>
-        <td class="r">${it.lineCost != null ? eur(it.lineCost) : "—"}</td></tr>`).join("");
-      return `<div class="po"><h2>${esc(g.supplier || t("po.noSupplier"))}</h2>
-        <table><thead><tr><th>${t("po.product")}</th><th class="r">${t("po.qty")}</th><th class="r">${t("po.unitPrice")}</th><th class="r">${t("po.lineTotal")}</th></tr></thead>
-        <tbody>${rows}</tbody></table>
-        ${hasPrices ? `<div class="sub">${t("po.subtotal")}: <b>${eur(subtotal(g))}</b></div>` : ""}</div>`;
-    }).join("");
-    const w = window.open("", "_blank"); if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>Schnitzery — ${t("misc.poTitle")}</title><style>
-      *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}body{margin:0;padding:16mm;color:#111}
-      h1{margin:0 0 2mm}.meta{color:#666;margin-bottom:8mm;font-size:11pt}
-      .po{margin-bottom:10mm;page-break-inside:avoid}h2{font-size:13pt;border-bottom:2px solid #333;padding-bottom:2mm}
-      table{width:100%;border-collapse:collapse;font-size:11pt}th,td{padding:2mm 3mm;border-bottom:1px solid #ddd;text-align:left}
-      .r{text-align:right}.sub{text-align:right;margin-top:3mm;font-size:12pt}
-      .grand{text-align:right;font-size:14pt;font-weight:700;border-top:2px solid #333;padding-top:3mm;margin-top:6mm}
-    </style></head><body>
-      <h1>Schnitzery — ${t("po.title")}</h1><div class="meta">${today()}</div>
-      ${sections}
-      ${hasPrices ? `<div class="grand">${t("po.total")}: ${eur(grandTotal)}</div>` : ""}
-      <script>window.onload=function(){window.print()}</script></body></html>`);
-    w.document.close();
-  }
-
-  return (
-    <div className="fade-up">
-      <Link href="/inventory" style={{ color: "var(--gray)", fontSize: 13, textDecoration: "none" }}>‹ {t("po.back")}</Link>
-      <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🧾" size={22} /> {t("po.title")}</h1>
-      <div className="page-sub">{t("po.subtitle")}</div>
-
-      <div style={{ display: "flex", gap: 6, alignItems: "center", margin: "14px 0" }}>
-        <span className="ui-muted">{t("po.coverFor")}</span>
-        {[7, 14, 30].map((cd) => (
-          <button key={cd} onClick={() => { setCoverDays(cd); load(cd); }}
-            style={{ fontSize: 12, padding: "5px 10px", borderRadius: 8, cursor: "pointer", background: coverDays === cd ? "var(--accent-soft)" : "rgba(255,255,255,0.05)", color: coverDays === cd ? "var(--gold)" : "var(--gray)", border: `1px solid ${coverDays === cd ? "var(--accent-line)" : "rgba(255,255,255,0.1)"}` }}>{cd}d</button>
-        ))}
-        <button className="btn-gold" onClick={printAll} disabled={loading || groups.length === 0}>🖨 {t("po.printPdf")}</button>
-      </div>
-
-      {loading ? <CardSkeleton rows={4} /> : groups.length === 0 ? (
-        <div className="card ui-empty-msg">{t("po.nothing")}</div>
-      ) : (
-        <>
-          {!hasPrices && <div className="card" style={{ marginBottom: 12, fontSize: 12, color: "var(--gold-ink)", borderColor: "var(--accent-line)" }}>{t("po.noPrices")}</div>}
-          {groups.map((g, gi) => (
-            <div key={gi} className="card mb-3 p-4">
-              <div className="d-flex jc-sb ai-c mb-3">
-                <div className="t-lg fw-7 u-text">{g.supplier || t("po.noSupplier")}</div>
-                {hasPrices && <div className="t-sm tone-action fw-7">{eur(subtotal(g))}</div>}
-              </div>
-              {g.items.map((it: any, ii: number) => (
-                <div key={ii} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
-                  <div className="u-grow">
-                    <div style={{ fontSize: 13, color: "var(--white)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{it.product}</div>
-                    <div className="ui-muted">{it.unitPrice != null ? `${eur(it.unitPrice)}/${it.unit || t("po.unit")}` : t("po.noPrice")}</div>
-                  </div>
-                  <input aria-label={`${t("po.qty")}: ${it.product}`} type="number" inputMode="decimal" value={it.qty} onChange={(e) => setQty(gi, ii, e.target.value)}
-                    style={{ width: 66, padding: "8px", textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 14, fontWeight: 600 }} />
-                  <span style={{ fontSize: 12, color: "var(--gray)", width: 26 }}>{it.unit}</span>
-                  <span style={{ fontSize: 12, color: "var(--white)", width: 58, textAlign: "right" }}>{it.lineCost != null ? eur(it.lineCost) : "—"}</span>
-                  <button className="ui-icon-btn" type="button" aria-label={`${t("common.delete")}: ${it.product}`} onClick={() => removeItem(gi, ii)}><Icon e="✕" size={16} /></button>
-                </div>
-              ))}
-              <div className="d-flex gap-2 mt-3">
-                <button onClick={() => copyGroup(g)} style={{ flex: 1, padding: "9px", borderRadius: 8, background: "var(--surface-2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 13, cursor: "pointer" }}>📋 {t("po.copy")}</button>
-                <button className="btn-secondary" onClick={() => emailGroup(g)}>✉ {t("po.email")}</button>
-              </div>
-            </div>
-          ))}
-          {hasPrices && (
-            <div className="card p-4 d-flex jc-sb ai-c">
-              <span className="t-md u-text fw-7">{t("po.total")}</span>
-              <span className="t-xl tone-action fw-7">{eur(grandTotal)}</span>
-            </div>
-          )}
-        </>
-      )}
+  return <div className="inventory-page">
+    <InventoryNav active="purchasing" canLeave={() => !dirty || confirm(t("orderDraft.discard"))} />
+    <Link className="ui-link-btn" href="/inventory?view=forecast" onClick={event => { if (dirty && !confirm(t("orderDraft.discard"))) event.preventDefault(); }}>{t("orderDraft.back")}</Link>
+    <PageHeader title={t("orderDraft.title")} subtitle={branchName || t("common.loading")} />
+    <p className="ui-note">{t("orderDraft.notice")}</p>
+    <Link className="btn-gold" href="/inventory/purchasing?new=1" onClick={event=>{if(dirty&&!confirm(t("orderDraft.discard")))event.preventDefault();}}>{t("inventoryOps.createSavedOrder")}</Link>
+    <div className="ui-toolbar">
+      <Segmented label={t("po.coverFor")} value={String(coverDays)} onChange={value => { if (!dirty || confirm(t("orderDraft.discard"))) setCoverDays(Number(value)); }} options={[7, 14, 30].map(n => ({ value: String(n), label: t("orderDraft.days", { n }) }))} />
+      <button type="button" className="btn-secondary u-push" onClick={print} disabled={!exportable}>{t("po.printPdf")}</button>
     </div>
-  );
+    {loading ? <CardSkeleton rows={4} /> : error ? <ErrorState message={t("orderDraft.loadFailed")} onRetry={() => load(coverDays)} retryLabel={t("business.retry")} />
+      : groups.length === 0 ? <EmptyState title={t("orderDraft.empty")}><span>{t("orderDraft.emptyHelp")}</span></EmptyState>
+      : <>
+        <div className="order-draft-summary" role="status"><strong>{amount(groups.flatMap(g => g.items))}</strong><span>{dirty ? t("orderDraft.edited") : t("orderDraft.estimate")}</span>
+          {summary.invalidQuantities > 0 && <span className="tone-danger">{t("orderDraft.invalidQuantities")}</span>}
+          {summary.selected === 0 && <span>{t("orderDraft.selectItems")}</span>}
+        </div>
+        {groups.map((group, gi) => <Panel key={gi} title={group.supplier || t("po.noSupplier")} actions={<span className="ui-muted">{amount(group.items)}</span>}>
+          <div className="table-scroll" tabIndex={0} role="region" aria-label={group.supplier || t("po.noSupplier")}>
+            <table className="data-table"><thead><tr><th scope="col">{t("po.product")}</th><th scope="col" className="numeric">{t("po.qty")}</th><th scope="col" className="numeric">{t("po.unitPrice")}</th><th scope="col" className="numeric">{t("po.lineTotal")}</th><th scope="col">{t("inventoryWorkflow.actions")}</th></tr></thead>
+              <tbody>{group.items.map((it, ii) => <tr key={`${it.category}|${it.product}|${it.unit}`}>
+                <td><strong>{it.product}</strong><div className="muted">{it.category} · {it.unit}</div></td>
+                <td className="numeric"><input className="form-input quantity-input" aria-label={`${t("po.qty")}: ${it.product} (${it.unit})`} type="number" inputMode="decimal" min="0" step="any" value={it.qty} onChange={e => setQty(gi, ii, e.target.value)} aria-invalid={it.qty === "" || !Number.isFinite(Number(it.qty)) || Number(it.qty) < 0} /></td>
+                <td className="numeric">{it.unitPrice == null ? t("po.noPrice") : eur(it.unitPrice, true)}{it.priceDate && <div className="muted">{fmtDay(it.priceDate, locale)}</div>}</td><td className="numeric">{orderLineCost(it) == null ? "—" : eur(orderLineCost(it)!)}</td>
+                <td><button className="btn-quiet-danger" type="button" onClick={() => removeItem(gi, ii)} aria-label={`${t("common.delete")}: ${it.product}`}>{t("common.delete")}</button></td>
+              </tr>)}</tbody>
+            </table>
+          </div>
+          <div className="ui-actions"><button className="btn-secondary" onClick={() => copy(group)} disabled={!exportable || orderSummary(group.items).selected === 0}>{t("po.copy")}</button>
+            <button className="btn-secondary" disabled={!exportable || orderSummary(group.items).selected === 0} onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(t("orderDraft.title"))}&body=${encodeURIComponent(groupText(group))}`; }}>{t("po.email")}</button>
+          </div>
+        </Panel>)}
+      </>}
+  </div>;
 }

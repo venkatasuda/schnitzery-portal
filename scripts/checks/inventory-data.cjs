@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
@@ -70,12 +71,14 @@ const reconciliation = {};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/inventory/reconciliation.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports:reconciliation});
 const mod = (file, req) => { const exports = {}; vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, { exports, Intl, Date, Set, Map, require: req }); return exports; };
 const coverage = mod('src/lib/analytics/coverage.ts', () => ({}));
+const orderDraft = mod('src/lib/inventory/orderDraft.ts', () => coverage);
 const valuation = mod('src/lib/inventory/valuation.ts', n => n.endsWith('coverage') ? coverage : reconciliation);
-const reconQuery = mod('src/lib/queries/reconciliation.ts', n => ({ '@/lib/supabase/readAll': allRows, '@/lib/supabase/server': { createClient: async () => sb }, '@/lib/time/berlinDate': { berlinToday: () => '2026-10-11' }, '@/lib/inventory/reconciliation': reconciliation })[n]);
+const reconQuery = mod('src/lib/queries/reconciliation.ts', n => ({ '@/lib/supabase/readAll': allRows, '@/lib/activeBranch': AB, '@/lib/supabase/server': { createClient: async () => sb }, '@/lib/time/berlinDate': { berlinToday: () => '2026-10-11' }, '@/lib/inventory/reconciliation': reconciliation })[n]);
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory.ts', 'utf8'), {
   compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
 }).outputText, { exports: exportsObject, Date, Set, Map, console, require(name) {
   if (name === "@/lib/supabase/readAll") return allRows;
+  if (name === '@/lib/activeBranch') return AB;
   if (name === '@/lib/supabase/server') return { createClient: async () => sb };
   if (name === '@/lib/time/berlinDate') return { berlinToday: () => '2026-10-11', berlinMonth: () => '2026-10', isCalendarDate: date => /^\d{4}-\d{2}-\d{2}$/.test(date) };
   if (name === '@/lib/inventory/identity') return { inventoryKey: key, validInventoryItem: item => typeof item.product === "string" && item.product.length > 0 };
@@ -83,6 +86,7 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory
   if (name === '@/lib/push/delivery') return {};
   if (name === '@/lib/inventory/valuation') return valuation;
   if (name === '@/lib/analytics/coverage') return coverage;
+  if (name === '@/lib/inventory/orderDraft') return orderDraft;
   if (name === '@/lib/queries/reconciliation') return reconQuery;
   throw new Error(`Unexpected import ${name}`);
 } });
@@ -136,5 +140,16 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory
   failure = 'inventory_counts';
   assert.equal((await exportsObject.getOrderAlert()).ok, false);
   assert.equal((await exportsObject.getDepletionForecast()).ok, false);
+  failure=null;
+  const configured=tables.inventory_master.find(p=>p.product==='Milk'&&p.category==='Dairy');
+  configured.reorder_point=10;configured.reorder_qty=50;
+  assert.equal((await exportsObject.getDepletionForecast()).items.find(p=>p.product==='Milk'&&p.category==='Dairy').suggested,50,'Minimum quantity applies after reorder point is reached');
+  configured.reorder_point=0;
+  assert.equal((await exportsObject.getDepletionForecast()).items.find(p=>p.product==='Milk'&&p.category==='Dairy').suggested,0,'Above a configured reorder point, do not suggest an order');
+  delete configured.reorder_point;configured.supplier={name:'Configured supplier',is_active:true,lead_days:30};
+  assert.equal((await exportsObject.getDepletionForecast()).items.find(p=>p.product==='Milk'&&p.category==='Dairy').suggested,172,'Supplier lead time extends demand coverage');
+  const beforeWrites=writes;
+  assert.equal((await exportsObject.saveCount('Milk','Dairy',1,50,'L','other-branch')).ok,false);
+  assert.equal(writes,beforeWrites,'A stale page cannot count against a newly selected branch');
   console.log('Distinct stock identities, deterministic counts, measured forecast, stale data and invalid-write checks pass.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

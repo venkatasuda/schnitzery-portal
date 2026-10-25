@@ -6,12 +6,17 @@ import { getMyStatus } from "@/lib/queries/attendance";
 import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attendance";
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { getLaborSummary } from "@/lib/queries/labor";
+import { getTargets, getDailyFlash, type Targets } from "@/lib/queries/targets";
+import { formatPct } from "@/lib/format";
+import OwnerCockpit from "@/components/dash/OwnerCockpit";
+import OwnerInsights, { type Insights } from "@/components/dash/OwnerInsights";
+import { getOwnerInsights } from "@/lib/queries/owner-insights";
 import { listMyDocuments } from "@/lib/queries/documents";
 import { getViewMode } from "@/lib/viewMode";
 import Link from "next/link";
 import StatusStrip from "@/components/StatusStrip";
 import Icon from "@/components/Icon";
-import { getT } from "@/lib/i18n/server";
+import { getT, getLocale } from "@/lib/i18n/server";
 import { ProgressRing, MiniBars, RankBars } from "@/components/dash/Charts";
 import { getWasteTrends, getWasteByBranch } from "@/lib/queries/waste";
 import { Stat } from "@/components/ui";
@@ -19,12 +24,15 @@ import { Stat } from "@/components/ui";
 type OrgOverview = Extract<Awaited<ReturnType<typeof getOrgOverview>>, { ok: true }>;
 type Tf = (k: string, v?: Record<string, string | number>) => string;
 
+// Money in the app language (server default locale would print 46.105 in English).
+const fmtEur = (v: number, locale: string) => new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
 const fmtH = (mins: number) => `${Math.floor((mins || 0) / 60)}h ${String((mins || 0) % 60).padStart(2, "0")}m`;
 
 // Role-based home dashboard. Managers get a full operational dashboard;
 // staff and owners keep their focused views.
 export default async function HomePage() {
   const t = await getT();
+  const locale = await getLocale();
   const docLabel = (k: string) => t("documents.type_" + (["id_card", "visa", "work_permit", "contract", "certificate"].includes(k) ? k : "other"));
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -54,7 +62,10 @@ export default async function HomePage() {
   let staffClockedIn = false, staffOnBreak = false;
   let org: OrgOverview | null = null;
   let mOps: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null = null;
-  let mLive: { workingNow: number; completed: number; late: number; totalMins: number } | null = null;
+  let mLive: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null = null;
+  let mTargets: Targets | null = null, mCanEditTargets = false;
+  let mFlash: { yesterday: { date: string; sales: number | null; hours: number }; lastWeek: { date: string; sales: number | null; hours: number } } | null = null;
+  let mInsights: Insights | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
   let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
@@ -69,14 +80,19 @@ export default async function HomePage() {
     if (d.ok) org = d;
     if ((wRes as any).ok) hqWaste = ((wRes as any).rows || []).filter((r: any) => r.value > 0).map((r: any) => ({ label: r.name, value: r.value })).slice(0, 8);
   } else if (isManager) {
-    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes] = await Promise.all([
+    const ownerView = isBranchOwner || hqBranchMode;
+    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes] = await Promise.all([
       getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6).catch(() => ({ ok: false })),
+      ownerView ? getTargets().catch(() => null) : null, ownerView ? getDailyFlash().catch(() => null) : null, ownerView ? getOwnerInsights().catch(() => null) : null,
     ]);
+    if (tRes && tRes.ok) { mTargets = tRes.targets; mCanEditTargets = tRes.canEdit; }
+    if (iRes && iRes.ok) mInsights = iRes;
+    if (fRes && fRes.ok) mFlash = { yesterday: fRes.yesterday, lastWeek: fRes.lastWeek };
     if ((cRes as any).ok) mCost = cRes as any;
     if ((wRes as any).ok) mWaste = ((wRes as any).weeks || []).map((w: any) => ({ label: String(w.weekStart).slice(5), value: w.wasteValue }));
     if (stRes.ok) { staffClockedIn = stRes.clockedIn || false; staffOnBreak = stRes.onBreak || false; }
     if (dRes.ok) mOps = dRes.stats ?? null;
-    if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0 };
+    if (liveRes.ok) mLive = { workingNow: liveRes.workingNow || 0, completed: liveRes.completed || 0, late: liveRes.late || 0, totalMins: liveRes.totalMins || 0, forgotten: (liveRes as { forgotten?: unknown[] }).forgotten?.length || 0, suspect: (liveRes as { suspect?: number }).suspect || 0 };
     if (otRes.ok) mOt = { totalWorkedMins: otRes.totalWorkedMins || 0, totalOvertimeMins: otRes.totalOvertimeMins || 0, peopleOver: otRes.peopleOver || 0 };
     if (schedRes.ok) mSched = { submissionCount: schedRes.submissionCount || 0, staffCount: schedRes.staffCount || 0, rosterExists: schedRes.rosterExists || false };
   } else {
@@ -136,16 +152,21 @@ export default async function HomePage() {
       {isHQ ? (
         <OwnerDash t={t} data={org} waste={hqWaste} />
       ) : isManager ? (
-        <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} t={t} />
+        <>
+          {(isBranchOwner || hqBranchMode) && <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={mFlash} t={t} locale={locale} />}
+          {mInsights && <OwnerInsights data={mInsights} labourTarget={mTargets?.labourPct ?? null} t={t} locale={locale} />}
+          <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} t={t} locale={locale} />
+        </>
       ) : (
-        <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} />
+        <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} locale={locale} />
       )}
     </div>
   );
 }
 
 // ─────────── STAFF DASHBOARD ───────────
-function StaffDash({ hours, clockedIn, onBreak, t }: {
+function StaffDash({ hours, clockedIn, onBreak, t, locale }: {
+  locale: string;
   hours: { totalHours: number; shifts: number; targetHours: number | null } | null;
   clockedIn: boolean; onBreak: boolean; t: Tf;
 }) {
@@ -168,7 +189,7 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
       <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "4px 0 14px", padding: 16 }}>
         {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
-          <Stat value={`${hours?.totalHours ?? 0}h`} label={t("home.thisMonthStat")} color="var(--gold-ink)" />
+          <Stat value={`${(hours?.totalHours ?? 0).toLocaleString(locale === "de" ? "de-DE" : "en-GB")} h`} label={t("home.thisMonthStat")} color="var(--gold-ink)" />
           <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
           {target == null && <Stat value="—" label={t("home.ofTarget")} />}
         </div>
@@ -185,9 +206,10 @@ function StaffDash({ hours, clockedIn, onBreak, t }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, t }: {
+function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, t, locale }: {
+  locale: string;
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
-  live: { workingNow: number; completed: number; late: number; totalMins: number } | null;
+  live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
   clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
@@ -198,6 +220,9 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     ...(ops?.pendingApprovals ? [{ href: "/approvals", icon: "✅", text: t("home.approvalsWaiting", { n: ops.pendingApprovals }), tone: "warn" }] : []),
     ...(ops?.lowStock ? [{ href: "/inventory", icon: "📦", text: t("home.lowStock", { n: ops.lowStock }), tone: "warn" }] : []),
     ...(missing ? [{ href: "/noshow", icon: "📋", text: t("home.notSubmitted", { n: missing }), tone: "warn" }] : []),
+    ...(live?.forgotten ? [{ href: "/attendance-hub", icon: "⏰", text: t("cockpit.forgotten", { n: live.forgotten }), tone: "danger" }] : []),
+    ...(live?.suspect ? [{ href: "/approvals", icon: "⚠", text: t("cockpit.suspect", { n: live.suspect }), tone: "danger" }] : []),
+    ...(cost?.coverage?.sales.missing.salesDays ? [{ href: "/labor", icon: "💶", text: t("cockpit.salesMissingAlert", { n: cost.coverage.sales.missing.salesDays }), tone: "warn" }] : []),
   ];
   return <div className="dashboard-layout">
     <div className="dashboard-kpis">
@@ -226,12 +251,12 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
       <section className="dashboard-panel">
         <div className="dashboard-panel-heading"><h2>{t("business.overview")}</h2><Link href="/analytics">{t("homeDashboard.details")} ›</Link></div>
         <div className="dashboard-costs">
-          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null || (cost.coverage?.sales.complete === false && !cost.monthSales) ? "—" : `${cost.coverage?.sales.complete === false ? "≥ " : ""}€${cost.monthSales.toLocaleString()}`}</strong></div>
-          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null || (cost.coverage?.spend.complete === false && !cost.invSpend) ? "—" : `${cost.coverage?.spend.complete === false ? "≥ " : ""}€${cost.invSpend.toLocaleString()}`}</strong></div>
+          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null || (cost.coverage?.sales.complete === false && !cost.monthSales) ? "—" : `${cost.coverage?.sales.complete === false ? "≥ " : ""}${fmtEur(cost.monthSales, locale)}`}</strong></div>
+          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null || (cost.coverage?.spend.complete === false && !cost.invSpend) ? "—" : `${cost.coverage?.spend.complete === false ? "≥ " : ""}${fmtEur(cost.invSpend, locale)}`}</strong></div>
         </div>
         <div className="dashboard-facts">
-          <div><span>{t("home.laborPct")}</span><strong>{cost?.laborPct == null ? "—" : `${cost.laborPct}%`}</strong></div>
-          <div><span>{t("home.foodCostPct")}</span><strong>{cost?.foodCostPct == null ? "—" : `${cost.foodCostPct}%`}</strong></div>
+          <div><span>{t("home.laborPct")}</span><strong>{formatPct(cost?.laborPct, locale)}</strong></div>
+          <div><span>{t("home.foodCostPct")}</span><strong>{formatPct(cost?.foodCostPct, locale)}</strong></div>
         </div>
         <p className="dashboard-muted">{[cost?.missingWageStaff ? t("business.missingWages", { n: cost.missingWageStaff }) : "", cost?.coverage?.sales.missing.salesDays ? t("business.missingSalesDays", { n: cost.coverage.sales.missing.salesDays }) : "", cost?.coverage?.spend.missing.costs ? t("business.missingCosts", { n: cost.coverage.spend.missing.costs }) : ""].filter(Boolean).join(" · ") || t("business.purchaseNote")}</p>
       </section>

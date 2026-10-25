@@ -13,7 +13,7 @@ const ICON: Record<string, string> = { Break: "☕", Rest: "🌙", "Long shift":
 
 export default function CompliancePage() {
   const { t, locale } = useLang();
-  const compType = (k: string) => (["Break", "Rest", "Long shift"].includes(k) ? t("compType." + k) : k);
+  const compType = (k: string) => (["Break", "Rest", "Long shift", "Clock-out"].includes(k) ? t("compType." + k) : k);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);

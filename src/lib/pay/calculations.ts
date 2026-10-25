@@ -22,6 +22,13 @@ export function shiftMinutes(log: { duration_mins?: number | null; clock_in?: st
   return { grossMin, breakMin, paidMin: grossMin - breakMin };
 }
 
+// A closed shift longer than this was almost certainly a forgotten clock-out (legal max is
+// 10h/day plus breaks). Such shifts must be corrected before approval, never paid as-is.
+export const IMPLAUSIBLE_SHIFT_MIN = 16 * 60;
+export function isImplausibleShift(log: Parameters<typeof shiftMinutes>[0]): boolean {
+  return shiftMinutes(log).grossMin > IMPLAUSIBLE_SHIFT_MIN;
+}
+
 export function payForMinutes(minutes: number, wage: number): number {
   if (!Number.isFinite(minutes) || minutes < 0 || !Number.isFinite(wage) || wage < 0) throw new Error("Invalid pay inputs.");
   return Math.round(minutes * wage / 60 * 100) / 100;

@@ -1,4 +1,5 @@
 // Codex review C/D (docs/ops/REVIEW-C-D.md): the eight reproduced bugs, now asserted
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 // as the SAFE behaviour. Converted from scripts/audit/review-c-d.cjs.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
 function load(file){const out={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:out,require:n=>n.endsWith('coverage')?coverage:require(n),Date,Intl,Set,Map});return out;}

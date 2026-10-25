@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // DOCUMENT WORKFLOW — data layer (Phase 2)
@@ -18,7 +19,7 @@ async function getMe() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null, branchId: null };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 const isManager = (r?: string | null) => MANAGER_ROLES.includes(r || "");
 
@@ -85,7 +86,7 @@ function effectiveStatus(status: string, expiry?: string | null):
 export async function uploadDocumentVersion(
   docType: string, filePath: string, fileName: string, issueDate?: string, expiryDate?: string
 ) {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in." };
 
   const { count } = await supabase

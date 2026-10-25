@@ -11,22 +11,14 @@ export default function LanguageToggle() {
       onClick={() => l !== locale && setLocale(l)}
       aria-pressed={locale === l}
       aria-label={name}
-      style={{
-        padding: "4px 9px",
-        fontSize: 12,
-        fontWeight: 700,
-        border: "none",
-        borderRadius: 6,
-        cursor: l === locale ? "default" : "pointer",
-        background: locale === l ? "var(--action)" : "transparent",
-        color: locale === l ? "var(--on-action)" : "var(--gray)",
-      }}
+      type="button"
+      className="language-option"
     >
       {label}
     </button>
   );
   return (
-    <div role="group" aria-label={t("misc.language")} style={{ display: "inline-flex", gap: 2, padding: 2, background: "var(--dark3)", borderRadius: 8, border: "1px solid var(--border)" }}>
+    <div role="group" aria-label={t("misc.language")} className="language-switch">
       {opt("en", "EN", "English")}
       {opt("de", "DE", "Deutsch")}
     </div>

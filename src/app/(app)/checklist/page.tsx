@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { toast } from "@/components/Toast";
 import { useEffect, useState } from "react";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -38,7 +39,7 @@ export default function ChecklistStatusPage() {
 
   const fmtTime = (ts: string | null) => {
     if (!ts) return "";
-    try { return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); } catch { return ""; }
+    try { return new Date(ts).toLocaleTimeString(appLocale(), { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); } catch { return ""; }
   };
 
   const Section = ({ title, items }: { title: string; items: any[] }) => (

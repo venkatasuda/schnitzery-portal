@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect, useRef } from "react";
 import { getPendingApprovals, decideLeave, decideSwap } from "@/lib/queries/leave";
 import { getAttendanceApprovals, setAttendanceApproval } from "@/lib/queries/live-attendance";
@@ -14,8 +15,8 @@ type Item = { kind: Kind; id: string; icon: string; name: string; detail: string
 type Filter = "all" | Kind;
 
 const fmtH = (m: number | null | undefined) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
-const fmtD = (d?: string | null) => (d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short" }) : "—");
-const fmtT = (v?: string | null) => (v ? new Date(v).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
+const fmtD = (d?: string | null) => (d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" }) : "—");
+const fmtT = (v?: string | null) => (v ? new Date(v).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
 
 const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
 
@@ -52,7 +53,7 @@ export default function ApprovalsPage() {
       out.push({ kind: "swap", id: s.id, icon: "🔄", name: (s as any).requester?.full_name || t("approvals.someone"), detail: `${t("approvals.swap")} · ${dayLabel(s.my_day)} ↔ ${dayLabel(s.their_day)}${other ? ` ${t("approvals.with")} ${other}` : ""}` });
     }
     for (const r of (att.ok && att.rows) || []) {
-      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${(r.late_mins || 0) > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.overtime ? ` · ${t("approvals.overtime")}` : ""}` });
+      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${(r.late_mins || 0) > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.suspect ? ` · ⚠ ${t("approvals.suspect")}` : r.overtime ? ` · ${t("approvals.overtime")}` : ""}` });
     }
     for (const c of (corr.ok && (corr as any).items) || []) {
       const req = `${fmtT(c.requested_clock_in)} → ${fmtT(c.requested_clock_out)}`;

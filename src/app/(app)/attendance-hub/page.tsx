@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
 
 import { useState, useEffect, useRef } from "react";
@@ -15,8 +16,8 @@ import { Stat } from "@/components/ui";
 type Tab = "live" | "approval" | "overtime" | "noshow" | "offline";
 
 const fmtH = (mins: number) => `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
-const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
-const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "short" }) : "—";
+const fmtTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—";
+const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" }) : "—";
 
 export default function AttendanceHubPage() {
   const { t, locale } = useLang();
@@ -206,7 +207,7 @@ export default function AttendanceHubPage() {
                 <div className="d-flex jc-sb ai-c mb-2">
                   <div className="ui-strong">
                     {r.name}
-                    {r.overtime && <span className="t-xs tone-warn ml-2"><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
+                    {r.suspect ? <span className="t-xs tone-danger ml-2"><Icon e="⚠" size={11} /> {t("approvals.suspect")}</span> : r.overtime && <span className="t-xs tone-warn ml-2"><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
                     {r.late_mins > 0 && <span className="t-xs tone-danger ml-2"><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
                   </div>
                   <div className="t-sm fw-7 tone-action">{fmtH(r.duration_mins || 0)}</div>
@@ -215,7 +216,7 @@ export default function AttendanceHubPage() {
                   {fmtDate(r.work_date)} · {r.team ? teamLabel(r.team) : "—"} · {fmtTime(r.clock_in)} → {fmtTime(r.clock_out)}
                 </div>
                 <div className="u-hstack">
-                  <button className="btn-gold" onClick={() => decide(r.id, "approved")} disabled={busyId === r.id}>{busyId === r.id ? "…" : t("ahub.approve")}</button>
+                  <button className="btn-gold" onClick={() => decide(r.id, "approved")} disabled={busyId === r.id || r.suspect} title={r.suspect ? t("approvals.suspect") : undefined}>{busyId === r.id ? "…" : t("ahub.approve")}</button>
                   <button className="btn-quiet-danger" onClick={() => decide(r.id, "rejected")} disabled={busyId === r.id}>{t("ahub.reject")}</button>
                 </div>
               </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import { pushText, type WeeklyPayload } from "@/lib/owner/weeklySummary";
 import Icon from "@/components/Icon";
 import { getManagerAlerts } from "@/lib/queries/alerts";
 import { getMyNotifications, markAllNotificationsRead } from "@/lib/queries/notifications";
@@ -38,12 +39,14 @@ const NOTIF: Record<string, { key: string; icon: string; href: string }> = {
   sync_failure:        { key: "notif.syncFailure",       icon: "🔄", href: "/ops" },
   attendance_anomaly:  { key: "notif.attendanceAnomaly", icon: "⚠️", href: "/ops" },
   system_error:        { key: "notif.systemError",       icon: "🛠️", href: "/" },
+  // owner
+  weekly_summary:      { key: "notif.weeklySummary",     icon: "📊", href: "/" },
 };
 
 const CORR_KEY: Record<string, string> = { forgot_in: "typeForgotIn", forgot_out: "typeForgotOut", missing: "typeMissing", incorrect: "typeIncorrect" };
 
 export default function NotificationBell() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const docLabel = (k: string) => t("documents.type_" + (DOC_TYPE_KEYS.includes(k) ? k : "other"));
   const [open, setOpen] = useState(false);
   const [ops, setOps] = useState<any[]>([]);
@@ -62,9 +65,11 @@ export default function NotificationBell() {
 
   useEffect(() => {
     function onDown(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    function onKey(e: KeyboardEvent) { if (open && e.key === "Escape") { setOpen(false); ref.current?.querySelector<HTMLButtonElement>("button")?.focus(); } }
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, []);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
 
   const unread = notes.filter((n) => !n.is_read).length;
   const total = opsTotal + unread;
@@ -91,6 +96,9 @@ export default function NotificationBell() {
       if (n.type === "doc_pending") return n.message ? `${label} · ${n.message}` : label;
       return label;
     }
+    if (n.type === "weekly_summary") {
+      try { return pushText(JSON.parse(n.message) as WeeklyPayload, locale === "de" ? "de" : "en").body; } catch { return ""; }
+    }
     return n.message || "";   // phase-7 types carry human text in message
   }
 
@@ -98,7 +106,7 @@ export default function NotificationBell() {
 
   return (
     <div className="u-relative" ref={ref}>
-      <button onClick={openMenu} className="theme-btn u-relative" aria-label={t("notif.title")}>
+      <button type="button" onClick={openMenu} className="theme-btn u-relative" aria-label={t("notif.title")} aria-expanded={open} aria-controls={open ? "portal-notifications" : undefined}>
         <Icon e="🔔" size={20} />
         {total > 0 && (
           <span style={{ position: "absolute", top: -3, right: -3, minWidth: 16, height: 16, borderRadius: 8, background: "#e74c3c", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", boxShadow: "0 0 0 2px var(--dark)" }}>
@@ -108,7 +116,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div style={{ position: "absolute", right: 0, top: 46, width: 300, background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,0.5)", zIndex: 200, overflow: "hidden" }}>
+        <div id="portal-notifications" role="region" aria-label={t("notif.title")} className="notification-panel">
           <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", fontSize: 13, fontWeight: 700, color: "var(--white)" }}>
             {t("notif.title")}{total > 0 ? ` · ${total}` : ""}
           </div>

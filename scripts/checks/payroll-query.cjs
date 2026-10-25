@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const AB={activeBranchFor:async(_db,p)=>p?.branch_id??null,accessibleBranchIds:async()=>[]}; // multi-branch resolver stub: home branch
 const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
@@ -17,6 +18,7 @@ const client={auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from(table)
 },rpc:async()=>{rpcCalls++;return{data:{source,revision},error:inputError}}};
 const api=load('src/lib/queries/payroll.ts',{
   '@/lib/supabase/server':{createClient:async()=>client},
+  '@/lib/activeBranch':AB,
   '@supabase/supabase-js':{createClient:()=>({rpc:async(name,args)=>{approvalCalls++;assert.equal(args.p_actor,'manager');assert.equal(args.p_snapshot.totals.gross,5);return{};}})},
   '@/lib/time/berlinDate':{berlinMonth:()=> '2026-10',monthRange:()=>({from:'2026-09-01',next:'2026-10-01'})},
   '@/lib/pay/calculations':load('src/lib/pay/calculations.ts'),

@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -11,7 +12,7 @@ import {
 } from "@/lib/queries/temp";
 
 const KINDS = ["fridge", "freezer", "hot_hold", "other"];
-const fmtWhen = (iso: string) => { try { return new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return iso; } };
+const fmtWhen = (iso: string) => { try { return new Date(iso).toLocaleString(appLocale(), { timeZone: "Europe/Berlin", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return iso; } };
 
 export default function TempPage() {
   const { t } = useLang();

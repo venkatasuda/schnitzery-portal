@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CalendarDays, Clock, Users, Package, ChartNoAxesCombined, Settings, Building2, ClipboardCheck, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Clock, Users, Package, ChartNoAxesCombined, Settings, Building2, ClipboardCheck, ShieldCheck, Menu } from "lucide-react";
 import { useLang } from "@/components/LanguageProvider";
 
 function navigationGroups(owner: boolean) {
   return [
     { label: "workspace.operations", items: [
-      { href: "/", label: "workspace.dashboard", icon: LayoutDashboard, routes: ["/"] },
+      { href: "/", label: "workspace.dashboard", icon: LayoutDashboard, routes: ["/", "/my-branches", "/targets"] },
       ...(owner ? [{ href: "/branches", label: "nav.branches", icon: Building2, routes: ["/branches", "/overview"] }] : []),
       { href: "/inventory", label: "nav.inventory", icon: Package, routes: ["/inventory", "/stock-alerts", "/waste", "/expiry", "/transfers", "/labels"] },
       { href: "/ops", label: "home.dailyOps", icon: ClipboardCheck, routes: ["/ops", "/temp", "/checklist-status", "/checklist", "/incidents", "/announcements"] },
@@ -27,7 +27,7 @@ function navigationGroups(owner: boolean) {
   ];
 }
 
-export default function ManagementNav({ role }: { role: string }) {
+export default function ManagementNav({ role, mobile = false }: { role: string; mobile?: boolean }) {
   const path = usePathname();
   const { t } = useLang();
   const owner = ["brand_owner", "super_admin"].includes(role);
@@ -43,16 +43,17 @@ export default function ManagementNav({ role }: { role: string }) {
       })}
     </div>)}
   </nav>;
-  return <>
-    <aside className="management-sidebar">
+  if (mobile) return <div className="management-mobile-nav">
+    <button type="button" className="header-control" popoverTarget="management-menu" aria-label={t("workspace.navigation")} title={t("workspace.navigation")}><Menu size={20} aria-hidden="true" /></button>
+    <div id="management-menu" popover="auto" className="management-menu-panel" key={path} onClick={event=>{if((event.target as HTMLElement).closest("a"))event.currentTarget.hidePopover();}}>
+      <strong className="management-menu-title">{t("workspace.navigation")}</strong>
+      {navigation}
+    </div>
+  </div>;
+  return <aside className="management-sidebar">
       <Link href="/" className="management-brand">Schnitzery<span>{t("workspace.management")}</span></Link>
       {navigation}
-    </aside>
-    <details className="management-mobile-nav" key={path}>
-      <summary>{t("workspace.navigation")}</summary>
-      {navigation}
-    </details>
-  </>;
+    </aside>;
 }
 
 export function ManagementLocation({ role }: { role: string }) {

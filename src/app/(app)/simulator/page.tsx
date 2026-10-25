@@ -1,5 +1,6 @@
 "use client";
 
+import { formatEur } from "@/lib/format";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -7,11 +8,11 @@ import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getMonthlySummary } from "@/lib/queries/labor";
 
-const eur = (n: number) => "€" + Math.round(n || 0).toLocaleString("de-DE");
 const pct = (n: number | null) => n == null ? "—" : `${Math.round(n * 10) / 10}%`;
 
 export default function SimulatorPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const eur = (n: number) => formatEur((n || 0), locale, 0);
   const [base, setBase] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [food, setFood] = useState(0);   // ingredient cost change %

@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadDocumentVersion, listMyDocuments, getDocumentUrl, archiveDocument } from "@/lib/queries/documents";
@@ -36,7 +37,7 @@ function statusBadge(eff: string, t: Tf): { label: string; color: string } {
   }
 }
 const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" }) : "";
+  d ? new Date(d).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", year: "numeric" }) : "";
 
 export default function DocumentsSection() {
   const { t } = useLang();

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { berlinMonday, berlinMonth, isCalendarDate } from "@/lib/time/berlinDate";
 import { shiftMinutes } from "@/lib/pay/calculations";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // SCHEDULE / ROSTER — weekly_roster stores ONE row per branch
@@ -32,7 +33,7 @@ async function getMe() {
     .select("id, full_name, role, branch_id")
     .eq("id", user.id)
     .single();
-  return { supabase, user, branchId: profile?.branch_id ?? null, profile };
+  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
 }
 
 // Helper for the UI: get this week's Monday (and optionally offset by N weeks).

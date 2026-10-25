@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isCalendarDate } from "@/lib/time/berlinDate";
 import { readAll } from "@/lib/supabase/readAll";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
@@ -11,7 +12,7 @@ async function getMe() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null, branchId: null };
   const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: p?.branch_id ?? null };
+  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
 }
 
 export async function submitCorrection(input: {
@@ -19,7 +20,7 @@ export async function submitCorrection(input: {
   requestedClockIn?: string | null; requestedClockOut?: string | null;
   reason: string; evidenceUrl?: string | null;
 }) {
-  const { supabase, user, branchId } = await getMe();
+  const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in." };
   if (!branchId) return { ok: false, error: "No branch." };
   if (!input || !["missing", "incorrect", "forgot_in", "forgot_out"].includes(input.type) || !isCalendarDate(input.targetDate)) return { ok: false, error: "Invalid correction type or date." };

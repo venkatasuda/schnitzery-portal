@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStaffDetail, getStaffHours } from "@/lib/queries/staff-detail";
 import EmployeeDocuments from "@/components/EmployeeDocuments";
+import BranchLinks from "@/components/BranchLinks";
 import { getStaffLeaveBalance, setLeaveAllowance } from "@/lib/queries/leave-balance";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -135,6 +136,7 @@ export default function StaffDetailPage() {
       )}
 
       {/* documents — required-doc checklist + approve/reject (manager) */}
+      {staff && <BranchLinks key={`links-${id}`} userId={id} />}
       {staff && <EmployeeDocuments key={id} userId={id} />}
     </div>
   );

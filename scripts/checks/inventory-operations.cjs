@@ -1,0 +1,50 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+function mod(file,resolve,globals={}){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,require:resolve,...globals});return exports;}
+const operations=mod('src/lib/inventory/operations.ts',require),valid=operations.validOperation;
+const dictionary=mod('src/lib/i18n/messages.ts',require).messages;
+for(const file of ['src/components/inventory/Products.tsx','src/components/inventory/Suppliers.tsx','src/components/inventory/MovementDetails.tsx','src/app/(app)/inventory/purchasing/page.tsx']){
+ for(const match of fs.readFileSync(file,'utf8').matchAll(/\bt\(["']([\w.]+)["']/g))for(const lang of ['en','de'])assert.equal(typeof match[1].split('.').reduce((v,k)=>v?.[k],dictionary[lang]),'string',`${lang}: missing ${match[1]}`);
+}
+const branch='11111111-1111-4111-8111-111111111111',id='22222222-2222-4222-8222-222222222222',product='33333333-3333-4333-8333-333333333333',supplier='44444444-4444-4444-8444-444444444444';
+const po={supplier_id:supplier,lines:[{product_id:product,qty:2,unit_price:null}]};
+assert.equal(valid('po_save',po),true);assert.equal(valid('po_save',{...po,lines:[...po.lines,...po.lines]}),false);
+for(const price of [-1,NaN,Infinity,'0'])assert.equal(valid('po_save',{...po,lines:[{...po.lines[0],unit_price:price}]}),false);
+assert.equal(valid('po_save',{...po,lines:[{...po.lines[0],unit_price:0}]}),true);
+for(const qty of [-1,0,NaN,Infinity,'2'])assert.equal(valid('po_save',{...po,lines:[{...po.lines[0],qty}]}),false);
+assert.equal(valid('receive',{id,revision:0,invoice:'D1',lines:[{id:product,accepted:0,rejected:1,cost:0,note:'Damaged'}]}),true);
+assert.equal(valid('waste_correct',{id,revision:0,qty:0,before:{qty:1},note:'Duplicate'}),true);
+assert.equal(valid('waste_correct',{id,revision:0,qty:0,before:{qty:1},note:''}),false);
+assert.equal(valid('transfer_receive',{id,revision:0,qty:0,note:'Nothing arrived'}),true);
+const reconcile=mod('src/lib/inventory/reconciliation.ts',require);
+const transfer={id,from_branch_id:'A',to_branch_id:'B',status:'received',qty:10,received_qty:8,unit:'kg',created_at:'2026-10-01T10:00:00Z'};
+const events=[{source_id:id,operation:'UPDATE',before_status:'requested',after_status:'sent',recorded_at:'2026-10-02T10:00:00Z'},{source_id:id,operation:'UPDATE',before_status:'sent',after_status:'received',recorded_at:'2026-10-03T10:00:00Z'}];
+assert.equal(reconcile.transferMoves('A',transfer,events,'2026-10-24').find(m=>m.kind==='sent').qty,10);
+assert.equal(reconcile.transferMoves('B',transfer,events,'2026-10-24').find(m=>m.kind==='received').qty,8);
+assert.equal(reconcile.transferMoves('B',{...transfer,received_qty:0},events,'2026-10-24').find(m=>m.kind==='received').qty,0);
+let role='manager',active=branch,rpcCalls=0;
+const db={auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from(){return this;},select(){return this;},eq(){return this;},single:async()=>({data:{role,branch_id:branch,status:'active'}}),rpc:async()=>{rpcCalls++;return{data:{id},error:null};}};
+const query=mod('src/lib/queries/inventory-operations.ts',name=>name==='@/lib/inventory/operations'?operations:name==='@/lib/supabase/server'?{createClient:async()=>db}:name==='@/lib/activeBranch'?{activeBranchFor:async()=>active,MULTI_BRANCH_ROLES:['manager','branch_owner','brand_owner','super_admin']}:{});
+const harness=fs.readFileSync('scripts/checks/workspace-ux.cjs','utf8').split('(async()=>{')[0];
+const box={module:{exports:{}},require,console,setImmediate,setTimeout,URL,URLSearchParams};vm.runInNewContext(harness+'\nmodule.exports={ui,find};',box);
+const {ui,find}=box.module.exports,flush=()=>new Promise(resolve=>setImmediate(resolve));
+const fixture={ok:true,branch:{id:branch,name:'Synthetic branch'},products:[{id:product,product:'Rice',category:'Dry',unit:'kg',soll:5,is_active:true}],suppliers:[{id:supplier,name:'Supplier',email:'',is_active:true,revision:0}],orders:[],order:{id,reference:'OLD-PO',status:'draft',supplier_id:supplier,supplier_name:'Supplier',supplier_email:'',note:'',revision:0},lines:[],receipts:[],receiptLines:[]};
+(async()=>{
+ let healthStatus=200,healthCalls=0;
+ const preflight=mod('e2e/preflight.ts',()=>({BASE_URL:'http://[::1]:3108'}),{AbortSignal,fetch:async(url,options)=>{healthCalls++;assert.ok(options.signal);if(!url.includes(':55321'))assert.match(url,/\/offline\.html$/);return{ok:healthStatus===200,status:healthStatus};}}).default;
+ await preflight();assert.equal(healthCalls,2);
+ healthStatus=503;await assert.rejects(preflight(),/HTTP 503/,'A responding but unhealthy server must fail preflight');
+ role='staff';assert.equal((await query.inventoryOperation(branch,id,'po_save',po)).error,'access');
+ role='manager';active=id;assert.equal((await query.inventoryOperation(branch,id,'po_save',po)).error,'access');
+ active=branch;assert.equal((await query.inventoryOperation(branch,id,'po_save',po)).ok,true);assert.equal(rpcCalls,1);
+ const calls=[];
+ const screen=await ui('inventory/purchasing',(name,args)=>{if(name==='inventoryOperation'){calls.push(args);return{ok:false,error:'save'};}return fixture;});
+ assert.match(screen.render(),/inventoryOps.newOrder/);
+ find(screen.tree(),e=>e.props?.actions?.props?.children==='inventoryOps.newOrder').props.actions.props.onClick();
+ find(screen.tree(),e=>e.type==='select'&&e.props['aria-label']==='inventoryOps.product 1').props.onChange({target:{value:product}});
+ find(screen.tree(),e=>e.type==='input'&&e.props['aria-label']==='inventoryOps.ordered 1').props.onChange({target:{value:'2'}});
+ find(screen.tree(),e=>e.type==='form').props.onSubmit({preventDefault(){}});await flush();
+ assert.equal(calls.length,1);assert.equal(calls[0][2],'po_save');assert.equal(calls[0][3].id,undefined,'New order must not overwrite selected old draft');
+ const failed=await ui('inventory/purchasing',{ok:false,error:'load'});assert.match(failed.render(),/role="alert"/);
+ const closed=await ui('inventory/purchasing',{...fixture,order:{...fixture.order,status:'closed'}});assert.doesNotMatch(closed.render(),/>inventoryOps.receive</);
+ console.log('Inventory operations: validated inputs, permissions, actual transfer quantities, new-order isolation and error states pass.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

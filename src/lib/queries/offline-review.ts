@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
+import { activeBranchFor } from "@/lib/activeBranch";
 
 export async function getOfflineIssues(manager=false, reviewed=false) {
   if(typeof manager!=="boolean" || typeof reviewed!=="boolean")return {ok:false,error:"Invalid view."};
@@ -8,8 +9,9 @@ export async function getOfflineIssues(manager=false, reviewed=false) {
   if(!user)return {ok:false,error:"Not logged in."};
   const {data:me,error:profileError}=await db.from("users").select("role,branch_id").eq("id",user.id).single();
   if(profileError || !me?.branch_id || (manager && !["manager","branch_owner","brand_owner","super_admin"].includes(me.role)))return {ok:false,error:"Access denied."};
+  const branch=manager?await activeBranchFor(db,me):null;
   let query=db.from("offline_attendance_issues").select("id,full_name,action,captured_at,error,note,reviewed_at")
-    .eq(manager?"branch_id":"user_id",manager?me.branch_id:user.id);
+    .eq(manager?"branch_id":"user_id",manager?branch:user.id);
   if(manager)query=reviewed?query.not("reviewed_at","is",null):query.is("reviewed_at",null);
   const {data,error}=await query.order("created_at",{ascending:!reviewed}).order("id").limit(100);
   return error?{ok:false,error:"Review records could not be loaded."}:{ok:true,rows:data||[]};

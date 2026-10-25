@@ -1,5 +1,6 @@
 "use client";
 
+import { appLocale } from "@/lib/format";
 import { berlinToday } from "@/lib/time/berlinDate";
 
 import { useState, useEffect, useCallback } from "react";
@@ -11,8 +12,8 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { Stat } from "@/components/ui";
 
 const todayStr = () => berlinToday();
-const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
-const fmtFromMs = (ms?: number | null) => (ms ? new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
+const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
+const fmtFromMs = (ms?: number | null) => (ms ? new Date(ms).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
 const fmtLabor = (m: number) => { m = Math.max(0, Math.round(m)); return `${Math.floor(m / 60)}h ${m % 60}m`; };
 
 export default function OpsPage() {
