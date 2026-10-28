@@ -11,7 +11,7 @@
     "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.135.0",
+    "@anthropic-ai/sdk": "^0.137.0",
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
     "@sentry/nextjs": "^10.76.2",
@@ -21,7 +21,7 @@
     "docx": "^9.12.0",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.59.0",
-    "next": "16.4.2",
+    "next": "16.4.3",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "19.3.1",
@@ -40,7 +40,7 @@
     "@types/web-push": "^3.6.4",
     "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^9",
-    "eslint-config-next": "16.4.2",
+    "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12"
