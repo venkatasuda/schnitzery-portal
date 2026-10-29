@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, PageHeader, Panel, Segmented } from "@/componen
 import { getInventoryContext, getPurchaseOrderDraft } from "@/lib/queries/inventory";
 import { orderLineCost, orderSummary } from "@/lib/inventory/orderDraft";
 import { berlinToday, fmtDay } from "@/lib/time/berlinDate";
+import { formatEur } from "@/lib/format";
 
 type Item = { product: string; category: string; qty: number | string; unit: string; unitPrice: number | null; priceDate?: string | null };
 type Group = { supplier: string; items: Item[] };
@@ -22,7 +23,7 @@ export default function OrderPage() {
   const [dirty, setDirty] = useState(false);
   const [branchName, setBranchName] = useState("");
   const request = useRef(0);
-  const eur = (n: number, unit = false) => new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: unit ? 4 : 2 }).format(n);
+  const eur = (n: number, unit = false) => formatEur(n, locale, unit ? 4 : 2);
   async function load(cd: number) {
     const id = ++request.current;
     setLoading(true); setError(false); setGroups([]); setDirty(false);
