@@ -88,7 +88,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      <main key={user.id} id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{children}</main>
+      {/* Refresh preserves client state; changing branch must discard the old branch's data and drafts. */}
+      <main key={`${user.id}:${activeBranch ?? profile?.branch_id ?? ""}:${isHQ ? viewMode : "branch"}`} id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{children}</main>
 
       <ToastHost />
       <AttendanceSync userId={user.id} />
