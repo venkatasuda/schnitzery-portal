@@ -22,7 +22,8 @@ const branch='00000000-0000-0000-0000-000000000010',other='00000000-0000-0000-00
  create policy event_scope on attendance_events for select to authenticated using(user_id=auth.uid() or (is_manager() and branch_id in (select accessible_branch_ids())));`);
  await db.exec("alter table users add column full_name text");
  await db.exec(fs.readFileSync('supabase/migrations/20261017160350_offline_attendance_integrity.sql','utf8'));
- const base=Date.now()-86400000;
+ // Keep daytime and overnight fixtures disjoint, regardless of CI's wall-clock hour.
+ const base=Date.parse(new Date(Date.now()-3*86400000).toISOString().slice(0,10)+'T08:00:00Z');
  const event=(action,offset=0,owner=uid)=>({event_uuid:randomUUID(),user_id:owner,capture_protocol:2,action,captured_at:new Date(base+offset*60000).toISOString(),device_id:'fixture'});
  const login=async id=>db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}',false)`);
  const replay=async rows=>(await db.query('select public.sync_attendance_events($1) result',[JSON.stringify(rows)])).rows[0].result.results;
