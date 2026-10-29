@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
-import { getLaborSummary, setDailySales, getRecentSales, getStaffWages, setStaffWage } from "@/lib/queries/labor";
+import { getLaborSummary, setDailySales, getRecentSales, getStaffWages, setStaffWage, setWageForMissing } from "@/lib/queries/labor";
 import SalesImport from "@/components/SalesImport";
 import { toast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
@@ -53,6 +53,21 @@ export default function LaborPage() {
     else toast(res.error || t("lab.couldNotSave"), "error");
     } catch { toast(t("staff.networkErr"), "error"); }
     finally { setSavingSale(false); }
+  }
+
+  const [bulkWage, setBulkWage] = useState("");
+  const [bulkDate, setBulkDate] = useState("");
+  const [bulkSaving, setBulkSaving] = useState(false);
+  async function saveBulkWage() {
+    const w = parseFloat(bulkWage.replace(",", "."));
+    if (!Number.isFinite(w) || w < 0 || !bulkDate || bulkSaving) { toast(t("lab.validWage"), "error"); return; }
+    setBulkSaving(true);
+    try {
+      const res = await setWageForMissing(w, bulkDate);
+      if (res.ok) { toast(t("lab.bulkDone", { n: res.count }), "success"); setBulkWage(""); setBulkDate(""); loadAll(); }
+      else toast(res.error || t("lab.couldNotSave"), "error");
+    } catch { toast(t("staff.networkErr"), "error"); }
+    finally { setBulkSaving(false); }
   }
 
   async function saveWage(userId: string) {
@@ -141,6 +156,17 @@ export default function LaborPage() {
         <Skeleton height={120} radius={14} />
       ) : (
         <div className="card p-2">
+          {staff.some((p) => p.hourly_wage == null) && (
+            <div className="labor-bulk">
+              <strong>{t("lab.bulkTitle", { n: staff.filter((p) => p.hourly_wage == null).length })}</strong>
+              <div className="labor-bulk-row">
+                <input type="number" inputMode="decimal" min="0" step="0.01" aria-label={t("lab.bulkWage")} placeholder="14.92" value={bulkWage} disabled={bulkSaving} onChange={(e) => setBulkWage(e.target.value)} style={{ ...input, width: 96, textAlign: "right" }} />
+                <label className="ui-muted">{t("lab.effectiveFrom")}<input type="date" aria-label={t("lab.effectiveFrom")} min="2000-01-01" max={today()} value={bulkDate} disabled={bulkSaving} onChange={(e) => setBulkDate(e.target.value)} style={{ ...input, display: "block", width: 160 }} /></label>
+                <button className="btn-gold" onClick={saveBulkWage} disabled={!bulkWage || !bulkDate || bulkSaving}>{bulkSaving ? t("common.saving") : t("lab.bulkApply")}</button>
+              </div>
+              <p className="ui-sub">{t("lab.bulkHint")}</p>
+            </div>
+          )}
           {staff.map((p, i) => (
             <div key={p.id} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "9px 6px", borderBottom: i < staff.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none" }}>
               <div style={{ flex: "1 1 160px", minWidth: 0 }}>

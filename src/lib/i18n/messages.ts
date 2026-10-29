@@ -773,6 +773,7 @@ export const messages = {
       hoursPerWeek: "Hours per Week", hoursByDay: "Hours by Day of Week", hoursByTeam: "Hours by Team (8 weeks)",
     },
     lab: {
+      bulkTitle: "{n} without a wage — same hourly wage for all of them", bulkWage: "Hourly wage (€) for everyone without one", bulkApply: "Apply to all", bulkHint: "Only people without a wage get it; existing wages stay. Use the date the wage really started.", bulkDone: "Wage set for {n} people",
       missingWageCost: "Labour cost is incomplete: add a wage rate for every worked employee.",
       effectiveFrom: "Effective from", unconfirmedDate: "Effective date unconfirmed", history: "Wage history", recorded: "Recorded",
       wageBasis: "Payroll uses the confirmed rate for each work date. Enter the real effective date — it is never guessed.",
@@ -1646,6 +1647,7 @@ export const messages = {
       hoursPerWeek: "Stunden pro Woche", hoursByDay: "Stunden nach Wochentag", hoursByTeam: "Stunden nach Team (8 Wochen)",
     },
     lab: {
+      bulkTitle: "{n} ohne Stundenlohn — gleicher Lohn für alle", bulkWage: "Stundenlohn (€) für alle ohne Lohn", bulkApply: "Für alle übernehmen", bulkHint: "Nur Personen ohne Lohn erhalten ihn; vorhandene Löhne bleiben. Das echte Startdatum des Lohns eintragen.", bulkDone: "Lohn für {n} Personen gesetzt",
       missingWageCost: "Die Personalkosten sind unvollständig: Für alle Mitarbeiter mit Arbeitsstunden muss ein Stundenlohn erfasst werden.",
       effectiveFrom: "Gültig ab", unconfirmedDate: "Gültigkeitsdatum unbestätigt", history: "Lohnhistorie", recorded: "Erfasst",
       wageBasis: "Die Lohnabrechnung nutzt den bestätigten Satz je Arbeitstag. Echtes Gültigkeitsdatum eingeben – es wird nie geschätzt.",

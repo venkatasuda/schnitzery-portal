@@ -6,7 +6,7 @@ import { getClockTokenBatch } from "@/lib/queries/clockcode";
 import { QRCodeSVG } from "qrcode.react";
 
 const LS_KEY = "sz_kiosk_tokenbatch";
-const REFILL_BELOW = 60;   // refill when fewer than 60 windows (30 min) remain
+const REFILL_BELOW = 50;   // batch = 60 windows (30 min offline); refill once ~5 min are used
 type Batch = { startWindow: number; codes: { w: number; token: string; code: string }[]; branchId: string; kioskId: string; rotateSeconds: number };
 
 // Kiosk identity: ?k=<id> (persisted) or a previously saved id; the server falls
@@ -45,7 +45,7 @@ export default function KioskScreen() {
     if (fetchingRef.current) return;
     if (typeof navigator !== "undefined" && !navigator.onLine) { setEmergency(true); return; }
     fetchingRef.current = true;
-    const res = await getClockTokenBatch(getKioskId(), 240);
+    const res = await getClockTokenBatch(getKioskId(), 60);
     fetchingRef.current = false;
     if (res.ok && res.codes?.length) {
       saveBatch({ startWindow: res.startWindow, codes: res.codes, branchId: res.branchId, kioskId: res.kioskId, rotateSeconds: res.rotateSeconds });

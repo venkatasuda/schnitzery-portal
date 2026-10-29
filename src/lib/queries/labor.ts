@@ -176,6 +176,34 @@ export async function setStaffWage(userId: string, wage: number, effectiveFrom: 
   return { ok: true };
 }
 
+// One wage for everyone in the branch who has none yet (e.g. a single house rate).
+// Same rules as setStaffWage per person: never yourself, only people ranked below
+// you, with the real effective date (never guessed). Existing wages are untouched.
+export async function setWageForMissing(wage: number, effectiveFrom: string) {
+  const { supabase, user, role, branchId } = await getMgr();
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (!isManager(role)) return { ok: false as const, error: "Managers only." };
+  if (!branchId) return { ok: false as const, error: "No branch." };
+  if (!isCalendarDate(effectiveFrom) || effectiveFrom < "2000-01-01" || effectiveFrom > berlinToday() || !Number.isFinite(wage) || wage < 0 || wage >= 1000) return { ok: false as const, error: "Enter a valid wage and its actual effective date." };
+  const [{ data: people, error }, wages] = await Promise.all([
+    readAll(supabase.from("users").select("id, role").eq("branch_id", branchId).eq("status", "active").neq("role", "kiosk").order("id")),
+    wageMapForBranches(supabase, [branchId]),
+  ]);
+  if (error) return { ok: false as const, error: error.message };
+  const targets = (people || []).filter((p) => p.id !== user.id && wages[p.id] == null && (role === "super_admin" || rankOf(p.role) < rankOf(role)));
+  if (!targets.length) return { ok: true as const, count: 0 };
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return { ok: false as const, error: "Wage history is not configured." };
+  const admin = createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  let count = 0;
+  for (const p of targets) { // ponytail: one RPC per person; fine for a branch, batch if hundreds
+    const r = await setWage(admin, p.id, branchId, wage, user.id, effectiveFrom);
+    if (!r.ok) return { ok: false as const, error: r.error, count };
+    count++;
+  }
+  return { ok: true as const, count };
+}
+
 // ── Monthly ops summary: one rollup of the month's key numbers + per-staff rows ──
 export async function getMonthlySummary(month?: string) {
   const { supabase, user, role, branchId } = await getMgr();
