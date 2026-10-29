@@ -878,6 +878,10 @@ fieldset.card { min-width: 0; }
 .cockpit-flash { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-5); margin-top: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); font-size: var(--text-sm); }
 label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-offset: 2px; }
 
+/* Labour page: one wage for everyone without one */
+.labor-bulk { padding: var(--space-3); margin-bottom: var(--space-2); border: 1px dashed var(--border); border-radius: var(--radius); }
+.labor-bulk-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin: var(--space-2) 0; }
+
 /* Branch setup card (src/components/dash/SetupCard.tsx) */
 .setup-card { margin-bottom: var(--space-5); }
 .setup-count { font-size: var(--text-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }

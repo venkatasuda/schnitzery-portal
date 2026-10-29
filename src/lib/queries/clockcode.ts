@@ -29,7 +29,7 @@ export async function getCurrentClockCode() {
 
 // Display devices fetch a batch of upcoming codes to pre-cache, so the kiosk
 // keeps showing valid codes during an outage (Emergency Attendance Mode).
-export async function getClockCodeBatch(count = 240) {
+export async function getClockCodeBatch(count = 60) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("clock_code_batch", { p_count: count });
   if (error) return { ok: false, error: error.message };
@@ -61,7 +61,7 @@ export async function getClockToken(kioskId?: string | null) {
 }
 
 // Pre-signed batch of upcoming tokens (+ codes) for offline display.
-export async function getClockTokenBatch(kioskId?: string | null, count = 240) {
+export async function getClockTokenBatch(kioskId?: string | null, count = 60) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("clock_token_batch", { p_kiosk: kioskId ?? null, p_count: count });
   if (error) return { ok: false, error: error.message };
