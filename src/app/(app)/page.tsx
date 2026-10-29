@@ -71,7 +71,7 @@ export default async function HomePage() {
   let mSetup: SetupStep[] | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
-  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
+  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number | null; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
   let mWaste: { label: string; value: number }[] = [];
   let hqWaste: { label: string; value: number }[] = [];
 
@@ -217,7 +217,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
   live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number | null; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
 }) {
   const missing = sched ? Math.max(0, sched.staffCount - sched.submissionCount) : 0;
   const alerts = [
