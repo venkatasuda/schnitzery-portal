@@ -9,6 +9,7 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { Field } from "@/components/ui";
+import RosterLabourPanel from "@/components/RosterLabourPanel";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // Every team a manager can roster — not only the ones that happen to have preset
@@ -155,6 +156,8 @@ export default function RosterPage() {
         <CardSkeleton rows={4} />
       ) : (
         <>
+          <RosterLabourPanel weekStart={weekStart} roster={roster} />
+
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
           <div className="card u-mb-3">
             <div className="card-title">{t("roster.weekGlance", { n: totalAssigned })}</div>

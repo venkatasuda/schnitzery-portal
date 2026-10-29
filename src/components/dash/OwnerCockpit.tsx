@@ -4,7 +4,7 @@ import type { Targets } from "@/lib/queries/targets";
 
 type Tf = (k: string, v?: Record<string, string | number>) => string;
 type Cov = { complete: boolean; missing: Record<string, number> };
-export type CockpitCost = { monthSales?: number; laborPct: number | null; foodCostPct: number | null; coverage?: Record<"sales" | "labor" | "spend", Cov> } | null;
+export type CockpitCost = { monthSales?: number | null; laborPct: number | null; foodCostPct: number | null; coverage?: Record<"sales" | "labor" | "spend", Cov> } | null;
 type Day = { date: string; sales: number | null; hours: number };
 
 // Owner home, top band (docs/OWNER-COCKPIT.md): month-to-date money against the

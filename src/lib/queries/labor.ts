@@ -35,20 +35,24 @@ export async function getLaborSummary() {
 
   const { from: first, next } = monthRange();
 
-  // wages — from user_pay, not users. See src/lib/pay/wages.ts (item 18).
-  const wages = await wageMapForBranches(supabase, [branchId]);
+  // Independent reads in parallel: wages (user_pay, see src/lib/pay/wages.ts), headcount,
+  // this month's completed shifts, sales and deliveries.
+  const today = berlinToday();
+  const [wages, headcount, logsRes, salesRes, purchRes] = await Promise.all([
+    wageMapForBranches(supabase, [branchId]),
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("branch_id", branchId),
+    readAll(supabase.from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, status")
+      .eq("branch_id", branchId).gte("work_date", first).lt("work_date", next).lte("work_date", today).eq("status", "complete").order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).lte("sale_date", today).order("id")),
+    readAll(supabase.from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first).lt("purchase_date", next).lte("purchase_date", today).order("id")),
+  ]);
   const wageOf: Record<string, number> = {};
   let withWage = 0;
   for (const [id, w] of Object.entries(wages)) { wageOf[id] = w ?? 0; if (w != null) withWage++; }
-
-  // Headcount still comes from users — only the wage column moved.
-  const { count: staffCount } = await supabase
-    .from("users").select("id", { count: "exact", head: true }).eq("branch_id", branchId);
+  const staffCount = headcount.count;
 
   // labor cost from completed attendance this month
-  const { data: logs, error: logsError } = await readAll(supabase
-    .from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, status")
-    .eq("branch_id", branchId).gte("work_date", first).lt("work_date", next).lte("work_date", berlinToday()).eq("status", "complete").order("id"));
+  const { data: logs, error: logsError } = logsRes;
   if (logsError) return { ok: false, error: logsError.message };
   const paidByUser: Record<string, number> = {};
   for (const l of logs || []) paidByUser[l.user_id] = (paidByUser[l.user_id] || 0) + shiftMinutes(l).paidMin;
@@ -56,16 +60,14 @@ export async function getLaborSummary() {
   const missingWageStaff = Object.keys(paidByUser).filter(id => wages[id] == null).length;
 
   // sales this month
-  const { data: sales, error: salesError } = await readAll(supabase
-    .from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).lte("sale_date", berlinToday()).order("id"));
+  const { data: sales, error: salesError } = salesRes;
   if (salesError) return { ok: false, error: salesError.message };
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
 
 
   // inventory spend this month → food cost % (safe if the deliveries table doesn't exist yet)
-  const { data: purch, error: purchErr } = await readAll(supabase
-    .from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", first).lt("purchase_date", next).lte("purchase_date", berlinToday()).order("id"));
+  const { data: purch, error: purchErr } = purchRes;
   if (purchErr) return { ok: false, error: purchErr.message };
   // Release D: missing sales days, wages or delivery costs are never zero; ratios need complete inputs.
   const worked = (logs || []).filter(l => shiftMinutes(l).paidMin > 0).map(l => ({ branch_id: branchId ?? "", work_date: l.work_date }));
@@ -83,7 +85,7 @@ export async function getLaborSummary() {
   return {
     ok: true,
     laborCost: Math.round(laborCost),
-    monthSales: Math.round(monthSales),
+    monthSales: sales?.length ? Math.round(monthSales) : null, // no sales entered = unknown ("—"), not €0
     recordedSalesDays: sales?.length || 0,
     laborPct,
     invSpend: Math.round(monthInvSpend),
@@ -184,17 +186,22 @@ export async function getMonthlySummary(month?: string) {
   // Actuals stop at Berlin today: future-dated records never count as current (review finding 9).
   const to = monthEnd < berlinToday() ? monthEnd : berlinToday();
 
-  const { data: staff, error: staffError } = await readAll(supabase.from("users")
-    .select("id, full_name, team, contract_hours")
-    .eq("branch_id", branchId).order("id"));
+  // All reads at once (they are independent): one round trip of latency instead of five.
+  const [staffRes, monthWages, logsRes, salesRes, purchRes] = await Promise.all([
+    readAll(supabase.from("users").select("id, full_name, team, contract_hours").eq("branch_id", branchId).order("id")),
+    wageMapForBranches(supabase, [branchId]),
+    readAll(supabase.from("attendance_logs")
+      .select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, late_mins, status")
+      .eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).eq("status", "complete").order("id")),
+    readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", from).lte("sale_date", to).order("id")),
+    readAll(supabase.from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", from).lte("purchase_date", to).order("id")),
+  ]);
+  const { data: staff, error: staffError } = staffRes;
   if (staffError) return { ok: false, error: staffError.message };
-  const monthWages = await wageMapForBranches(supabase, [branchId]);
   const info: Record<string, any> = {};
   for (const s of staff || []) info[s.id] = { ...s, hourly_wage: monthWages[s.id] ?? null };
 
-  const { data: logs, error: logsError } = await readAll(supabase.from("attendance_logs")
-    .select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, late_mins, status")
-    .eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).eq("status", "complete").order("id"));
+  const { data: logs, error: logsError } = logsRes;
   if (logsError) return { ok: false, error: logsError.message };
 
   const per: Record<string, { mins: number; shifts: number; late: number }> = {};
@@ -209,14 +216,12 @@ export async function getMonthlySummary(month?: string) {
     shifts += 1;
   }
 
-  const { data: sales, error: salesError } = await readAll(supabase.from("daily_sales")
-    .select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", from).lte("sale_date", to).order("id"));
+  const { data: sales, error: salesError } = salesRes;
   if (salesError) return { ok: false, error: salesError.message };
   let monthSales = 0;
   for (const s of sales || []) monthSales += Number(s.amount) || 0;
 
-  const { data: purch, error: purchErr } = await readAll(supabase.from("inventory_purchases")
-    .select("cost").eq("branch_id", branchId).gte("purchase_date", from).lte("purchase_date", to).order("id"));
+  const { data: purch, error: purchErr } = purchRes;
   if (purchErr) return { ok: false, error: purchErr.message };
   const spend = spendFigure(purch || []); // deliveries without a cost are missing, not €0
   const foodSpend = spend.value;

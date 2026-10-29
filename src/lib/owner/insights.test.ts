@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { weeklyTrend, forecastWeek, healthPart, healthScore } from "./insights";
+import { weeklyTrend, forecastWeek, healthPart, healthScore, setupSteps, rosterEntryMinutes } from "./insights";
 
 describe("owner insights", () => {
   it("weekly trend: labour %, SPLH, and gaps stay null", () => {
@@ -25,6 +25,8 @@ describe("owner insights", () => {
     expect(f).toMatchObject({ sales: 1100, cost: 120, labourPct: 10.9, missingWages: 0 });
     const g = forecastWeek(["2026-10-27"], hist, [{ date: "2026-10-27", user_id: "x", mins: 60 }], {});
     expect(g).toMatchObject({ sales: null, cost: null, labourPct: null, missingWages: 1 });
+    // empty roster: whole-week expectation once every day has history
+    expect(forecastWeek(["2026-10-26"], hist, [], {}).sales).toBe(1100);
   });
 
   it("health: mean of measurable parts", () => {
@@ -32,5 +34,22 @@ describe("owner insights", () => {
     expect(parts.map((p) => p.score)).toEqual([93, null, 100, 50]);
     expect(healthScore(parts)).toBe(81);
     expect(healthScore([healthPart("temps", 0, 0)])).toBeNull();
+  });
+
+  it("setup: done only when the data exists; wages need every working person", () => {
+    const empty = setupSteps({ staff: 4, staffWithoutWage: 4, hasTargets: false, fridges: 0, checklistTasks: 0, salesDays: 0, hasRoster: false });
+    expect(empty.filter((s) => s.done).length).toBe(0);
+    expect(empty[0]).toMatchObject({ key: "wages", missing: 4 });
+    const ready = setupSteps({ staff: 4, staffWithoutWage: 0, hasTargets: true, fridges: 2, checklistTasks: 5, salesDays: 3, hasRoster: true });
+    expect(ready.every((s) => s.done)).toBe(true);
+    expect(setupSteps({ staff: 0, staffWithoutWage: 0, hasTargets: true, fridges: 1, checklistTasks: 1, salesDays: 1, hasRoster: true })[0].done).toBe(false); // no staff yet
+  });
+
+  it("roster entry minutes: preset minus break, custom range, overnight, unknown", () => {
+    const times = new Map([["Kitchen|Morning", { team: "Kitchen", shift: "Morning", start: "08:00", end: "16:00", breakMins: 30 }]]);
+    expect(rosterEntryMinutes({ team: "Kitchen", shift: "Morning" }, times)).toBe(450);
+    expect(rosterEntryMinutes({ team: "Cashier", shift: "10:00–14:30" }, times)).toBe(270);
+    expect(rosterEntryMinutes({ team: "Cashier", shift: "22:00–06:00" }, times)).toBe(480);
+    expect(rosterEntryMinutes({ team: "Cashier", shift: "Evening" }, times)).toBeNull();
   });
 });

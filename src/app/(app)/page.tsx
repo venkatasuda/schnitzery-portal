@@ -10,7 +10,9 @@ import { getTargets, getDailyFlash, type Targets } from "@/lib/queries/targets";
 import { formatPct } from "@/lib/format";
 import OwnerCockpit from "@/components/dash/OwnerCockpit";
 import OwnerInsights, { type Insights } from "@/components/dash/OwnerInsights";
-import { getOwnerInsights } from "@/lib/queries/owner-insights";
+import { getOwnerInsights, getSetupProgress } from "@/lib/queries/owner-insights";
+import SetupCard from "@/components/dash/SetupCard";
+import type { SetupStep } from "@/lib/owner/insights";
 import { listMyDocuments } from "@/lib/queries/documents";
 import { getViewMode } from "@/lib/viewMode";
 import Link from "next/link";
@@ -66,9 +68,10 @@ export default async function HomePage() {
   let mTargets: Targets | null = null, mCanEditTargets = false;
   let mFlash: { yesterday: { date: string; sales: number | null; hours: number }; lastWeek: { date: string; sales: number | null; hours: number } } | null = null;
   let mInsights: Insights | null = null;
+  let mSetup: SetupStep[] | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
-  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
+  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
   let mWaste: { label: string; value: number }[] = [];
   let hqWaste: { label: string; value: number }[] = [];
 
@@ -81,12 +84,13 @@ export default async function HomePage() {
     if ((wRes as any).ok) hqWaste = ((wRes as any).rows || []).filter((r: any) => r.value > 0).map((r: any) => ({ label: r.name, value: r.value })).slice(0, 8);
   } else if (isManager) {
     const ownerView = isBranchOwner || hqBranchMode;
-    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes] = await Promise.all([
+    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes, sRes] = await Promise.all([
       getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6).catch(() => ({ ok: false })),
-      ownerView ? getTargets().catch(() => null) : null, ownerView ? getDailyFlash().catch(() => null) : null, ownerView ? getOwnerInsights().catch(() => null) : null,
+      ownerView ? getTargets().catch(() => null) : null, ownerView ? getDailyFlash().catch(() => null) : null, ownerView ? getOwnerInsights().catch(() => null) : null, ownerView ? getSetupProgress().catch(() => null) : null,
     ]);
     if (tRes && tRes.ok) { mTargets = tRes.targets; mCanEditTargets = tRes.canEdit; }
     if (iRes && iRes.ok) mInsights = iRes;
+    if (sRes && sRes.ok) mSetup = sRes.steps;
     if (fRes && fRes.ok) mFlash = { yesterday: fRes.yesterday, lastWeek: fRes.lastWeek };
     if ((cRes as any).ok) mCost = cRes as any;
     if ((wRes as any).ok) mWaste = ((wRes as any).weeks || []).map((w: any) => ({ label: String(w.weekStart).slice(5), value: w.wasteValue }));
@@ -153,6 +157,7 @@ export default async function HomePage() {
         <OwnerDash t={t} data={org} waste={hqWaste} />
       ) : isManager ? (
         <>
+          {mSetup && <SetupCard steps={mSetup} t={t} />}
           {(isBranchOwner || hqBranchMode) && <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={mFlash} t={t} locale={locale} />}
           {mInsights && <OwnerInsights data={mInsights} labourTarget={mTargets?.labourPct ?? null} t={t} locale={locale} />}
           <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} t={t} locale={locale} />
@@ -212,7 +217,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
   live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
 }) {
   const missing = sched ? Math.max(0, sched.staffCount - sched.submissionCount) : 0;
   const alerts = [

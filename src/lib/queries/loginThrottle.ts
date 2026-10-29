@@ -177,7 +177,7 @@ async function finishLogin(): Promise<{ ok: boolean }> {
   }
 }
 
-type SignInResult = { ok: true } | { ok: false; code: "locked" | "throttled" | "invalid" | "bad"; retryAfter?: number };
+type SignInResult = { ok: true } | { ok: false; code: "locked" | "throttled" | "invalid" | "bad" | "unavailable"; retryAfter?: number };
 
 // The one public entry point for password sign-in. Runs the throttle, the sign-in and
 // the bookkeeping on the server, so none of the steps can be skipped from a browser.
@@ -188,6 +188,12 @@ export async function signIn(email: unknown, password: unknown): Promise<SignInR
   if (gate.blocked) return { ok: false, code: gate.locked ? "locked" : "throttled", retryAfter: gate.retryAfter };
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email: norm(email), password });
+  // Only a real "wrong credentials" answer counts as a failed attempt. An outage or network
+  // error must not say "wrong password" (people retry and lock themselves out) nor count.
+  if (error && !(error.status === 400 || error.code === "invalid_credentials" || error.code === "user_banned")) {
+    Sentry.captureException(error, { tags: { area: "loginThrottle", op: "signIn" } });
+    return { ok: false, code: "unavailable" };
+  }
   if (error || !data.user) {
     await recordFail(email);
     return { ok: false, code: "invalid" }; // never echo Supabase's message (no account probing)
