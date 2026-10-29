@@ -88,7 +88,7 @@ export async function getLaborSummary() {
     monthSales: sales?.length ? Math.round(monthSales) : null, // no sales entered = unknown ("—"), not €0
     recordedSalesDays: sales?.length || 0,
     laborPct,
-    invSpend: Math.round(monthInvSpend),
+    invSpend: (purch || []).length ? Math.round(monthInvSpend) : null, // no deliveries entered = unknown ("—"), not €0
     foodCostPct,
     staffCount: staffCount || 0,
     withWage,
