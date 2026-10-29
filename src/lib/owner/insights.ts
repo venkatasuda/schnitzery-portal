@@ -54,9 +54,11 @@ export function forecastWeek(dates: string[], history: Sale[], planned: PlannedS
     }
     return { date, forecast: same.length ? Math.round(sumSales(same) / same.length) : null, hours: r1(p.reduce((a, x) => a + x.mins, 0) / 60), cost: cost == null ? null : Math.round(cost) };
   });
-  // Sales forecast is complete when every day with planned hours has a forecast.
+  // Sales forecast is complete when every day with planned hours has a forecast. With
+  // nothing planned yet, show the whole week's expectation (helps plan the first shifts).
   const open = days.filter((d) => d.hours > 0);
-  const salesKnown = open.length > 0 && open.every((d) => d.forecast != null);
+  const basis = open.length ? open : days;
+  const salesKnown = basis.every((d) => d.forecast != null);
   const sales = salesKnown ? days.reduce((a, d) => a + (d.forecast ?? 0), 0) : null;
   const cost = days.every((d) => d.cost != null) ? days.reduce((a, d) => a + (d.cost ?? 0), 0) : null;
   return {
@@ -77,3 +79,33 @@ export function healthScore(parts: HealthPart[]): number | null {
   return s.length ? Math.round(s.reduce((a, b) => a + b, 0) / s.length) : null;
 }
 export const healthTone = (n: number | null) => (n == null ? "" : n >= 90 ? "good" : n >= 75 ? "warn" : "bad");
+
+// Branch setup checklist (owner home): the routine data the owner figures depend on.
+// The card disappears once every step is done.
+export type SetupInput = { staff: number; staffWithoutWage: number; hasTargets: boolean; fridges: number; checklistTasks: number; salesDays: number; hasRoster: boolean };
+export type SetupStep = { key: "wages" | "targets" | "fridges" | "checklists" | "sales" | "roster"; done: boolean; href: string; missing?: number };
+export function setupSteps(x: SetupInput): SetupStep[] {
+  return [
+    { key: "wages", done: x.staff > 0 && x.staffWithoutWage === 0, href: "/labor", missing: x.staffWithoutWage || undefined },
+    { key: "targets", done: x.hasTargets, href: "/targets" },
+    { key: "fridges", done: x.fridges > 0, href: "/temp" },
+    { key: "checklists", done: x.checklistTasks > 0, href: "/checklist" },
+    { key: "sales", done: x.salesDays > 0, href: "/labor" },
+    { key: "roster", done: x.hasRoster, href: "/schedule-hub" },
+  ];
+}
+
+// Paid minutes of one roster entry: a preset shift (team|shift → times from the branch's
+// shift catalogue, minus its break) or a custom "HH:MM–HH:MM" range. Unknown → null.
+export type ShiftTimeDef = { team: string; shift: string; start: string; end: string; breakMins: number };
+const hm = (s: string) => { const m = /^(\d{1,2}):(\d{2})$/.exec(s.trim()); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+export function rosterEntryMinutes(e: { team?: string; shift?: string }, times: Map<string, ShiftTimeDef>): number | null {
+  const preset = times.get(`${e.team}|${e.shift}`);
+  const custom = !preset && e.shift ? e.shift.split(/[–\-—]/) : null;
+  const start = preset ? hm(preset.start) : custom?.length === 2 ? hm(custom[0]) : null;
+  const end = preset ? hm(preset.end) : custom?.length === 2 ? hm(custom[1]) : null;
+  if (start == null || end == null) return null;
+  let mins = end - start;
+  if (mins <= 0) mins += 1440; // overnight
+  return Math.max(0, mins - (preset?.breakMins ?? 0));
+}

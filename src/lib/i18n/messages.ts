@@ -147,6 +147,13 @@ export const messages = {
       setTargets: "Set targets", editTargets: "Edit targets", flash: "Yesterday", flashSales: "Sales", flashHours: "Hours worked", vsLastWeek: "vs. same day last week", enterSales: "Enter sales",
       forgotten: "{n} shift(s) still open — forgotten clock-out?", suspect: "{n} shift(s) over 16 h — correct the clock-out before approving", salesMissingAlert: "Sales missing for {n} day(s) this month",
     },
+    rosterLabour: { title: "Labour cost of this roster", noHistory: "No sales in the last 4 weeks to forecast from" },
+    setup: {
+      title: "Get your branch ready", progress: "{done} of {total} done", hint: "Your figures on this page are only as good as this data.",
+      wages: "Add an hourly wage for everyone who works", targets: "Set your targets", fridges: "Add your fridges and freezers",
+      checklists: "Create opening and closing checklists", sales: "Enter or import daily sales", roster: "Plan this or next week's roster",
+      missing: "{n} missing", isDone: "done", isOpen: "to do",
+    },
     insights: {
       nextWeek: "Next week (forecast)", roster: "Roster", weekOf: "Week of {d}", noRoster: "No roster for next week yet. Plan it to see the expected labour cost.",
       expectedSales: "Expected sales", plannedHours: "Planned hours", plannedCost: "Planned labour cost", projectedLabour: "Expected labour %", day: "Day", labourShort: "Labour %",
@@ -1012,6 +1019,13 @@ export const messages = {
       monthToDate: "Monat bis heute", salesMissing: "{n} Tag(e) ohne Umsatz", incomplete: "Angaben unvollständig", noTarget: "Kein Ziel gesetzt", target: "Ziel {n} %",
       setTargets: "Ziele festlegen", editTargets: "Ziele ändern", flash: "Gestern", flashSales: "Umsatz", flashHours: "Gearbeitete Stunden", vsLastWeek: "ggü. gleichem Tag letzte Woche", enterSales: "Umsatz eintragen",
       forgotten: "{n} Schicht(en) noch offen – Ausstempeln vergessen?", suspect: "{n} Schicht(en) über 16 Std. – Ausstempelzeit vor dem Genehmigen korrigieren", salesMissingAlert: "Umsatz fehlt für {n} Tag(e) in diesem Monat",
+    },
+    rosterLabour: { title: "Personalkosten dieses Dienstplans", noHistory: "Keine Umsätze der letzten 4 Wochen für eine Prognose" },
+    setup: {
+      title: "Filiale startklar machen", progress: "{done} von {total} erledigt", hint: "Die Zahlen auf dieser Seite sind nur so gut wie diese Angaben.",
+      wages: "Stundenlohn für alle Mitarbeitenden eintragen", targets: "Ziele festlegen", fridges: "Kühlschränke und Tiefkühler anlegen",
+      checklists: "Öffnungs- und Schließ-Checklisten anlegen", sales: "Tagesumsatz eintragen oder importieren", roster: "Dienstplan für diese oder nächste Woche planen",
+      missing: "{n} fehlen", isDone: "erledigt", isOpen: "offen",
     },
     insights: {
       nextWeek: "Nächste Woche (Prognose)", roster: "Dienstplan", weekOf: "Woche ab {d}", noRoster: "Noch kein Dienstplan für nächste Woche. Plane ihn, um die erwarteten Personalkosten zu sehen.",

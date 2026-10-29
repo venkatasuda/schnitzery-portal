@@ -23,7 +23,7 @@ export default function LoginForm() {
     const res = await signIn(email, password).catch(() => null);
     if (!res || !res.ok) {
       setLoading(false);
-      setError(!res ? t("login.failed")
+      setError(!res || res.code === "unavailable" ? t("login.failed")
         : res.code === "locked" ? t("login.locked")
         : res.code === "throttled" ? t("login.tooManyAttempts", { min: Math.ceil((res.retryAfter || 60) / 60) })
         : t("login.invalid"));

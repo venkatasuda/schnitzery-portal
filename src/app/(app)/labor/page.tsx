@@ -95,7 +95,7 @@ export default function LaborPage() {
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: 22, marginTop: 8, fontSize: 13, color: "var(--gray)" }}>
             <span>{t("lab.labor")} <b className="u-text">{sum?.missingWageStaff ? "—" : eur(sum?.laborCost || 0)}</b></span>
-            <span>{t("lab.sales")} <b className="u-text">{sum?.recordedSalesDays ? eur(sum.monthSales) : "—"}</b></span>
+            <span>{t("lab.sales")} <b className="u-text">{sum?.recordedSalesDays ? eur(sum.monthSales ?? 0) : "—"}</b></span>
           </div>
           {pct == null && !sum?.missingWageStaff && <div className="ui-note">{t("lab.enterToCalc")}</div>}
           {!!sum?.missingWageStaff && <p className="tone-warn" role="status">{t("lab.missingWageCost")}</p>}
