@@ -1,6 +1,7 @@
 "use client";
 
 import { serverText } from "@/lib/i18n/serverMessages";
+import { formatEur } from "@/lib/format";
 import { berlinToday, fmtDay, fmtMonthDay } from "@/lib/time/berlinDate";
 import { inventoryKey } from "@/lib/inventory/identity";
 
@@ -245,7 +246,7 @@ export default function InventoryPage() {
       && `${p.product} ${p.category}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
       && (statusFilter === "all" || statusFilter === status);
   });
-  const eur = (n: number | null | undefined) => n == null || !Number.isFinite(n) ? "—" : `€${Math.round(n).toLocaleString()}`;
+  const eur = (n: number | null | undefined) => formatEur(n, locale, 2);
   // Release D: an incomplete figure shows only its known part, marked as a lower bound.
   const atLeast = (complete: boolean | undefined, n: number | null | undefined) => (n != null && complete === false ? "≥ " : "") + eur(n);
   const area: InventoryArea = tab === "overview" ? "overview" : ["count", "catalog"].includes(tab) ? "stock" : ["forecast", "deliveries"].includes(tab) ? "purchasing" : ["movements", "history"].includes(tab) ? "movements" : "reports";

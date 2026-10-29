@@ -1,10 +1,10 @@
 // Money in the app's language, not the device's: "1.234,50 €" in German, "€1,234.50" in English.
-// digits: "auto" (0–2 decimals), 0 (whole euros) or 2 (always cents).
-export function formatEur(n: number | null | undefined, locale: string, digits: "auto" | 0 | 2 = "auto"): string {
+// digits: "auto" (0–2 decimals), 0 (whole euros), 2 (cents), or 4 (unit prices).
+export function formatEur(n: number | null | undefined, locale: string, digits: "auto" | 0 | 2 | 4 = "auto"): string {
   if (n == null || !Number.isFinite(n)) return "—";
   // "auto": whole euros without cents, otherwise always two decimals (never "2.869,4 €").
   const cents = Math.round(n * 100) % 100 !== 0;
-  const min = digits === 2 || (digits === "auto" && cents) ? 2 : 0, max = digits === 0 ? 0 : 2;
+  const min = digits === 2 || digits === 4 || (digits === "auto" && cents) ? 2 : 0, max = digits === 4 ? 4 : digits === 0 ? 0 : 2;
   return new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: min, maximumFractionDigits: max }).format(n);
 }
 
