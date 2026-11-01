@@ -18,16 +18,17 @@ export default function TipPool() {
   const [data, setData] = useState<Week | null>(null);
   const [cash, setCash] = useState(""), [card, setCard] = useState("");
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState("");
   const eur = (n: number) => formatEur(n, locale, 2);
   const day = (d: string) => new Date(`${d.slice(0, 10)}T12:00:00Z`).toLocaleDateString(locale === "de" ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin" });
 
   const load = useCallback(async () => {
-    setData(null);
+    setData(null); setFailed("");
     try {
       const r = await getTipWeek(week);
       if (r.ok) { setData(r); setCash(r.entered ? String(r.cash) : ""); setCard(r.entered ? String(r.card) : ""); }
-      else toast(serverText(r.error, locale), "error");
-    } catch { toast(t("staff.networkErr"), "error"); }
+      else setFailed(serverText(r.error, locale)); // shown in the card, never an endless "Loading…"
+    } catch { setFailed(t("staff.networkErr")); }
   }, [week, locale, t]);
   useEffect(() => { load(); }, [load]);
 
@@ -56,7 +57,8 @@ export default function TipPool() {
         <label className="ui-muted">{t("tips.card")}<input className="form-input ui-input-sm" type="number" inputMode="decimal" min="0" step="0.01" value={card} disabled={busy || !data} onChange={(e) => setCard(e.target.value)} style={{ display: "block", width: 110 }} /></label>
         <button className="btn-gold" onClick={save} disabled={busy || !data}>{busy ? t("common.saving") : t("tips.save")}</button>
       </div>
-      {!data ? <p className="ui-sub">{t("common.loading")}</p> : !data.shares.length ? <p className="ui-sub">{t("tips.noHours")}</p> : (
+      {failed ? <p role="alert" className="tone-danger t-sm">{failed} <button className="btn-secondary ui-btn-sm" onClick={load}>{t("business.retry")}</button></p>
+        : !data ? <p className="ui-sub">{t("common.loading")}</p> : !data.shares.length ? <p className="ui-sub">{t("tips.noHours")}</p> : (
         <>
           {data.unapproved > 0 && <p className="tone-warn t-sm">{t("tips.unapproved", { n: data.unapproved })}</p>}
           <table className="data-table mt-2">
