@@ -44,3 +44,7 @@ Recommended order: 1 → 5 → 6 (quick, visible) → 2 → 3 → 4.
   (`src/lib/pay/datev.ts`). Personalnummer = numeric employee code. New "Sunday hours"
   (Sunday, not holiday, § 3b EStG) for the SFN Lohnart. Not yet: DATEV Lohn und Gehalt
   format, absences (Urlaub/Krank) as days, 24/31 Dec and 1 May special rates.
+- #3 done (owner decision: weekly, by hours, everyone equal): "Tip pool" card on the labour
+  page. Cash + card per Mon–Sun week (`tip_pools`, migration 20261101100000, managers only),
+  split by paid minutes of completed shifts, largest-remainder cents (`src/lib/pay/tips.ts`).
+  Not yet: staff seeing their own share, tips in the DATEV file.

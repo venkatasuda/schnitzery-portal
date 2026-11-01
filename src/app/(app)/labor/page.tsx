@@ -9,6 +9,7 @@ import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getLaborSummary, setDailySales, getRecentSales, getStaffWages, setStaffWage, setWageForMissing, raiseToMinimumWage } from "@/lib/queries/labor";
 import SalesImport from "@/components/SalesImport";
+import TipPool from "@/components/TipPool";
 import { toast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
 import { wageIssue, minimumWageOn } from "@/lib/pay/legal";
@@ -160,6 +161,8 @@ export default function LaborPage() {
           ))}
         </div>
       )}
+
+      <TipPool />
 
       {/* staff wages */}
       <div className="section-label">{t("lab.staffWages")}</div>

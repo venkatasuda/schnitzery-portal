@@ -686,6 +686,12 @@ export const messages = {
       today: "Today", present: "Present", colCost: "Cost", laborByTeam: "Labor cost by team", colTeam: "Team", shiftStats: "Shift analytics", mostWorked: "Most worked", topOvertime: "Most overtime", swaps: "Shift swaps", missed: "Missed shifts", staffPerf: "Staff performance", staffPerfHint: "Lowest attendance shown first", noStaffData: "No staff activity in this period.",
       colEmployee: "Employee", colAtt: "Att %", colLate: "Late", colHours: "Hours", absShort: "abs", avgShort: "ø",
     },
+    tips: {
+      title: "Tip pool (Trinkgeld)", hint: "Enter the week's tips once. Everyone who worked shares by hours worked.",
+      week: "{from} – {to}", prev: "Previous week", next: "Next week", cash: "Cash tips (€)", card: "Card tips (€)", save: "Save tips", saved: "Tips saved",
+      hours: "Hours", share: "Share", noHours: "No completed shifts this week.", unapproved: "{n} shift(s) not approved yet — shares can still change.",
+      taxNote: "Tips from guests passed on to staff are usually tax-free (§ 3 Nr. 51 EStG). Keep them out of sales; check card tips with your tax advisor.",
+    },
     datev: {
       title: "DATEV export for your tax advisor", hint: "LODAS file with hours per person and Lohnart, from the approved month. Your tax advisor gives you the numbers.",
       berater: "Beraternummer", mandant: "Mandantennummer", laHint: "Lohnart numbers from your tax advisor. Leave a field empty to skip it. Personalnummer = the employee code in Staff (digits only).",
@@ -1569,6 +1575,12 @@ export const messages = {
       trendTitle: "Arbeitsstunden pro Tag", teamTitle: "Stunden nach Team", otTrend: "Überstunden-Trend (6 Monate)",
       today: "Heute", present: "Anwesend", colCost: "Kosten", laborByTeam: "Personalkosten nach Team", colTeam: "Team", shiftStats: "Schicht-Analyse", mostWorked: "Meiste Stunden", topOvertime: "Meiste Überstunden", swaps: "Schichttausch", missed: "Verpasste Schichten", staffPerf: "Mitarbeiterleistung", staffPerfHint: "Niedrigste Anwesenheit zuerst", noStaffData: "Keine Mitarbeiteraktivität in diesem Zeitraum.",
       colEmployee: "Mitarbeiter", colAtt: "Anw. %", colLate: "Verspätet", colHours: "Stunden", absShort: "Fehlt", avgShort: "ø",
+    },
+    tips: {
+      title: "Trinkgeld-Pool", hint: "Trinkgeld der Woche einmal eintragen. Alle, die gearbeitet haben, teilen nach Arbeitsstunden.",
+      week: "{from} – {to}", prev: "Vorige Woche", next: "Nächste Woche", cash: "Bar-Trinkgeld (€)", card: "Karten-Trinkgeld (€)", save: "Trinkgeld speichern", saved: "Trinkgeld gespeichert",
+      hours: "Stunden", share: "Anteil", noHours: "Keine abgeschlossenen Schichten in dieser Woche.", unapproved: "{n} Schicht(en) noch nicht genehmigt — Anteile können sich noch ändern.",
+      taxNote: "Trinkgeld von Gästen, das an Mitarbeitende weitergegeben wird, ist meist steuerfrei (§ 3 Nr. 51 EStG). Nicht in den Umsatz buchen; Karten-Trinkgeld mit dem Steuerbüro klären.",
     },
     datev: {
       title: "DATEV-Export für Ihr Steuerbüro", hint: "LODAS-Datei mit Stunden je Person und Lohnart aus dem freigegebenen Monat. Die Nummern bekommen Sie vom Steuerbüro.",

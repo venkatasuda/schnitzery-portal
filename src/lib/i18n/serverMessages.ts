@@ -4,6 +4,7 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "Enter valid tip amounts.": "Bitte gültige Trinkgeldbeträge eingeben.",
   "Beraternummer: 4–7 digits.": "Beraternummer: 4–7 Ziffern.",
   "Invalid DATEV settings.": "Ungültige DATEV-Einstellungen.",
   "Lohnart for regular hours is required.": "Die Lohnart für normale Stunden ist erforderlich.",
