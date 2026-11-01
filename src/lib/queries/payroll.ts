@@ -7,6 +7,7 @@ import { berlinMonth, monthRange } from "@/lib/time/berlinDate";
 import { classifyShift, shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { bwHolidays } from "@/lib/time/holidays";
+import { DATEV_KINDS, datevSettingsError, type DatevSettings } from "@/lib/pay/datev";
 
 // ============================================================================
 // PAYROLL ENGINE — per-employee monthly hour breakdown for a branch.
@@ -58,6 +59,31 @@ export async function setPayrollSettings(input: { otDailyHours: number; nightSta
     night_end: input.nightEnd || "06:00",
     updated_by: name ?? "manager", updated_at: new Date().toISOString(),
   }, { onConflict: "branch_id" });
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const };
+}
+
+// ── DATEV export settings (Beraternummer, Mandantennummer, Lohnarten) ───────
+const emptyDatev = (): DatevSettings => ({ beraterNr: "", mandantNr: "", lohnarten: {} });
+export async function getDatevSettings() {
+  const { supabase, branchId, role } = await getMgr();
+  if (!branchId || !MGR.includes(role ?? "")) return { ok: false as const, error: "Managers only.", settings: emptyDatev() };
+  const { data, error } = await supabase.from("payroll_settings").select("datev").eq("branch_id", branchId).maybeSingle();
+  if (error) return { ok: false as const, error: error.message, settings: emptyDatev() };
+  const d = (data?.datev || {}) as Partial<DatevSettings>;
+  const lohnarten: DatevSettings["lohnarten"] = {};
+  for (const k of DATEV_KINDS) { const v = d.lohnarten?.[k]; if (typeof v === "string") lohnarten[k] = v; }
+  return { ok: true as const, settings: { beraterNr: String(d.beraterNr ?? ""), mandantNr: String(d.mandantNr ?? ""), lohnarten } };
+}
+export async function setDatevSettings(input: DatevSettings) {
+  const { supabase, role, branchId, name } = await getMgr();
+  if (!branchId || !MGR.includes(role ?? "")) return { ok: false as const, error: "Managers only." };
+  if (!input || typeof input !== "object") return { ok: false as const, error: "Invalid DATEV settings." };
+  const clean: DatevSettings = { beraterNr: String(input.beraterNr ?? "").trim(), mandantNr: String(input.mandantNr ?? "").trim(), lohnarten: {} };
+  for (const k of DATEV_KINDS) { const v = String(input.lohnarten?.[k] ?? "").trim(); if (v) clean.lohnarten[k] = v; }
+  const err = datevSettingsError(clean);
+  if (err) return { ok: false as const, error: err };
+  const { error } = await supabase.from("payroll_settings").upsert({ branch_id: branchId, datev: clean, updated_by: name ?? "manager", updated_at: new Date().toISOString() }, { onConflict: "branch_id" });
   if (error) return { ok: false as const, error: error.message };
   return { ok: true as const };
 }
@@ -143,16 +169,16 @@ export async function getPayrollSummary(month?: string, approvalId?: string) {
   const monthClosed = ym < berlinMonth();
   const readiness = { canApprove: run.status === "draft" && logs.length > 0 && monthClosed && !unapprovedShifts && !missingWages && !invalidShifts, unapprovedShifts, missingWages, invalidShifts, monthClosed };
 
-  type Acc = { gross: number; brk: number; weekend: number; holiday: number; night: number; shifts: number; perDayPaid: Record<string, number>; rates: Record<string, { wage: number; paidMin: number }> };
+  type Acc = { gross: number; brk: number; weekend: number; holiday: number; night: number; sunday: number; shifts: number; perDayPaid: Record<string, number>; rates: Record<string, { wage: number; paidMin: number }> };
   const acc: Record<string, Acc> = {};
   for (const l of logs || []) {
-    if (!acc[l.user_id]) acc[l.user_id] = { gross: 0, brk: 0, weekend: 0, holiday: 0, night: 0, shifts: 0, perDayPaid: {}, rates: {} };
+    if (!acc[l.user_id]) acc[l.user_id] = { gross: 0, brk: 0, weekend: 0, holiday: 0, night: 0, sunday: 0, shifts: 0, perDayPaid: {}, rates: {} };
     acc[l.user_id].shifts += 1;
     const { grossMin: gross, breakMin: brk, paidMin: paid } = shiftMinutes(l);
     if (gross <= 0) continue;
     const c = classifyShift(l.clock_in, l.clock_out, holidays, nStart, nEnd);
     const a = acc[l.user_id];
-    a.gross += gross; a.brk += brk; a.weekend += c.weekendMin; a.holiday += c.holidayMin; a.night += c.nightMin;
+    a.gross += gross; a.brk += brk; a.weekend += c.weekendMin; a.holiday += c.holidayMin; a.night += c.nightMin; a.sunday += c.sundayMin;
     a.perDayPaid[l.work_date] = (a.perDayPaid[l.work_date] || 0) + paid;
     const wage = payWages[`${l.user_id}|${l.work_date}`];
     if (wage != null && Number.isFinite(wage) && wage >= 0) {
@@ -174,7 +200,7 @@ export async function getPayrollSummary(month?: string, approvalId?: string) {
     }
     const paidMin = regular + overtime;
     minuteTotals.regularH += regular; minuteTotals.overtimeH += overtime;
-    minuteTotals.weekendH += a.weekend; minuteTotals.holidayH += a.holiday; minuteTotals.nightH += a.night;
+    minuteTotals.weekendH += a.weekend; minuteTotals.holidayH += a.holiday; minuteTotals.nightH += a.night; minuteTotals.sundayH += a.sunday;
     minuteTotals.breakH += a.brk; minuteTotals.paidH += paidMin; minuteTotals.unpaidH += a.brk;
     const rates = Object.values(a.rates);
     const wage = rates.length === 1 ? rates[0].wage : null;
@@ -184,7 +210,7 @@ export async function getPayrollSummary(month?: string, approvalId?: string) {
     return {
       userId: s.id, code: s.employee_code || "", name: s.full_name, team: s.team || "", shifts: a.shifts,
       regularH: h1(regular), overtimeH: h1(overtime),
-      weekendH: h1(a.weekend), holidayH: h1(a.holiday), nightH: h1(a.night),
+      weekendH: h1(a.weekend), holidayH: h1(a.holiday), nightH: h1(a.night), sundayH: h1(a.sunday),
       breakH: h1(a.brk), paidH: h1(paidMin), unpaidH: h1(a.brk),
       wage, rates, gross, invalidShifts: invalidForEmployee,
     };
@@ -197,5 +223,5 @@ export async function getPayrollSummary(month?: string, approvalId?: string) {
 }
 
 function emptyTotals() {
-  return { regularH: 0, overtimeH: 0, weekendH: 0, holidayH: 0, nightH: 0, breakH: 0, paidH: 0, unpaidH: 0, gross: 0 };
+  return { regularH: 0, overtimeH: 0, weekendH: 0, holidayH: 0, nightH: 0, sundayH: 0, breakH: 0, paidH: 0, unpaidH: 0, gross: 0 };
 }

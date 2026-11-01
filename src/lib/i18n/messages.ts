@@ -686,6 +686,14 @@ export const messages = {
       today: "Today", present: "Present", colCost: "Cost", laborByTeam: "Labor cost by team", colTeam: "Team", shiftStats: "Shift analytics", mostWorked: "Most worked", topOvertime: "Most overtime", swaps: "Shift swaps", missed: "Missed shifts", staffPerf: "Staff performance", staffPerfHint: "Lowest attendance shown first", noStaffData: "No staff activity in this period.",
       colEmployee: "Employee", colAtt: "Att %", colLate: "Late", colHours: "Hours", absShort: "abs", avgShort: "ø",
     },
+    datev: {
+      title: "DATEV export for your tax advisor", hint: "LODAS file with hours per person and Lohnart, from the approved month. Your tax advisor gives you the numbers.",
+      berater: "Beraternummer", mandant: "Mandantennummer", laHint: "Lohnart numbers from your tax advisor. Leave a field empty to skip it. Personalnummer = the employee code in Staff (digits only).",
+      la_regular: "Lohnart: hours", la_overtime: "Lohnart: overtime", la_night: "Lohnart: night", la_sunday: "Lohnart: Sunday", la_holiday: "Lohnart: holiday",
+      saved: "DATEV settings saved", download: "Download DATEV LODAS file", edit: "Change numbers", numbers: "Berater {b} · Mandant {m}",
+      approveFirst: "Approve the month first", missingPnr: "Not in the file — no numeric Personalnummer (employee code): {names}",
+      notInSnapshot: "This month was approved before Sunday hours were recorded; Sunday hours are not in the file. Reopen and approve again to include them.",
+    },
     pay: {
       title: "Payroll", subtitle: "Monthly hours, broken down and ready to export",
       month: "Month", rules: "Rules", rulesHint: "How this branch splits hours.",
@@ -1561,6 +1569,14 @@ export const messages = {
       trendTitle: "Arbeitsstunden pro Tag", teamTitle: "Stunden nach Team", otTrend: "Überstunden-Trend (6 Monate)",
       today: "Heute", present: "Anwesend", colCost: "Kosten", laborByTeam: "Personalkosten nach Team", colTeam: "Team", shiftStats: "Schicht-Analyse", mostWorked: "Meiste Stunden", topOvertime: "Meiste Überstunden", swaps: "Schichttausch", missed: "Verpasste Schichten", staffPerf: "Mitarbeiterleistung", staffPerfHint: "Niedrigste Anwesenheit zuerst", noStaffData: "Keine Mitarbeiteraktivität in diesem Zeitraum.",
       colEmployee: "Mitarbeiter", colAtt: "Anw. %", colLate: "Verspätet", colHours: "Stunden", absShort: "Fehlt", avgShort: "ø",
+    },
+    datev: {
+      title: "DATEV-Export für Ihr Steuerbüro", hint: "LODAS-Datei mit Stunden je Person und Lohnart aus dem freigegebenen Monat. Die Nummern bekommen Sie vom Steuerbüro.",
+      berater: "Beraternummer", mandant: "Mandantennummer", laHint: "Lohnarten vom Steuerbüro. Leeres Feld = wird nicht exportiert. Personalnummer = Mitarbeitercode unter Personal (nur Ziffern).",
+      la_regular: "Lohnart: Stunden", la_overtime: "Lohnart: Überstunden", la_night: "Lohnart: Nacht", la_sunday: "Lohnart: Sonntag", la_holiday: "Lohnart: Feiertag",
+      saved: "DATEV-Einstellungen gespeichert", download: "DATEV-LODAS-Datei herunterladen", edit: "Nummern ändern", numbers: "Berater {b} · Mandant {m}",
+      approveFirst: "Erst den Monat freigeben", missingPnr: "Nicht in der Datei — keine numerische Personalnummer (Mitarbeitercode): {names}",
+      notInSnapshot: "Dieser Monat wurde freigegeben, bevor Sonntagsstunden erfasst wurden; sie fehlen in der Datei. Wieder öffnen und neu freigeben, um sie aufzunehmen.",
     },
     pay: {
       title: "Lohnabrechnung", subtitle: "Monatsstunden, aufgeschlüsselt und exportbereit",

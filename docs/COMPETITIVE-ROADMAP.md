@@ -38,3 +38,9 @@ Recommended order: 1 → 5 → 6 (quick, visible) → 2 → 3 → 4.
   in payroll and leave). A holiday is forecast from past Sundays/holidays; past holidays no
   longer skew normal weekdays. Still open: school holidays (needs a yearly table) and
   same-week-last-year (needs 12 months of sales history first).
+- #2 done (LODAS): Payroll export page → "DATEV export" card. Beraternummer, Mandantennummer
+  and Lohnarten per branch (`payroll_settings.datev`, migration 20261101090000); hours per
+  person and Lohnart (Bearbeitungsschlüssel 1) from the approved month only
+  (`src/lib/pay/datev.ts`). Personalnummer = numeric employee code. New "Sunday hours"
+  (Sunday, not holiday, § 3b EStG) for the SFN Lohnart. Not yet: DATEV Lohn und Gehalt
+  format, absences (Urlaub/Krank) as days, 24/31 Dec and 1 May special rates.

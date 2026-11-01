@@ -12,6 +12,7 @@ import { getPayrollSummary, setPayrollSettings, setPayrollApproval } from "@/lib
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Field, Stat, StatGrid } from "@/components/ui";
+import DatevExport from "@/components/DatevExport";
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "");
 const htmlText = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -210,6 +211,7 @@ export default function PayrollExportPage() {
             <button onClick={downloadExcel} className="btn-secondary">{t("pay.exportExcel")}</button>
             <button onClick={payrollReport} className="btn-secondary">{t("pay.exportReport")}</button>
           </div>
+          <DatevExport month={month} rows={rows} approved={run.status === "approved"} />
           <div className="ui-note">{t("pay.overlapNote")}</div>
           <div className="ui-note">{t("pay.ratesNote")}</div>
         </>

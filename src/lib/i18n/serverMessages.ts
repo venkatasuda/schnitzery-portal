@@ -4,6 +4,11 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "Beraternummer: 4–7 digits.": "Beraternummer: 4–7 Ziffern.",
+  "Invalid DATEV settings.": "Ungültige DATEV-Einstellungen.",
+  "Lohnart for regular hours is required.": "Die Lohnart für normale Stunden ist erforderlich.",
+  "Lohnart: 1–4 digits.": "Lohnart: 1–4 Ziffern.",
+  "Mandantennummer: 1–5 digits.": "Mandantennummer: 1–5 Ziffern.",
   "A manager correction with a reason is required.": "Eine Korrektur durch die Leitung mit Begründung ist erforderlich.",
   "A rejection reason is required.": "Bitte einen Ablehnungsgrund angeben.",
   "Already actioned. Refresh the transfer.": "Bereits bearbeitet. Bitte den Transfer neu laden.",

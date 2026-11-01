@@ -17,6 +17,10 @@ it("counts elapsed night minutes across Berlin clock changes", () => {
   expect(classifyShift("2026-03-28T23:00Z", "2026-03-29T05:00Z", new Set(), 22 * 60, 6 * 60).nightMin).toBe(300);
   expect(classifyShift("2026-10-24T22:00Z", "2026-10-25T06:00Z", new Set(), 22 * 60, 6 * 60).nightMin).toBe(420);
   expect(() => classifyShift("2026-01-01T10:00Z", "2026-01-01T11:00Z", new Set(), NaN, 360)).toThrow();
+  // Sunday hours for SFN: Sunday only (not Saturday); a Sunday holiday is holiday only
+  expect(classifyShift("2026-11-08T09:00Z", "2026-11-08T13:00Z", new Set(), 22 * 60, 6 * 60)).toMatchObject({ sundayMin: 240, weekendMin: 240 });
+  expect(classifyShift("2026-11-07T09:00Z", "2026-11-07T13:00Z", new Set(), 22 * 60, 6 * 60).sundayMin).toBe(0);
+  expect(classifyShift("2027-03-28T09:00Z", "2027-03-28T13:00Z", new Set(["2027-03-28"]), 22 * 60, 6 * 60)).toMatchObject({ sundayMin: 0, holidayMin: 240 });
 });
 
 it("rejects push endpoints outside known HTTPS push providers", () => {
