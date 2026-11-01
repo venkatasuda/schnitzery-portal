@@ -33,6 +33,6 @@ export async function saveInventoryRecipe(branch:string,id:string,name:string,po
  if(!uuid(branch)||!uuid(id)||typeof name!=="string"||!name.trim()||name.length>160||!Number.isFinite(portions)||portions<=0||portions>=1000000||!Number.isFinite(netPrice)||netPrice<0||netPrice>=1000000||!Array.isArray(lines)||!lines.length||lines.length>100||!lines.every(l=>l&&uuid(l.product_id)&&Number.isFinite(l.qty)&&l.qty>0&&typeof l.unit==="string"&&l.unit.trim().length>0&&l.unit.length<=30))return{ok:false as const,error:"invalid"};
  const ctx=await scope();if(!ctx||ctx.branch!==branch)return{ok:false as const,error:"access"};
  const {error}=await ctx.db.rpc("save_inventory_recipe",{p_branch:branch,p_id:id,p_name:name,p_portions:portions,p_net_price:netPrice,p_lines:lines,p_prices_net_confirmed:pricesNetConfirmed});
- if(error)return{ok:false as const,error:error.code==="40001"?"conflict":"save"};
+ if(error)return{ok:false as const,error:(error.code==="23505"||error.code==="40001")?"conflict":"save"};
  return{ok:true as const};
 }

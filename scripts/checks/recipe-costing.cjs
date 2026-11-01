@@ -11,6 +11,7 @@ const a='00000000-0000-0000-0000-000000000001',b='00000000-0000-0000-0000-000000
  create function public.accessible_branch_ids() returns setof uuid language sql security definer as $$select branch_id from public.users where id=auth.uid()$$;
  grant select on users,inventory_master to authenticated;`);
  await db.exec(fs.readFileSync('supabase/migrations/20261101074231_inventory_recipe_costing.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/20261101125825_inventory_recipe_retry_conflict.sql','utf8'));
  const login=async who=>db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${who}',false)`);
  const lines=JSON.stringify([{product_id:product,qty:500,unit:'g'}]);
  const save=async(branch=a,recipe=id,body=lines)=>db.query('select public.save_inventory_recipe($1,$2,$3,$4,$5,$6)',[branch,recipe,'Dish',2,10,body]);
@@ -19,7 +20,7 @@ const a='00000000-0000-0000-0000-000000000001',b='00000000-0000-0000-0000-000000
  await assert.rejects(save(a,id,JSON.stringify([{product_id:product,qty:1,unit:'l'}])),/Unsupported ingredient conversion/);
  await save();await save();
  let rows=await db.query('select * from public.inventory_recipe_versions');assert.equal(rows.rows.length,1);assert.equal(rows.rows[0].ingredients[0].qty,.5);assert.equal(rows.rows[0].created_by,manager);
- await assert.rejects(save(a,id,JSON.stringify([{product_id:product,qty:1,unit:'kg'}])),/Recipe command conflict/);
+ await assert.rejects(save(a,id,JSON.stringify([{product_id:product,qty:1,unit:'kg'}])),{code: '23505', message: 'Recipe command conflict'});
  await assert.rejects(db.exec(`update public.inventory_recipe_versions set net_price=0`),/permission denied/);
  await assert.rejects(db.exec(`delete from public.inventory_recipe_versions`),/permission denied/);
  await assert.rejects(db.exec(`insert into public.inventory_recipe_versions select * from public.inventory_recipe_versions`),/permission denied/);

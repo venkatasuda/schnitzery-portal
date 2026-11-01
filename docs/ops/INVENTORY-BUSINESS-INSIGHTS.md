@@ -26,7 +26,7 @@ Implementation date: 2026-11-01. Source implementation is local; no production m
 
 ## Release dependency
 
-Apply `supabase/migrations/20261101074231_inventory_recipe_costing.sql` in version order to staging first, then test save/retry/role denial through the real API and browser. The recipe page reports unavailability if its schema is absent. The insight report itself reads existing tables. Run the complete release checks and deploy the frontend only after staging acceptance. Do not claim the recipe workflow is production-ready based only on the isolated SQL suite.
+Apply the recipe migrations `20261101074231` and `20261101125825` in version order. Both are applied to isolated local staging; hosted staging/production application and authenticated browser acceptance remain outstanding. The recipe page reports unavailability if its schema is absent. The insight report itself reads existing tables. Run the complete release checks and deploy the frontend only after staging acceptance. Do not claim the recipe workflow is production-ready based only on the isolated SQL suite.
 
 ## Remaining scope from the larger proposal
 
@@ -39,3 +39,9 @@ The following were not implemented by this change and must not be represented as
 5. HQ inventory comparison using normalized branch coverage, demand forecasting with backtesting, overhead inputs and a complete profit/loss report. Existing branch dashboards are not proof of these new measures.
 
 The current result is a usable analysis and costing increment, not completion of the entire advanced inventory roadmap.
+
+## Local API acceptance — 2026-11-01
+
+- Real local Supabase Auth and Data API passed manager save, canonical 500 g to 0.5 kg, identical-request idempotency, changed-request conflict, immutable-write denial, incompatible-unit rejection, staff/cross-branch denial and brand-owner read access. Synthetic records were removed in cleanup.
+- Fixed a permanent reused-command conflict incorrectly reported as transaction rollback (40001 / HTTP 500). The forward migration returns 23505 / HTTP 409; the server action recognizes both codes during rollout. The isolated SQL regression asserts the exact new error code.
+- No production schema or frontend was changed by this acceptance pass. Full browser acceptance and the larger remaining scope above are still open.
