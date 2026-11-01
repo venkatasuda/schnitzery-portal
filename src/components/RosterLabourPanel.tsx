@@ -5,6 +5,7 @@ import { useLang } from "@/components/LanguageProvider";
 import { getRosterPlanning } from "@/lib/queries/owner-insights";
 import { forecastWeek, rosterEntryMinutes, type ShiftTimeDef, type PlannedShift } from "@/lib/owner/insights";
 import { formatEur, formatPct } from "@/lib/format";
+import { minijobOverCap } from "@/lib/pay/legal";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 type Entry = { user_id: string; team: string; shift: string };
@@ -42,7 +43,7 @@ export default function RosterLabourPanel({ weekStart, roster }: { weekStart: st
         if (mins == null) unknown++; else planned.push({ date: dates[i], user_id: e.user_id, mins });
       }
     });
-    return { ...forecastWeek(dates, plan.history, planned, plan.wagesKnown ? plan.wages : {}), unknown };
+    return { ...forecastWeek(dates, plan.history, planned, plan.wagesKnown ? plan.wages : {}), unknown, overCap: minijobOverCap(plan.minijobbers, planned) };
   }, [plan, roster, weekStart]);
 
   if (failed) return null; // planning aid only; the roster itself still works
@@ -65,6 +66,9 @@ export default function RosterLabourPanel({ weekStart, roster }: { weekStart: st
         <div><span>{t("insights.plannedCost")}</span><strong>{formatEur(result.cost, locale, 0)}</strong></div>
         <div><span>{t("insights.projectedLabour")}</span><strong className={`ins-pct${tone}`}>{formatPct(result.labourPct, locale)}</strong></div>
       </div>
+      {result.overCap.map((o) => (
+        <p key={`${o.id}${o.month}`} className="tone-danger t-sm">{t("rosterLabour.minijobOver", { name: o.name, eur: formatEur(o.earnings, locale, "auto"), cap: formatEur(o.cap, locale, 0) })}</p>
+      ))}
       <p className="ui-sub">{target != null ? t("cockpit.target", { n: target }) : t("cockpit.noTarget")}{notes.length ? ` · ${notes.join(" · ")}` : ""}</p>
     </div>
   );

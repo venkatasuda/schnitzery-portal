@@ -107,6 +107,7 @@ export const messages = {
       reportIncident: "Report Incident", reportIncidentSub: "Accidents, hazards & issues",
       needsAttention: "Needs Attention", allClear: "All clear", allClearSub: "Nothing needs your attention right now.",
       approvalsWaiting: "{n} approvals waiting", openIncidents: "{n} open incidents",
+      belowMinNow: "{n} people paid below the legal minimum wage", belowMinSoon: "{n} people below the minimum wage from {date} ({min}/h) — raise wages",
       lowStock: "{n} low-stock items", notSubmitted: "{n} haven't submitted availability",
       today: "Today", statWorking: "Working", statDone: "Done", statLate: "Late", hours: "Hours",
       dailyChecklist: "Daily Checklist", allTasksDone: "All tasks done today 🎉", openingClosing: "Opening & closing tasks",
@@ -147,7 +148,7 @@ export const messages = {
       setTargets: "Set targets", editTargets: "Edit targets", flash: "Yesterday", flashSales: "Sales", flashHours: "Hours worked", vsLastWeek: "vs. same day last week", enterSales: "Enter sales",
       forgotten: "{n} shift(s) still open — forgotten clock-out?", suspect: "{n} shift(s) over 16 h — correct the clock-out before approving", salesMissingAlert: "Sales missing for {n} day(s) this month",
     },
-    rosterLabour: { title: "Labour cost of this roster", noHistory: "No sales in the last 4 weeks to forecast from" },
+    rosterLabour: { minijobOver: "{name} (Minijob): {eur} this month with this roster — above the {cap} limit", title: "Labour cost of this roster", noHistory: "No sales in the last 4 weeks to forecast from" },
     setup: {
       title: "Get your branch ready", progress: "{done} of {total} done", hint: "Your figures on this page are only as good as this data.",
       wages: "Add an hourly wage for everyone who works", targets: "Set your targets", fridges: "Add your fridges and freezers",
@@ -773,7 +774,8 @@ export const messages = {
       hoursPerWeek: "Hours per Week", hoursByDay: "Hours by Day of Week", hoursByTeam: "Hours by Team (8 weeks)",
     },
     lab: {
-      bulkTitle: "{n} without a wage — same hourly wage for all of them", bulkWage: "Hourly wage (€) for everyone without one", bulkApply: "Apply to all", bulkHint: "Only people without a wage get it; existing wages stay. Use the date the wage really started.", bulkDone: "Wage set for {n} people",
+      bulkTitle: "{n} without a wage — same hourly wage for all of them", bulkWage: "Hourly wage (€) for everyone without one", bulkApply: "Apply to all", bulkHint: "Only people without a wage get it; existing wages stay. Use the date the wage really started.", bulkDone: "Wage set for {n} people", raiseTitle: "{n} below the legal minimum wage ({min}/h)", raiseApply: "Raise them to the minimum wage", raiseHint: "Sets exactly the legal minimum, effective from the day it came into force. Trainees and interns are left alone; higher wages stay.",
+      belowMin: "Below the legal minimum wage ({min}/h)", belowSoon: "Below the minimum wage from {date} ({min}/h) — raise it",
       missingWageCost: "Labour cost is incomplete: add a wage rate for every worked employee.",
       effectiveFrom: "Effective from", unconfirmedDate: "Effective date unconfirmed", history: "Wage history", recorded: "Recorded",
       wageBasis: "Payroll uses the confirmed rate for each work date. Enter the real effective date — it is never guessed.",
@@ -981,6 +983,7 @@ export const messages = {
       reportIncident: "Vorfall melden", reportIncidentSub: "Unfälle, Gefahren & Probleme",
       needsAttention: "Erfordert Aufmerksamkeit", allClear: "Alles erledigt", allClearSub: "Im Moment ist nichts zu tun.",
       approvalsWaiting: "{n} Genehmigungen ausstehend", openIncidents: "{n} offene Vorfälle",
+      belowMinNow: "{n} Personen unter dem gesetzlichen Mindestlohn", belowMinSoon: "{n} Personen ab {date} unter dem Mindestlohn ({min}/h) — Löhne anheben",
       lowStock: "{n} Artikel mit niedrigem Bestand", notSubmitted: "{n} haben keine Verfügbarkeit eingereicht",
       today: "Heute", statWorking: "Arbeitet", statDone: "Fertig", statLate: "Verspätet", hours: "Stunden",
       dailyChecklist: "Tägliche Checkliste", allTasksDone: "Heute alle Aufgaben erledigt 🎉", openingClosing: "Öffnungs- & Schließaufgaben",
@@ -1021,7 +1024,7 @@ export const messages = {
       setTargets: "Ziele festlegen", editTargets: "Ziele ändern", flash: "Gestern", flashSales: "Umsatz", flashHours: "Gearbeitete Stunden", vsLastWeek: "ggü. gleichem Tag letzte Woche", enterSales: "Umsatz eintragen",
       forgotten: "{n} Schicht(en) noch offen – Ausstempeln vergessen?", suspect: "{n} Schicht(en) über 16 Std. – Ausstempelzeit vor dem Genehmigen korrigieren", salesMissingAlert: "Umsatz fehlt für {n} Tag(e) in diesem Monat",
     },
-    rosterLabour: { title: "Personalkosten dieses Dienstplans", noHistory: "Keine Umsätze der letzten 4 Wochen für eine Prognose" },
+    rosterLabour: { minijobOver: "{name} (Minijob): {eur} in diesem Monat mit diesem Plan — über der Grenze von {cap}", title: "Personalkosten dieses Dienstplans", noHistory: "Keine Umsätze der letzten 4 Wochen für eine Prognose" },
     setup: {
       title: "Filiale startklar machen", progress: "{done} von {total} erledigt", hint: "Die Zahlen auf dieser Seite sind nur so gut wie diese Angaben.",
       wages: "Stundenlohn für alle Mitarbeitenden eintragen", targets: "Ziele festlegen", fridges: "Kühlschränke und Tiefkühler anlegen",
@@ -1647,7 +1650,8 @@ export const messages = {
       hoursPerWeek: "Stunden pro Woche", hoursByDay: "Stunden nach Wochentag", hoursByTeam: "Stunden nach Team (8 Wochen)",
     },
     lab: {
-      bulkTitle: "{n} ohne Stundenlohn — gleicher Lohn für alle", bulkWage: "Stundenlohn (€) für alle ohne Lohn", bulkApply: "Für alle übernehmen", bulkHint: "Nur Personen ohne Lohn erhalten ihn; vorhandene Löhne bleiben. Das echte Startdatum des Lohns eintragen.", bulkDone: "Lohn für {n} Personen gesetzt",
+      bulkTitle: "{n} ohne Stundenlohn — gleicher Lohn für alle", bulkWage: "Stundenlohn (€) für alle ohne Lohn", bulkApply: "Für alle übernehmen", bulkHint: "Nur Personen ohne Lohn erhalten ihn; vorhandene Löhne bleiben. Das echte Startdatum des Lohns eintragen.", bulkDone: "Lohn für {n} Personen gesetzt", raiseTitle: "{n} unter dem gesetzlichen Mindestlohn ({min}/h)", raiseApply: "Auf den Mindestlohn anheben", raiseHint: "Setzt genau den Mindestlohn, gültig ab dem Tag, an dem er gilt. Azubis und Praktikanten bleiben unverändert; höhere Löhne bleiben.",
+      belowMin: "Unter dem gesetzlichen Mindestlohn ({min}/h)", belowSoon: "Ab {date} unter dem Mindestlohn ({min}/h) — bitte anheben",
       missingWageCost: "Die Personalkosten sind unvollständig: Für alle Mitarbeiter mit Arbeitsstunden muss ein Stundenlohn erfasst werden.",
       effectiveFrom: "Gültig ab", unconfirmedDate: "Gültigkeitsdatum unbestätigt", history: "Lohnhistorie", recorded: "Erfasst",
       wageBasis: "Die Lohnabrechnung nutzt den bestätigten Satz je Arbeitstag. Echtes Gültigkeitsdatum eingeben – es wird nie geschätzt.",

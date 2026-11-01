@@ -3,10 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { readAll } from "@/lib/supabase/readAll";
 import { activeBranchFor, accessibleBranchIds } from "@/lib/activeBranch";
-import { berlinToday, berlinMonday, mondayOfDate } from "@/lib/time/berlinDate";
+import { berlinToday, berlinMonday, mondayOfDate, isCalendarDate } from "@/lib/time/berlinDate";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches } from "@/lib/pay/wages";
 import { getShiftTimes } from "@/lib/queries/shift-times";
+import { isMinijob, type Minijobber } from "@/lib/pay/legal";
 import { DAYS } from "@/lib/queries/schedule-constants";
 import { weeklyTrend, forecastWeek, healthPart, healthScore, setupSteps, rosterEntryMinutes, type HealthPart, type PlannedShift, type ShiftTimeDef } from "@/lib/owner/insights";
 
@@ -23,6 +24,7 @@ async function ctx() {
   return { db, role: p?.role ?? "", branchId: await activeBranchFor(db, p) };
 }
 const addDays = (d: string, n: number) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const nextMonthStart = (d: string) => { const x = new Date(`${d.slice(0, 7)}-01T12:00:00Z`); x.setUTCMonth(x.getUTCMonth() + 1); return x.toISOString().slice(0, 10); };
 
 // Last 7 full days (today excluded — it is still running).
 async function health(db: Db, branchId: string): Promise<{ score: number | null; parts: HealthPart[] } | null> {
@@ -136,7 +138,7 @@ export async function getRosterPlanning(weekStart: string) {
   if (!MGR.includes(c.role)) return { ok: false as const, error: "Managers only." };
   const b = c.branchId;
   if (!b) return { ok: false as const, error: "No branch." };
-  if (typeof weekStart !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) return { ok: false as const, error: "Invalid period." };
+  if (typeof weekStart !== "string" || !isCalendarDate(weekStart)) return { ok: false as const, error: "Invalid period." };
   const until = weekStart < berlinToday() ? weekStart : berlinToday();
   const [sales, wages, times, target] = await Promise.all([
     readAll(c.db.from("daily_sales").select("sale_date, amount").eq("branch_id", b).gte("sale_date", addDays(until, -28)).lt("sale_date", until).order("id")),
@@ -145,8 +147,27 @@ export async function getRosterPlanning(weekStart: string) {
     c.db.from("branch_targets").select("labour_pct").eq("branch_id", b).maybeSingle(),
   ]);
   if (sales.error) return { ok: false as const, error: sales.error.message };
+
+  // Minijob cap: hours already worked this month (and next, if the week spans it),
+  // outside the roster week itself so planned shifts aren't counted twice.
+  const weekEnd = addDays(weekStart, 6);
+  const { data: staff } = await c.db.from("users").select("id, full_name, contract_type").eq("branch_id", b);
+  const mj = (staff || []).filter((u) => isMinijob(u.contract_type));
+  const minijobbers: Minijobber[] = mj.map((u) => ({ id: u.id, name: u.full_name || "—", wage: wages?.[u.id] ?? null, workedMins: {} }));
+  if (mj.length) {
+    const logs = await readAll(c.db.from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, status")
+      .in("user_id", mj.map((u) => u.id)).eq("status", "complete")
+      .gte("work_date", `${weekStart.slice(0, 7)}-01`).lt("work_date", nextMonthStart(weekEnd)).order("id"));
+    const byId = new Map(minijobbers.map((m) => [m.id, m]));
+    for (const l of logs.data || []) {
+      if (l.work_date >= weekStart && l.work_date <= weekEnd) continue;
+      const m = byId.get(l.user_id), k = String(l.work_date).slice(0, 7);
+      if (m) m.workedMins[k] = (m.workedMins[k] || 0) + shiftMinutes(l).paidMin;
+    }
+  }
   return {
     ok: true as const,
+    minijobbers,
     history: (sales.data || []).map((r) => ({ sale_date: r.sale_date as string, amount: Number(r.amount) })),
     wages: wages ?? {}, wagesKnown: wages != null,
     times: (times && times.ok ? times.items : []).map(({ team, shift, start, end, breakMins }) => ({ team, shift, start, end, breakMins })),

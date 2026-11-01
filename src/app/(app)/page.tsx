@@ -7,7 +7,7 @@ import { getLiveAttendance, getMonthlyOvertime } from "@/lib/queries/live-attend
 import { getScheduleOverview } from "@/lib/queries/schedule-insights";
 import { getLaborSummary } from "@/lib/queries/labor";
 import { getTargets, getDailyFlash, type Targets } from "@/lib/queries/targets";
-import { formatPct } from "@/lib/format";
+import { formatPct, formatEur } from "@/lib/format";
 import OwnerCockpit from "@/components/dash/OwnerCockpit";
 import OwnerInsights, { type Insights } from "@/components/dash/OwnerInsights";
 import { getOwnerInsights, getSetupProgress } from "@/lib/queries/owner-insights";
@@ -71,7 +71,7 @@ export default async function HomePage() {
   let mSetup: SetupStep[] | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
-  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number | null; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
+  let mCost: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number | null; missingWageStaff?: number; belowMinNow?: number; belowMinSoon?: number; nextMin?: { from: string; eur: number } | null; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null = null;
   let mWaste: { label: string; value: number }[] = [];
   let hqWaste: { label: string; value: number }[] = [];
 
@@ -217,7 +217,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
   live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
   sched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null;
-  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number | null; missingWageStaff?: number; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
+  clockedIn: boolean; onBreak: boolean; owner?: boolean; cost?: { laborPct: number | null; foodCostPct: number | null; monthSales?: number | null; laborCost?: number; invSpend?: number | null; missingWageStaff?: number; belowMinNow?: number; belowMinSoon?: number; nextMin?: { from: string; eur: number } | null; coverage?: Record<"sales" | "labor" | "spend", { complete: boolean; missing: Record<string, number> }> } | null; waste?: { label: string; value: number }[]; t: Tf;
 }) {
   const missing = sched ? Math.max(0, sched.staffCount - sched.submissionCount) : 0;
   const alerts = [
@@ -227,6 +227,8 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     ...(missing ? [{ href: "/noshow", icon: "📋", text: t("home.notSubmitted", { n: missing }), tone: "warn" }] : []),
     ...(live?.forgotten ? [{ href: "/attendance-hub", icon: "⏰", text: t("cockpit.forgotten", { n: live.forgotten }), tone: "danger" }] : []),
     ...(live?.suspect ? [{ href: "/approvals", icon: "⚠", text: t("cockpit.suspect", { n: live.suspect }), tone: "danger" }] : []),
+    ...(cost?.belowMinNow ? [{ href: "/labor", icon: "⚖", text: t("home.belowMinNow", { n: cost.belowMinNow }), tone: "danger" }] : []),
+    ...(cost?.belowMinSoon && cost.nextMin ? [{ href: "/labor", icon: "⚖", text: t("home.belowMinSoon", { n: cost.belowMinSoon, min: formatEur(cost.nextMin.eur, locale, "auto"), date: new Date(`${cost.nextMin.from}T12:00:00Z`).toLocaleDateString(locale, { timeZone: "Europe/Berlin" }) }), tone: "warn" }] : []),
     ...(cost?.coverage?.sales.missing.salesDays ? [{ href: "/labor", icon: "💶", text: t("cockpit.salesMissingAlert", { n: cost.coverage.sales.missing.salesDays }), tone: "warn" }] : []),
   ];
   return <div className="dashboard-layout">
