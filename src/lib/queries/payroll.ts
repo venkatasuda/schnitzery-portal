@@ -6,6 +6,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { berlinMonth, monthRange } from "@/lib/time/berlinDate";
 import { classifyShift, shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { bwHolidays } from "@/lib/time/holidays";
 
 // ============================================================================
 // PAYROLL ENGINE — per-employee monthly hour breakdown for a branch.
@@ -19,25 +20,6 @@ import { activeBranchFor } from "@/lib/activeBranch";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
-// ── Baden-Württemberg public holidays (Meeus/Jones/Butcher Easter) ──────────
-function easter(year: number) {
-  const a = year % 19, b = Math.floor(year / 100), c = year % 100;
-  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4), k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31);
-  const day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(Date.UTC(year, month - 1, day));
-}
-function bwHolidays(year: number): string[] {
-  const e = easter(year);
-  const off = (n: number) => { const d = new Date(e); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-  return [`${year}-01-01`, `${year}-01-06`, off(-2), off(1), `${year}-05-01`, off(39), off(50), off(60),
-          `${year}-10-03`, `${year}-11-01`, `${year}-12-25`, `${year}-12-26`];
-}
 
 // ── Berlin wall-clock components for a UTC instant ──────────────────────────
 const h1 = (min: number) => Math.round(min / 6) / 10;   // minutes → hours, 1 decimal

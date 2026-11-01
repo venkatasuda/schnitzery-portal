@@ -2,6 +2,7 @@
 // branch health score. Pure — queries/owner-insights.ts gathers rows, this does the maths.
 // Honest gaps: a figure that is missing an input is null ("—"), never 0.
 import { mondayOfDate, berlinWeekdayIndex } from "@/lib/time/berlinDate";
+import { isBwHoliday } from "@/lib/time/holidays";
 
 type Sale = { sale_date: string; amount: number | string | null };
 type Worked = { user_id: string; work_date: string; paidMin: number };
@@ -36,23 +37,28 @@ export function weeklyTrend(weeks: string[], sales: Sale[], worked: Worked[], wa
 }
 
 export type PlannedShift = { date: string; user_id: string; mins: number };
-export type ForecastDay = { date: string; forecast: number | null; hours: number; cost: number | null };
+export type ForecastDay = { date: string; forecast: number | null; hours: number; cost: number | null; holiday: boolean };
 export type WeekForecast = { days: ForecastDay[]; sales: number | null; hours: number; cost: number | null; labourPct: number | null; missingWages: number };
 
 // Week ahead: forecast each day's sales as the average of the same weekday in the history
 // (only days that have an entry), cost the planned roster at current wages.
+// Public holidays trade like Sundays: a holiday is forecast from past Sundays/holidays,
+// and past holidays are left out of the normal weekday averages.
 export function forecastWeek(dates: string[], history: Sale[], planned: PlannedShift[], wages: Wages): WeekForecast {
   const missing = new Set<string>();
   const days = dates.map((date) => {
+    const holiday = isBwHoliday(date);
     const wd = berlinWeekdayIndex(date);
-    const same = history.filter((h) => berlinWeekdayIndex(h.sale_date) === wd);
+    const same = history.filter((h) => holiday
+      ? isBwHoliday(h.sale_date) || berlinWeekdayIndex(h.sale_date) === 6
+      : !isBwHoliday(h.sale_date) && berlinWeekdayIndex(h.sale_date) === wd);
     const p = planned.filter((x) => x.date === date);
     let cost: number | null = 0;
     for (const x of p) {
       const w = wages[x.user_id];
       if (w == null) { missing.add(x.user_id); cost = null; } else if (cost != null) cost += (x.mins / 60) * w;
     }
-    return { date, forecast: same.length ? Math.round(sumSales(same) / same.length) : null, hours: r1(p.reduce((a, x) => a + x.mins, 0) / 60), cost: cost == null ? null : Math.round(cost) };
+    return { date, forecast: same.length ? Math.round(sumSales(same) / same.length) : null, hours: r1(p.reduce((a, x) => a + x.mins, 0) / 60), cost: cost == null ? null : Math.round(cost), holiday };
   });
   // Sales forecast is complete when every day with planned hours has a forecast. With
   // nothing planned yet, show the whole week's expectation (helps plan the first shifts).

@@ -20,13 +20,24 @@ describe("owner insights", () => {
   it("forecast: same-weekday average, roster cost, missing wage hides cost", () => {
     const hist = [{ sale_date: "2026-10-12", amount: 1000 }, { sale_date: "2026-10-19", amount: 1200 }]; // Mondays
     const f = forecastWeek(["2026-10-26", "2026-10-27"], hist, [{ date: "2026-10-26", user_id: "a", mins: 480 }], { a: 15 });
-    expect(f.days[0]).toEqual({ date: "2026-10-26", forecast: 1100, hours: 8, cost: 120 });
+    expect(f.days[0]).toEqual({ date: "2026-10-26", forecast: 1100, hours: 8, cost: 120, holiday: false });
     expect(f.days[1].forecast).toBeNull(); // no Tuesday history, but nobody planned → still complete
     expect(f).toMatchObject({ sales: 1100, cost: 120, labourPct: 10.9, missingWages: 0 });
     const g = forecastWeek(["2026-10-27"], hist, [{ date: "2026-10-27", user_id: "x", mins: 60 }], {});
     expect(g).toMatchObject({ sales: null, cost: null, labourPct: null, missingWages: 1 });
     // empty roster: whole-week expectation once every day has history
     expect(forecastWeek(["2026-10-26"], hist, [], {}).sales).toBe(1100);
+  });
+
+  it("forecast: holidays trade like Sundays and don't skew normal weekdays", () => {
+    const hist = [
+      { sale_date: "2026-12-11", amount: 1000 }, { sale_date: "2026-12-18", amount: 1000 }, // Fridays
+      { sale_date: "2026-12-13", amount: 2000 }, { sale_date: "2026-12-20", amount: 2200 }, // Sundays
+    ];
+    const xmas = forecastWeek(["2026-12-25"], hist, [], {}).days[0]; // Friday, 1. Weihnachtstag
+    expect(xmas).toMatchObject({ holiday: true, forecast: 2100 });
+    const mondays = [{ sale_date: "2027-03-29", amount: 3000 }, { sale_date: "2027-03-23", amount: 9 }, { sale_date: "2027-04-05", amount: 1000 }]; // 29 Mar 2027 = Ostermontag
+    expect(forecastWeek(["2027-04-12"], mondays, [], {}).days[0]).toMatchObject({ holiday: false, forecast: 1000 });
   });
 
   it("health: mean of measurable parts", () => {

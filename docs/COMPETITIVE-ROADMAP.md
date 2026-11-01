@@ -34,3 +34,7 @@ Recommended order: 1 → 5 → 6 (quick, visible) → 2 → 3 → 4.
   shifts clocked in > 15 min before the planned start, or on a day the person wasn't
   rostered (`src/lib/time/roster.ts`). Planned-vs-actual now understands custom
   "HH:MM–HH:MM" roster entries (they used to show as "unscheduled").
+- #6 part 1: BW public holidays (one shared `src/lib/time/holidays.ts`, replacing two copies
+  in payroll and leave). A holiday is forecast from past Sundays/holidays; past holidays no
+  longer skew normal weekdays. Still open: school holidays (needs a yearly table) and
+  same-week-last-year (needs 12 months of sales history first).

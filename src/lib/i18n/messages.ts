@@ -157,7 +157,7 @@ export const messages = {
     },
     insights: {
       nextWeek: "Next week (forecast)", roster: "Roster", weekOf: "Week of {d}", noRoster: "No roster for next week yet. Plan it to see the expected labour cost.",
-      expectedSales: "Expected sales", plannedHours: "Planned hours", plannedCost: "Planned labour cost", projectedLabour: "Expected labour %", day: "Day", labourShort: "Labour %",
+      holiday: "public holiday (forecast from past Sundays)", expectedSales: "Expected sales", plannedHours: "Planned hours", plannedCost: "Planned labour cost", projectedLabour: "Expected labour %", day: "Day", labourShort: "Labour %",
       unknownShifts: "{n} rostered shift(s) without times", forecastNote: "Sales = average of the same weekday over the last 4 weeks",
       trend: "Last 8 weeks", splh: "Sales per labour hour", splhVsAvg: "Last week · 4-week average {avg}", trendNote: "Last full week. Faded bars: sales not entered for every day.",
       health: "Branch health", healthNote: "Routine work done in the last 7 days",
@@ -1033,7 +1033,7 @@ export const messages = {
     },
     insights: {
       nextWeek: "Nächste Woche (Prognose)", roster: "Dienstplan", weekOf: "Woche ab {d}", noRoster: "Noch kein Dienstplan für nächste Woche. Plane ihn, um die erwarteten Personalkosten zu sehen.",
-      expectedSales: "Erwarteter Umsatz", plannedHours: "Geplante Stunden", plannedCost: "Geplante Personalkosten", projectedLabour: "Erwartete Personal-%", day: "Tag", labourShort: "Personal %",
+      holiday: "Feiertag (Prognose aus vergangenen Sonntagen)", expectedSales: "Erwarteter Umsatz", plannedHours: "Geplante Stunden", plannedCost: "Geplante Personalkosten", projectedLabour: "Erwartete Personal-%", day: "Tag", labourShort: "Personal %",
       unknownShifts: "{n} geplante Schicht(en) ohne Uhrzeiten", forecastNote: "Umsatz = Durchschnitt des gleichen Wochentags der letzten 4 Wochen",
       trend: "Letzte 8 Wochen", splh: "Umsatz pro Arbeitsstunde", splhVsAvg: "Letzte Woche · 4-Wochen-Schnitt {avg}", trendNote: "Letzte volle Woche. Blasse Balken: Umsatz nicht für jeden Tag eingetragen.",
       health: "Filial-Gesundheit", healthNote: "Routinearbeit der letzten 7 Tage erledigt",
