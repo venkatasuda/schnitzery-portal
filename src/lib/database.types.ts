@@ -1138,6 +1138,7 @@ export type Database = {
       payroll_settings: {
         Row: {
           branch_id: string
+          datev: Json
           night_end: string
           night_start: string
           ot_daily_hours: number
@@ -1146,6 +1147,7 @@ export type Database = {
         }
         Insert: {
           branch_id: string
+          datev?: Json
           night_end?: string
           night_start?: string
           ot_daily_hours?: number
@@ -1154,6 +1156,7 @@ export type Database = {
         }
         Update: {
           branch_id?: string
+          datev?: Json
           night_end?: string
           night_start?: string
           ot_daily_hours?: number

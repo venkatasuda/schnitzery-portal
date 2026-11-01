@@ -208,6 +208,7 @@ export default function AttendanceHubPage() {
                   <div className="ui-strong">
                     {r.name}
                     {r.suspect ? <span className="t-xs tone-danger ml-2"><Icon e="⚠" size={11} /> {t("approvals.suspect")}</span> : r.overtime && <span className="t-xs tone-warn ml-2"><Icon e="⏱" size={11} /> {t("approvals.overtime")}</span>}
+                    {r.clockFlag && <span className="t-xs tone-warn ml-2"><Icon e="⏰" size={11} /> {r.clockFlag.kind === "early" ? t("approvals.early", { n: r.clockFlag.mins }) : t("approvals.unrostered")}</span>}
                     {r.late_mins > 0 && <span className="t-xs tone-danger ml-2"><Icon e="⚠" size={11} /> {t("ahub.mLate", { n: r.late_mins })}</span>}
                   </div>
                   <div className="t-sm fw-7 tone-action">{fmtH(r.duration_mins || 0)}</div>

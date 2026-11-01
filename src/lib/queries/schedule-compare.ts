@@ -4,23 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { DAYS } from "@/lib/queries/schedule-constants";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { zonedToUtc, rosterEntryTimes, type ShiftTime } from "@/lib/time/roster";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
-const TZ = "Europe/Berlin"; // Stuttgart wall-clock for shift times
-
-// Convert a wall-clock time on a given date in `tz` to the correct UTC instant
-// (DST-safe), so it can be compared against UTC attendance timestamps.
-function zonedToUtc(dateStr: string, hhmm: string, tz = TZ): Date {
-  const [Y, Mo, D] = dateStr.split("-").map(Number);
-  const [h, mi] = hhmm.split(":").map(Number);
-  const guess = Date.UTC(Y, Mo - 1, D, h || 0, mi || 0);
-  const dtf = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-  const parts: Record<string, string> = {};
-  for (const p of dtf.formatToParts(new Date(guess))) parts[p.type] = p.value;
-  const wall = Date.UTC(+parts.year, +parts.month - 1, +parts.day, parts.hour === "24" ? 0 : +parts.hour, +parts.minute);
-  return new Date(guess - (wall - guess));
-}
-
 function dateOfDay(weekStart: string, dayName: string): string {
   const idx = DAYS.indexOf(dayName);
   const [Y, M, D] = weekStart.split("-").map(Number);
@@ -60,8 +46,7 @@ export async function getScheduleComparison(weekStart: string) {
 
   // 2) resolved shift times
   const st = await getShiftTimes();
-  const timeMap: Record<string, { start: string; end: string; breakMins: number }> = {};
-  for (const s of (st.ok ? st.items : [])) timeMap[`${s.team}|${s.shift}`] = { start: s.start, end: s.end, breakMins: s.breakMins };
+  const timeMap = new Map<string, ShiftTime>((st.ok ? st.items : []).map((s) => [`${s.team}|${s.shift}`, s]));
 
   // 3) attendance for the week's date span
   const from = dateOfDay(weekStart, DAYS[0]);
@@ -88,8 +73,8 @@ export async function getScheduleComparison(weekStart: string) {
   for (const day of DAYS) {
     const date = dateOfDay(weekStart, day);
     for (const e of (rd[day] || [])) {
-      const tm = timeMap[`${e.team}|${e.shift}`];
-      if (!tm || !tm.start || !tm.end) continue;
+      const tm = rosterEntryTimes(e, timeMap); // preset or custom "HH:MM–HH:MM"
+      if (!tm) continue;
       const S = zonedToUtc(date, tm.start);
       let E = zonedToUtc(date, tm.end);
       if (E.getTime() <= S.getTime()) E = new Date(E.getTime() + 24 * 3600 * 1000); // overnight

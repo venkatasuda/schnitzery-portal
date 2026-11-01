@@ -37,7 +37,7 @@ export function payForMinutes(minutes: number, wage: number): number {
 export function classifyShift(inISO: string, outISO: string, holidays: Set<string>, nStart: number, nEnd: number) {
   if (![nStart, nEnd].every(n => Number.isFinite(n) && n >= 0 && n < 1440)) throw new Error("Invalid night hours.");
   const start = Date.parse(inISO), end = Date.parse(outISO);
-  const result = { totalMin: 0, weekendMin: 0, holidayMin: 0, nightMin: 0 };
+  const result = { totalMin: 0, weekendMin: 0, holidayMin: 0, nightMin: 0, sundayMin: 0 };
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return result;
   if (end - start > 7 * 86400000) throw new Error("Shift exceeds seven days; correct attendance before calculating payroll.");
   for (let cur = start; cur < end;) {
@@ -53,6 +53,7 @@ export function classifyShift(inISO: string, outISO: string, holidays: Set<strin
     const weekday = new Date(date + "T12:00:00Z").getUTCDay();
     if (weekday === 0 || weekday === 6) result.weekendMin += mins;
     if (holidays.has(date)) result.holidayMin += mins;
+    else if (weekday === 0) result.sundayMin += mins; // SFN: a Sunday holiday counts as holiday only (§ 3b EStG)
     const night = nStart < nEnd ? localMin >= nStart && localMin < nEnd : localMin >= nStart || localMin < nEnd;
     if (night) result.nightMin += mins;
     cur = next;
@@ -61,5 +62,6 @@ export function classifyShift(inISO: string, outISO: string, holidays: Set<strin
   result.weekendMin = Math.round(result.weekendMin);
   result.holidayMin = Math.round(result.holidayMin);
   result.nightMin = Math.round(result.nightMin);
+  result.sundayMin = Math.round(result.sundayMin);
   return result;
 }

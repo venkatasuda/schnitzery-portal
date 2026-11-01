@@ -53,7 +53,7 @@ export default function OwnerInsights({ data, labourTarget, t, locale }: { data:
             <table className="data-table"><thead><tr><th scope="col">{t("insights.day")}</th><th scope="col" className="numeric">{t("insights.expectedSales")}</th><th scope="col" className="numeric">{t("insights.plannedHours")}</th><th scope="col" className="numeric">{t("insights.labourShort")}</th></tr></thead>
               <tbody>{f.days.map((d) => {
                 const pct = d.cost != null && d.forecast ? Math.round((d.cost / d.forecast) * 1000) / 10 : null;
-                return <tr key={d.date}><td>{day(d.date)}</td><td className="numeric">{money(d.forecast)}</td><td className="numeric">{d.hours}</td><td className={`numeric ins-pct${tone(pct)}`}>{formatPct(pct, locale)}</td></tr>;
+                return <tr key={d.date}><td>{day(d.date)}{d.holiday && <span className="ui-muted"> · {t("insights.holiday")}</span>}</td><td className="numeric">{money(d.forecast)}</td><td className="numeric">{d.hours}</td><td className={`numeric ins-pct${tone(pct)}`}>{formatPct(pct, locale)}</td></tr>;
               })}</tbody></table>
           </div>
           <p className="dashboard-muted">{[f.missingWages ? t("business.missingWages", { n: f.missingWages }) : "", f.unknownShifts ? t("insights.unknownShifts", { n: f.unknownShifts }) : "", t("insights.forecastNote")].filter(Boolean).join(" · ")}</p>

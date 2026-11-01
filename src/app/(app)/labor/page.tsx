@@ -7,10 +7,12 @@ import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import Link from "next/link";
-import { getLaborSummary, setDailySales, getRecentSales, getStaffWages, setStaffWage, setWageForMissing } from "@/lib/queries/labor";
+import { getLaborSummary, setDailySales, getRecentSales, getStaffWages, setStaffWage, setWageForMissing, raiseToMinimumWage } from "@/lib/queries/labor";
 import SalesImport from "@/components/SalesImport";
+import TipPool from "@/components/TipPool";
 import { toast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
+import { wageIssue, minimumWageOn } from "@/lib/pay/legal";
 
 const today = () => berlinToday();
 
@@ -69,6 +71,17 @@ export default function LaborPage() {
     } catch { toast(t("staff.networkErr"), "error"); }
     finally { setBulkSaving(false); }
   }
+  async function raiseAll() {
+    if (bulkSaving) return;
+    setBulkSaving(true);
+    try {
+      const res = await raiseToMinimumWage();
+      if (res.ok) { toast(t("lab.bulkDone", { n: res.count }), "success"); loadAll(); }
+      else toast(res.error || t("lab.couldNotSave"), "error");
+    } catch { toast(t("staff.networkErr"), "error"); }
+    finally { setBulkSaving(false); }
+  }
+  const belowNow = staff.filter((p) => wageIssue(p.hourly_wage, p.contract_type, today())?.kind === "below_now").length;
 
   async function saveWage(userId: string) {
     const raw = wageEdits[userId] ?? String(staff.find(p => p.id === userId)?.hourly_wage ?? "");
@@ -149,6 +162,8 @@ export default function LaborPage() {
         </div>
       )}
 
+      <TipPool />
+
       {/* staff wages */}
       <div className="section-label">{t("lab.staffWages")}</div>
       <p className="u-muted t-md">{t("lab.wageBasis")}</p>
@@ -156,11 +171,18 @@ export default function LaborPage() {
         <Skeleton height={120} radius={14} />
       ) : (
         <div className="card p-2">
+          {belowNow > 0 && (
+            <div className="labor-bulk">
+              <strong>{t("lab.raiseTitle", { n: belowNow, min: eur(minimumWageOn(today()) ?? 0) })}</strong>
+              <div className="labor-bulk-row"><button className="btn-gold" onClick={raiseAll} disabled={bulkSaving}>{bulkSaving ? t("common.saving") : t("lab.raiseApply")}</button></div>
+              <p className="ui-sub">{t("lab.raiseHint")}</p>
+            </div>
+          )}
           {staff.some((p) => p.hourly_wage == null) && (
             <div className="labor-bulk">
               <strong>{t("lab.bulkTitle", { n: staff.filter((p) => p.hourly_wage == null).length })}</strong>
               <div className="labor-bulk-row">
-                <input type="number" inputMode="decimal" min="0" step="0.01" aria-label={t("lab.bulkWage")} placeholder="14.92" value={bulkWage} disabled={bulkSaving} onChange={(e) => setBulkWage(e.target.value)} style={{ ...input, width: 96, textAlign: "right" }} />
+                <input type="number" inputMode="decimal" min="0" step="0.01" aria-label={t("lab.bulkWage")} placeholder={String(minimumWageOn(today()) ?? "")} value={bulkWage} disabled={bulkSaving} onChange={(e) => setBulkWage(e.target.value)} style={{ ...input, width: 96, textAlign: "right" }} />
                 <label className="ui-muted">{t("lab.effectiveFrom")}<input type="date" aria-label={t("lab.effectiveFrom")} min="2000-01-01" max={today()} value={bulkDate} disabled={bulkSaving} onChange={(e) => setBulkDate(e.target.value)} style={{ ...input, display: "block", width: 160 }} /></label>
                 <button className="btn-gold" onClick={saveBulkWage} disabled={!bulkWage || !bulkDate || bulkSaving}>{bulkSaving ? t("common.saving") : t("lab.bulkApply")}</button>
               </div>
@@ -173,6 +195,7 @@ export default function LaborPage() {
                 <div style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.full_name}</div>
                 <div className="ui-muted">{p.team || "—"}</div>
                 {!p.history?.some((h: any) => h.effective_from) && <div className="tone-warn t-xs">{t("lab.unconfirmedDate")}</div>}
+                {(() => { const w = wageIssue(p.hourly_wage, p.contract_type, today()); return w && <div className={w.kind === "below_now" ? "tone-danger t-xs" : "tone-warn t-xs"}>{w.kind === "below_now" ? t("lab.belowMin", { min: eur(w.min) }) : t("lab.belowSoon", { min: eur(w.min), date: new Date(`${w.from}T12:00:00Z`).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin" }) })}</div>; })()}
               </div>
               <input
                 type="number" inputMode="decimal" min="0" step="0.01" disabled={!!savingWage}
