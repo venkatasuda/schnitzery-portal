@@ -22,6 +22,8 @@ const api=load('src/lib/queries/payroll.ts',{
   '@supabase/supabase-js':{createClient:()=>({rpc:async(name,args)=>{approvalCalls++;assert.equal(args.p_actor,'manager');assert.equal(args.p_snapshot.totals.gross,5);return{};}})},
   '@/lib/time/berlinDate':{berlinMonth:()=> '2026-10',monthRange:()=>({from:'2026-09-01',next:'2026-10-01'})},
   '@/lib/pay/calculations':load('src/lib/pay/calculations.ts'),
+  '@/lib/time/holidays':load('src/lib/time/holidays.ts'),
+  '@/lib/pay/datev':load('src/lib/pay/datev.ts'),
 });
 (async()=>{
   let result=await api.getPayrollSummary('2026-09');

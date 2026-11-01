@@ -58,3 +58,8 @@ Recommended order: 1 → 5 → 6 (quick, visible) → 2 → 3 → 4.
   self); stored by the server in the person's documents folder as doc_type "payslip"
   (approved, no review step). Staff see a "Payslips" card under Documents, one entry per
   month; links are signed server-side after the RLS row check. No migration.
+- #8 done: onboarding checklist for people who joined in the last 90 days, on the staff
+  detail page, plus a home alert. 9 steps, all derived from existing data
+  (`src/lib/people/onboarding.ts`): contract type/hours, contract doc, Steuer-ID,
+  § 43 IfSG (health_certificate), numeric Personalnummer, wage, first login,
+  availability, first shift. No migration; nothing can be ticked by hand.
