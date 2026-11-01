@@ -208,12 +208,14 @@ export async function getAttendanceApprovals() {
   const rosterOf = new Map<string, Record<string, RosterEntry[]>>();
   let times = new Map<string, ShiftTime>();
   if (weeks.length) {
-    const [ros, st] = await Promise.all([
-      supabase.from("weekly_roster").select("week_start, roster_data").eq("branch_id", branchId).in("week_start", weeks),
-      getShiftTimes().catch(() => null),
-    ]);
-    for (const r of ros.data || []) rosterOf.set(String(r.week_start), (r.roster_data as Record<string, RosterEntry[]>) || {});
-    times = new Map((st && st.ok ? st.items : []).map((s) => [`${s.team}|${s.shift}`, s]));
+    try {
+      const [ros, st] = await Promise.all([
+        supabase.from("weekly_roster").select("week_start, roster_data").eq("branch_id", branchId).in("week_start", weeks),
+        getShiftTimes().catch(() => null),
+      ]);
+      for (const r of ros.data || []) rosterOf.set(String(r.week_start), (r.roster_data as Record<string, RosterEntry[]>) || {});
+      times = new Map((st && st.ok ? st.items : []).map((s) => [`${s.team}|${s.shift}`, s]));
+    } catch { /* no flags rather than no approvals list */ }
   }
   const flagOf = (l: { user_id: string; work_date: string; clock_in: string | null }) => {
     const d = String(l.work_date), week = rosterOf.get(mondayOfDate(d));

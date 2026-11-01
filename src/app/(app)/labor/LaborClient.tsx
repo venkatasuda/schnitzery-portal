@@ -20,7 +20,7 @@ type Initial = { sum: any; sales: any[]; staff: any[]; error: string | null; den
 
 // Data arrives with the page (page.tsx loads it on the server, in parallel); this client
 // component only reloads after a change.
-export default function LaborClient({ initial = null }: { initial?: Initial }) {
+export default function LaborClient({ initial = null }: { initial?: Initial } = {}) {
   const { t, locale } = useLang();
   const eur = (n: number) => formatEur((n || 0), locale, "auto");
   const [sum, setSum] = useState<any>(initial?.sum ?? null);
