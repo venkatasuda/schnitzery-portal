@@ -30,3 +30,7 @@ Recommended order: 1 → 5 → 6 (quick, visible) → 2 → 3 → 4.
   rates in `src/lib/pay/legal.ts` (update the table when a new rate is decided);
   labour page badge per person, owner-home alert (below now / below in ≤ 61 days),
   roster panel warns when a Minijobber's month (worked + planned) passes the cap.
+- #5 done as "flag, never block" (owner decision): Approvals and the attendance hub mark
+  shifts clocked in > 15 min before the planned start, or on a day the person wasn't
+  rostered (`src/lib/time/roster.ts`). Planned-vs-actual now understands custom
+  "HH:MM–HH:MM" roster entries (they used to show as "unscheduled").

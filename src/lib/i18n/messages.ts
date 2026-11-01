@@ -265,7 +265,7 @@ export const messages = {
       tabAll: "All", tabLeave: "Leave", tabSwaps: "Swaps", tabTime: "Time",
       nothing: "Nothing to approve", caughtUp: "You're all caught up.", back: "‹ Back to dashboard",
       approved: "Approved.", rejected: "Rejected.", actionFailed: "Action failed.", someone: "Someone",
-      timeOff: "Time off", swap: "Swap", with: "with", mLate: "m late", overtime: "overtime", suspect: "over 16 h — clock-out forgotten? Correct it first",
+      timeOff: "Time off", swap: "Swap", with: "with", mLate: "m late", overtime: "overtime", suspect: "over 16 h — clock-out forgotten? Correct it first", early: "clocked in {n} min before the planned shift — pay the early minutes?", unrostered: "not on the roster that day",
     },
     inv: {
       status: "Status", lowStatus: "Below target", atTargetStatus: "At target", notCountedStatus: "Not counted today",
@@ -1141,7 +1141,7 @@ export const messages = {
       tabAll: "Alle", tabLeave: "Urlaub", tabSwaps: "Tausch", tabTime: "Zeit",
       nothing: "Nichts zu genehmigen", caughtUp: "Alles erledigt.", back: "‹ Zurück zur Übersicht",
       approved: "Genehmigt.", rejected: "Abgelehnt.", actionFailed: "Aktion fehlgeschlagen.", someone: "Jemand",
-      timeOff: "Urlaub", swap: "Tausch", with: "mit", mLate: " Min. zu spät", overtime: "Überstunden", suspect: "über 16 Std. – Ausstempeln vergessen? Erst korrigieren",
+      timeOff: "Urlaub", swap: "Tausch", with: "mit", mLate: " Min. zu spät", overtime: "Überstunden", suspect: "über 16 Std. – Ausstempeln vergessen? Erst korrigieren", early: "{n} Min. vor Schichtbeginn eingestempelt – frühe Minuten bezahlen?", unrostered: "an dem Tag nicht im Dienstplan",
     },
     inv: {
       status: "Status", lowStatus: "Unter Zielbestand", atTargetStatus: "Zielbestand erreicht", notCountedStatus: "Heute nicht gezählt",
