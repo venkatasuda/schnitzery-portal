@@ -22,7 +22,7 @@ async function renderAfterLoad(fail) {
   };
   const exports = {};
   const result = fail ? { ok: false, error: 'Database unavailable' } : { ok: true, leave: [], swaps: [], rows: [], items: [] };
-  vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/(app)/approvals/page.tsx', 'utf8'), {
+  vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/(app)/approvals/ApprovalsClient.tsx', 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
   }).outputText, {
     exports,

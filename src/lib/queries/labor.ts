@@ -236,9 +236,14 @@ export async function raiseToMinimumWage() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return { ok: false as const, error: "Wage history is not configured." };
   const admin = createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  // The current wage is the one with the latest start date, so the raise must not start
+  // before the person's current wage — otherwise it lands in history and changes nothing.
+  const { data: pay } = await supabase.from("user_pay").select("user_id, effective_from").in("user_id", targets.map((p) => p.id));
+  const since = new Map((pay || []).map((r) => [r.user_id as string, (r.effective_from as string | null) ?? ""]));
   let count = 0;
   for (const p of targets) {
-    const r = await setWage(admin, p.id, branchId, rate.eur, user.id, rate.from);
+    const from = (since.get(p.id) || "") > rate.from ? since.get(p.id)! : rate.from;
+    const r = await setWage(admin, p.id, branchId, rate.eur, user.id, from);
     if (!r.ok) return { ok: false as const, error: r.error, count };
     count++;
   }

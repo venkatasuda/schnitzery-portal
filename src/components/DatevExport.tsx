@@ -13,21 +13,21 @@ import { buildLodas, datevSettingsError, DATEV_KINDS, type DatevRow, type DatevS
 export default function DatevExport({ month, rows, approved }: { month: string; rows: DatevRow[]; approved: boolean }) {
   const { t, locale } = useLang();
   const [s, setS] = useState<DatevSettings | null>(null);
+  const [saved, setSaved] = useState(false); // from the database, not from what is being typed
   const [edit, setEdit] = useState(false);
   const [busy, setBusy] = useState(false);
   const [left, setLeft] = useState<{ missingPnr: string[]; notInSnapshot: string[] } | null>(null);
 
-  useEffect(() => { getDatevSettings().then((r) => setS(r.settings)).catch(() => setS({ beraterNr: "", mandantNr: "", lohnarten: {} })); }, []);
+  useEffect(() => { getDatevSettings().then((r) => { setS(r.settings); setSaved(!datevSettingsError(r.settings)); }).catch(() => setS({ beraterNr: "", mandantNr: "", lohnarten: {} })); }, []);
   useEffect(() => setLeft(null), [month]);
   if (!s) return null;
-  const configured = !datevSettingsError(s);
 
   async function save() {
     if (!s) return;
     setBusy(true);
     try {
       const r = await setDatevSettings(s);
-      if (r.ok) { toast(t("datev.saved"), "success"); setEdit(false); } else toast(serverText(r.error || "", locale) || t("pay.saveFailed"), "error");
+      if (r.ok) { toast(t("datev.saved"), "success"); setSaved(true); setEdit(false); } else toast(serverText(r.error || "", locale) || t("pay.saveFailed"), "error");
     } catch { toast(t("pay.saveFailed"), "error"); }
     finally { setBusy(false); }
   }
@@ -52,7 +52,7 @@ export default function DatevExport({ month, rows, approved }: { month: string; 
     <div className="card mt-4">
       <div className="card-title">{t("datev.title")}</div>
       <p className="ui-sub">{t("datev.hint")}</p>
-      {(edit || !configured) ? (
+      {(edit || !saved) ? (
         <div className="d-flex f-col gap-3">
           <div className="d-flex gap-4 f-wrap">
             <Field label={t("datev.berater")}><input className="form-input ui-input-sm" inputMode="numeric" maxLength={7} value={s.beraterNr} onChange={(e) => setS({ ...s, beraterNr: e.target.value.replace(/\D/g, "") })} /></Field>
