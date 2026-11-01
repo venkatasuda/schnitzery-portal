@@ -13,6 +13,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Field, Stat, StatGrid } from "@/components/ui";
 import DatevExport from "@/components/DatevExport";
+import PayslipUpload from "@/components/PayslipUpload";
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "");
 const htmlText = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -212,6 +213,7 @@ export default function PayrollExportPage() {
             <button onClick={payrollReport} className="btn-secondary">{t("pay.exportReport")}</button>
           </div>
           <DatevExport month={month} rows={rows} approved={run.status === "approved"} />
+          <PayslipUpload month={month} people={rows} />
           <div className="ui-note">{t("pay.overlapNote")}</div>
           <div className="ui-note">{t("pay.ratesNote")}</div>
         </>

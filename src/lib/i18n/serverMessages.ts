@@ -4,6 +4,12 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "Choose a person, a month and a PDF.": "Bitte Person, Monat und PDF wählen.",
+  "Employee not found in this branch.": "Mitarbeiter:in nicht in dieser Filiale gefunden.",
+  "Only PDF files.": "Nur PDF-Dateien.",
+  "Payslips are not configured.": "Lohnabrechnungen sind nicht eingerichtet.",
+  "The PDF must be under 900 KB.": "Das PDF muss kleiner als 900 KB sein.",
+  "You can't upload your own payslip.": "Die eigene Lohnabrechnung kann man nicht selbst hochladen.",
   "Enter valid tip amounts.": "Bitte gültige Trinkgeldbeträge eingeben.",
   "Beraternummer: 4–7 digits.": "Beraternummer: 4–7 Ziffern.",
   "Invalid DATEV settings.": "Ungültige DATEV-Einstellungen.",

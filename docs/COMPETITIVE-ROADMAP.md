@@ -48,3 +48,13 @@ Recommended order: 1 → 5 → 6 (quick, visible) → 2 → 3 → 4.
   page. Cash + card per Mon–Sun week (`tip_pools`, migration 20261101100000, managers only),
   split by paid minutes of completed shifts, largest-remainder cents (`src/lib/pay/tips.ts`).
   Not yet: staff seeing their own share, tips in the DATEV file.
+- #4 done (first version): roster page "Draft from last week" (`src/lib/roster/draft.ts`).
+  Copies last week's shifts; keeps each person if they still fit, else the same team's
+  available colleague with the fewest hours; rules: one shift/day, availability window,
+  11 h rest (ArbZG § 5), weekly contract hours, Minijob cap. Open slots are listed.
+  Fills the screen only — the manager saves. Not yet: scaling staff to the sales forecast.
+- #7 done: payroll export page → "Payslips" card. Manager uploads one PDF per person and
+  month (PDF magic bytes, < 900 KB, target in branch and below the manager's rank, never
+  self); stored by the server in the person's documents folder as doc_type "payslip"
+  (approved, no review step). Staff see a "Payslips" card under Documents, one entry per
+  month; links are signed server-side after the RLS row check. No migration.

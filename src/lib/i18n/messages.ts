@@ -461,7 +461,7 @@ export const messages = {
     },
     roster: {
       title: "Weekly Roster", subtitle: "Assign staff to shifts · {week}", managersOnly: "Only managers can edit the roster.",
-      thisWeek: "This week", weeksPlus: "+{n}w", weeksMinus: "{n}w", saveRoster: "Save roster", loadFailed: "Roster could not be loaded. Your existing plan has not been changed.", discardChanges: "Leave this week and discard your unsaved changes?", removeShift: "Remove shift for {name}",
+      thisWeek: "This week", weeksPlus: "+{n}w", weeksMinus: "{n}w", saveRoster: "Save roster", draft: "Draft from last week", draftHint: "Copies last week and swaps in available colleagues where needed (availability, 11 h rest, contract hours, Minijob limit). Nothing is saved until you press Save.", draftReplace: "Replace this week's shifts with a draft?", draftNoTemplate: "Last week has no roster to start from.", draftDone: "Draft: {n} shifts, {r} reassigned, {o} open — check and save", draftOpen: "{n} shift(s) nobody can take", draftOpenHint: "Nobody from that team is available within rest-time, contract and Minijob limits. Assign someone by hand or leave it open.", loadFailed: "Roster could not be loaded. Your existing plan has not been changed.", discardChanges: "Leave this week and discard your unsaved changes?", removeShift: "Remove shift for {name}",
       weekGlance: "Week at a Glance · {n} shifts", assigned: "{n} assigned", add: "+ Add",
       staff: "Staff", select: "Select…", team: "Team", shift: "Shift", noOne: "No one assigned.",
       customTime: "Custom time…", from: "From", to: "To", badTime: "Set a start and end time.",
@@ -692,6 +692,10 @@ export const messages = {
       hours: "Hours", share: "Share", noHours: "No completed shifts this week.", unapproved: "{n} shift(s) not approved yet — shares can still change.",
       taxNote: "Tips from guests passed on to staff are usually tax-free (§ 3 Nr. 51 EStG). Keep them out of sales; check card tips with your tax advisor.",
     },
+    payslip: {
+      title: "Payslips", hint: "Upload each person's payslip PDF from your tax advisor (under 900 KB). They see it right away under Documents.",
+      person: "Choose a person", file: "Payslip PDF", upload: "Upload payslip", done: "Payslip uploaded", pick: "Choose a person and a PDF.",
+    },
     datev: {
       title: "DATEV export for your tax advisor", hint: "LODAS file with hours per person and Lohnart, from the approved month. Your tax advisor gives you the numbers.",
       berater: "Beraternummer", mandant: "Mandantennummer", laHint: "Lohnart numbers from your tax advisor. Leave a field empty to skip it. Personalnummer = the employee code in Staff (digits only).",
@@ -870,7 +874,7 @@ export const messages = {
       uploading: "Uploading…",
       type_id_card: "ID Card / Passport", type_visa: "Visa / Residence Permit",
       type_work_permit: "Work Permit", type_contract: "Contract",
-      type_certificate: "Certificate", type_other: "Other",
+      type_certificate: "Certificate", type_other: "Other", type_payslip: "Payslips",
       type_tax_id: "Tax ID", type_health_certificate: "Health Certificate", type_training_certificate: "Training Certificate",
       tooBig: "File must be under 5 MB.", uploaded: "Document uploaded.",
       uploadFailed: "Upload failed: ", couldNotOpen: "Could not open document.", loadFailed: "Documents could not be loaded. Try again.",
@@ -1351,7 +1355,7 @@ export const messages = {
     },
     roster: {
       title: "Wochendienstplan", subtitle: "Mitarbeiter Schichten zuweisen · {week}", managersOnly: "Nur Manager können den Dienstplan bearbeiten.",
-      thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "Dienstplan speichern", loadFailed: "Dienstplan konnte nicht geladen werden. Der bestehende Plan wurde nicht verändert.", discardChanges: "Diese Woche verlassen und ungespeicherte Änderungen verwerfen?", removeShift: "Schicht für {name} entfernen",
+      thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "Dienstplan speichern", draft: "Entwurf aus letzter Woche", draftHint: "Übernimmt die letzte Woche und setzt bei Bedarf verfügbare Kolleg:innen ein (Verfügbarkeit, 11 Std. Ruhezeit, Vertragsstunden, Minijob-Grenze). Gespeichert wird erst mit Speichern.", draftReplace: "Schichten dieser Woche durch einen Entwurf ersetzen?", draftNoTemplate: "Letzte Woche hat keinen Dienstplan als Vorlage.", draftDone: "Entwurf: {n} Schichten, {r} neu besetzt, {o} offen — prüfen und speichern", draftOpen: "{n} Schicht(en) kann niemand übernehmen", draftOpenHint: "Niemand aus dem Team ist innerhalb von Ruhezeit, Vertrag und Minijob-Grenze verfügbar. Von Hand besetzen oder offen lassen.", loadFailed: "Dienstplan konnte nicht geladen werden. Der bestehende Plan wurde nicht verändert.", discardChanges: "Diese Woche verlassen und ungespeicherte Änderungen verwerfen?", removeShift: "Schicht für {name} entfernen",
       weekGlance: "Wochenüberblick · {n} Schichten", assigned: "{n} zugewiesen", add: "+ Hinzufügen",
       staff: "Mitarbeiter", select: "Wählen…", team: "Team", shift: "Schicht", noOne: "Niemand zugewiesen.",
       customTime: "Eigene Zeit…", from: "Von", to: "Bis", badTime: "Start- und Endzeit angeben.",
@@ -1582,6 +1586,10 @@ export const messages = {
       hours: "Stunden", share: "Anteil", noHours: "Keine abgeschlossenen Schichten in dieser Woche.", unapproved: "{n} Schicht(en) noch nicht genehmigt — Anteile können sich noch ändern.",
       taxNote: "Trinkgeld von Gästen, das an Mitarbeitende weitergegeben wird, ist meist steuerfrei (§ 3 Nr. 51 EStG). Nicht in den Umsatz buchen; Karten-Trinkgeld mit dem Steuerbüro klären.",
     },
+    payslip: {
+      title: "Lohnabrechnungen", hint: "Lohnabrechnung (PDF vom Steuerbüro, unter 900 KB) je Person hochladen. Sie erscheint sofort unter Dokumente.",
+      person: "Person wählen", file: "Lohnabrechnung (PDF)", upload: "Hochladen", done: "Lohnabrechnung hochgeladen", pick: "Bitte Person und PDF wählen.",
+    },
     datev: {
       title: "DATEV-Export für Ihr Steuerbüro", hint: "LODAS-Datei mit Stunden je Person und Lohnart aus dem freigegebenen Monat. Die Nummern bekommen Sie vom Steuerbüro.",
       berater: "Beraternummer", mandant: "Mandantennummer", laHint: "Lohnarten vom Steuerbüro. Leeres Feld = wird nicht exportiert. Personalnummer = Mitarbeitercode unter Personal (nur Ziffern).",
@@ -1760,7 +1768,7 @@ export const messages = {
       uploading: "Wird hochgeladen…",
       type_id_card: "Ausweis / Reisepass", type_visa: "Visum / Aufenthaltstitel",
       type_work_permit: "Arbeitserlaubnis", type_contract: "Vertrag",
-      type_certificate: "Zertifikat", type_other: "Sonstiges",
+      type_certificate: "Zertifikat", type_other: "Sonstiges", type_payslip: "Lohnabrechnungen",
       type_tax_id: "Steuer-ID", type_health_certificate: "Gesundheitszeugnis", type_training_certificate: "Schulungsnachweis",
       tooBig: "Datei muss kleiner als 5 MB sein.", uploaded: "Dokument hochgeladen.",
       uploadFailed: "Upload fehlgeschlagen: ", couldNotOpen: "Dokument konnte nicht geöffnet werden.", loadFailed: "Dokumente konnten nicht geladen werden. Bitte erneut versuchen.",
