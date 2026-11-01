@@ -107,7 +107,7 @@ export const messages = {
       reportIncident: "Report Incident", reportIncidentSub: "Accidents, hazards & issues",
       needsAttention: "Needs Attention", allClear: "All clear", allClearSub: "Nothing needs your attention right now.",
       approvalsWaiting: "{n} approvals waiting", openIncidents: "{n} open incidents",
-      belowMinNow: "{n} people paid below the legal minimum wage", belowMinSoon: "{n} people below the minimum wage from {date} ({min}/h) — raise wages",
+      newHiresOpen: "{n} new hire(s) with open onboarding steps", belowMinNow: "{n} people paid below the legal minimum wage", belowMinSoon: "{n} people below the minimum wage from {date} ({min}/h) — raise wages",
       lowStock: "{n} low-stock items", notSubmitted: "{n} haven't submitted availability",
       today: "Today", statWorking: "Working", statDone: "Done", statLate: "Late", hours: "Hours",
       dailyChecklist: "Daily Checklist", allTasksDone: "All tasks done today 🎉", openingClosing: "Opening & closing tasks",
@@ -696,6 +696,13 @@ export const messages = {
       title: "Payslips", hint: "Upload each person's payslip PDF from your tax advisor (under 900 KB). They see it right away under Documents.",
       person: "Choose a person", file: "Payslip PDF", upload: "Upload payslip", done: "Payslip uploaded", pick: "Choose a person and a PDF.",
     },
+    onboarding: {
+      title: "Onboarding · {done} of {total} done", fix: "Fix",
+      contract: "Contract type and hours entered", contractDoc: "Signed contract uploaded and approved", taxId: "Tax ID (Steuer-ID) uploaded and approved",
+      ifsg: "§ 43 IfSG Belehrung (health certificate) approved", pnr: "Personalnummer for DATEV (numeric employee code)", wage: "Hourly wage set",
+      login: "Logged in and changed the first password", availability: "Availability submitted (by the person in their app)", firstShift: "First shift rostered or worked",
+      docsHint: "Documents are uploaded by the person under Profile → Documents and approved below.",
+    },
     datev: {
       title: "DATEV export for your tax advisor", hint: "LODAS file with hours per person and Lohnart, from the approved month. Your tax advisor gives you the numbers.",
       berater: "Beraternummer", mandant: "Mandantennummer", laHint: "Lohnart numbers from your tax advisor. Leave a field empty to skip it. Personalnummer = the employee code in Staff (digits only).",
@@ -1001,7 +1008,7 @@ export const messages = {
       reportIncident: "Vorfall melden", reportIncidentSub: "Unfälle, Gefahren & Probleme",
       needsAttention: "Erfordert Aufmerksamkeit", allClear: "Alles erledigt", allClearSub: "Im Moment ist nichts zu tun.",
       approvalsWaiting: "{n} Genehmigungen ausstehend", openIncidents: "{n} offene Vorfälle",
-      belowMinNow: "{n} Personen unter dem gesetzlichen Mindestlohn", belowMinSoon: "{n} Personen ab {date} unter dem Mindestlohn ({min}/h) — Löhne anheben",
+      newHiresOpen: "{n} Neueinstellung(en) mit offenen Onboarding-Schritten", belowMinNow: "{n} Personen unter dem gesetzlichen Mindestlohn", belowMinSoon: "{n} Personen ab {date} unter dem Mindestlohn ({min}/h) — Löhne anheben",
       lowStock: "{n} Artikel mit niedrigem Bestand", notSubmitted: "{n} haben keine Verfügbarkeit eingereicht",
       today: "Heute", statWorking: "Arbeitet", statDone: "Fertig", statLate: "Verspätet", hours: "Stunden",
       dailyChecklist: "Tägliche Checkliste", allTasksDone: "Heute alle Aufgaben erledigt 🎉", openingClosing: "Öffnungs- & Schließaufgaben",
@@ -1589,6 +1596,13 @@ export const messages = {
     payslip: {
       title: "Lohnabrechnungen", hint: "Lohnabrechnung (PDF vom Steuerbüro, unter 900 KB) je Person hochladen. Sie erscheint sofort unter Dokumente.",
       person: "Person wählen", file: "Lohnabrechnung (PDF)", upload: "Hochladen", done: "Lohnabrechnung hochgeladen", pick: "Bitte Person und PDF wählen.",
+    },
+    onboarding: {
+      title: "Onboarding · {done} von {total} erledigt", fix: "Erledigen",
+      contract: "Vertragsart und Stunden eingetragen", contractDoc: "Unterschriebener Vertrag hochgeladen und geprüft", taxId: "Steuer-ID hochgeladen und geprüft",
+      ifsg: "Belehrung nach § 43 IfSG (Gesundheitszeugnis) geprüft", pnr: "Personalnummer für DATEV (numerischer Mitarbeitercode)", wage: "Stundenlohn festgelegt",
+      login: "Angemeldet und erstes Passwort geändert", availability: "Verfügbarkeit eingereicht (von der Person in der App)", firstShift: "Erste Schicht geplant oder gearbeitet",
+      docsHint: "Dokumente lädt die Person unter Profil → Dokumente hoch; geprüft werden sie unten.",
     },
     datev: {
       title: "DATEV-Export für Ihr Steuerbüro", hint: "LODAS-Datei mit Stunden je Person und Lohnart aus dem freigegebenen Monat. Die Nummern bekommen Sie vom Steuerbüro.",
