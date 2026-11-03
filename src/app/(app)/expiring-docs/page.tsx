@@ -38,6 +38,12 @@ export default function ExpiringDocsPage() {
   const [employee, setEmployee] = useState("");
   const [docType, setDocType] = useState("");
 
+  // Links from home alerts open the right list: /expiring-docs?bucket=missing
+  useEffect(() => {
+    const b = new URLSearchParams(window.location.search).get("bucket");
+    if (b && ["all", "30", "60", "90", "expired", "pending", "missing"].includes(b)) setBucket(b as Bucket);
+  }, []);
+
   useEffect(() => {
     getDocumentsDashboard().then((r: any) => {
       if (r.ok) setData(r);

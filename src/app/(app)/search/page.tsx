@@ -17,7 +17,7 @@ export default function SearchPage() {
   const timer = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => { const q0 = new URLSearchParams(window.location.search).get("q"); if (q0) setQ(q0.slice(0, 100)); inputRef.current?.focus(); }, []); // /search?q=… works as a link
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
