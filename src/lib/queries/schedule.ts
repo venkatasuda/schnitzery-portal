@@ -101,7 +101,7 @@ export async function getRoster(weekStart?: string) {
   // staff list for assignment dropdowns (same branch)
   const { data: staff, error: staffError } = await supabase
     .from("users")
-    .select("id, full_name, role, contract_hours")
+    .select("id, full_name, role, team, contract_hours")
     .eq("branch_id", branchId)
     .eq("status", "active").neq("role", "kiosk")
     .order("full_name");
@@ -123,6 +123,7 @@ export async function getRoster(weekStart?: string) {
     id: s.id,
     full_name: s.full_name,
     role: s.role,
+    team: s.team ?? null,
     contractHours: s.contract_hours ?? null,
     workedH: Math.round(((workedMins[s.id] || 0) / 60) * 10) / 10,
   }));

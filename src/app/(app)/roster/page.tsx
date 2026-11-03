@@ -10,6 +10,9 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { Field } from "@/components/ui";
 import RosterLabourPanel from "@/components/RosterLabourPanel";
+import { getRosterPlanning } from "@/lib/queries/owner-insights";
+import { getShiftTimes } from "@/lib/queries/shift-times";
+import { draftRoster } from "@/lib/roster/draft";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // Every team a manager can roster — not only the ones that happen to have preset
@@ -38,6 +41,8 @@ export default function RosterPage() {
   const [loadError, setLoadError] = useState("");
   const [expected,setExpected] = useState<{id:string;roster:any}|null>(null);
   const loadSerial=useRef(0);
+  const [drafting, setDrafting] = useState(false);
+  const [openSlots, setOpenSlots] = useState<{ day: string; team: string; shift: string }[]>([]);
 
   // add-shift form (per selected day)
   const [activeDay, setActiveDay] = useState<string | null>(null);
@@ -57,7 +62,7 @@ export default function RosterPage() {
       const res = await getRoster(ws);
       if(serial!==loadSerial.current)return;
       if (!res.ok) { if (res.error?.includes("managers")) setDenied(true); throw Error(res.error); }
-      setWeekStart(res.weekStart || ""); setRoster(res.roster || {}); setExpected(res.expected || null);
+      setWeekStart(res.weekStart || ""); setRoster(res.roster || {}); setExpected(res.expected || null); setOpenSlots([]);
       setStaff(res.staff || []); setAvail((res as any).avail || {});
     } catch { if(serial===loadSerial.current)setLoadError(t("roster.loadFailed")); }
     finally { if(serial===loadSerial.current)setLoading(false); }
@@ -101,6 +106,29 @@ export default function RosterPage() {
       arr.splice(idx, 1);
       return { ...r, [day]: arr };
     });
+  }
+
+  // Auto-draft from last week's roster (src/lib/roster/draft.ts). Fills the screen only;
+  // nothing is saved until the manager presses Save.
+  async function autoDraft() {
+    if (drafting || saving || loading || loadError || !weekStart) return;
+    if (totalAssigned > 0 && !confirm(t("roster.draftReplace"))) return;
+    setDrafting(true);
+    try {
+      const prev = new Date(`${weekStart}T12:00:00Z`); prev.setUTCDate(prev.getUTCDate() - 7);
+      const [last, st, plan] = await Promise.all([getRoster(prev.toISOString().slice(0, 10)), getShiftTimes(), getRosterPlanning(weekStart)]);
+      const template = (last.ok && (last as { roster?: Roster }).roster) || {};
+      if (!Object.values(template).some((d) => (d as Entry[]).length)) { toast(t("roster.draftNoTemplate"), "error"); return; }
+      const d = draftRoster({
+        weekStart, template, avail,
+        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null })),
+        times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
+        minijobbers: plan.ok ? plan.minijobbers : [],
+      });
+      setRoster(d.roster); setOpenSlots(d.open);
+      toast(t("roster.draftDone", { n: d.assigned, r: d.replaced, o: d.open.length }), d.open.length ? "error" : "success");
+    } catch { toast(t("roster.loadFailed"), "error"); }
+    finally { setDrafting(false); }
   }
 
   async function doSave() {
@@ -147,6 +175,9 @@ export default function RosterPage() {
           </span>
           <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
         </div>
+        <button className="btn-secondary" onClick={autoDraft} disabled={drafting||saving||loading||!!loadError} title={t("roster.draftHint")}>
+          {drafting ? t("common.loading") : t("roster.draft")}
+        </button>
         <button className="btn-gold" onClick={doSave} disabled={saving||loading||!!loadError}>
           {saving ? t("common.saving") : t("roster.saveRoster")}
         </button>
@@ -157,6 +188,13 @@ export default function RosterPage() {
       ) : (
         <>
           <RosterLabourPanel weekStart={weekStart} roster={roster} />
+          {openSlots.length > 0 && (
+            <div className="card u-mb-3" role="status">
+              <div className="card-title">{t("roster.draftOpen", { n: openSlots.length })}</div>
+              <ul className="t-sm">{openSlots.map((o, i) => <li key={i}>{dayLabel(o.day)} · {teamLabel(o.team)} · {shiftLabel(o.shift)}</li>)}</ul>
+              <p className="ui-sub">{t("roster.draftOpenHint")}</p>
+            </div>
+          )}
 
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
           <div className="card u-mb-3">
