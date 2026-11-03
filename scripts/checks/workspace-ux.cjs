@@ -15,12 +15,14 @@ function moduleAt(file, resolve, url = 'http://schnitzery.localhost:3100/invento
 async function ui(page, result, url) {
   const states=[], effects=[]; let cursor=0, initial=true;
   const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(value){const i=cursor++;if(initial)states[i]={current:value};return states[i];}};
-  const component=moduleAt(`src/app/(app)/${page}/page.tsx`, function resolve(name){
+  const component=moduleAt(`src/app/(app)/${page}/${page==='labor'?'LaborClient':'page'}.tsx`, function resolve(name){ // labour page: server part loads data, client part renders
     if(name==='react')return hooks;
     if(name==='recharts')return new Proxy({}, {get:()=>()=>null});
     if(name==='@/lib/time/berlinDate')return {...moduleAt('src/lib/time/berlinDate.ts',require),berlinToday:()=> '2026-10-13'};
     if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:(_target,key)=>async(...args)=>{if(result instanceof Error)throw result;if(key==='getInventoryContext')return {ok:true,branch:{id:'branch',name:'Test branch'},countDate:'2026-10-13'}; return typeof result==='function'?result(key,args):result;}});
     if(name==='@/lib/inventory/identity')return moduleAt('src/lib/inventory/identity.ts',require);
+    if(name==='@/lib/pay/legal')return moduleAt('src/lib/pay/legal.ts',require);
+    if(name==='@/components/TipPool')return {__esModule:true,default:()=>null};
     if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
     if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
     if(name==='@/lib/inventory/orderDraft')return moduleAt('src/lib/inventory/orderDraft.ts',()=>moduleAt('src/lib/analytics/coverage.ts',require));
@@ -116,6 +118,7 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     '@/lib/auth/rank':{rankOf:r=>({super_admin:5,brand_owner:4,branch_owner:3,manager:2,staff:1})[r]||0},
     '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({from:'2026-10-01',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
+    '@/lib/pay/legal':moduleAt('src/lib/pay/legal.ts',()=>({})),
     '@/lib/pay/wages':{wageMapForBranches:async()=>({a:0})},
     '@/lib/analytics/coverage':moduleAt('src/lib/analytics/coverage.ts',()=>({})),
     '@/lib/supabase/readAll':{readAll:async q=>({data:q.table==='attendance_logs'?[{user_id:'a',clock_in:'2026-10-01T08:00:00Z',clock_out:'2026-10-01T09:00:00Z'}]:[],error:null})},
@@ -129,6 +132,7 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     '@/lib/auth/rank':{rankOf:r=>({super_admin:5,brand_owner:4,branch_owner:3,manager:2,staff:1})[r]||0},
     '@/lib/time/berlinDate':{berlinToday:()=> '2026-10-17',monthRange:()=>({ym:'2026-10',from:'2026-10-01',to:'2026-10-31',next:'2026-11-01'})},
     '@/lib/pay/calculations':calc,
+    '@/lib/pay/legal':moduleAt('src/lib/pay/legal.ts',()=>({})),
     '@/lib/pay/wages':{wageMapForBranches:async()=>({})},
     '@/lib/analytics/coverage':moduleAt('src/lib/analytics/coverage.ts',()=>({})),
     '@/lib/supabase/readAll':{readAll:async q=>({data:q.table==='attendance_logs'?[{user_id:'a',work_date:'2026-10-01',clock_in:'2026-10-01T08:00:00Z',clock_out:'2026-10-01T09:00:00Z'}]:q.table==='daily_sales'?[{amount:100,sale_date:'2026-10-01'}]:q.table==='users'?[{id:'a',full_name:'A'}]:[],error:null})},

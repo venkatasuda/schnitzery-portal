@@ -8,6 +8,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { monthRange, isCalendarDate, berlinToday } from "@/lib/time/berlinDate";
 import { shiftMinutes, payForMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches, setWage } from "@/lib/pay/wages";
+import { wageIssue, nextMinimumWage, MINIMUM_WAGE } from "@/lib/pay/legal";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { rankOf } from "@/lib/auth/rank";
 
@@ -40,7 +41,7 @@ export async function getLaborSummary() {
   const today = berlinToday();
   const [wages, headcount, logsRes, salesRes, purchRes] = await Promise.all([
     wageMapForBranches(supabase, [branchId]),
-    supabase.from("users").select("id", { count: "exact", head: true }).eq("branch_id", branchId),
+    supabase.from("users").select("id, contract_type", { count: "exact" }).eq("branch_id", branchId),
     readAll(supabase.from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, status")
       .eq("branch_id", branchId).gte("work_date", first).lt("work_date", next).lte("work_date", today).eq("status", "complete").order("id")),
     readAll(supabase.from("daily_sales").select("amount, sale_date").eq("branch_id", branchId).gte("sale_date", first).lt("sale_date", next).lte("sale_date", today).order("id")),
@@ -50,6 +51,13 @@ export async function getLaborSummary() {
   let withWage = 0;
   for (const [id, w] of Object.entries(wages)) { wageOf[id] = w ?? 0; if (w != null) withWage++; }
   const staffCount = headcount.count;
+  // Mindestlohn check (warning only: trainees/interns can be exempt).
+  let belowMinNow = 0, belowMinSoon = 0;
+  for (const u of headcount.data || []) {
+    const w = wageIssue(wages[u.id], u.contract_type, today);
+    if (w?.kind === "below_now") belowMinNow++; else if (w) belowMinSoon++;
+  }
+  const nextMin = nextMinimumWage(today);
 
   // labor cost from completed attendance this month
   const { data: logs, error: logsError } = logsRes;
@@ -93,6 +101,9 @@ export async function getLaborSummary() {
     staffCount: staffCount || 0,
     withWage,
     missingWageStaff,
+    belowMinNow,
+    belowMinSoon,
+    nextMin,
     coverage,
   };
 }
@@ -143,7 +154,7 @@ export async function getStaffWages() {
   if (!user) return { ok: false, error: "Not logged in.", staff: [] };
   if (!isManager(role)) return { ok: false, error: "Managers only.", staff: [] };
   const { data, error } = await readAll(supabase
-    .from("users").select("id, full_name, team").eq("branch_id", branchId).order("full_name").order("id"));
+    .from("users").select("id, full_name, team, contract_type").eq("branch_id", branchId).order("full_name").order("id"));
   if (error) return { ok: false, error: error.message, staff: [] };
 
   // Wages come from user_pay (item 18) and are stitched on here, so the shape
@@ -198,6 +209,41 @@ export async function setWageForMissing(wage: number, effectiveFrom: string) {
   let count = 0;
   for (const p of targets) { // ponytail: one RPC per person; fine for a branch, batch if hundreds
     const r = await setWage(admin, p.id, branchId, wage, user.id, effectiveFrom);
+    if (!r.ok) return { ok: false as const, error: r.error, count };
+    count++;
+  }
+  return { ok: true as const, count };
+}
+
+// Raise everyone paid below the legal minimum wage to exactly that minimum, effective from
+// the day the rate came into force (a legal date, not a guess). Trainees/interns are skipped.
+export async function raiseToMinimumWage() {
+  const { supabase, user, role, branchId } = await getMgr();
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (!isManager(role)) return { ok: false as const, error: "Managers only." };
+  if (!branchId) return { ok: false as const, error: "No branch." };
+  const today = berlinToday();
+  const rate = [...MINIMUM_WAGE].reverse().find((m) => m.from <= today);
+  if (!rate) return { ok: true as const, count: 0 };
+  const [{ data: people, error }, wages] = await Promise.all([
+    readAll(supabase.from("users").select("id, role, contract_type").eq("branch_id", branchId).eq("status", "active").neq("role", "kiosk").order("id")),
+    wageMapForBranches(supabase, [branchId]),
+  ]);
+  if (error) return { ok: false as const, error: error.message };
+  const targets = (people || []).filter((p) => p.id !== user.id && (role === "super_admin" || rankOf(p.role) < rankOf(role))
+    && wageIssue(wages[p.id], p.contract_type, today)?.kind === "below_now");
+  if (!targets.length) return { ok: true as const, count: 0 };
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return { ok: false as const, error: "Wage history is not configured." };
+  const admin = createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  // The current wage is the one with the latest start date, so the raise must not start
+  // before the person's current wage — otherwise it lands in history and changes nothing.
+  const { data: pay } = await supabase.from("user_pay").select("user_id, effective_from").in("user_id", targets.map((p) => p.id));
+  const since = new Map((pay || []).map((r) => [r.user_id as string, (r.effective_from as string | null) ?? ""]));
+  let count = 0;
+  for (const p of targets) {
+    const from = (since.get(p.id) || "") > rate.from ? since.get(p.id)! : rate.from;
+    const r = await setWage(admin, p.id, branchId, rate.eur, user.id, from);
     if (!r.ok) return { ok: false as const, error: r.error, count };
     count++;
   }

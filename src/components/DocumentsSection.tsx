@@ -21,7 +21,7 @@ const DOC_TYPES = [
   { key: "certificate", icon: "🎓" },
   { key: "other", icon: "📁" },
 ];
-const iconOf = (k: string) => DOC_TYPES.find((t) => t.key === k)?.icon || "📁";
+const iconOf = (k: string) => (k === "payslip" ? "💶" : DOC_TYPES.find((t) => t.key === k)?.icon || "📁");
 
 type Tf = (k: string, v?: Record<string, string | number>) => string;
 
@@ -41,7 +41,7 @@ const fmtDate = (d?: string | null) =>
 
 export default function DocumentsSection() {
   const { t } = useLang();
-  const docLabel = (k: string) => t("documents.type_" + (DOC_TYPES.some((x) => x.key === k) ? k : "other"));
+  const docLabel = (k: string) => t("documents.type_" + (k === "payslip" || DOC_TYPES.some((x) => x.key === k) ? k : "other")); // payslips come from the manager, not the upload picker
   const [docs, setDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed,setLoadFailed]=useState(false);
@@ -171,7 +171,7 @@ export default function DocumentsSection() {
                   return (
                     <div className="d-flex ai-c gap-3 mt-2 pt-2 bt-1" key={v.id}>
                       <div className="u-grow">
-                        <div className="t-xs u-text">{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></div>
+                        <div className="t-xs u-text">{type === "payslip" ? v.file_name : <>{t("docw.version", { n: v.version_no })} · <span style={{ color: vb.color }}>{vb.label}</span></>}</div>
                         <div className="doc-meta">{t("docw.uploadedOn", { date: fmtDate(v.created_at) })}</div>
                       </div>
                       <button onClick={() => view(v.file_path)} className="doc-btn">{t("documents.view")}</button>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getStaffDetail, getStaffHours } from "@/lib/queries/staff-detail";
 import EmployeeDocuments from "@/components/EmployeeDocuments";
 import BranchLinks from "@/components/BranchLinks";
+import OnboardingCard from "@/components/OnboardingCard";
 import { getStaffLeaveBalance, setLeaveAllowance } from "@/lib/queries/leave-balance";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -104,6 +105,8 @@ export default function StaffDetailPage() {
           </div>
         </div>
       )}
+
+      <OnboardingCard userId={id} />
 
       {/* hours */}
       <div className="section-label">{t("staffd.hoursThisMonth")}</div>

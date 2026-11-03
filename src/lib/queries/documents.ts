@@ -2,6 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { rankOf } from "@/lib/auth/rank";
+import { berlinMonth } from "@/lib/time/berlinDate";
 
 // ============================================================
 // DOCUMENT WORKFLOW — data layer (Phase 2)
@@ -208,10 +211,14 @@ export async function getDocumentUrl(filePath: string) {
   if (!user) return { ok: false, error: "Not logged in." };
 
   const { data: doc } = await supabase
-    .from("user_documents").select("id").eq("file_path", filePath).maybeSingle();
+    .from("user_documents").select("id, doc_type").eq("file_path", filePath).maybeSingle();
   if (!doc) return { ok: false, error: "Not found or no access." };
 
-  const { data, error } = await supabase.storage.from("documents").createSignedUrl(filePath, 300);
+  // Payslips are written by the server into the employee's folder; RLS on the row above
+  // is the gate, so they are signed server-side rather than relying on storage policies.
+  const storage = doc.doc_type === "payslip" ? admin()?.storage : supabase.storage;
+  if (!storage) return { ok: false, error: "Payslips are not configured." };
+  const { data, error } = await storage.from("documents").createSignedUrl(filePath, 300);
   if (error) return { ok: false, error: error.message };
   return { ok: true, url: data.signedUrl };
 }
@@ -338,4 +345,44 @@ export async function getDocumentsDashboard() {
     counts,
     staff: (staff || []).map((s) => ({ id: s.id, name: s.full_name })),
   };
+}
+// ── PAYSLIPS (manager uploads the tax advisor's PDF; staff see it in Documents) ──
+function admin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return url && key ? createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
+}
+const PAYSLIP_MAX = 900 * 1024; // server actions accept ~1 MB; DATEV payslips are far smaller
+
+export async function uploadPayslip(form: FormData) {
+  const { supabase, user, role, branchId } = await getMe();
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (!isManager(role)) return { ok: false as const, error: "Managers only." };
+  if (!branchId) return { ok: false as const, error: "No branch." };
+  const userId = form.get("userId"), month = form.get("month"), file = form.get("file");
+  if (typeof userId !== "string" || !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(userId)
+    || typeof month !== "string" || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month > berlinMonth()
+    || !(file instanceof File)) return { ok: false as const, error: "Choose a person, a month and a PDF." };
+  if (userId === user.id) return { ok: false as const, error: "You can't upload your own payslip." };
+  if (file.size === 0 || file.size > PAYSLIP_MAX) return { ok: false as const, error: "The PDF must be under 900 KB." };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (String.fromCharCode(...bytes.slice(0, 5)) !== "%PDF-") return { ok: false as const, error: "Only PDF files." };
+
+  const { data: target } = await supabase.from("users").select("id, role, branch_id").eq("id", userId).maybeSingle();
+  if (!target || target.branch_id !== branchId) return { ok: false as const, error: "Employee not found in this branch." };
+  if (role !== "super_admin" && rankOf(target.role) >= rankOf(role)) return { ok: false as const, error: "Not allowed." };
+
+  const db = admin();
+  if (!db) return { ok: false as const, error: "Payslips are not configured." };
+  const path = `${userId}/payslip_${month}_${Date.now()}.pdf`;
+  const up = await db.storage.from("documents").upload(path, bytes, { contentType: "application/pdf", upsert: false });
+  if (up.error) return { ok: false as const, error: up.error.message };
+  const { count } = await db.from("user_documents").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("doc_type", "payslip");
+  const now = new Date().toISOString();
+  const { error } = await db.from("user_documents").insert({
+    user_id: userId, branch_id: branchId, doc_type: "payslip", file_path: path, file_name: `Lohnabrechnung ${month}.pdf`,
+    issue_date: `${month}-01`, status: "approved", is_active: true, uploaded_by: user.id, reviewed_by: user.id, reviewed_at: now,
+    version_no: (count || 0) + 1,
+  });
+  if (error) { await db.storage.from("documents").remove([path]); return { ok: false as const, error: error.message }; }
+  return { ok: true as const };
 }

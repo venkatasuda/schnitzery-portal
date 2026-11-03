@@ -4,6 +4,18 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "Choose a person, a month and a PDF.": "Bitte Person, Monat und PDF wählen.",
+  "Employee not found in this branch.": "Mitarbeiter:in nicht in dieser Filiale gefunden.",
+  "Only PDF files.": "Nur PDF-Dateien.",
+  "Payslips are not configured.": "Lohnabrechnungen sind nicht eingerichtet.",
+  "The PDF must be under 900 KB.": "Das PDF muss kleiner als 900 KB sein.",
+  "You can't upload your own payslip.": "Die eigene Lohnabrechnung kann man nicht selbst hochladen.",
+  "Enter valid tip amounts.": "Bitte gültige Trinkgeldbeträge eingeben.",
+  "Beraternummer: 4–7 digits.": "Beraternummer: 4–7 Ziffern.",
+  "Invalid DATEV settings.": "Ungültige DATEV-Einstellungen.",
+  "Lohnart for regular hours is required.": "Die Lohnart für normale Stunden ist erforderlich.",
+  "Lohnart: 1–4 digits.": "Lohnart: 1–4 Ziffern.",
+  "Mandantennummer: 1–5 digits.": "Mandantennummer: 1–5 Ziffern.",
   "A manager correction with a reason is required.": "Eine Korrektur durch die Leitung mit Begründung ist erforderlich.",
   "A rejection reason is required.": "Bitte einen Ablehnungsgrund angeben.",
   "Already actioned. Refresh the transfer.": "Bereits bearbeitet. Bitte den Transfer neu laden.",

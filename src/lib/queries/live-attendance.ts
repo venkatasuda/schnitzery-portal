@@ -2,9 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { readAll } from "@/lib/supabase/readAll";
-import { berlinToday, berlinMonth } from "@/lib/time/berlinDate";
+import { berlinToday, berlinMonth, mondayOfDate } from "@/lib/time/berlinDate";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { IMPLAUSIBLE_SHIFT_MIN, isImplausibleShift } from "@/lib/pay/calculations";
+import { clockInFlag, type RosterEntry, type ShiftTime } from "@/lib/time/roster";
+import { getShiftTimes } from "@/lib/queries/shift-times";
+import { DAYS } from "@/lib/queries/schedule-constants";
 
 // ============================================================
 // LIVE ATTENDANCE + OVERTIME + APPROVALS — manager/owner views.
@@ -199,6 +202,28 @@ export async function getAttendanceApprovals() {
     }
   }
 
+  // Early / not-rostered flags (owner decision 2026-11: flag for approval, never block).
+  // Rosters are cosmetic for this list: if they can't be read, rows simply carry no flag.
+  const weeks = [...new Set(pending.map((l) => mondayOfDate(String(l.work_date))))];
+  const rosterOf = new Map<string, Record<string, RosterEntry[]>>();
+  let times = new Map<string, ShiftTime>();
+  if (weeks.length) {
+    try {
+      const [ros, st] = await Promise.all([
+        supabase.from("weekly_roster").select("week_start, roster_data").eq("branch_id", branchId).in("week_start", weeks),
+        getShiftTimes().catch(() => null),
+      ]);
+      for (const r of ros.data || []) rosterOf.set(String(r.week_start), (r.roster_data as Record<string, RosterEntry[]>) || {});
+      times = new Map((st && st.ok ? st.items : []).map((s) => [`${s.team}|${s.shift}`, s]));
+    } catch { /* no flags rather than no approvals list */ }
+  }
+  const flagOf = (l: { user_id: string; work_date: string; clock_in: string | null }) => {
+    const d = String(l.work_date), week = rosterOf.get(mondayOfDate(d));
+    if (!week) return null; // no roster that week: nothing to compare against
+    const day = DAYS[(new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7];
+    return clockInFlag(l.clock_in, d, (week[day] || []).filter((e) => e.user_id === l.user_id), times);
+  };
+
   const rows = pending.map((l) => ({
     id: l.id, user_id: l.user_id,
     name: names[l.user_id]?.full_name || "Unknown",
@@ -207,6 +232,7 @@ export async function getAttendanceApprovals() {
     duration_mins: l.duration_mins, late_mins: l.late_mins || 0,
     overtime: (l.duration_mins || 0) > LONG_SHIFT_MIN,
     suspect: isImplausibleShift(l), // probable forgotten clock-out: correct before approving
+    clockFlag: flagOf(l),
   }));
 
   return { ok: true, rows };

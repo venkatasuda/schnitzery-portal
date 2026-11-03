@@ -11,7 +11,9 @@ const client={auth:{getUser:async()=>({data:{user:{id:actor}}})},from(table){
     then:(resolve,reject)=>Promise.resolve({data:rows(),error:table==='users'&&nameFailure?{message:'Names unavailable'}:null}).then(resolve,reject)};return q;
 }};
 function load(file,imports){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,Date,Set,URL,require:name=>imports[name]});return exports;}
-const imports={'@/lib/activeBranch':AB,'@/lib/supabase/server':{createClient:async()=>client},'@/lib/supabase/readAll':{readAll:async q=>await q},'@/lib/time/berlinDate':{berlinToday:()=> '2026-10-12',berlinMonth:()=> '2026-10',isCalendarDate:d=>typeof d==='string'&&/^2026-09-\d\d$/.test(d)}};
+const imports={'@/lib/activeBranch':AB,'@/lib/supabase/server':{createClient:async()=>client},'@/lib/supabase/readAll':{readAll:async q=>await q},'@/lib/time/berlinDate':{berlinToday:()=> '2026-10-12',berlinMonth:()=> '2026-10',isCalendarDate:d=>typeof d==='string'&&/^2026-09-\d\d$/.test(d),mondayOfDate:d=>{const x=new Date(d.slice(0,10)+'T12:00:00Z');x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7));return x.toISOString().slice(0,10);}},
+  '@/lib/queries/shift-times':{getShiftTimes:async()=>({ok:true,items:[]})},'@/lib/queries/schedule-constants':{DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']}};
+imports['@/lib/time/roster']=load('src/lib/time/roster.ts',{});
 imports['@/lib/pay/calculations']=load('src/lib/pay/calculations.ts',{});
 const api=load('src/lib/queries/live-attendance.ts',imports),corrections=load('src/lib/queries/corrections.ts',imports);
 (async()=>{
