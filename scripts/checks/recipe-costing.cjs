@@ -12,6 +12,8 @@ const a='00000000-0000-0000-0000-000000000001',b='00000000-0000-0000-0000-000000
  grant select on users,inventory_master to authenticated;`);
  await db.exec(fs.readFileSync('supabase/migrations/20261101074231_inventory_recipe_costing.sql','utf8'));
  await db.exec(fs.readFileSync('supabase/migrations/20261101125825_inventory_recipe_retry_conflict.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/20261103101702_inventory_preparation_planning.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/20261103102620_inventory_recipe_optional_selling_price.sql','utf8'));
  const login=async who=>db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${who}',false)`);
  const lines=JSON.stringify([{product_id:product,qty:500,unit:'g'}]);
  const save=async(branch=a,recipe=id,body=lines)=>db.query('select public.save_inventory_recipe($1,$2,$3,$4,$5,$6)',[branch,recipe,'Dish',2,10,body]);
@@ -19,6 +21,10 @@ const a='00000000-0000-0000-0000-000000000001',b='00000000-0000-0000-0000-000000
  await login(manager);await assert.rejects(save(b),/Recipe access denied/);
  await assert.rejects(save(a,id,JSON.stringify([{product_id:product,qty:1,unit:'l'}])),/Unsupported ingredient conversion/);
  await save();await save();
+ const unknownPrice='00000000-0000-0000-0000-000000000010';
+ await db.query('select public.save_inventory_recipe($1,$2,$3,$4,$5,$6)',[a,unknownPrice,'Preparation without selling price',2,null,lines]);
+ assert.equal((await db.query('select net_price from inventory_recipe_versions where id=$1',[unknownPrice])).rows[0].net_price,null);
+ await db.exec(`reset role;delete from inventory_recipe_versions where id='${unknownPrice}'`);await login(manager);
  let rows=await db.query('select * from public.inventory_recipe_versions');assert.equal(rows.rows.length,1);assert.equal(rows.rows[0].ingredients[0].qty,.5);assert.equal(rows.rows[0].created_by,manager);
  await assert.rejects(save(a,id,JSON.stringify([{product_id:product,qty:1,unit:'kg'}])),{code: '23505', message: 'Recipe command conflict'});
  await assert.rejects(db.exec(`update public.inventory_recipe_versions set net_price=0`),/permission denied/);
@@ -31,5 +37,21 @@ const a='00000000-0000-0000-0000-000000000001',b='00000000-0000-0000-0000-000000
  await db.exec(`reset role;update users set status='active' where id='${manager}';update inventory_master set unit='case' where id='${product}'`);await login(manager);await save();
  rows=await db.query('select * from inventory_recipe_versions');assert.equal(rows.rows[0].ingredients[0].unit,'kg','saved ingredient identity never reinterpreted');
  await assert.rejects(db.query('select private.save_inventory_recipe($1,$2,$3,$4,$5,$6)',[b,id,'Dish',2,10,lines]),/Recipe access denied/);
- await db.close();console.log('Recipe costing: canonical unit conversion, branch/active-role access, private-helper checks, immutable versions and idempotent retries pass.');
+ const yieldId='00000000-0000-0000-0000-000000000007',planId='00000000-0000-0000-0000-000000000008',draftYield='00000000-0000-0000-0000-000000000009';
+ const saveYield=(branch=a,loss='[0.1]',confirmed=true,y=yieldId)=>db.query('select public.save_inventory_recipe_yield($1,$2,$3,$4,$5,$6,$7,$8)',[branch,y,id,.4,'kg',loss,confirmed,'Measured test yield']);
+ const savePlan=(branch=a,y=yieldId,target=4)=>db.query('select public.save_inventory_preparation_plan($1,$2,$3,$4,$5,$6,$7,$8)',[branch,planId,y,'2026-11-03',target,1,1,0]);
+ await assert.rejects(saveYield(b),/Preparation access denied/);await assert.rejects(saveYield(a,'[0.6]'),/Invalid trimming quantity/);await assert.rejects(saveYield(a,'[]'),/Recipe or losses unavailable/);
+ await saveYield();await saveYield();await assert.rejects(saveYield(a,'[0.2]'),{code:'23505'});
+ await saveYield(a,'[0.1]',false,draftYield);await assert.rejects(savePlan(a,draftYield),/Confirmed branch recipe yield required/);
+ await savePlan();await savePlan();await assert.rejects(savePlan(a,yieldId,5),{code:'23505'});
+ assert.equal((await db.query('select * from inventory_preparation_plans')).rows.length,1);
+ for(const table of ['inventory_recipe_yields','inventory_preparation_plans']){
+  await assert.rejects(db.exec(`update public.${table} set id=id`),/permission denied/);
+  await assert.rejects(db.exec(`delete from public.${table}`),/permission denied/);
+  await assert.rejects(db.exec(`insert into public.${table} select * from public.${table}`),/permission denied/);
+ }
+ await login(staff);await assert.rejects(saveYield(),/Preparation access denied/);await assert.rejects(savePlan(),/Preparation access denied/);assert.equal((await db.query('select * from inventory_recipe_yields')).rows.length,0);
+ await db.exec(`reset role;update users set branch_id='${b}' where id='${manager}'`);await login(manager);await assert.rejects(savePlan(),/Preparation access denied/);assert.equal((await db.query('select * from inventory_preparation_plans')).rows.length,0);
+ await db.exec(`reset role;update users set branch_id='${a}',status='inactive' where id='${manager}'`);await login(manager);await assert.rejects(saveYield(),/Preparation access denied/);
+ await db.close();console.log('Recipe and preparation checks: canonical conversions, confirmed yields, trimming limits, branch/active-role access, immutable versions and idempotent retries pass.');
 })().catch(e=>{console.error(e);process.exitCode=1});

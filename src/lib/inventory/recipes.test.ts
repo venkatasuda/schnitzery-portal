@@ -18,6 +18,8 @@ it("retains sub-cent ingredient precision until display",()=>{
 });
 it("withholds contribution when the purchase-price VAT basis is unconfirmed",()=>{
  expect(recipeCost({...recipe,prices_net_confirmed:false},[{product:"Flour",category:"Dry",unit:"kg",price:4}]).contribution).toBeNull();
+ const unknownPrice=recipeCost({...recipe,net_price:null},[{product:"Flour",category:"Dry",unit:"kg",price:4}]);
+ expect(unknownPrice.perPortion).toBe(1);expect(unknownPrice.contribution).toBeNull();expect(unknownPrice.ingredientPct).toBeNull();
 });
 it("costs the supplied Metro salad examples without forcing rounded sheet totals or unconfirmed margins",()=>{
  const common:[string,number,string,number][]=[
