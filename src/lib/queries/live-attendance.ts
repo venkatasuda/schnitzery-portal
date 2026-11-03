@@ -261,3 +261,17 @@ export async function setAttendanceApproval(logId: string, status: "approved" | 
   if (!data) return { ok: false, error: "Shift is unavailable or already reviewed. Reload the queue." };
   return { ok: true };
 }
+
+// Manager closes a forgotten open shift with the real end time and a reason. All rules
+// (branch, rank, not own shift, end after clock-in, not in the future, max 16 h, reason)
+// are enforced by the database function; this only validates the shape.
+export async function closeOpenShift(logId: string, clockOut: string, reason: string) {
+  if (typeof logId !== "string" || !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(logId)
+    || typeof clockOut !== "string" || !Number.isFinite(Date.parse(clockOut))
+    || typeof reason !== "string" || reason.trim().length < 3 || reason.length > 500) return { ok: false as const, error: "Enter the end time and a short reason." };
+  const { supabase, user } = await getMe();
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  const { error } = await supabase.rpc("manager_close_shift", { p_log: logId, p_out: new Date(clockOut).toISOString(), p_reason: reason.trim() });
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const };
+}

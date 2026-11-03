@@ -102,12 +102,7 @@ export async function saveBranchSettings(qrRequired: boolean, gpsMode: string) {
   });
   if (error) return { ok: false, error: error.message };
 
-  // log it
-  await supabase.from("audit_logs").insert({
-    branch_id: branchId, action: "settings_updated",
-    actor: profile?.full_name || "manager",
-    details: `QR required: ${qrRequired}, GPS: ${gpsMode}`,
-  });
+  // Logged by the database (trigger on branch_settings); the app can no longer write audit rows.
   return { ok: true };
 }
 
@@ -117,8 +112,15 @@ export async function getAuditLog() {
   if (!user) return { ok: false, error: "Not logged in.", logs: [] };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only.", logs: [] };
   const { data, error } = await supabase
-    .from("audit_logs").select("*").eq("branch_id", branchId)
-    .order("created_at", { ascending: false }).limit(100);
+    .from("audit_logs").select("id, action, actor, details, changes, target_user, created_at").eq("branch_id", branchId)
+    .order("created_at", { ascending: false }).limit(200);
   if (error) return { ok: false, error: error.message, logs: [] };
-  return { ok: true, logs: data || [] };
+  // Who an entry is about (staff of this branch; people elsewhere stay "—").
+  const ids = [...new Set((data || []).map((l) => l.target_user).filter(Boolean))] as string[];
+  const names: Record<string, string> = {};
+  if (ids.length) {
+    const { data: us } = await supabase.from("users").select("id, full_name").in("id", ids);
+    for (const u of us || []) names[u.id] = u.full_name;
+  }
+  return { ok: true, logs: (data || []).map((l) => ({ ...l, target_name: l.target_user ? names[l.target_user] ?? null : null })) };
 }

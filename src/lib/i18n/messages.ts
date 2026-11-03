@@ -497,7 +497,7 @@ export const messages = {
       title: "Team Leave Calendar", subtitle: "Approved upcoming time off across the team.",
       empty: "No upcoming leave booked.", staffFallback: "Staff", daysShort: "d",
     },
-    audit: { subtitle: "Recent activity on your branch.", empty: "No activity logged yet.", by: "by {actor}" },
+    audit: { subtitle: "Every important change in your branch: who did it, when, and what changed. Entries cannot be edited or deleted.", empty: "No activity logged yet.", by: "by {actor}", a_wage_set: "Hourly wage set", a_payroll_approved: "Payroll approved", a_payroll_status: "Payroll status changed", a_payroll_rules_changed: "Payroll rules / DATEV changed", a_tips_saved: "Tips saved", a_shift_reviewed: "Shift approved / rejected", a_shift_closed: "Open shift closed by manager", a_correction_rejected: "Correction rejected", a_attendance_corrected: "Correction approved", a_leave_decided: "Leave decided", a_staff_created: "Staff account created", a_staff_updated: "Staff details changed", a_branch_access: "Branch access changed", a_document_reviewed: "Document reviewed", a_payslip_uploaded: "Payslip uploaded", a_targets_changed: "Targets changed", a_settings_updated: "Branch settings changed" },
     dash: {
       title: "Dashboard", subtitle: "Live overview of your branch.",
       workingNow: "Working now", activeStaff: "Active staff", pendingApprovals: "Pending approvals",
@@ -823,8 +823,8 @@ export const messages = {
       ruleNote: "Restaurants are exempt from Sunday-rest rules (§10), so Sunday work isn't flagged. This is guidance, not legal advice.",
     },
     compType: { Break: "Break", Rest: "Rest", "Long shift": "Long shift", "Clock-out": "Clock-out?" },
-    ahub: {
-      forgottenTitle: "{n} shift(s) still open for more than 14 hours", forgottenHint: "Probably a forgotten clock-out. Open shifts are left out of payroll until closed: ask the person to clock out and request a correction with the real end time.", forgottenSince: "clocked in {when}",
+    ahub: { closeShift: "Close shift", closeEnd: "Real end time", closeReason: "Reason", closeReasonPh: "e.g. confirmed by phone: left at 22:15", closeConfirm: "Close", closeDone: "Shift closed – the hours now go to approval",
+      forgottenTitle: "{n} shift(s) still open for more than 14 hours", forgottenHint: "Probably a forgotten clock-out. Open shifts are left out of payroll until closed. Use \"Close shift\" with the real end time (ask the person) and a reason – it is logged, the person is notified, and the hours still go to approval.", forgottenSince: "clocked in {when}",
       subtitle: "Live · approvals · overtime · no-shows",
       tabLive: "🔴 Live", tabApproval: "📋 Approval", tabOvertime: "⏱ Overtime", tabNoshow: "🚫 No-Shows", tabDisplay: "📲 Display",
       completed: "Completed", today: "📅 Today", filterName: "🔍  Filter by name…",
@@ -1398,7 +1398,7 @@ export const messages = {
       title: "Team-Urlaubskalender", subtitle: "Genehmigter anstehender Urlaub im gesamten Team.",
       empty: "Kein anstehender Urlaub gebucht.", staffFallback: "Mitarbeiter", daysShort: "T.",
     },
-    audit: { subtitle: "Letzte Aktivität in deiner Filiale.", empty: "Noch keine Aktivität protokolliert.", by: "von {actor}" },
+    audit: { subtitle: "Jede wichtige Änderung in deiner Filiale: wer, wann und was. Einträge können nicht geändert oder gelöscht werden.", empty: "Noch keine Aktivität protokolliert.", by: "von {actor}", a_wage_set: "Stundenlohn festgelegt", a_payroll_approved: "Lohnabrechnung freigegeben", a_payroll_status: "Status der Lohnabrechnung geändert", a_payroll_rules_changed: "Lohnregeln / DATEV geändert", a_tips_saved: "Trinkgeld gespeichert", a_shift_reviewed: "Schicht genehmigt / abgelehnt", a_shift_closed: "Offene Schicht durch Leitung geschlossen", a_correction_rejected: "Korrektur abgelehnt", a_attendance_corrected: "Korrektur genehmigt", a_leave_decided: "Urlaub entschieden", a_staff_created: "Mitarbeiterkonto angelegt", a_staff_updated: "Mitarbeiterdaten geändert", a_branch_access: "Filialzugang geändert", a_document_reviewed: "Dokument geprüft", a_payslip_uploaded: "Lohnabrechnung hochgeladen", a_targets_changed: "Ziele geändert", a_settings_updated: "Filialeinstellungen geändert" },
     dash: {
       title: "Dashboard", subtitle: "Live-Überblick deiner Filiale.",
       workingNow: "Arbeitet gerade", activeStaff: "Aktive Mitarbeiter", pendingApprovals: "Offene Genehmigungen",
@@ -1724,8 +1724,8 @@ export const messages = {
       ruleNote: "Restaurants sind von der Sonntagsruhe (§10) ausgenommen, daher wird Sonntagsarbeit nicht markiert. Dies ist eine Orientierung, keine Rechtsberatung.",
     },
     compType: { Break: "Pause", Rest: "Ruhezeit", "Long shift": "Lange Schicht", "Clock-out": "Ausstempeln?" },
-    ahub: {
-      forgottenTitle: "{n} Schicht(en) seit über 14 Stunden offen", forgottenHint: "Vermutlich vergessen auszustempeln. Offene Schichten fehlen in der Lohnabrechnung, bis sie geschlossen sind: Person ausstempeln lassen und eine Korrektur mit der echten Endzeit beantragen.", forgottenSince: "eingestempelt {when}",
+    ahub: { closeShift: "Schicht schließen", closeEnd: "Echtes Schichtende", closeReason: "Grund", closeReasonPh: "z. B. telefonisch bestätigt: Ende 22:15", closeConfirm: "Schließen", closeDone: "Schicht geschlossen – Stunden gehen jetzt zur Genehmigung",
+      forgottenTitle: "{n} Schicht(en) seit über 14 Stunden offen", forgottenHint: "Vermutlich vergessen auszustempeln. Offene Schichten fehlen in der Lohnabrechnung, bis sie geschlossen sind. Mit \"Schicht schließen\" die echte Endzeit (bei der Person nachfragen) und einen Grund eintragen – das wird protokolliert, die Person benachrichtigt, und die Stunden gehen weiter zur Genehmigung.", forgottenSince: "eingestempelt {when}",
       subtitle: "Live · Genehmigungen · Überstunden · No-Shows",
       tabLive: "🔴 Live", tabApproval: "📋 Genehmigung", tabOvertime: "⏱ Überstunden", tabNoshow: "🚫 No-Shows", tabDisplay: "📲 Anzeige",
       completed: "Fertig", today: "📅 Heute", filterName: "🔍  Nach Name filtern…",

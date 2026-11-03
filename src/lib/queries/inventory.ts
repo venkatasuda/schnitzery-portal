@@ -383,7 +383,7 @@ export async function getInventoryAnalytics(days = 30) {
     needsReview: !usage?.complete,
     totalSales: Math.round(sales.value), missingSalesDays: sales.missing.salesDays || 0,
     foodCostPct: pctOf(spend, sales), // purchases ÷ sales — labelled "Purchase spend / sales"
-    cogsPct,                          // cost of goods used ÷ sales over the commonly counted span
+    cogsPct, usageSpan: valued?.span ?? null, salesDays: new Set(S.map(s => s.sale_date)).size,
     prevSpend: Math.round(prevSpend.value),
     spendPctChange: spend.complete && prevSpend.complete && prevSpend.value > 0 ? Math.round(((spend.value - prevSpend.value) / prevSpend.value) * 100) : null,
     byCategory, topCategory: byCategory[0] || null,

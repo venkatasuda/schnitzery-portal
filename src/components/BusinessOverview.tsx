@@ -15,6 +15,7 @@ export default function BusinessOverview({ data }: { data: Report }) {
   // Known part of an incomplete figure; "≥ €0" says nothing, so nothing known shows "—".
   const known = (f: { complete: boolean }, v: number) => f.complete ? money(v) : v > 0 ? "≥ " + money(v) : "—";
   return <section className="business-overview" aria-label={t("business.overview")}>
+    <div className="dashboard-panel-heading"><Link href="/inventory/insights">{locale === "de" ? "Bestand, Ausschuss und Lieferanten verstehen" : "Understand stock, waste and suppliers"} →</Link></div>
     <div className="business-kpis">
       {[
         [t("business.sales"), b.salesDays ? known(sales, m.totalSales) : "—", t("business.recordedDays", { n: b.salesDays, total: b.elapsedDays })],

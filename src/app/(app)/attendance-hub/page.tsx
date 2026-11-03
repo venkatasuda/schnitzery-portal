@@ -13,6 +13,7 @@ import {
 } from "@/lib/queries/live-attendance";
 import { Stat } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
+import CloseShiftForm from "@/components/CloseShiftForm";
 
 type Tab = "live" | "approval" | "overtime" | "noshow" | "offline";
 
@@ -144,7 +145,7 @@ export default function AttendanceHubPage() {
                 <strong>{t("ahub.forgottenTitle", { n: forgotten.length })}</strong>
                 <div className="ui-muted">{t("ahub.forgottenHint")}</div>
                 <ul className="ui-plain-list">
-                  {forgotten.map((f) => <li key={f.id}>{f.name} · {t("ahub.forgottenSince", { when: new Date(f.clock_in).toLocaleString(locale === "de" ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}</li>)}
+                  {forgotten.map((f) => <li key={f.id}>{f.name} · {t("ahub.forgottenSince", { when: new Date(f.clock_in).toLocaleString(locale === "de" ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}<CloseShiftForm id={f.id} clockIn={f.clock_in} onDone={() => loadLive(date)} /></li>)}
                 </ul>
               </div>
             </div>

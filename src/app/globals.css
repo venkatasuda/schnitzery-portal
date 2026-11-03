@@ -993,3 +993,20 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
   .header-preferences-panel { inset: 72px 12px auto auto; }
   .notification-panel { position: fixed; inset: 72px 12px auto; width: auto; max-width: none; }
 }
+.inventory-insight-toolbar, .inventory-insight-coverage, .inventory-insight-links { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.inventory-insight-toolbar { margin-block: 1rem; }
+.inventory-insight-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-block: 1rem; }
+.inventory-insight-details { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1rem; }
+.inventory-insight-actions { padding-inline-start: 1.5rem; }
+.inventory-insight-actions li { padding-block: .75rem; border-bottom: 1px solid var(--border); }
+.inventory-insight-actions a { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; min-height: 44px; align-items: center; }
+.inventory-insight-reason { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem; padding-block: .75rem; border-bottom: 1px solid var(--border); }
+.inventory-insight-reason small { grid-column: 1 / -1; }
+.inventory-insight-coverage dd { margin: .5rem 0; }
+@media (max-width: 1000px) { .inventory-insight-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .inventory-insight-details { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .inventory-insight-kpis { grid-template-columns: minmax(0, 1fr); } .inventory-insight-toolbar > * { min-width: 0; max-width: 100%; } }
+.inventory-recipe-fields { border: 0; padding: 0; min-width: 0; }
+.inventory-recipe-line { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-block: 1rem; min-width: 0; display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; }
+.inventory-recipe-line > * { min-width: 0; max-width: 100%; }
+.inventory-prep-confirm { display: flex; align-items: start; gap: .75rem; margin-block: 1rem; }
+.inventory-prep-plan { border-block-start: 1px solid var(--border); padding-block: 1rem; overflow-wrap: anywhere; }

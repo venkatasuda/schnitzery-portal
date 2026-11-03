@@ -270,10 +270,10 @@ export default function InventoryPage() {
       </div>
 
       {area !== "overview" && <div className="hub-tabs inventory-subnav" role="group" aria-label={t(`inventoryWorkspace.${area}`)}>
-        {area === "stock" && <><TabButton active={tab === "count"} onClick={() => navigate("count")}>{t("inv.tabCount")}</TabButton><TabButton active={tab === "catalog"} onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton><Link className="hub-tab" href="/expiry">{t("home.expiry")}</Link><Link className="hub-tab" href="/labels">{t("scan.labels")}</Link></>}
+        {area === "stock" && <><TabButton active={tab === "count"} onClick={() => navigate("count")}>{t("inv.tabCount")}</TabButton><TabButton active={tab === "catalog"} onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton><Link className="hub-tab" href="/inventory/preparation">{locale === "de" ? "Küchenvorbereitung" : "Kitchen preparation"}</Link><Link className="hub-tab" href="/expiry">{t("home.expiry")}</Link><Link className="hub-tab" href="/labels">{t("scan.labels")}</Link></>}
         {area === "purchasing" && <><TabButton active={tab === "forecast"} onClick={() => navigate("forecast")}>{t("inventoryWorkflow.reorder")}</TabButton><Link className="hub-tab" href="/inventory/purchasing">{t("inventoryOps.orders")}</Link><TabButton active={tab === "deliveries"} onClick={() => navigate("deliveries")}>{t("inv.tabDeliveries")}</TabButton></>}
         {area === "movements" && <><TabButton active={tab === "movements"} onClick={() => navigate("movements")}>{t("inventoryWorkspace.workflows")}</TabButton><TabButton active={tab === "history"} onClick={() => navigate("history")}>{t("stockHistory.title")}</TabButton></>}
-        {area === "reports" && <><TabButton active={tab === "analytics"} onClick={() => navigate("analytics")}>{t("inventoryWorkflow.reports")}</TabButton><TabButton active={tab === "reconcile"} onClick={() => navigate("reconcile")}>{t("reconcile.title")}</TabButton></>}
+        {area === "reports" && <><Link className="btn-secondary" href="/inventory/insights">{locale === "de" ? "Geschäftsauswertung" : "Business insights"}</Link><TabButton active={tab === "analytics"} onClick={() => navigate("analytics")}>{t("inventoryWorkflow.reports")}</TabButton><TabButton active={tab === "reconcile"} onClick={() => navigate("reconcile")}>{t("reconcile.title")}</TabButton></>}
       </div>}
 
       {loading ? <CardSkeleton rows={4} /> : loadError ? null : (
@@ -286,6 +286,7 @@ export default function InventoryPage() {
             </div>
             <Panel title={t("inventoryWorkspace.dailyWork")}>
               <div className="inventory-task-grid">
+                <Link className="inventory-task" href="/inventory/insights"><strong>{locale === "de" ? "Geschäftsauswertung" : "Business insights"}</strong><span>{locale === "de" ? "Bestandswert, Ausschuss, Preisänderungen und Lieferantenleistung mit Datengrundlage." : "Stock value, waste, price changes and supplier performance with supporting evidence."}</span></Link>
                 <Link className="inventory-task" href="/inventory/counts"><strong>{t("countSession.title")}</strong><span>{t("countSession.help")}</span></Link>
                 <Link className="inventory-task" href="/inventory/purchasing"><strong>{t("inventoryOps.receive")}</strong><span>{t("inventoryWorkspace.receivingHelp")}</span></Link>
                 <button className="inventory-task" onClick={() => navigate("forecast")}><strong>{t("inventoryWorkflow.reorder")}</strong><span>{t("inventoryWorkspace.reorderHelp")}</span></button>

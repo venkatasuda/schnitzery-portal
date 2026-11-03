@@ -46,7 +46,7 @@ const count=(id,date,ist,unit='kg')=>({id,date,ist,unit});
  assert.equal(rec.sameSnapshot({...shown,status:'gain',delivered:0,received:7},shown),false);
  assert.equal(rec.sameSnapshot(shown,{...shown}),true);
  // 10: CSV export carries completeness and the honest ratio name
- const csv=fs.readFileSync('src/app/(app)/summary/page.tsx','utf8');
+ const csv=fs.readFileSync('src/app/(app)/summary/SummaryClient.tsx','utf8');
  assert.ok(csv.includes('Wage confirmed')&&csv.includes('incomplete (lower bound)')&&csv.includes('Purchase spend / sales %')&&!csv.includes('"Food cost %"'));
  // 8 is covered by scripts/checks/stock-reconciliation.cjs (isolated Postgres) and stock-reconciliation-query.cjs.
  console.log('Review C/D: all ten findings hold as fixed (safe behaviour asserted).');
