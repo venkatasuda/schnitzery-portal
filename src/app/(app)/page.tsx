@@ -13,7 +13,7 @@ import OwnerInsights, { type Insights } from "@/components/dash/OwnerInsights";
 import { getOwnerInsights, getSetupProgress } from "@/lib/queries/owner-insights";
 import SetupCard from "@/components/dash/SetupCard";
 import type { SetupStep } from "@/lib/owner/insights";
-import { listMyDocuments } from "@/lib/queries/documents";
+import { listMyDocuments, getDocumentsDashboard } from "@/lib/queries/documents";
 import { getBranchOnboarding } from "@/lib/queries/onboarding";
 import { getViewMode } from "@/lib/viewMode";
 import Link from "next/link";
@@ -69,7 +69,7 @@ export default async function HomePage() {
   let mTargets: Targets | null = null, mCanEditTargets = false;
   let mFlash: { yesterday: { date: string; sales: number | null; hours: number }; lastWeek: { date: string; sales: number | null; hours: number } } | null = null;
   let mInsights: Insights | null = null;
-  let mNewHires = 0;
+  let mNewHires = 0, mDocsMissing = 0, mDocsExpired = 0, mDocsPending = 0;
   let mSetup: SetupStep[] | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
   let mSched: { submissionCount: number; staffCount: number; rosterExists: boolean } | null = null;
@@ -86,11 +86,13 @@ export default async function HomePage() {
     if ((wRes as any).ok) hqWaste = ((wRes as any).rows || []).filter((r: any) => r.value > 0).map((r: any) => ({ label: r.name, value: r.value })).slice(0, 8);
   } else if (isManager) {
     const ownerView = isBranchOwner || hqBranchMode;
-    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes, sRes, obRes] = await Promise.all([
+    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes, sRes, obRes, docRes] = await Promise.all([
       getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6).catch(() => ({ ok: false })),
       ownerView ? getTargets().catch(() => null) : null, ownerView ? getDailyFlash().catch(() => null) : null, ownerView ? getOwnerInsights().catch(() => null) : null, ownerView ? getSetupProgress().catch(() => null) : null,
       getBranchOnboarding().catch(() => null),
+      getDocumentsDashboard().catch(() => null),
     ]);
+    if (docRes && docRes.ok) { mDocsMissing = docRes.counts?.missing ?? 0; mDocsExpired = docRes.counts?.expired ?? 0; mDocsPending = docRes.counts?.pending ?? 0; }
     if (obRes && obRes.ok) mNewHires = obRes.people.filter((x) => x.open > 0).length;
     if (tRes && tRes.ok) { mTargets = tRes.targets; mCanEditTargets = tRes.canEdit; }
     if (iRes && iRes.ok) mInsights = iRes;
@@ -164,7 +166,7 @@ export default async function HomePage() {
           {mSetup && <SetupCard steps={mSetup} t={t} />}
           {(isBranchOwner || hqBranchMode) && <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={mFlash} t={t} locale={locale} />}
           {mInsights && <OwnerInsights data={mInsights} labourTarget={mTargets?.labourPct ?? null} t={t} locale={locale} />}
-          <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} t={t} locale={locale} />
+          <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
         </>
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} locale={locale} />
@@ -215,8 +217,8 @@ function StaffDash({ hours, clockedIn, onBreak, t, locale }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, newHires = 0, t, locale }: {
-  locale: string; newHires?: number;
+function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, newHires = 0, docs, t, locale }: {
+  locale: string; newHires?: number; docs?: { missing: number; expired: number; pending: number };
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
   live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null;
   ot: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null;
@@ -229,6 +231,9 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     ...(ops?.pendingApprovals ? [{ href: "/approvals", icon: "✅", text: t("home.approvalsWaiting", { n: ops.pendingApprovals }), tone: "warn" }] : []),
     ...(ops?.lowStock ? [{ href: "/inventory", icon: "📦", text: t("home.lowStock", { n: ops.lowStock }), tone: "warn" }] : []),
     ...(newHires ? [{ href: "/staff", icon: "🧾", text: t("home.newHiresOpen", { n: newHires }), tone: "warn" }] : []),
+    ...(docs?.expired ? [{ href: "/expiring-docs?bucket=expired", icon: "📄", text: t("home.docsExpired", { n: docs.expired }), tone: "danger" }] : []),
+    ...(docs?.missing ? [{ href: "/expiring-docs?bucket=missing", icon: "📄", text: t("home.docsMissing", { n: docs.missing }), tone: "warn" }] : []),
+    ...(docs?.pending ? [{ href: "/expiring-docs?bucket=pending", icon: "📄", text: t("home.docsPending", { n: docs.pending }), tone: "warn" }] : []),
     ...(missing ? [{ href: "/noshow", icon: "📋", text: t("home.notSubmitted", { n: missing }), tone: "warn" }] : []),
     ...(live?.forgotten ? [{ href: "/attendance-hub", icon: "⏰", text: t("cockpit.forgotten", { n: live.forgotten }), tone: "danger" }] : []),
     ...(live?.suspect ? [{ href: "/approvals", icon: "⚠", text: t("cockpit.suspect", { n: live.suspect }), tone: "danger" }] : []),

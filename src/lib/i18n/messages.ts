@@ -107,7 +107,7 @@ export const messages = {
       reportIncident: "Report Incident", reportIncidentSub: "Accidents, hazards & issues",
       needsAttention: "Needs Attention", allClear: "All clear", allClearSub: "Nothing needs your attention right now.",
       approvalsWaiting: "{n} approvals waiting", openIncidents: "{n} open incidents",
-      newHiresOpen: "{n} new hire(s) with open onboarding steps", belowMinNow: "{n} people paid below the legal minimum wage", belowMinSoon: "{n} people below the minimum wage from {date} ({min}/h) — raise wages",
+      newHiresOpen: "{n} new hire(s) with open onboarding steps", docsExpired: "Expired staff documents: {n}", docsMissing: "Required staff documents missing: {n}", docsPending: "Staff documents waiting for review: {n}", belowMinNow: "Paid below the legal minimum wage: {n}", belowMinSoon: "Below the minimum wage from {date} ({min}/h): {n} — raise wages",
       lowStock: "{n} low-stock items", notSubmitted: "{n} haven't submitted availability",
       today: "Today", statWorking: "Working", statDone: "Done", statLate: "Late", hours: "Hours",
       dailyChecklist: "Daily Checklist", allTasksDone: "All tasks done today 🎉", openingClosing: "Opening & closing tasks",
@@ -327,7 +327,7 @@ export const messages = {
     },
     staffd: {
       back: "‹ Back to Staff", couldNotLoad: "Could not load.", notFound: "Not found.", details: "Details",
-      schnitzeryId: "Schnitzery ID", mobile: "Mobile", hPerWeek: "{h} h/week",
+      schnitzeryId: "Schnitzery ID", mobile: "Mobile", hPerWeek: "{h} h/week", hPerMonth: "{h} h/month",
       hoursThisMonth: "Hours · This Month", worked: "Worked", ofContract: "Of Contract",
       vacation: "Vacation · {year}", allowance: "Allowance", taken: "Taken", remaining: "Remaining", annualDays: "Annual days",
       enterValidDays: "Enter a valid number of days.", allowanceSaved: "Allowance saved.", couldNotSave: "Could not save.",
@@ -497,7 +497,7 @@ export const messages = {
       title: "Team Leave Calendar", subtitle: "Approved upcoming time off across the team.",
       empty: "No upcoming leave booked.", staffFallback: "Staff", daysShort: "d",
     },
-    audit: { subtitle: "Recent activity on your branch.", empty: "No activity logged yet.", by: "by {actor}" },
+    audit: { subtitle: "Every important change in your branch: who did it, when, and what changed. Entries cannot be edited or deleted.", empty: "No activity logged yet.", by: "by {actor}", a_wage_set: "Hourly wage set", a_payroll_approved: "Payroll approved", a_payroll_status: "Payroll status changed", a_payroll_rules_changed: "Payroll rules / DATEV changed", a_tips_saved: "Tips saved", a_shift_reviewed: "Shift approved / rejected", a_shift_closed: "Open shift closed by manager", a_correction_rejected: "Correction rejected", a_attendance_corrected: "Correction approved", a_leave_decided: "Leave decided", a_staff_created: "Staff account created", a_staff_updated: "Staff details changed", a_branch_access: "Branch access changed", a_document_reviewed: "Document reviewed", a_payslip_uploaded: "Payslip uploaded", a_targets_changed: "Targets changed", a_settings_updated: "Branch settings changed" },
     dash: {
       title: "Dashboard", subtitle: "Live overview of your branch.",
       workingNow: "Working now", activeStaff: "Active staff", pendingApprovals: "Pending approvals",
@@ -509,7 +509,7 @@ export const messages = {
       branches: "Branches", totalStaff: "Total staff", workingNow: "Working now", pendingLeave: "Pending leave", openIncidents: "Open incidents",
       search: "🔍 Search branches…", sectionBranches: "Branches",
       miniStaff: "staff", miniWorking: "working", miniLeave: "leave", miniIncidents: "incidents",
-      ownersOnly: "This area is for owners only.",
+      ownersOnly: "This area is for the brand owner (all branches). Branch owners see their branch in the normal pages.",
       backAll: "‹ Back to all branches", lowStock: "Low stock", team: "Team ({n})", noStaff: "No staff assigned to this branch yet.", noTeam: "No team",
     },
     exp: {
@@ -593,7 +593,7 @@ export const messages = {
     view: { label: "View mode", hq: "HQ", branch: "Branch", picker: "Branch", allMine: "All my branches", allHq: "All branches (HQ)", switched: "Switched to {name}" },
     wbranch: {
       title: "Waste by Branch", subtitle: "Total waste value per branch — highest first.",
-      ownersOnly: "This area is for owners only.", days: "{n} days",
+      ownersOnly: "This area is for the brand owner (all branches). Branch owners see their branch in the normal pages.", days: "{n} days",
       none: "No waste logged in this period.", total: "Total across all branches",
       entries: "{n} entries", pctOfSales: "{p}% of sales",
     },
@@ -646,7 +646,7 @@ export const messages = {
     act: {
       title: "Action Center", subtitle: "Everything that needs your attention",
       alertsTitle: "Needs your attention", alertLate: "{name} — late {n}× this week", alertAbsent: "{name} — missed {n} shifts this week", alertLowAtt: "{name} — attendance at {n}%",
-      open: "Open Action Center", needAttention: "items need attention",
+      open: "Open Action Center", needAttention: "items need attention", forgotten: "Forgotten clock-outs", forgottenSub: "Shifts still open after 14 hours", belowMinWage: "Below the minimum wage", belowMinWageSub: "People paid below the legal minimum wage", openIncidents: "Open incidents", openIncidentsSub: "Reported and not yet resolved", missingAvailability: "Availability missing", missingAvailabilitySub: "Not yet submitted for next week",
       allClear: "All clear", allClearSub: "Nothing needs your attention right now.",
       approvals: "Pending approvals", corrections: "Attendance corrections", noShows: "Missing attendance (no-shows)",
       notCheckedIn: "Not checked in yet", expiringDocs: "Expiring documents", payroll: "Payroll to approve",
@@ -667,7 +667,7 @@ export const messages = {
       costTitle: "Cost ratios by branch · this month", primeCost: "Labor + purchases", totalAll: "All branches",
       primeCostNote: "(Labour + purchases) ÷ sales. Around 60% is healthy. Worst first.",
       noCostData: "Add daily sales and deliveries to compare branch costs.",
-      ownersOnly: "This overview is for owners and super admins.",
+      ownersOnly: "This overview is for the brand owner (all branches). Branch owners see their branch on the dashboard.",
       branches: "Branches", employees: "Employees", workingNow: "Working now",
       attendanceToday: "Attendance today", issues: "Attention items", expiringDocs: "Expiring docs",
       payrollStatus: "Payroll (this month)", approved: "branches approved",
@@ -799,7 +799,7 @@ export const messages = {
       hoursPerWeek: "Hours per Week", hoursByDay: "Hours by Day of Week", hoursByTeam: "Hours by Team (8 weeks)",
     },
     lab: {
-      bulkTitle: "{n} without a wage — same hourly wage for all of them", bulkWage: "Hourly wage (€) for everyone without one", bulkApply: "Apply to all", bulkHint: "Only people without a wage get it; existing wages stay. Use the date the wage really started.", bulkDone: "Wage set for {n} people", raiseTitle: "{n} below the legal minimum wage ({min}/h)", raiseApply: "Raise them to the minimum wage", raiseHint: "Sets exactly the legal minimum, from the day it came into force (or from the person's current wage date, if later). Earlier back pay is not calculated — check it with your tax advisor. Trainees and interns are left alone; higher wages stay.",
+      bulkTitle: "{n} without a wage — same hourly wage for all of them", bulkWage: "Hourly wage (€) for everyone without one", bulkApply: "Apply to all", bulkHint: "Only people without a wage get it; existing wages stay. Use the date the wage really started.", bulkDone: "Wages set: {n}", raiseTitle: "{n} below the legal minimum wage ({min}/h)", raiseApply: "Raise them to the minimum wage", raiseHint: "Sets exactly the legal minimum, from the day it came into force (or from the person's current wage date, if later). Earlier back pay is not calculated — check it with your tax advisor. Trainees and interns are left alone; higher wages stay.",
       belowMin: "Below the legal minimum wage ({min}/h)", belowSoon: "Below the minimum wage from {date} ({min}/h) — raise it",
       missingWageCost: "Labour cost is incomplete: add a wage rate for every worked employee.",
       effectiveFrom: "Effective from", unconfirmedDate: "Effective date unconfirmed", history: "Wage history", recorded: "Recorded",
@@ -815,7 +815,7 @@ export const messages = {
     comp: {
       subtitle: "German ArbZG · last 14 days · from actual clock-ins",
       breakIssues: "Break Issues", restIssues: "Rest Issues", over10h: "Over 10h",
-      allCompliant: "All compliant", checkedNote: "{n} shifts checked over the last 14 days — no break, rest, or overtime issues.",
+      allCompliant: "All compliant", nothingChecked: "No completed shifts in the last 14 days, so there is nothing to check yet.", checkedNote: "{n} shifts checked over the last 14 days — no break, rest, or overtime issues.",
       issuesHeader: "{n} Issues ({c} shifts checked)", rulesTitle: "The rules being checked (ArbZG)",
       ruleBreak: "☕ Break: 30 min for shifts over 6h, 45 min over 9h.",
       ruleRest: "🌙 Rest: at least 11h between the end of one shift and the start of the next.",
@@ -823,8 +823,8 @@ export const messages = {
       ruleNote: "Restaurants are exempt from Sunday-rest rules (§10), so Sunday work isn't flagged. This is guidance, not legal advice.",
     },
     compType: { Break: "Break", Rest: "Rest", "Long shift": "Long shift", "Clock-out": "Clock-out?" },
-    ahub: {
-      forgottenTitle: "{n} shift(s) still open for more than 14 hours", forgottenHint: "Probably a forgotten clock-out. Open shifts are left out of payroll until closed: ask the person to clock out and request a correction with the real end time.", forgottenSince: "clocked in {when}",
+    ahub: { closeShift: "Close shift", closeEnd: "Real end time", closeReason: "Reason", closeReasonPh: "e.g. confirmed by phone: left at 22:15", closeConfirm: "Close", closeDone: "Shift closed – the hours now go to approval",
+      forgottenTitle: "{n} shift(s) still open for more than 14 hours", forgottenHint: "Probably a forgotten clock-out. Open shifts are left out of payroll until closed. Use \"Close shift\" with the real end time (ask the person) and a reason – it is logged, the person is notified, and the hours still go to approval.", forgottenSince: "clocked in {when}",
       subtitle: "Live · approvals · overtime · no-shows",
       tabLive: "🔴 Live", tabApproval: "📋 Approval", tabOvertime: "⏱ Overtime", tabNoshow: "🚫 No-Shows", tabDisplay: "📲 Display",
       completed: "Completed", today: "📅 Today", filterName: "🔍  Filter by name…",
@@ -859,7 +859,7 @@ export const messages = {
     profile: {
       title: "My Profile", subtitle: "Your details and skills",
       employeeCode: "Employee code", email: "Email", phone: "Phone",
-      contract: "Contract", contractHours: "Contract hours", status: "Status",
+      contract: "Contract", contractHours: "Contract hours per month", status: "Status",
       skills: "Skills", noSkills: "No skills listed.", editProfile: "Edit Profile",
       fullName: "Full name", skillsLabel: "Skills (comma-separated)",
       skillsPlaceholder: "Grill, Cashier, Opening",
@@ -1008,7 +1008,7 @@ export const messages = {
       reportIncident: "Vorfall melden", reportIncidentSub: "Unfälle, Gefahren & Probleme",
       needsAttention: "Erfordert Aufmerksamkeit", allClear: "Alles erledigt", allClearSub: "Im Moment ist nichts zu tun.",
       approvalsWaiting: "{n} Genehmigungen ausstehend", openIncidents: "{n} offene Vorfälle",
-      newHiresOpen: "{n} Neueinstellung(en) mit offenen Onboarding-Schritten", belowMinNow: "{n} Personen unter dem gesetzlichen Mindestlohn", belowMinSoon: "{n} Personen ab {date} unter dem Mindestlohn ({min}/h) — Löhne anheben",
+      newHiresOpen: "{n} Neueinstellung(en) mit offenen Onboarding-Schritten", docsExpired: "Abgelaufene Mitarbeiterdokumente: {n}", docsMissing: "Fehlende Pflichtdokumente: {n}", docsPending: "Mitarbeiterdokumente zur Prüfung: {n}", belowMinNow: "Unter dem gesetzlichen Mindestlohn: {n}", belowMinSoon: "Ab {date} unter dem Mindestlohn ({min}/h): {n} — Löhne anheben",
       lowStock: "{n} Artikel mit niedrigem Bestand", notSubmitted: "{n} haben keine Verfügbarkeit eingereicht",
       today: "Heute", statWorking: "Arbeitet", statDone: "Fertig", statLate: "Verspätet", hours: "Stunden",
       dailyChecklist: "Tägliche Checkliste", allTasksDone: "Heute alle Aufgaben erledigt 🎉", openingClosing: "Öffnungs- & Schließaufgaben",
@@ -1228,7 +1228,7 @@ export const messages = {
     },
     staffd: {
       back: "‹ Zurück zur Übersicht", couldNotLoad: "Konnte nicht geladen werden.", notFound: "Nicht gefunden.", details: "Details",
-      schnitzeryId: "Schnitzery-ID", mobile: "Mobil", hPerWeek: "{h} Std./Woche",
+      schnitzeryId: "Schnitzery-ID", mobile: "Mobil", hPerWeek: "{h} Std./Woche", hPerMonth: "{h} Std./Monat",
       hoursThisMonth: "Stunden · Diesen Monat", worked: "Gearbeitet", ofContract: "Vom Vertrag",
       vacation: "Urlaub · {year}", allowance: "Anspruch", taken: "Genommen", remaining: "Verbleibend", annualDays: "Jahrestage",
       enterValidDays: "Gib eine gültige Anzahl von Tagen ein.", allowanceSaved: "Anspruch gespeichert.", couldNotSave: "Konnte nicht gespeichert werden.",
@@ -1362,7 +1362,7 @@ export const messages = {
     },
     roster: {
       title: "Wochendienstplan", subtitle: "Mitarbeiter Schichten zuweisen · {week}", managersOnly: "Nur Manager können den Dienstplan bearbeiten.",
-      thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "Dienstplan speichern", draft: "Entwurf aus letzter Woche", draftHint: "Übernimmt die letzte Woche und setzt bei Bedarf verfügbare Kolleg:innen ein (Verfügbarkeit, 11 Std. Ruhezeit, Vertragsstunden, Minijob-Grenze). Gespeichert wird erst mit Speichern.", draftReplace: "Schichten dieser Woche durch einen Entwurf ersetzen?", draftNoTemplate: "Letzte Woche hat keinen Dienstplan als Vorlage.", draftDone: "Entwurf: {n} Schichten, {r} neu besetzt, {o} offen — prüfen und speichern", draftOpen: "{n} Schicht(en) kann niemand übernehmen", draftOpenHint: "Niemand aus dem Team ist innerhalb von Ruhezeit, Vertrag und Minijob-Grenze verfügbar. Von Hand besetzen oder offen lassen.", loadFailed: "Dienstplan konnte nicht geladen werden. Der bestehende Plan wurde nicht verändert.", discardChanges: "Diese Woche verlassen und ungespeicherte Änderungen verwerfen?", removeShift: "Schicht für {name} entfernen",
+      thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "Dienstplan speichern", draft: "Entwurf aus letzter Woche", draftHint: "Übernimmt die letzte Woche und setzt bei Bedarf verfügbare Mitarbeiter ein (Verfügbarkeit, 11 Std. Ruhezeit, Vertragsstunden, Minijob-Grenze). Gespeichert wird erst mit Speichern.", draftReplace: "Schichten dieser Woche durch einen Entwurf ersetzen?", draftNoTemplate: "Letzte Woche hat keinen Dienstplan als Vorlage.", draftDone: "Entwurf: {n} Schichten, {r} neu besetzt, {o} offen — prüfen und speichern", draftOpen: "{n} Schicht(en) kann niemand übernehmen", draftOpenHint: "Niemand aus dem Team ist innerhalb von Ruhezeit, Vertrag und Minijob-Grenze verfügbar. Von Hand besetzen oder offen lassen.", loadFailed: "Dienstplan konnte nicht geladen werden. Der bestehende Plan wurde nicht verändert.", discardChanges: "Diese Woche verlassen und ungespeicherte Änderungen verwerfen?", removeShift: "Schicht für {name} entfernen",
       weekGlance: "Wochenüberblick · {n} Schichten", assigned: "{n} zugewiesen", add: "+ Hinzufügen",
       staff: "Mitarbeiter", select: "Wählen…", team: "Team", shift: "Schicht", noOne: "Niemand zugewiesen.",
       customTime: "Eigene Zeit…", from: "Von", to: "Bis", badTime: "Start- und Endzeit angeben.",
@@ -1398,7 +1398,7 @@ export const messages = {
       title: "Team-Urlaubskalender", subtitle: "Genehmigter anstehender Urlaub im gesamten Team.",
       empty: "Kein anstehender Urlaub gebucht.", staffFallback: "Mitarbeiter", daysShort: "T.",
     },
-    audit: { subtitle: "Letzte Aktivität in deiner Filiale.", empty: "Noch keine Aktivität protokolliert.", by: "von {actor}" },
+    audit: { subtitle: "Jede wichtige Änderung in deiner Filiale: wer, wann und was. Einträge können nicht geändert oder gelöscht werden.", empty: "Noch keine Aktivität protokolliert.", by: "von {actor}", a_wage_set: "Stundenlohn festgelegt", a_payroll_approved: "Lohnabrechnung freigegeben", a_payroll_status: "Status der Lohnabrechnung geändert", a_payroll_rules_changed: "Lohnregeln / DATEV geändert", a_tips_saved: "Trinkgeld gespeichert", a_shift_reviewed: "Schicht genehmigt / abgelehnt", a_shift_closed: "Offene Schicht durch Leitung geschlossen", a_correction_rejected: "Korrektur abgelehnt", a_attendance_corrected: "Korrektur genehmigt", a_leave_decided: "Urlaub entschieden", a_staff_created: "Mitarbeiterkonto angelegt", a_staff_updated: "Mitarbeiterdaten geändert", a_branch_access: "Filialzugang geändert", a_document_reviewed: "Dokument geprüft", a_payslip_uploaded: "Lohnabrechnung hochgeladen", a_targets_changed: "Ziele geändert", a_settings_updated: "Filialeinstellungen geändert" },
     dash: {
       title: "Dashboard", subtitle: "Live-Überblick deiner Filiale.",
       workingNow: "Arbeitet gerade", activeStaff: "Aktive Mitarbeiter", pendingApprovals: "Offene Genehmigungen",
@@ -1410,7 +1410,7 @@ export const messages = {
       branches: "Filialen", totalStaff: "Mitarbeiter gesamt", workingNow: "Arbeitet gerade", pendingLeave: "Offener Urlaub", openIncidents: "Offene Vorfälle",
       search: "🔍 Filialen suchen…", sectionBranches: "Filialen",
       miniStaff: "Mitarbeiter", miniWorking: "arbeitet", miniLeave: "Urlaub", miniIncidents: "Vorfälle",
-      ownersOnly: "Dieser Bereich ist nur für Inhaber.",
+      ownersOnly: "Dieser Bereich ist für die Markeninhaber (alle Filialen). Filialinhaber sehen ihre Filiale auf den normalen Seiten.",
       backAll: "‹ Zurück zu allen Filialen", lowStock: "Niedriger Bestand", team: "Team ({n})", noStaff: "Dieser Filiale ist noch niemand zugewiesen.", noTeam: "Kein Team",
     },
     exp: {
@@ -1494,7 +1494,7 @@ export const messages = {
     view: { label: "Ansicht", hq: "Zentrale", branch: "Filiale", picker: "Filiale", allMine: "Alle meine Filialen", allHq: "Alle Filialen (Zentrale)", switched: "Gewechselt zu {name}" },
     wbranch: {
       title: "Abfall nach Filiale", subtitle: "Gesamter Abfallwert je Filiale — höchster zuerst.",
-      ownersOnly: "Dieser Bereich ist nur für Inhaber.", days: "{n} Tage",
+      ownersOnly: "Dieser Bereich ist für die Markeninhaber (alle Filialen). Filialinhaber sehen ihre Filiale auf den normalen Seiten.", days: "{n} Tage",
       none: "Kein Abfall in diesem Zeitraum erfasst.", total: "Gesamt über alle Filialen",
       entries: "{n} Einträge", pctOfSales: "{p}% vom Umsatz",
     },
@@ -1547,7 +1547,7 @@ export const messages = {
     act: {
       title: "Aktionszentrale", subtitle: "Alles, was deine Aufmerksamkeit braucht",
       alertsTitle: "Erfordert Aufmerksamkeit", alertLate: "{name} — {n}× zu spät diese Woche", alertAbsent: "{name} — {n} Schichten verpasst diese Woche", alertLowAtt: "{name} — Anwesenheit bei {n}%",
-      open: "Aktionszentrale öffnen", needAttention: "Punkte zu beachten",
+      open: "Aktionszentrale öffnen", needAttention: "Punkte zu beachten", forgotten: "Vergessenes Ausstempeln", forgottenSub: "Schichten seit über 14 Stunden offen", belowMinWage: "Unter dem Mindestlohn", belowMinWageSub: "Personen unter dem gesetzlichen Mindestlohn", openIncidents: "Offene Vorfälle", openIncidentsSub: "Gemeldet und noch nicht erledigt", missingAvailability: "Verfügbarkeit fehlt", missingAvailabilitySub: "Für nächste Woche noch nicht eingereicht",
       allClear: "Alles erledigt", allClearSub: "Aktuell ist nichts zu tun.",
       approvals: "Offene Freigaben", corrections: "Korrekturen", noShows: "Fehlende Anwesenheit (No-Shows)",
       notCheckedIn: "Noch nicht eingestempelt", expiringDocs: "Ablaufende Dokumente", payroll: "Lohn freizugeben",
@@ -1568,7 +1568,7 @@ export const messages = {
       costTitle: "Kostenquoten nach Filiale · diesen Monat", primeCost: "Prime Cost", totalAll: "Alle Filialen",
       primeCostNote: "(Personal + Einkauf) ÷ Umsatz. Etwa 60 % ist gesund. Schlechteste zuerst.",
       noCostData: "Tagesumsatz und Lieferungen erfassen, um Filialkosten zu vergleichen.",
-      ownersOnly: "Diese Übersicht ist für Inhaber und Super-Admins.",
+      ownersOnly: "Diese Übersicht ist für die Markeninhaber (alle Filialen). Filialinhaber sehen ihre Filiale im Dashboard.",
       branches: "Filialen", employees: "Mitarbeiter", workingNow: "Arbeiten jetzt",
       attendanceToday: "Anwesenheit heute", issues: "Zu beachten", expiringDocs: "Ablaufende Dok.",
       payrollStatus: "Lohn (dieser Monat)", approved: "Filialen freigegeben",
@@ -1700,7 +1700,7 @@ export const messages = {
       hoursPerWeek: "Stunden pro Woche", hoursByDay: "Stunden nach Wochentag", hoursByTeam: "Stunden nach Team (8 Wochen)",
     },
     lab: {
-      bulkTitle: "{n} ohne Stundenlohn — gleicher Lohn für alle", bulkWage: "Stundenlohn (€) für alle ohne Lohn", bulkApply: "Für alle übernehmen", bulkHint: "Nur Personen ohne Lohn erhalten ihn; vorhandene Löhne bleiben. Das echte Startdatum des Lohns eintragen.", bulkDone: "Lohn für {n} Personen gesetzt", raiseTitle: "{n} unter dem gesetzlichen Mindestlohn ({min}/h)", raiseApply: "Auf den Mindestlohn anheben", raiseHint: "Setzt genau den Mindestlohn, ab dem Tag, an dem er gilt (oder ab dem Datum des aktuellen Lohns, falls später). Nachzahlungen davor werden nicht berechnet — bitte mit dem Steuerbüro klären. Azubis und Praktikanten bleiben unverändert; höhere Löhne bleiben.",
+      bulkTitle: "{n} ohne Stundenlohn — gleicher Lohn für alle", bulkWage: "Stundenlohn (€) für alle ohne Lohn", bulkApply: "Für alle übernehmen", bulkHint: "Nur Personen ohne Lohn erhalten ihn; vorhandene Löhne bleiben. Das echte Startdatum des Lohns eintragen.", bulkDone: "Löhne gesetzt: {n}", raiseTitle: "{n} unter dem gesetzlichen Mindestlohn ({min}/h)", raiseApply: "Auf den Mindestlohn anheben", raiseHint: "Setzt genau den Mindestlohn, ab dem Tag, an dem er gilt (oder ab dem Datum des aktuellen Lohns, falls später). Nachzahlungen davor werden nicht berechnet — bitte mit dem Steuerbüro klären. Azubis und Praktikanten bleiben unverändert; höhere Löhne bleiben.",
       belowMin: "Unter dem gesetzlichen Mindestlohn ({min}/h)", belowSoon: "Ab {date} unter dem Mindestlohn ({min}/h) — bitte anheben",
       missingWageCost: "Die Personalkosten sind unvollständig: Für alle Mitarbeiter mit Arbeitsstunden muss ein Stundenlohn erfasst werden.",
       effectiveFrom: "Gültig ab", unconfirmedDate: "Gültigkeitsdatum unbestätigt", history: "Lohnhistorie", recorded: "Erfasst",
@@ -1716,7 +1716,7 @@ export const messages = {
     comp: {
       subtitle: "ArbZG · letzte 14 Tage · aus echten Einstempelungen",
       breakIssues: "Pausen-Probleme", restIssues: "Ruhezeit-Probleme", over10h: "Über 10 Std.",
-      allCompliant: "Alles konform", checkedNote: "{n} Schichten in den letzten 14 Tagen geprüft — keine Pausen-, Ruhezeit- oder Überstundenprobleme.",
+      allCompliant: "Alles konform", nothingChecked: "Keine abgeschlossenen Schichten in den letzten 14 Tagen – noch nichts zu prüfen.", checkedNote: "{n} Schichten in den letzten 14 Tagen geprüft — keine Pausen-, Ruhezeit- oder Überstundenprobleme.",
       issuesHeader: "{n} Probleme ({c} Schichten geprüft)", rulesTitle: "Die geprüften Regeln (ArbZG)",
       ruleBreak: "☕ Pause: 30 Min. bei Schichten über 6 Std., 45 Min. über 9 Std.",
       ruleRest: "🌙 Ruhezeit: mindestens 11 Std. zwischen Schichtende und nächstem Schichtbeginn.",
@@ -1724,8 +1724,8 @@ export const messages = {
       ruleNote: "Restaurants sind von der Sonntagsruhe (§10) ausgenommen, daher wird Sonntagsarbeit nicht markiert. Dies ist eine Orientierung, keine Rechtsberatung.",
     },
     compType: { Break: "Pause", Rest: "Ruhezeit", "Long shift": "Lange Schicht", "Clock-out": "Ausstempeln?" },
-    ahub: {
-      forgottenTitle: "{n} Schicht(en) seit über 14 Stunden offen", forgottenHint: "Vermutlich vergessen auszustempeln. Offene Schichten fehlen in der Lohnabrechnung, bis sie geschlossen sind: Person ausstempeln lassen und eine Korrektur mit der echten Endzeit beantragen.", forgottenSince: "eingestempelt {when}",
+    ahub: { closeShift: "Schicht schließen", closeEnd: "Echtes Schichtende", closeReason: "Grund", closeReasonPh: "z. B. telefonisch bestätigt: Ende 22:15", closeConfirm: "Schließen", closeDone: "Schicht geschlossen – Stunden gehen jetzt zur Genehmigung",
+      forgottenTitle: "{n} Schicht(en) seit über 14 Stunden offen", forgottenHint: "Vermutlich vergessen auszustempeln. Offene Schichten fehlen in der Lohnabrechnung, bis sie geschlossen sind. Mit \"Schicht schließen\" die echte Endzeit (bei der Person nachfragen) und einen Grund eintragen – das wird protokolliert, die Person benachrichtigt, und die Stunden gehen weiter zur Genehmigung.", forgottenSince: "eingestempelt {when}",
       subtitle: "Live · Genehmigungen · Überstunden · No-Shows",
       tabLive: "🔴 Live", tabApproval: "📋 Genehmigung", tabOvertime: "⏱ Überstunden", tabNoshow: "🚫 No-Shows", tabDisplay: "📲 Anzeige",
       completed: "Fertig", today: "📅 Heute", filterName: "🔍  Nach Name filtern…",
@@ -1760,7 +1760,7 @@ export const messages = {
     profile: {
       title: "Mein Profil", subtitle: "Deine Daten und Fähigkeiten",
       employeeCode: "Mitarbeiter-Code", email: "E-Mail", phone: "Telefon",
-      contract: "Vertrag", contractHours: "Vertragsstunden", status: "Status",
+      contract: "Vertrag", contractHours: "Vertragsstunden pro Monat", status: "Status",
       skills: "Fähigkeiten", noSkills: "Keine Fähigkeiten angegeben.", editProfile: "Profil bearbeiten",
       fullName: "Vollständiger Name", skillsLabel: "Fähigkeiten (kommagetrennt)",
       skillsPlaceholder: "Grill, Kasse, Öffnen",

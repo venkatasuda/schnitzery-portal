@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
+import { DAYS, SHIFT_MODEL, TEAMS } from "@/lib/queries/schedule-constants";
 import { berlinMonday, berlinMonth, isCalendarDate } from "@/lib/time/berlinDate";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { activeBranchFor } from "@/lib/activeBranch";
@@ -101,7 +101,7 @@ export async function getRoster(weekStart?: string) {
   // staff list for assignment dropdowns (same branch)
   const { data: staff, error: staffError } = await supabase
     .from("users")
-    .select("id, full_name, role, contract_hours")
+    .select("id, full_name, role, team, contract_hours")
     .eq("branch_id", branchId)
     .eq("status", "active").neq("role", "kiosk")
     .order("full_name");
@@ -123,6 +123,7 @@ export async function getRoster(weekStart?: string) {
     id: s.id,
     full_name: s.full_name,
     role: s.role,
+    team: s.team ?? null,
     contractHours: s.contract_hours ?? null,
     workedH: Math.round(((workedMins[s.id] || 0) / 60) * 10) / 10,
   }));
@@ -161,7 +162,7 @@ export async function saveRoster(weekStart: string, rosterData: any, expected: {
     || Object.entries(rosterData).some(([day,rows])=>!DAYS.includes(day) || !Array.isArray(rows) || rows.length>200
       || rows.some(e=>!e || typeof e.user_id!=="string" || typeof e.shift!=="string"
         || !(SHIFT_MODEL[e.team]?.some(s=>s.shift===e.shift) || /^(?:[01]\d|2[0-3]):[0-5]\d–(?:[01]\d|2[0-3]):[0-5]\d$/.test(e.shift))
-        || !["Manager","Preparation","Kitchen","Cashier","Dishwashing"].includes(e.team)))) return {ok:false,code:"errInvalid",error:"Invalid roster. Reload before saving."};
+        || !TEAMS.includes(e.team)))) return {ok:false,code:"errInvalid",error:"Invalid roster. Reload before saving."};
   const ids = [...new Set<string>(Object.values(rosterData).flat().map((e:any)=>e.user_id))];
   const {data:people,error:peopleError}=ids.length ? await supabase.from("users").select("id,full_name").in("id",ids).eq("branch_id",branchId).eq("status","active").neq("role","kiosk") : {data:[],error:null};
   if (peopleError || people?.length!==ids.length) return {ok:false,code:"errStaff",error:"Roster staff must be active in this branch."};

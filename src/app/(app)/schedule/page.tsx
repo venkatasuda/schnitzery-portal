@@ -12,6 +12,7 @@ import {
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { Field } from "@/components/ui";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TEAM_COLORS: Record<string, string> = {
@@ -21,7 +22,7 @@ const TEAM_COLORS: Record<string, string> = {
 export default function SchedulePage() {
   const { t, locale } = useLang();
   const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const [tab, setTab] = useState<"my" | "request" | "mine">("my");
   const [weekOffset, setWeekOffset] = useState(0);
   const [weekStart, setWeekStart] = useState("");

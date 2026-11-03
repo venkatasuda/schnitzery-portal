@@ -49,7 +49,10 @@ export default function CompliancePage() {
             <Stat value={data.counts.longCount} label={t("comp.over10h")} color={data.counts.longCount > 0 ? "var(--warn)" : "var(--success)"} />
           </div>
 
-          {v.length === 0 ? (
+          {data.checked === 0 ? (
+            // Nothing checked is not "compliant": there were simply no completed shifts.
+            <div className="card ui-empty-msg">{t("comp.nothingChecked")}</div>
+          ) : v.length === 0 ? (
             <div className="card" style={{ textAlign: "center", padding: 32 }}>
               <div className="u-mb-2"><Icon e="✅" size={30} color="var(--success)" /></div>
               <div className="tone-success t-lg fw-7">{t("comp.allCompliant")}</div>

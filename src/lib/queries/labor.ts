@@ -333,9 +333,9 @@ export async function getMonthlySummary(month?: string) {
 
   return {
     ok: true, month: ym,
-    sales: Math.round(monthSales),
+    sales: (sales || []).length ? Math.round(monthSales) : null, // nothing entered = unknown ("—"), not €0
     laborCost: Math.round(laborCost), laborPct,
-    foodSpend: Math.round(foodSpend), foodPct, primePct,
+    foodSpend: (purch || []).length ? Math.round(foodSpend) : null, foodPct, primePct, // no deliveries entered = unknown
     totalHours, shifts, lateShifts, lateRate,
     overtimeHrs: Math.round(overtimeHrs * 10) / 10,
     rows,

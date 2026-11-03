@@ -64,7 +64,8 @@ export default function AnalyticsPage() {
   if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const m = data?.metrics;
-  const clr = (v: number, dir: "up" | "down", good: number, ok: number) => dir === "up" ? (v >= good ? GREEN : v >= ok ? AMBER : RED) : (v <= good ? GREEN : v <= ok ? AMBER : RED);
+  const clr = (v: number | null, dir: "up" | "down", good: number, ok: number) => v == null ? "var(--gray)" : dir === "up" ? (v >= good ? GREEN : v >= ok ? AMBER : RED) : (v <= good ? GREEN : v <= ok ? AMBER : RED);
+  const P = (v: number | null | undefined) => (v == null ? "—" : `${v}%`); // nothing measured = "—"
   const teamRows: any[] = Object.values(staff.reduce((acc: any, s: any) => { const k = s.team || "—"; (acc[k] = acc[k] || { team: k, hours: 0, cost: 0, partial: false }); acc[k].hours += s.totalHours; acc[k].cost += s.cost ?? 0; acc[k].partial ||= s.cost == null; return acc; }, {})).sort((a: any, b: any) => b.cost - a.cost);
   const mostWorked = staff.reduce((m: any, s: any) => (s.totalHours > (m?.totalHours ?? -1) ? s : m), null as any);
   const topOT = staff.reduce((m: any, s: any) => (s.otHours > (m?.otHours ?? -1) ? s : m), null as any);
@@ -106,9 +107,9 @@ export default function AnalyticsPage() {
           <div className="ui-stat-grid u-m0">
             <Stat value={today.metrics.totalSales ? `€${today.metrics.totalSales.toFixed(0)}` : "—"} label={t("bana.totalSales")} color={GOLD} />
             <Stat value={`${today.metrics.attended}/${today.metrics.scheduled}`} label={t("bana.present")} color={GOLD} />
-            <Stat value={`${today.metrics.attendancePct}%`} label={t("bana.kAttendance")} color={clr(today.metrics.attendancePct, "up", 95, 85)} />
+            <Stat value={P(today.metrics.attendancePct)} label={t("bana.kAttendance")} color={clr(today.metrics.attendancePct, "up", 95, 85)} />
             <Stat value={today.metrics.laborCost ? `${today.business.coverage.labor.complete ? "" : "≥ "}€${today.metrics.laborCost.toFixed(0)}` : "—"} label={t("bana.kLaborCost")} color={GOLD} />
-            <Stat value={`${today.metrics.latePct}%`} label={t("bana.kLate")} color={clr(today.metrics.latePct, "down", 10, 20)} />
+            <Stat value={P(today.metrics.latePct)} label={t("bana.kLate")} color={clr(today.metrics.latePct, "down", 10, 20)} />
             <Stat value={today.metrics.laborCostPct != null ? `${today.metrics.laborCostPct}%` : "—"} label={t("bana.laborCostPct")} color={GOLD} />
           </div>
         </div>
@@ -127,12 +128,12 @@ export default function AnalyticsPage() {
         <>
           {/* KPI grid */}
           <div className="report-metrics">
-            <Stat value={`${m.attendancePct}%`} label={t("bana.kAttendance")} color={clr(m.attendancePct, "up", 95, 85)} sub={`${m.attended}/${m.scheduled}`} />
-            <Stat value={`${m.absencePct}%`} label={t("bana.kAbsence")} color={clr(m.absencePct, "down", 5, 15)} />
-            <Stat value={`${m.latePct}%`} label={t("bana.kLate")} color={clr(m.latePct, "down", 10, 20)} />
-            <Stat value={`${m.shiftCompliancePct}%`} label={t("bana.kCompliance")} color={clr(m.shiftCompliancePct, "up", 90, 75)} />
-            <Stat value={`${m.utilizationPct}%`} label={t("bana.kUtilization")} color={clr(m.utilizationPct, "up", 90, 70)} />
-            <Stat value={`${m.overtimePct}%`} label={t("bana.kOvertime")} color={clr(m.overtimePct, "down", 10, 20)} />
+            <Stat value={P(m.attendancePct)} label={t("bana.kAttendance")} color={clr(m.attendancePct, "up", 95, 85)} sub={`${m.attended}/${m.scheduled}`} />
+            <Stat value={P(m.absencePct)} label={t("bana.kAbsence")} color={clr(m.absencePct, "down", 5, 15)} />
+            <Stat value={P(m.latePct)} label={t("bana.kLate")} color={clr(m.latePct, "down", 10, 20)} />
+            <Stat value={P(m.shiftCompliancePct)} label={t("bana.kCompliance")} color={clr(m.shiftCompliancePct, "up", 90, 75)} />
+            <Stat value={P(m.utilizationPct)} label={t("bana.kUtilization")} color={clr(m.utilizationPct, "up", 90, 70)} />
+            <Stat value={P(m.overtimePct)} label={t("bana.kOvertime")} color={clr(m.overtimePct, "down", 10, 20)} />
             <Stat value={`${m.laborHours}h`} label={t("bana.kLaborHours")} color={GOLD} />
             <Stat value={m.laborCost ? `${data.business.coverage.labor.complete ? "" : "≥ "}€${m.laborCost.toFixed(0)}` : "—"} label={t("bana.kLaborCost")} color={GOLD} />
           </div>

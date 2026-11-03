@@ -138,7 +138,8 @@ export async function getOpsDashboard(opts: { date?: string; branchId?: string |
   const order: Record<string, number> = { absent: 0, working: 1, not_checked_in: 2, unscheduled: 3, completed: 4 };
   rows.sort((a, b) => (order[a.status] - order[b.status]) || a.name.localeCompare(b.name));
 
-  const utilization = scheduledNow > 0 ? Math.round((scheduledNowPresent / scheduledNow) * 100) : (workingNow > 0 ? 100 : 0);
+  // Nobody scheduled right now: there is nothing to measure, so the figure is unknown ("—"), not 0% or 100%.
+  const utilization: number | null = scheduledNow > 0 ? Math.round((scheduledNowPresent / scheduledNow) * 100) : null;
 
   return {
     ok: true, date, isToday, branchId: branch, asOf: new Date(refMs).toISOString(),

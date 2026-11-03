@@ -8,8 +8,8 @@ import { getBranchDetail } from "@/lib/queries/owner";
 import { ErrorState, Stat, StatGrid } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
 import { serverText } from "@/lib/i18n/serverMessages";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
-const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"];
 const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6" };
 
 export default function BranchDetailPage() {

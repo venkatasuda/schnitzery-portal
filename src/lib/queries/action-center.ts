@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getOpsDashboard } from "@/lib/queries/ops-dashboard";
 import { getShiftConflicts } from "@/lib/queries/shift-conflicts";
 import { getStaffPerformance } from "@/lib/queries/branch-analytics";
+import { getLiveAttendance } from "@/lib/queries/live-attendance";
+import { getDashboardStats } from "@/lib/queries/admin";
+import { getScheduleOverview } from "@/lib/queries/schedule-insights";
+import { getLaborSummary } from "@/lib/queries/labor";
 
 // ============================================================================
 // ACTION CENTER — one count of everything that needs a manager's attention,
@@ -30,6 +34,11 @@ export async function getActionCenter() {
 
   const isOwner = OWNER.includes(me?.role ?? "");
 
+  // Same sources as the home-page alerts, so the "everything" list really is everything.
+  const homeAlerts = Promise.all([
+    getLiveAttendance().catch(() => null), getDashboardStats().catch(() => null),
+    getScheduleOverview().catch(() => null), getLaborSummary().catch(() => null),
+  ]);
   const [leaveR, swapR, attR, corrR, docR, brR, payR, conf] = await Promise.all([
     supabase.from("leave_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("swap_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -61,7 +70,13 @@ export async function getActionCenter() {
   const payrollPending = Math.max(0, branches - cnt(payR));
   const conflicts = conf && (conf as any).ok ? (conf as any).total : 0;
 
-  const total = approvals + corrections + expiringDocs + payrollPending + noShows + notCheckedIn + conflicts;
+  const [live, dash, sched, lab] = await homeAlerts;
+  const forgotten = live && live.ok ? ((live as { forgotten?: unknown[] }).forgotten?.length ?? 0) : 0;
+  const openIncidents = dash && dash.ok ? (dash.stats?.openIncidents ?? 0) : 0;
+  const missingAvailability = sched && sched.ok ? Math.max(0, (sched.staffCount ?? 0) - (sched.submissionCount ?? 0)) : 0;
+  const belowMinWage = lab && lab.ok ? ((lab as { belowMinNow?: number }).belowMinNow ?? 0) : 0;
+
+  const total = approvals + corrections + expiringDocs + payrollPending + noShows + notCheckedIn + conflicts + forgotten + openIncidents + missingAvailability + belowMinWage;
 
   return {
     ok: true as const,
@@ -75,6 +90,7 @@ export async function getActionCenter() {
       notCheckedIn,
       lateToday,
       conflicts,
+      forgotten, openIncidents, missingAvailability, belowMinWage,
       prevMonth,
     },
   };

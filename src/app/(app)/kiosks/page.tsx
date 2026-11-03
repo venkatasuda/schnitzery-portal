@@ -97,7 +97,7 @@ export default function KiosksPage() {
       )}
 
       <div style={{ fontSize: 11.5, color: "var(--gray)", marginTop: 14, lineHeight: 1.5 }}><Icon className="u-icon-inline" e="💡" size={13} /> {t("kioskadm.revokeHint")}</div>
-      <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 14, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
+      <Link href="/settings" style={{ display: "block", textAlign: "center", marginTop: 14, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>← {t("profile.branchSettings")}</Link>
     </div>
   );
 }

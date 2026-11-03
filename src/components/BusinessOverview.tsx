@@ -20,7 +20,7 @@ export default function BusinessOverview({ data }: { data: Report }) {
       {[
         [t("business.sales"), b.salesDays ? known(sales, m.totalSales) : "—", t("business.recordedDays", { n: b.salesDays, total: b.elapsedDays })],
         [t("business.labor"), known(labor, m.laborCost), b.missingWageStaff ? t("business.missingWages", { n: b.missingWageStaff }) : t("business.baseWages")],
-        [t("business.purchases"), known(spend, b.purchaseSpend), spend.missing.costs ? t("business.missingCosts", { n: spend.missing.costs }) : t("business.purchaseNote")],
+        [t("business.purchases"), b.purchaseRecords ? known(spend, b.purchaseSpend) : "—", spend.missing.costs ? t("business.missingCosts", { n: spend.missing.costs }) : t("business.purchaseNote")],
         [t("business.productivity"), m.salesPerLaborHour == null ? "—" : money(m.salesPerLaborHour), t("business.perPaidHour")],
       ].map(([label, value, note]) => <article className="business-kpi" key={label}><span>{label}</span><strong>{value}</strong><small>{note}</small></article>)}
     </div>
