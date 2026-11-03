@@ -32,6 +32,8 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // Local staging uses IPv6 loopback; Next otherwise blocks its dev assets.
+  allowedDevOrigins: ["[::1]", "schnitzery.localhost"],
   poweredByHeader: false,
   // Emit a self-contained server bundle (.next/standalone) so the app can run in
   // a Docker container on Cloud Run / GKE later. Harmless on Vercel (ignored).

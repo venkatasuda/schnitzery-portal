@@ -26,7 +26,7 @@ Implementation date: 2026-11-01. Source implementation is local; no production m
 
 ## Release dependency
 
-Apply the recipe migrations `20261101074231` and `20261101125825` in version order. Both are applied to isolated local staging; hosted staging/production application and authenticated browser acceptance remain outstanding. The recipe page reports unavailability if its schema is absent. The insight report itself reads existing tables. Run the complete release checks and deploy the frontend only after staging acceptance. Do not claim the recipe workflow is production-ready based only on the isolated SQL suite.
+Apply the recipe migrations `20261101074231` and `20261101125825` in version order. Both are applied to isolated local staging; hosted staging/production application remains outstanding; local authenticated browser acceptance passed. The recipe page reports unavailability if its schema is absent. The insight report itself reads existing tables. Run the complete release checks and deploy the frontend only after staging acceptance. Do not claim the recipe workflow is production-ready based only on the isolated SQL suite.
 
 ## Remaining scope from the larger proposal
 
@@ -44,4 +44,13 @@ The current result is a usable analysis and costing increment, not completion of
 
 - Real local Supabase Auth and Data API passed manager save, canonical 500 g to 0.5 kg, identical-request idempotency, changed-request conflict, immutable-write denial, incompatible-unit rejection, staff/cross-branch denial and brand-owner read access. Synthetic records were removed in cleanup.
 - Fixed a permanent reused-command conflict incorrectly reported as transaction rollback (40001 / HTTP 500). The forward migration returns 23505 / HTTP 409; the server action recognizes both codes during rollout. The isolated SQL regression asserts the exact new error code.
-- No production schema or frontend was changed by this acceptance pass. Full browser acceptance and the larger remaining scope above are still open.
+- No production schema or frontend was changed by this acceptance pass. Local browser acceptance is recorded below; hosted release verification and the larger remaining scope above are still open.
+
+## Authenticated browser acceptance — recorded 2026-11-03
+
+- Local Playwright run passed (1 test, 8.2 minutes including runner/report overhead). Verified manager recipe save and reload, canonical 500 g to 0.5 kg, missing-price warning, product filter, CSV download initiation, German 375 px recipe/insight pages without page-level overflow, staff denial, brand-owner visibility and other-branch isolation. Synthetic recipe and product cleanup completed.
+- Reviewed captured desktop and phone screenshots. Tables retain their own horizontal scrolling. This is not a full keyboard/screen-reader audit or acceptance of every older inventory workflow.
+- Fixed local Next development-origin configuration for IPv6 loopback. A cross-drive dependency junction failed under webpack; the passing run used an exact source snapshot on E: beside its dependencies, against the isolated local Docker database. No production keys or business records were used.
+- Slow development compilation/actions caused earlier unsuccessful attempts; the passing run does not establish production latency or capacity.
+- Repeat with: npm run e2e -- inventory-insights-recipes.e2e.ts (local staging only). Existing checks and hosted CI remain release gates. Do not merge this increment as completion of the larger roadmap.
+- Rollback: revert the frontend change if save or permission checks fail. Preserve immutable recipe records and the additive schema; do not drop recipe tables to roll back UI.
