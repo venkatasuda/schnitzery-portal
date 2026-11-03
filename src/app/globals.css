@@ -1008,3 +1008,5 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .inventory-recipe-fields { border: 0; padding: 0; min-width: 0; }
 .inventory-recipe-line { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-block: 1rem; min-width: 0; display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; }
 .inventory-recipe-line > * { min-width: 0; max-width: 100%; }
+.inventory-prep-confirm { display: flex; align-items: start; gap: .75rem; margin-block: 1rem; }
+.inventory-prep-plan { border-block-start: 1px solid var(--border); padding-block: 1rem; overflow-wrap: anywhere; }

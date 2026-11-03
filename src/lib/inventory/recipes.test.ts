@@ -18,4 +18,22 @@ it("retains sub-cent ingredient precision until display",()=>{
 });
 it("withholds contribution when the purchase-price VAT basis is unconfirmed",()=>{
  expect(recipeCost({...recipe,prices_net_confirmed:false},[{product:"Flour",category:"Dry",unit:"kg",price:4}]).contribution).toBeNull();
+ const unknownPrice=recipeCost({...recipe,net_price:null},[{product:"Flour",category:"Dry",unit:"kg",price:4}]);
+ expect(unknownPrice.perPortion).toBe(1);expect(unknownPrice.contribution).toBeNull();expect(unknownPrice.ingredientPct).toBeNull();
+});
+it("costs the supplied Metro salad examples without forcing rounded sheet totals or unconfirmed margins",()=>{
+ const common:[string,number,string,number][]=[
+  ["Carrots",700,"g",.90],["Vinegar",150,"ml",2.71],["Salt",100,"g",.54],
+  ["Quark",2,"kg",2.26],["Yoghurt",2,"kg",2.12],["Mayonnaise",2,"kg",1.46],["Cream powder",40,"g",13.93],
+ ];
+ for(const red of [false,true]){
+  const rows:[string,number,string,number][]=[["Cabbage",15,"kg",red?.82:.70],...common,...(red?[["Sugar",100,"g",1.39] as [string,number,string,number]]:[])];
+  const ingredients=rows.map(([product,qty,unit])=>({product_id:product,product,category:"Example",unit:unit==="ml"?"l":"kg",qty:convertIngredient(qty,unit,unit==="ml"?"l":"kg")!,entered_qty:qty,entered_unit:unit}));
+  const prices=rows.map(([product,,,price],i)=>({product,category:"Example",unit:ingredients[i].unit,price}));
+  const result=recipeCost({...recipe,ingredients,portions:1,prices_net_confirmed:false},prices);
+  expect(result.total.value).toBe(red?25.77:23.83);
+  expect(result.contribution).toBeNull();
+  const incomplete=recipeCost({...recipe,ingredients},prices.slice(1));
+  expect(incomplete.total.complete).toBe(false);expect(incomplete.perPortion).toBeNull();expect(incomplete.contribution).toBeNull();
+ }
 });
