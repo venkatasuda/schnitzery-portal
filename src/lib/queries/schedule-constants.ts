@@ -2,6 +2,9 @@
 
 export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+// Every team, in one place (was copied into 13 files; 10 had lost "Dishwashing").
+export const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"];
+
 // Your restaurant's teams + shifts. Times are placeholders — edit later.
 export const SHIFT_MODEL: Record<string, { shift: string; time: string }[]> = {
   Manager: [

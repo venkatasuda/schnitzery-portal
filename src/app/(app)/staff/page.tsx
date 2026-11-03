@@ -8,8 +8,8 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { Field } from "@/components/ui";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
-const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier"];
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
 const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
 const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6" };

@@ -35,6 +35,10 @@ export default function ActionCenterPage() {
     { key: "notCheckedIn", icon: "⏳", count: it.notCheckedIn, href: "/ops", color: "var(--warn)", sub: t("act.notInSub") },
     { key: "expiringDocs", icon: "📄", count: it.expiringDocs, href: "/expiring-docs", color: "var(--warn)", sub: t("act.docsSub") },
     { key: "payroll", icon: "💶", count: it.payrollPending, href: "/export", color: "var(--warn)", sub: t("act.payrollSub") },
+    { key: "forgotten", icon: "⏰", count: it.forgotten, href: "/attendance-hub", color: "var(--danger)", sub: t("act.forgottenSub") },
+    { key: "belowMinWage", icon: "⚖", count: it.belowMinWage, href: "/labor", color: "var(--danger)", sub: t("act.belowMinWageSub") },
+    { key: "openIncidents", icon: "🚨", count: it.openIncidents, href: "/incidents", color: "var(--danger)", sub: t("act.openIncidentsSub") },
+    { key: "missingAvailability", icon: "📋", count: it.missingAvailability, href: "/noshow?tab=missing", color: "var(--warn)", sub: t("act.missingAvailabilitySub") },
   ] : [];
   const active = rows.filter((r) => r.count > 0);
 

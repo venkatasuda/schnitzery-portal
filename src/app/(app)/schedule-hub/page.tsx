@@ -10,12 +10,13 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
 type Tab = "roster" | "insights" | "conflicts" | "tools";
 
 export default function ScheduleHubPage() {
   const { t, locale } = useLang();
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const dayLabel = (k: string) => (k && ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].includes(String(k).toLowerCase()) ? t("days." + String(k).toLowerCase()) : k);
   const [tab, setTab] = useState<Tab>("roster");
   const [error, setError] = useState<string | null>(null);

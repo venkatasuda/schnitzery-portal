@@ -12,6 +12,7 @@ import {
   getLiveAttendance, getMonthlyOvertime, getAttendanceApprovals, setAttendanceApproval,
 } from "@/lib/queries/live-attendance";
 import { Stat } from "@/components/ui";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
 type Tab = "live" | "approval" | "overtime" | "noshow" | "offline";
 
@@ -21,7 +22,7 @@ const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString(appLocale(), {
 
 export default function AttendanceHubPage() {
   const { t, locale } = useLang();
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const [tab, setTab] = useState<Tab>("live");
   const [denied, setDenied] = useState(false);
   const [readError,setReadError]=useState(false);

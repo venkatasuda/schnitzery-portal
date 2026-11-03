@@ -327,7 +327,7 @@ export const messages = {
     },
     staffd: {
       back: "‹ Back to Staff", couldNotLoad: "Could not load.", notFound: "Not found.", details: "Details",
-      schnitzeryId: "Schnitzery ID", mobile: "Mobile", hPerWeek: "{h} h/week",
+      schnitzeryId: "Schnitzery ID", mobile: "Mobile", hPerWeek: "{h} h/week", hPerMonth: "{h} h/month",
       hoursThisMonth: "Hours · This Month", worked: "Worked", ofContract: "Of Contract",
       vacation: "Vacation · {year}", allowance: "Allowance", taken: "Taken", remaining: "Remaining", annualDays: "Annual days",
       enterValidDays: "Enter a valid number of days.", allowanceSaved: "Allowance saved.", couldNotSave: "Could not save.",
@@ -646,7 +646,7 @@ export const messages = {
     act: {
       title: "Action Center", subtitle: "Everything that needs your attention",
       alertsTitle: "Needs your attention", alertLate: "{name} — late {n}× this week", alertAbsent: "{name} — missed {n} shifts this week", alertLowAtt: "{name} — attendance at {n}%",
-      open: "Open Action Center", needAttention: "items need attention",
+      open: "Open Action Center", needAttention: "items need attention", forgotten: "Forgotten clock-outs", forgottenSub: "Shifts still open after 14 hours", belowMinWage: "Below the minimum wage", belowMinWageSub: "People paid below the legal minimum wage", openIncidents: "Open incidents", openIncidentsSub: "Reported and not yet resolved", missingAvailability: "Availability missing", missingAvailabilitySub: "Not yet submitted for next week",
       allClear: "All clear", allClearSub: "Nothing needs your attention right now.",
       approvals: "Pending approvals", corrections: "Attendance corrections", noShows: "Missing attendance (no-shows)",
       notCheckedIn: "Not checked in yet", expiringDocs: "Expiring documents", payroll: "Payroll to approve",
@@ -815,7 +815,7 @@ export const messages = {
     comp: {
       subtitle: "German ArbZG · last 14 days · from actual clock-ins",
       breakIssues: "Break Issues", restIssues: "Rest Issues", over10h: "Over 10h",
-      allCompliant: "All compliant", checkedNote: "{n} shifts checked over the last 14 days — no break, rest, or overtime issues.",
+      allCompliant: "All compliant", nothingChecked: "No completed shifts in the last 14 days, so there is nothing to check yet.", checkedNote: "{n} shifts checked over the last 14 days — no break, rest, or overtime issues.",
       issuesHeader: "{n} Issues ({c} shifts checked)", rulesTitle: "The rules being checked (ArbZG)",
       ruleBreak: "☕ Break: 30 min for shifts over 6h, 45 min over 9h.",
       ruleRest: "🌙 Rest: at least 11h between the end of one shift and the start of the next.",
@@ -859,7 +859,7 @@ export const messages = {
     profile: {
       title: "My Profile", subtitle: "Your details and skills",
       employeeCode: "Employee code", email: "Email", phone: "Phone",
-      contract: "Contract", contractHours: "Contract hours", status: "Status",
+      contract: "Contract", contractHours: "Contract hours per month", status: "Status",
       skills: "Skills", noSkills: "No skills listed.", editProfile: "Edit Profile",
       fullName: "Full name", skillsLabel: "Skills (comma-separated)",
       skillsPlaceholder: "Grill, Cashier, Opening",
@@ -1228,7 +1228,7 @@ export const messages = {
     },
     staffd: {
       back: "‹ Zurück zur Übersicht", couldNotLoad: "Konnte nicht geladen werden.", notFound: "Nicht gefunden.", details: "Details",
-      schnitzeryId: "Schnitzery-ID", mobile: "Mobil", hPerWeek: "{h} Std./Woche",
+      schnitzeryId: "Schnitzery-ID", mobile: "Mobil", hPerWeek: "{h} Std./Woche", hPerMonth: "{h} Std./Monat",
       hoursThisMonth: "Stunden · Diesen Monat", worked: "Gearbeitet", ofContract: "Vom Vertrag",
       vacation: "Urlaub · {year}", allowance: "Anspruch", taken: "Genommen", remaining: "Verbleibend", annualDays: "Jahrestage",
       enterValidDays: "Gib eine gültige Anzahl von Tagen ein.", allowanceSaved: "Anspruch gespeichert.", couldNotSave: "Konnte nicht gespeichert werden.",
@@ -1547,7 +1547,7 @@ export const messages = {
     act: {
       title: "Aktionszentrale", subtitle: "Alles, was deine Aufmerksamkeit braucht",
       alertsTitle: "Erfordert Aufmerksamkeit", alertLate: "{name} — {n}× zu spät diese Woche", alertAbsent: "{name} — {n} Schichten verpasst diese Woche", alertLowAtt: "{name} — Anwesenheit bei {n}%",
-      open: "Aktionszentrale öffnen", needAttention: "Punkte zu beachten",
+      open: "Aktionszentrale öffnen", needAttention: "Punkte zu beachten", forgotten: "Vergessenes Ausstempeln", forgottenSub: "Schichten seit über 14 Stunden offen", belowMinWage: "Unter dem Mindestlohn", belowMinWageSub: "Personen unter dem gesetzlichen Mindestlohn", openIncidents: "Offene Vorfälle", openIncidentsSub: "Gemeldet und noch nicht erledigt", missingAvailability: "Verfügbarkeit fehlt", missingAvailabilitySub: "Für nächste Woche noch nicht eingereicht",
       allClear: "Alles erledigt", allClearSub: "Aktuell ist nichts zu tun.",
       approvals: "Offene Freigaben", corrections: "Korrekturen", noShows: "Fehlende Anwesenheit (No-Shows)",
       notCheckedIn: "Noch nicht eingestempelt", expiringDocs: "Ablaufende Dokumente", payroll: "Lohn freizugeben",
@@ -1716,7 +1716,7 @@ export const messages = {
     comp: {
       subtitle: "ArbZG · letzte 14 Tage · aus echten Einstempelungen",
       breakIssues: "Pausen-Probleme", restIssues: "Ruhezeit-Probleme", over10h: "Über 10 Std.",
-      allCompliant: "Alles konform", checkedNote: "{n} Schichten in den letzten 14 Tagen geprüft — keine Pausen-, Ruhezeit- oder Überstundenprobleme.",
+      allCompliant: "Alles konform", nothingChecked: "Keine abgeschlossenen Schichten in den letzten 14 Tagen – noch nichts zu prüfen.", checkedNote: "{n} Schichten in den letzten 14 Tagen geprüft — keine Pausen-, Ruhezeit- oder Überstundenprobleme.",
       issuesHeader: "{n} Probleme ({c} Schichten geprüft)", rulesTitle: "Die geprüften Regeln (ArbZG)",
       ruleBreak: "☕ Pause: 30 Min. bei Schichten über 6 Std., 45 Min. über 9 Std.",
       ruleRest: "🌙 Ruhezeit: mindestens 11 Std. zwischen Schichtende und nächstem Schichtbeginn.",
@@ -1760,7 +1760,7 @@ export const messages = {
     profile: {
       title: "Mein Profil", subtitle: "Deine Daten und Fähigkeiten",
       employeeCode: "Mitarbeiter-Code", email: "E-Mail", phone: "Telefon",
-      contract: "Vertrag", contractHours: "Vertragsstunden", status: "Status",
+      contract: "Vertrag", contractHours: "Vertragsstunden pro Monat", status: "Status",
       skills: "Fähigkeiten", noSkills: "Keine Fähigkeiten angegeben.", editProfile: "Profil bearbeiten",
       fullName: "Vollständiger Name", skillsLabel: "Fähigkeiten (kommagetrennt)",
       skillsPlaceholder: "Grill, Kasse, Öffnen",

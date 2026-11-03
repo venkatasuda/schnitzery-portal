@@ -10,6 +10,7 @@ import Icon from "@/components/Icon";
 import { getOpsDashboard, getOpsFilters } from "@/lib/queries/ops-dashboard";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Stat } from "@/components/ui";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
 const todayStr = () => berlinToday();
 const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
@@ -18,7 +19,7 @@ const fmtLabor = (m: number) => { m = Math.max(0, Math.round(m)); return `${Math
 
 export default function OpsPage() {
   const { t } = useLang();
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const [filters, setFilters] = useState<any>(null);
   const [branch, setBranch] = useState<string>("");
   const [date, setDate] = useState(todayStr());
@@ -106,10 +107,10 @@ export default function OpsPage() {
           <div className="card p-4 mb-4">
             <div className="d-flex ai-c jc-sb mb-2">
               <span className="ui-muted-md">{t("ops.utilization")}</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }}>{m.utilization}%</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: m.utilization == null ? "var(--gray)" : m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }}>{m.utilization == null ? "—" : `${m.utilization}%`}</span>
             </div>
             <div style={{ height: 8, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ width: `${m.utilization}%`, height: "100%", background: m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }} />
+              <div style={{ width: `${m.utilization ?? 0}%`, height: "100%", background: m.utilization == null ? "transparent" : m.utilization >= 90 ? "var(--success)" : m.utilization >= 70 ? "var(--warn)" : "var(--danger)" }} />
             </div>
             <div className="ui-note">{t("ops.scheduled")}: {m.scheduledTotal} · {t("ops.completed")}: {m.completed}</div>
           </div>

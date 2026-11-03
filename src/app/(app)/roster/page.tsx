@@ -3,7 +3,7 @@
 import { appLocale } from "@/lib/format";
 import { useEffect, useRef, useState } from "react";
 import { getRoster, saveRoster, getWeekStart } from "@/lib/queries/schedule";
-import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
+import { SHIFT_MODEL, TEAMS } from "@/lib/queries/schedule-constants";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
@@ -17,7 +17,6 @@ import { draftRoster } from "@/lib/roster/draft";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // Every team a manager can roster — not only the ones that happen to have preset
 // shift times. Teams without presets simply use a custom start/end time.
-const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"];
 const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6", Dishwashing: "var(--info)" };
 const CUSTOM = "__custom__";
 const presetsFor = (team: string) => SHIFT_MODEL[team] || [];
@@ -28,7 +27,7 @@ type Roster = Record<string, Entry[]>;
 export default function RosterPage() {
   const { t } = useLang();
   const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
   const [weekOffset, setWeekOffset] = useState(0);
   const [weekStart, setWeekStart] = useState("");
