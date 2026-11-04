@@ -2,6 +2,8 @@
 
 ## Where staff go
 
+See [connected purchasing workflows](INVENTORY-PACKS-RETURNS-COSTS.md) for pack conversions, supplier returns, credits and later invoice costs.
+
 - **Inventory > Purchasing > Receive a delivery:** record a delivery without an existing purchase order. Enter supplier, invoice/reference, delivery date and accepted/rejected quantities. Split accepted quantities into batches with their own expiry dates and lot numbers.
 - **Purchasing > open an order > Receive goods:** receive against that order, including partial deliveries and discrepancies. Do not also enter the same delivery through direct receiving.
 - **Inventory > Stock > Batches & expiry:** see remaining tracked quantities, earliest expiry first, missing dates and batch history. Search by product, lot or receipt reference. Record partial use or waste here.

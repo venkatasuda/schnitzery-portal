@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { account, addCatalogProduct, removeCatalogProduct, admin, BASE_URL, BRANCH, openContexts, signIn, unique } from "./local";
+import { account, addCatalogProduct, removeCatalogProduct, admin, BASE_URL, BRANCH, openContexts, authenticatedPage as signIn, unique } from "./local";
 
 test.afterEach(async()=>{for(const context of openContexts.splice(0))await context.close();});
 
@@ -9,6 +9,12 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
  page.on("dialog",dialog=>dialog.accept()); // ordinary confirmations on disposable local fixtures only
  await addCatalogProduct(page,product);
  try{
+  await page.getByRole("row").filter({hasText:product}).getByRole("button",{name:"Purchase packs",exact:true}).click();
+  const packDialog=page.getByRole("dialog",{name:"Purchase packs",exact:true});
+  await packDialog.getByLabel("Pack name",{exact:true}).fill("Bag");
+  await packDialog.getByLabel("Stock quantity per pack (kg)",{exact:true}).fill("2");
+  await packDialog.getByRole("checkbox").check();
+  await packDialog.getByRole("button",{name:"Save pack version",exact:true}).click();await expect(packDialog).toBeHidden();
   await page.goto("/inventory/purchasing");
   await page.getByRole("button",{name:"Suppliers",exact:true}).click();
   await page.getByRole("button",{name:"Add supplier",exact:true}).click();
@@ -23,8 +29,9 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   const p=await admin().from("inventory_master").select("id").eq("branch_id",BRANCH.A).eq("product",product).single();
   expect(p.error).toBeNull();
   await dialog.getByLabel("Product 1",{exact:true}).selectOption(p.data!.id);
-  await dialog.getByLabel("Ordered quantity 1",{exact:true}).fill("2");
-  await dialog.getByLabel("Unit price (€) 1",{exact:true}).fill("0.005");
+  await dialog.getByLabel("Order unit 1",{exact:true}).selectOption({label:"Bag · 2 kg"});
+  await dialog.getByLabel("Ordered quantity 1",{exact:true}).fill("1");
+  await dialog.getByLabel("Unit price (€) 1",{exact:true}).fill("0.01");
   await dialog.getByRole("button",{name:"Save",exact:true}).click();await expect(dialog).toBeHidden();
   // Open the saved order view after maintaining the supplier directory.
   await page.getByRole("button",{name:"Purchase orders",exact:true}).click();
@@ -49,6 +56,23 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   const receipts=await admin().from("inventory_receipts").select("id").eq("order_id",orderId!);expect(receipts.error).toBeNull();expect(receipts.data).toHaveLength(2);
   const purchases=await admin().from("inventory_purchases").select("qty,cost").in("receipt_id",receipts.data!.map(r=>r.id));
   expect(purchases.data?.reduce((s,r)=>s+Number(r.qty),0)).toBe(2);expect(purchases.data?.filter(r=>r.cost==null)).toHaveLength(1);expect(purchases.data?.reduce((s,r)=>s+Number(r.cost),0)).toBe(2);
+  await page.getByRole("button",{name:"Returns & credits",exact:true}).click();
+  await page.getByRole("button",{name:"Record goods sent back",exact:true}).click();
+  dialog=page.getByRole("dialog",{name:"Record goods sent back",exact:true});
+  const batch=await admin().from("stock_batches").select("id").eq("branch_id",BRANCH.A).eq("product",product).order("id").limit(1).single();expect(batch.error).toBeNull();
+  await dialog.getByLabel("Receipt-linked batch",{exact:true}).selectOption(batch.data!.id);
+  await dialog.getByLabel("Quantity sent back (kg)",{exact:true}).fill("0.25");
+  await dialog.getByLabel("Document reference",{exact:true}).fill(`${supplier}-RETURN`);
+  await dialog.getByLabel("Reason / evidence",{exact:true}).fill("Supplier accepted packaging return");
+  await dialog.getByRole("checkbox").check();await dialog.getByRole("button",{name:"Save",exact:true}).click();await expect(dialog).toBeHidden();
+  const returnCard=page.locator("details.inventory-receipt").filter({hasText:`${supplier}-RETURN`});await returnCard.locator("summary").click();
+  await returnCard.getByRole("button",{name:"Record supplier credit",exact:true}).click();
+  dialog=page.getByRole("dialog",{name:"Record supplier credit",exact:true});
+  await dialog.getByLabel("Credit amount (€)",{exact:true}).fill("0.50");await dialog.getByLabel("Document reference",{exact:true}).fill(`${supplier}-CREDIT`);
+  await dialog.getByLabel("Tax basis on credit document",{exact:true}).selectOption("net");await dialog.getByLabel("Reason / evidence",{exact:true}).fill("Credit note checked against supplier document");
+  await dialog.getByRole("checkbox").check();await dialog.getByRole("button",{name:"Save",exact:true}).click();await expect(dialog).toBeHidden();
+  expect(Number((await admin().from("stock_batches").select("remaining_qty").eq("id",batch.data!.id).single()).data!.remaining_qty)).toBe(0.75);
+  expect((await admin().from("inventory_supplier_credits").select("id").eq("reference",`${supplier}-CREDIT`)).data).toHaveLength(1);
   const other=await signIn(browser,account("manager","B"));await other.goto(orderURL);await expect(other.getByRole("alert").filter({hasText:"Inventory data could not be loaded"})).toBeVisible();await expect(other.getByText(supplier,{exact:true})).toHaveCount(0);
   const staff=await signIn(browser,account("staff","A"));await staff.goto(orderURL);await expect(staff.getByRole("alert").filter({hasText:"Active manager access"})).toBeVisible();
   const owner=await signIn(browser,account("brand_owner","A"));await owner.goto(orderURL);await expect(owner.getByRole("heading",{name:/PO-.*Closed/})).toBeVisible();

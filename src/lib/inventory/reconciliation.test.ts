@@ -94,3 +94,10 @@ it("uncertain intervals are never used as the normal baseline", () => {
   // baseline is the clean 100,10,10 (median 10), not the uncertain interval; then 21/day → unusual
   expect(reconcileIntervals(counts, moves).map(i => i.status)).toEqual(["ok", "uncertain", "ok", "ok", "unusual"]);
 });
+
+it("keeps supplier returns separate from consumption and waste", () => {
+  const counts = [c("2026-10-01", 10), c("2026-10-05", 6)];
+  const interval = reconcileIntervals(counts, [{ kind: "returned", date: "2026-10-03", qty: 3 }])[0];
+  expect(interval).toMatchObject({ returned: 3, wasted: 0, expected: 7, used: 1, status: "ok" });
+  expect(reconcileIntervals(counts, [{ kind: "returned", date: "2026-10-05", qty: 3 }])[0].reasons).toContain("same_day");
+});
