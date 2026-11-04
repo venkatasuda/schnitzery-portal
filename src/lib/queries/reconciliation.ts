@@ -32,7 +32,7 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
 
   const today = berlinToday();
   const from = new Date(Date.parse(`${today}T12:00:00Z`) - days * 86400000).toISOString().slice(0, 10);
-  const [counts, purchases, waste, transfers, reviews] = await Promise.all([
+  const [counts, purchases, waste, transfers, reviews, returns] = await Promise.all([
     readAll(db.from("inventory_counts").select("id,product,category,unit,count_date,ist").eq("branch_id", branch).gte("count_date", from).order("count_date").order("created_at").order("id")),
     readAll(db.from("inventory_purchases").select("product,category,unit,qty,purchase_date").eq("branch_id", branch).gte("purchase_date", from).order("id")),
     readAll(db.from("waste_log").select("product,category,unit,qty,work_date").eq("branch_id", branch).gte("work_date", from).order("id")),
@@ -41,8 +41,9 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
       .or(`from_branch_id.eq.${branch},to_branch_id.eq.${branch}`).in("status", ["sent", "received"])
       .or(`updated_at.gte.${from},status.eq.sent`).order("id")),
     readAll(db.from("stock_reconciliation_reviews").select("from_count_id,to_count_id,note,figures,reviewed_by,created_at").eq("branch_id", branch).order("id")),
+    readAll(db.from("inventory_supplier_returns").select("product,category,unit,qty,return_date").eq("branch_id",branch).gte("return_date",from).order("id")),
   ]);
-  const failed = counts.error || purchases.error || waste.error || transfers.error || reviews.error;
+  const failed = returns.error || counts.error || purchases.error || waste.error || transfers.error || reviews.error;
   if (failed) return { ok: false as const, error: "Reconciliation could not be loaded. Try again." };
 
   const ids = (transfers.data || []).map(t => t.id as string);
@@ -73,6 +74,7 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
   const moves: Record<string, StockMove[]> = {};
   const add = (r: { category?: string | null; product: string }, m: StockMove) => (moves[productKey(r)] ||= []).push(m);
   for (const p of purchases.data || []) add(p, { kind: "delivered", date: p.purchase_date, qty: num(p.qty), unit: p.unit });
+  for (const r of returns.data || []) add(r,{kind:"returned",date:r.return_date,qty:num(r.qty),unit:r.unit});
   for (const w of waste.data || []) add(w, { kind: "wasted", date: w.work_date, qty: num(w.qty), unit: w.unit });
   for (const t of transfers.data || []) for (const m of transferMoves(branch, t as TransferRow, events, today)) add(t, m);
   for (const o of Object.values(orphans)) {

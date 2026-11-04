@@ -99,6 +99,7 @@ export default function Reconciliation() {
       <h2>{detail.product} · {detail.unit||"—"}</h2><p>{d(detail.from)} → {d(detail.to)}</p><p>{t("reconcile.note")}</p>
       <dl className="inventory-detail-grid">{(["opening","delivered","received","sent","wasted","closing","expected","used"] as const).map(key=><div key={key}><dt>{t(key==="received"||key==="sent"?`inventoryOps.${key}`:key==="expected"?"inventoryOps.expectedBalance":`reconcile.${key==="wasted"?"waste":key}`)}</dt><dd>{n(detail[key])} {detail.unit}</dd></div>)}</dl>
       {detail.reasons.length>0&&<ul>{detail.reasons.map(reason=><li key={reason}>{t(`reconcile.${reason}`)}</li>)}</ul>}
+      <p>{locale==="de"?"An Lieferanten zurückgesendet":"Returned to supplier"}: {n(detail.returned??0)} {detail.unit}</p>
       <Link className="btn-secondary" href={`/inventory?view=history&historyProduct=${encodeURIComponent(detail.product)}`}>{t("inventoryOps.inspectMovements")}</Link>
       <details><summary>{t("inventoryOps.evidence")}</summary><p>{detail.fromId} → {detail.toId}</p></details>
       {detail.review&&<p>{t("reconcile.reviewedOn")} {new Date(detail.review.created_at).toLocaleString(loc,{timeZone:"Europe/Berlin"})}: {detail.review.note}{changedSince(detail)&&` · ${t("reconcile.changed")}`}</p>}
