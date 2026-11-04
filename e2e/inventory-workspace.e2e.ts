@@ -39,7 +39,8 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
    await page.getByRole("button",{name:"Receive goods",exact:true}).click();dialog=page.getByRole("dialog",{name:"Receive goods"});
    await dialog.getByLabel("Unique invoice / delivery reference for this order").fill(`${supplier}-${index}`);
    await dialog.getByLabel(`Accepted: ${product}`,{exact:true}).fill("1");
-   await dialog.getByLabel(`Accepted line cost (€): ${product}`,{exact:true}).fill("2");
+   await dialog.getByLabel(`Accepted line cost (€): ${product}`,{exact:true}).fill(index===1?"":"2");
+   await dialog.getByLabel(`Expiry date 1: ${product}`,{exact:true}).fill("2030-12-01");
    if(explanation)await dialog.getByLabel(`Note: ${product}`,{exact:true}).fill(explanation);
    await dialog.getByRole("checkbox",{name:/I checked the delivery reference/}).check();
    await dialog.getByRole("button",{name:"Post receipt",exact:true}).click();await expect(dialog).toBeHidden();
@@ -47,7 +48,7 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   }
   const receipts=await admin().from("inventory_receipts").select("id").eq("order_id",orderId!);expect(receipts.error).toBeNull();expect(receipts.data).toHaveLength(2);
   const purchases=await admin().from("inventory_purchases").select("qty,cost").in("receipt_id",receipts.data!.map(r=>r.id));
-  expect(purchases.data?.reduce((s,r)=>s+Number(r.qty),0)).toBe(2);expect(purchases.data?.reduce((s,r)=>s+Number(r.cost),0)).toBe(4);
+  expect(purchases.data?.reduce((s,r)=>s+Number(r.qty),0)).toBe(2);expect(purchases.data?.filter(r=>r.cost==null)).toHaveLength(1);expect(purchases.data?.reduce((s,r)=>s+Number(r.cost),0)).toBe(2);
   const other=await signIn(browser,account("manager","B"));await other.goto(orderURL);await expect(other.getByRole("alert").filter({hasText:"Inventory data could not be loaded"})).toBeVisible();await expect(other.getByText(supplier,{exact:true})).toHaveCount(0);
   const staff=await signIn(browser,account("staff","A"));await staff.goto(orderURL);await expect(staff.getByRole("alert").filter({hasText:"Active manager access"})).toBeVisible();
   const owner=await signIn(browser,account("brand_owner","A"));await owner.goto(orderURL);await expect(owner.getByRole("heading",{name:/PO-.*Closed/})).toBeVisible();

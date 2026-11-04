@@ -6,7 +6,7 @@ export type InsightProduct = Item & { id: string; soll: unknown; reorder_point?:
 export type InsightPurchase = Item & { qty: unknown; cost: unknown; purchase_date: string; supplier?: string | null };
 export type InsightCount = Item & { ist: unknown; count_date: string };
 export type InsightWaste = Item & { qty: unknown; work_date: string; reason: string };
-export type InsightBatch = Item & { id: string; qty: unknown; expiry_date: string };
+export type InsightBatch = Item & { id: string; qty: unknown; remaining_qty?:unknown; expiry_date: string|null };
 export type InsightOrder = { id: string; supplier_id: string; supplier_name: string; reference: string; status: string; expected_date: string | null; created_at: string };
 export type InsightLine = { id: string; order_id: string; qty: unknown; received_qty: unknown; unit_price: unknown };
 export type InsightReceipt = { id: string; order_id: string; received_at: string };
@@ -68,12 +68,12 @@ export function inventoryInsights(input: {
   }
   const waste=wastePeriod(from,today,true),previousWaste=wastePeriod(previousFrom,from,false);
   if(waste.entries)actions.push({kind:"waste",label:String(waste.entries),value:waste.figure.complete?waste.figure.value:null,href:"/waste",priority:3});
-  const expiry=input.batches.filter(b=>b.expiry_date<=new Date(day(today)+3*86400000).toISOString().slice(0,10)).map(b=>{
-    const qty=num(b.qty),price=latestPrice(purchases.get(inventoryKey(b))??[],today);
+  const expiry=input.batches.filter((b):b is InsightBatch&{expiry_date:string}=>b.expiry_date!=null&&b.expiry_date<=new Date(day(today)+3*86400000).toISOString().slice(0,10)).map(b=>{
+    const qty=num(b.remaining_qty===undefined?b.qty:b.remaining_qty),price=latestPrice(purchases.get(inventoryKey(b))??[],today);
     return {...b,value:qty===0?0:qty!=null&&price!=null?round(qty*price):null,expired:b.expiry_date<today};
   }).sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date));
   for(const b of expiry)actions.push({kind:"expiry",label:b.product,value:b.value,href:"/expiry",priority:b.expired?0:1});
-  const expiryValue=figure(expiry.reduce((n,b)=>n+(b.value??0),0),{prices:expiry.filter(b=>b.value==null).length});
+  const expiryValue=figure(expiry.reduce((n,b)=>n+(b.value??0),0),{prices:expiry.filter(b=>b.value==null).length,counts:input.batches.filter(b=>b.expiry_date==null).length});
   const open=input.orders.filter(o=>["sent","partial"].includes(o.status));
   const overdue=open.filter(o=>o.expected_date!=null&&o.expected_date<today);
   for(const o of overdue)actions.push({kind:"order",label:o.reference,value:null,href:`/inventory/purchasing?order=${o.id}`,priority:1});

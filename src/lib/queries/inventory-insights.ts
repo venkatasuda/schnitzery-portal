@@ -24,7 +24,7 @@ export async function getInventoryInsights(days: number = 30) {
     readAll(db.from("inventory_counts").select("product,category,unit,ist,count_date").eq("branch_id",branch).gte("count_date",historyFrom).lte("count_date",today).order("count_date").order("created_at").order("id")),
     readAll(db.from("inventory_purchases").select("product,category,unit,qty,cost,purchase_date,supplier").eq("branch_id",branch).gte("purchase_date",historyFrom).lte("purchase_date",today).order("id")),
     readAll(db.from("waste_log").select("product,category,unit,qty,work_date,reason").eq("branch_id",branch).gte("work_date",previousFrom).lte("work_date",today).order("id")),
-    readAll(db.from("stock_batches").select("id,product,category,unit,qty,expiry_date").eq("branch_id",branch).eq("status","active").order("id")),
+    readAll(db.from("stock_batches").select("id,product,category,unit,qty,remaining_qty,expiry_date").eq("branch_id",branch).eq("status","active").order("id")),
     readAll(db.from("inventory_orders").select("id,supplier_id,supplier_name,reference,status,expected_date,created_at").eq("branch_id",branch).or(`status.in.(sent,partial),created_at.gte.${from}`).order("id")),
     getInventoryAnalytics(days-1),
   ]);

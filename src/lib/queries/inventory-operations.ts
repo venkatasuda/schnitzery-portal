@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { activeBranchFor, MULTI_BRANCH_ROLES } from "@/lib/activeBranch";
 import { readAll } from "@/lib/supabase/readAll";
+import type { StockBatch } from "@/lib/inventory/batches";
 import { uuid, validOperation, type InventoryAction, type Product, type Supplier, type PurchaseOrder, type PurchaseLine, type Receipt, type ReceiptLine } from "@/lib/inventory/operations";
 
 async function scope() {
@@ -28,15 +29,19 @@ export async function getInventoryOperations(mode: "catalog" | "purchasing", sel
   if (!["catalog","purchasing"].includes(mode) || (selected && !uuid(selected))) return {ok:false as const,error:"invalid"};
   const ctx = await scope();
   if (!ctx) return {ok:false as const,error:"access"};
-  const [branch,products,suppliers,orders] = await Promise.all([
+  const [branch,products,suppliers,orders,direct] = await Promise.all([
     ctx.db.from("branches").select("id,name").eq("id",ctx.branch).single(),
     readAll(ctx.db.from("inventory_master").select("*").eq("branch_id",ctx.branch).eq("is_active",true).order("category").order("product").order("id")),
     readAll(ctx.db.from("inventory_suppliers").select("*").eq("branch_id",ctx.branch).order("name").order("id")),
     mode==="purchasing" ? ctx.db.from("inventory_orders").select("*").eq("branch_id",ctx.branch).order("created_at",{ascending:false}).limit(80) : Promise.resolve({data:[],error:null}),
+    mode==="purchasing"?ctx.db.from("inventory_operation_events").select("id,recorded_at,supplier:request->>supplier,invoice:request->>invoice,received_date:request->>received_date,result").eq("branch_id",ctx.branch).eq("action","receive_direct").order("recorded_at",{ascending:false}).limit(40):Promise.resolve({data:[],error:null}),
   ]);
   if(branch.error||products.error||suppliers.error||orders.error) return {ok:false as const,error:"load"};
+
+  if(direct.error)return{ok:false as const,error:"load"};
   let order: PurchaseOrder|null=null;
   let lines: PurchaseLine[]=[],receipts:Receipt[]=[],receiptLines:ReceiptLine[]=[],orderEvents:{id:string;action:string;request:Record<string,unknown>;actor_id:string;recorded_at:string}[]=[];
+  const batches:StockBatch[]=[];
   if(selected){
     const found=await ctx.db.from("inventory_orders").select("*").eq("id",selected).eq("branch_id",ctx.branch).single();
     if(found.error)return{ok:false as const,error:"load"};
@@ -49,9 +54,11 @@ export async function getInventoryOperations(mode: "catalog" | "purchasing", sel
     lines=l.data as PurchaseLine[];receipts=r.data as Receipt[];
     const events=await readAll(ctx.db.from("inventory_operation_events").select("id,action,request,actor_id,recorded_at").eq("branch_id",ctx.branch).eq("result->>id",selected).in("action",["po_save","po_approve","po_send","po_cancel","po_close","receive"]).order("recorded_at").order("id"));
     if(events.error)return{ok:false as const,error:"load"};orderEvents=events.data as typeof orderEvents;
-    if(receipts.length){const rl=await readAll(ctx.db.from("inventory_receipt_lines").select("*").in("receipt_id",receipts.map(r=>r.id)).order("id"));if(rl.error)return{ok:false as const,error:"load"};receiptLines=rl.data as ReceiptLine[];}
+    if(receipts.length){const rl=await readAll(ctx.db.from("inventory_receipt_lines").select("*").in("receipt_id",receipts.map(r=>r.id)).order("id"));if(rl.error)return{ok:false as const,error:"load"};receiptLines=rl.data as ReceiptLine[];
+      for(let i=0;i<receiptLines.length;i+=100){const b=await readAll(ctx.db.from("stock_batches").select("*").eq("branch_id",ctx.branch).in("receipt_line_id",receiptLines.slice(i,i+100).map(l=>l.id)).order("expiry_date",{ascending:true,nullsFirst:false}).order("id"));if(b.error)return{ok:false as const,error:"load"};batches.push(...b.data as StockBatch[]);}
+    }
   }
-  return {ok:true as const,branch:branch.data!,products:products.data as Product[],suppliers:suppliers.data as Supplier[],orders:orders.data as PurchaseOrder[],order,lines,receipts,receiptLines,orderEvents};
+  return {ok:true as const,branch:branch.data!,products:products.data as Product[],suppliers:suppliers.data as Supplier[],orders:orders.data as PurchaseOrder[],order,lines,receipts,receiptLines,orderEvents,batches,directReceipts:(direct.data??[]) as {id:string;recorded_at:string;supplier:string;invoice:string;received_date:string;result:{lines:{product:string;unit:string|null;accepted:number;rejected:number;cost:number|null}[]}}[]};
 }
 
 export async function getInventoryEntry(id: string, kind: "waste" | "transfer") {
