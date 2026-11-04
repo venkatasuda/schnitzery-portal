@@ -183,6 +183,7 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
  await login(manager);
  await reverse(150,100);await reverse(150,100);
  assert.equal((await db.query('select count(*)::int n from inventory_production_reversals where run_id=$1',[id(100)])).rows[0].n,1);
+ assert.equal((await db.query('select note from stock_batches where production_id=$1',[id(100)])).rows[0].note,'Reversed mistaken production');
  assert.ok((await db.query('select reversed_at from inventory_production_runs where id=$1',[id(100)])).rows[0].reversed_at);
  assert.equal(Number((await db.query('select remaining_qty from stock_batches where production_id=$1',[id(100)])).rows[0].remaining_qty),0);
  assert.equal(Number((await db.query('select unit_cost from inventory_production_inputs where run_id=$1',[id(100)])).rows[0].unit_cost),1.2,'Reversal preserves cost evidence');

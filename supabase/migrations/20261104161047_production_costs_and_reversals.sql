@@ -65,7 +65,7 @@ begin
   if not exists(select 1 from public.stock_batches where id=i.batch_id and status in('active','used') and remaining_qty+i.qty<=qty) then raise exception 'Ingredient balance cannot be restored';end if;
   update public.stock_batches set remaining_qty=remaining_qty+i.qty,status='active',closed_at=null,closed_by=null where id=i.batch_id;
  end loop;
- update public.stock_batches set remaining_qty=0,status='used',closed_at=clock_timestamp(),closed_by=auth.uid() where id=r.output_batch_id;
+ update public.stock_batches set remaining_qty=0,status='used',note='Reversed mistaken production',closed_at=clock_timestamp(),closed_by=auth.uid() where id=r.output_batch_id;
  insert into public.inventory_production_reversals(id,run_id,branch_id,reason,actor_id) values(p_command,p_id,p_branch,trim(p_reason),auth.uid());
  update public.inventory_production_runs set reversed_at=clock_timestamp(),revision=revision+1 where id=p_id;
  insert into public.stock_events(source_table,source_id,operation,branch_ids,before_row,after_row,actor_id) values('inventory_production_runs',p_id,'UPDATE',array[p_branch],to_jsonb(r),(select to_jsonb(t) from public.inventory_production_runs t where id=p_id),auth.uid());

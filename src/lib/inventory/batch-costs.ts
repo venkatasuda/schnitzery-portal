@@ -10,7 +10,7 @@ export function batchCostReport(batches:CostBatch[],inputs:CostInput[],runs:Cost
  const rows=batches.filter(b=>b.status==="active"&&Number(b.remaining_qty)>0).map(b=>{
   let price:number|null=null,source:"receipt"|"production"|"unknown"="unknown";
   const purchase=b.purchase_id?purchaseMap.get(b.purchase_id):null,run=b.production_id?runMap.get(b.production_id):null;
-  if(purchase&&inventoryKey(purchase)===inventoryKey(b)&&Number(purchase.qty)>0&&purchase.cost!=null){price=Number(purchase.cost)/Number(purchase.qty);source="receipt";}
+  if(purchase&&inventoryKey(purchase)===inventoryKey(b)&&Number.isFinite(Number(purchase.qty))&&Number(purchase.qty)>0&&purchase.cost!=null){price=Number(purchase.cost)/Number(purchase.qty);source="receipt";}
   else if(run&&run.status==="posted"&&!run.reversed_at&&Number(run.qty)>0){const lines=byRun.get(run.id)??[];if(lines.length&&lines.every(i=>i.unit_cost!=null&&Number.isFinite(Number(i.unit_cost))&&Number(i.unit_cost)>=0)){price=lines.reduce((n,i)=>n+Number(i.qty)*Number(i.unit_cost),0)/Number(run.qty);source="production";}}
   if(price!=null&&(!Number.isFinite(price)||price<0)){price=null;source="unknown";}
   return{...b,price,source,value:price==null?null:price*Number(b.remaining_qty)};

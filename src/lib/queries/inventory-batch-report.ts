@@ -15,5 +15,5 @@ export async function getInventoryBatchReport(){
   readAll(ctx.db.from("inventory_production_reversals").select("id,run_id,reason,recorded_at").eq("branch_id",ctx.branch).order("recorded_at",{ascending:false}).order("id")),
  ]);
  if([branch,batches,inputs,runs,purchases,actions,reversals].some(r=>r.error))return{ok:false as const,error:"load"};
- return{ok:true as const,branch:branch.data!.name,batches:batches.data as CostBatch[],inputs:inputs.data as CostInput[],runs:runs.data as CostRun[],purchases:purchases.data as CostPurchase[],actions:actions.data as {id:string;batch_id:string;action:string;qty:number;note:string;recorded_at:string}[],reversals:reversals.data as {id:string;run_id:string;reason:string;recorded_at:string}[],loadedAt:new Date().toISOString()};
+ return{ok:true as const,branchId:ctx.branch,branch:branch.data!.name,batches:batches.data as CostBatch[],inputs:inputs.data as CostInput[],runs:runs.data as CostRun[],purchases:purchases.data as CostPurchase[],actions:actions.data as {id:string;batch_id:string;action:string;qty:number;note:string;recorded_at:string}[],reversals:reversals.data as {id:string;run_id:string;reason:string;recorded_at:string}[],loadedAt:new Date().toISOString()};
 }

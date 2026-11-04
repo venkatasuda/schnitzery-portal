@@ -106,3 +106,10 @@ export async function removeCatalogProduct(page: Page, product: string) {
   await expect(dialog).toBeHidden();
   await expect(page.getByRole("row").filter({hasText:product})).toHaveCount(0);
 }
+
+export async function authenticatedClient(who:ReturnType<typeof account>){
+ const env=stagingEnv(),url=env.NEXT_PUBLIC_SUPABASE_URL||"";
+ if(!/^http:\/\/(127\.0\.0\.1|localhost):55321\/?$/.test(url))throw new Error("Refusing non-local authentication");
+ const client=createClient(url,env.NEXT_PUBLIC_SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+ const {error}=await client.auth.signInWithPassword({email:who.email,password:who.password});if(error)throw new Error("Synthetic test authentication failed");return client;
+}
