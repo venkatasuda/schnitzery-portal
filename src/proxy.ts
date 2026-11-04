@@ -65,6 +65,6 @@ export const config = {
     // /api/cron/* is called by Vercel Cron with a secret (checked in the route), never a user.
     // /monitoring is the Sentry tunnel: errors on the login page (signed out)
     // must still reach Sentry, so it bypasses the login redirect.
-    "/((?!_next/static|_next/image|favicon.ico|monitoring$|api/cron/|sw\\.js$|offline\\.html$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|monitoring$|api/cron/|api/integrations/pos$|sw\\.js$|offline\\.html$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
