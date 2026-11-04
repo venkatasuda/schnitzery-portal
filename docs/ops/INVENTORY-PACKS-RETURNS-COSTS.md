@@ -36,6 +36,14 @@ New tables enable RLS with authenticated read access only. Database commands enf
 
 `scripts/checks/receiving-batches.cjs` applies actual stock journal/workflow migrations. The expanded local check passed conversions, old pack versions, partial receipts, retries, forged writes, duplicate/over-returns, atomic rollback, credit/stock separation, cost history/stale edits and role/branch restrictions. Unit/reconciliation checks passed. Browser acceptance is tracked separately and remains a release gate.
 
+## Local acceptance recorded 2026-11-04
+
+- 125 unit tests in 24 files, TypeScript and the expanded database checks passed. Static accessibility, loader safety, translations, design ratchet and inventory/reconciliation regressions passed.
+- The purchasing browser workflow passed: pack setup, pack-based order, two partial receipts (one with unknown cost), physical supplier return, separate credit, manager/staff/owner permissions, branch isolation and German mobile purchasing layout.
+- Direct-receiving browser acceptance passed: split expiry lots, no duplicate physical count, partial use/waste, missing-date resolution, late invoice cost entry/history, unchanged quantities, German 375 px layout and cross-branch isolation.
+- Browser tests used real local Supabase authentication with synthetic accounts. They do not establish login-form behavior, production performance, exhaustive browser/device coverage or a production release. Each final workflow took about four minutes on the local development stack.
+- Audited synthetic receipts, credits and movements remain in local staging for review; test products are archived. No real production records were changed.
+
 ## Remaining scope
 
 Actual kitchen production, item-level POS consumption, lot-allocated transfers, recalls/holds, accounting valuation, automatic integrations, full profit reporting, shared unsaved-navigation protection and production load/restore evidence remain unfinished. This batch does not complete the full inventory roadmap.
