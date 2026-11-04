@@ -67,7 +67,7 @@ export async function getBatches(includeClosed=false) {
 }
 
 export async function getExpirySummary() {
-  const { supabase, user, branchId,profile } = await getMe();
+  const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   const today = berlinToday();
   const { data, error } = await readAll(supabase
