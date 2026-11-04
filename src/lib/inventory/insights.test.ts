@@ -5,6 +5,10 @@ const product={id:"p",product:"Oil",category:"Dry",unit:"l",soll:10};
 const buy=(purchase_date:string,qty:number,cost:number,unit="l"):InsightPurchase=>({...product,purchase_date,qty,cost,unit});
 const base={today:"2026-11-01",from:"2026-10-26",previousFrom:"2026-10-19",products:[product],counts:[],purchases:[],waste:[],batches:[],orders:[],lines:[],receipts:[],receiptLines:[]};
 describe("owner inventory insights",()=>{
+ it("values remaining batch quantities and flags unknown dates instead of assuming zero expiry exposure",()=>{
+  const r=inventoryInsights({...base,purchases:[buy("2026-11-01",10,20)],batches:[{...product,id:"b",qty:10,remaining_qty:3,expiry_date:"2026-11-04"},{...product,id:"u",qty:5,remaining_qty:5,expiry_date:null}]});
+  expect(r.expiryValue.value).toBe(6);expect(r.expiryValue.complete).toBe(false);expect(r.expiryValue.missing.counts).toBe(1);
+ });
  it("keeps absent counts and prices unknown, never a zero-stock claim",()=>{
   const r=inventoryInsights(base);expect(r.stock[0].qty).toBeNull();expect(r.stock[0].value).toBeNull();expect(r.stockValue.complete).toBe(false);expect(r.stock[0].suggested).toBeNull();
  });

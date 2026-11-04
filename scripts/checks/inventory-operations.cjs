@@ -1,6 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
 function mod(file,resolve,globals={}){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,require:resolve,...globals});return exports;}
-const operations=mod('src/lib/inventory/operations.ts',require),valid=operations.validOperation;
+const batchHelpers=mod('src/lib/inventory/batches.ts',name=>name==='../time/berlinDate'?mod('src/lib/time/berlinDate.ts',require):require(name));
+const operations=mod('src/lib/inventory/operations.ts',name=>name==='./batches'?batchHelpers:name==='../time/berlinDate'?mod('src/lib/time/berlinDate.ts',require):require(name)),valid=operations.validOperation;
 const dictionary=mod('src/lib/i18n/messages.ts',require).messages;
 for(const file of ['src/components/inventory/Products.tsx','src/components/inventory/Suppliers.tsx','src/components/inventory/MovementDetails.tsx','src/app/(app)/inventory/purchasing/page.tsx']){
  for(const match of fs.readFileSync(file,'utf8').matchAll(/\bt\(["']([\w.]+)["']/g))for(const lang of ['en','de'])assert.equal(typeof match[1].split('.').reduce((v,k)=>v?.[k],dictionary[lang]),'string',`${lang}: missing ${match[1]}`);
@@ -39,7 +40,8 @@ const fixture={ok:true,branch:{id:branch,name:'Synthetic branch'},products:[{id:
  const calls=[];
  const screen=await ui('inventory/purchasing',(name,args)=>{if(name==='inventoryOperation'){calls.push(args);return{ok:false,error:'save'};}return fixture;});
  assert.match(screen.render(),/inventoryOps.newOrder/);
- find(screen.tree(),e=>e.props?.actions?.props?.children==='inventoryOps.newOrder').props.actions.props.onClick();
+ const header=find(screen.tree(),e=>e.props?.actions?.props?.children?.some?.(child=>child?.props?.children==='inventoryOps.newOrder'));
+ header.props.actions.props.children.find(child=>child?.props?.children==='inventoryOps.newOrder').props.onClick();
  find(screen.tree(),e=>e.type==='select'&&e.props['aria-label']==='inventoryOps.product 1').props.onChange({target:{value:product}});
  find(screen.tree(),e=>e.type==='input'&&e.props['aria-label']==='inventoryOps.ordered 1').props.onChange({target:{value:'2'}});
  find(screen.tree(),e=>e.type==='form').props.onSubmit({preventDefault(){}});await flush();

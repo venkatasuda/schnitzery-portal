@@ -11,7 +11,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
   getProducts, getCounts, getInventoryContext, saveCount, getOrderAlert,
-  addDelivery, getDeliveries, getInventoryAnalytics, getInventoryTrend, getInventoryVariance, getDepletionForecast,
+  getDeliveries, getInventoryAnalytics, getInventoryTrend, getInventoryVariance, getDepletionForecast,
 } from "@/lib/queries/inventory";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -55,8 +55,6 @@ export default function InventoryPage() {
 
   // DELIVERIES tab
   const [deliveries, setDeliveries] = useState<any[]>([]);
-  const [del, setDel] = useState({ product: "", qty: "", cost: "", supplier: "", note: "", date: "" });
-  const [savingDel, setSavingDel] = useState(false);
 
   // ANALYTICS tab
   const [analytics, setAnalytics] = useState<any>(null);
@@ -153,21 +151,6 @@ export default function InventoryPage() {
   async function doSaveCount(p: any) {
     await quickSave(p, entry[inventoryKey(p)] ?? "");
   }
-  async function doAddDelivery() {
-    if (!del.product) { toast(t("inv.pickProduct"), "error"); return; }
-    if (del.qty.trim() === "" || del.cost.trim() === "") { toast(t("inv.enterQtyCost"), "error"); return; }
-    const prod = products.find((p) => p.id === del.product);
-    setSavingDel(true);
-    const res = await addDelivery({
-      product: prod?.product || "", category: prod?.category || "",
-      qty: Number(del.qty) || 0, unit: prod?.unit || "", cost: Number(del.cost) || 0,
-      supplier: del.supplier || undefined, note: del.note || undefined, date: del.date || undefined,
-    });
-    setSavingDel(false);
-    if (res.ok) { toast(t("inv.deliverySaved"), "success"); setDel({ product: "", qty: "", cost: "", supplier: "", note: "", date: "" }); loadDeliveries(); }
-    else toast(res.error || t("inv.failed"), "error");
-  }
-
   function stockStatus(p: any): "green" | "amber" | "red" | "none" {
     const c = counts[inventoryKey(p)];
     const ist = c ? Number(c.ist) : null;
@@ -269,8 +252,9 @@ export default function InventoryPage() {
         </div>
       </div>
 
+      {tab === "count" && <p className="business-note">{locale==="de"?"Neue Ware unter Einkauf annehmen. Hier den gesamten physischen Regalbestand zählen, nicht nur die Liefermenge. Erfasste Chargenrestmengen und Ablaufdaten stehen unter Chargen und Ablauf.":"Receive new goods under Purchasing. Here, count the total physically on the shelf, not just the delivered quantity. Registered batch balances and dates are under Batches & expiry."}</p>}
       {area !== "overview" && <div className="hub-tabs inventory-subnav" role="group" aria-label={t(`inventoryWorkspace.${area}`)}>
-        {area === "stock" && <><TabButton active={tab === "count"} onClick={() => navigate("count")}>{t("inv.tabCount")}</TabButton><TabButton active={tab === "catalog"} onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton><Link className="hub-tab" href="/inventory/preparation">{locale === "de" ? "Küchenvorbereitung" : "Kitchen preparation"}</Link><Link className="hub-tab" href="/expiry">{t("home.expiry")}</Link><Link className="hub-tab" href="/labels">{t("scan.labels")}</Link></>}
+        {area === "stock" && <><TabButton active={tab === "count"} onClick={() => navigate("count")}>{t("inv.tabCount")}</TabButton><TabButton active={tab === "catalog"} onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton><Link className="hub-tab" href="/inventory/preparation">{locale === "de" ? "Küchenvorbereitung" : "Kitchen preparation"}</Link><Link className="hub-tab" href="/expiry">{locale==="de"?"Chargen und Ablauf":"Batches & expiry"}</Link><Link className="hub-tab" href="/labels">{t("scan.labels")}</Link></>}
         {area === "purchasing" && <><TabButton active={tab === "forecast"} onClick={() => navigate("forecast")}>{t("inventoryWorkflow.reorder")}</TabButton><Link className="hub-tab" href="/inventory/purchasing">{t("inventoryOps.orders")}</Link><TabButton active={tab === "deliveries"} onClick={() => navigate("deliveries")}>{t("inv.tabDeliveries")}</TabButton></>}
         {area === "movements" && <><TabButton active={tab === "movements"} onClick={() => navigate("movements")}>{t("inventoryWorkspace.workflows")}</TabButton><TabButton active={tab === "history"} onClick={() => navigate("history")}>{t("stockHistory.title")}</TabButton></>}
         {area === "reports" && <><Link className="btn-secondary" href="/inventory/insights">{locale === "de" ? "Geschäftsauswertung" : "Business insights"}</Link><TabButton active={tab === "analytics"} onClick={() => navigate("analytics")}>{t("inventoryWorkflow.reports")}</TabButton><TabButton active={tab === "reconcile"} onClick={() => navigate("reconcile")}>{t("reconcile.title")}</TabButton></>}
@@ -288,9 +272,9 @@ export default function InventoryPage() {
               <div className="inventory-task-grid">
                 <Link className="inventory-task" href="/inventory/insights"><strong>{locale === "de" ? "Geschäftsauswertung" : "Business insights"}</strong><span>{locale === "de" ? "Bestandswert, Ausschuss, Preisänderungen und Lieferantenleistung mit Datengrundlage." : "Stock value, waste, price changes and supplier performance with supporting evidence."}</span></Link>
                 <Link className="inventory-task" href="/inventory/counts"><strong>{t("countSession.title")}</strong><span>{t("countSession.help")}</span></Link>
-                <Link className="inventory-task" href="/inventory/purchasing"><strong>{t("inventoryOps.receive")}</strong><span>{t("inventoryWorkspace.receivingHelp")}</span></Link>
+                <Link className="inventory-task" href="/inventory/purchasing?receive=1"><strong>{t("inventoryOps.receive")}</strong><span>{t("inventoryWorkspace.receivingHelp")}</span></Link>
                 <button className="inventory-task" onClick={() => navigate("forecast")}><strong>{t("inventoryWorkflow.reorder")}</strong><span>{t("inventoryWorkspace.reorderHelp")}</span></button>
-                <Link className="inventory-task" href="/expiry"><strong>{t("home.expiry")}</strong><span>{t("inventoryWorkspace.expiryHelp")}</span></Link>
+                <Link className="inventory-task" href="/expiry"><strong>{locale==="de"?"Chargen und Ablauf":"Batches & expiry"}</strong><span>{t("inventoryWorkspace.expiryHelp")}</span></Link>
                 <button className="inventory-task" onClick={() => navigate("reconcile")}><strong>{t("reconcile.title")}</strong><span>{t("inventoryWorkspace.reviewHelp")}</span></button>
               </div>
             </Panel>
@@ -424,28 +408,7 @@ export default function InventoryPage() {
           {tab === "deliveries" && (
             <div className="inventory-delivery-grid">
               <p className="ui-note">{t("inventoryOps.quickDeliveryHelp")} <Link href="/inventory/purchasing">{t("inventoryOps.orders")}</Link></p>
-              {products.length === 0 ? (
-                <div className="card ui-empty-msg">{t("inv.addProductsFirst")}</div>
-              ) : (
-                <Panel title={t("inv.recordDelivery")}>
-                  <p className="ui-sub">{t("inv.recordDeliverySub")}</p>
-                  <div className="ui-form-grid">
-                    <Field label={t("inv.product")}>
-                      <select value={del.product} onChange={(e) => setDel({ ...del, product: e.target.value })} className="form-input">
-                        <option value="">{t("inv.pickProductOpt")}</option>
-                        {products.map((p) => <option key={p.id} value={p.id}>{p.product} · {p.category}{p.unit ? ` (${p.unit})` : ""}</option>)}
-                      </select>
-                    </Field>
-                    <Field label={t("inv.qtyReceived")}><input type="number" value={del.qty} onChange={(e) => setDel({ ...del, qty: e.target.value })} className="form-input" placeholder="100" /></Field>
-                    <Field label={t("inv.costPaid")}><input type="number" value={del.cost} onChange={(e) => setDel({ ...del, cost: e.target.value })} className="form-input" placeholder="40.00" /></Field>
-                    <Field label={t("inv.date")}><input type="date" value={del.date} onChange={(e) => setDel({ ...del, date: e.target.value })} className="form-input" /></Field>
-                    <Field label={t("inv.supplier")}><input value={del.supplier} onChange={(e) => setDel({ ...del, supplier: e.target.value })} className="form-input" placeholder={t("inv.phSupplier")} /></Field>
-                    <Field label={t("inv.note")}><input value={del.note} onChange={(e) => setDel({ ...del, note: e.target.value })} className="form-input" /></Field>
-                  </div>
-                  <button type="button" className="btn-gold ui-block" onClick={doAddDelivery} disabled={savingDel}>{savingDel ? t("common.saving") : t("inv.saveDelivery")}</button>
-                </Panel>
-              )}
-
+              <Panel title={t("inv.recordDelivery")}><p>{locale==="de"?"Lieferungen mit Mengen, Chargen und Ablaufdaten an einem Ort annehmen. Nicht als Bestandszählung erfassen.":"Receive quantities, batches and expiry dates together in one place. Do not record a delivery as a stock count."}</p><Link className="btn-gold" href="/inventory/purchasing?receive=1">{locale==="de"?"Lieferung annehmen":"Receive a delivery"}</Link><Link className="btn-secondary" href="/expiry">{locale==="de"?"Chargen und Ablauf":"Stock batches & expiry"}</Link></Panel>
               <section><h2 className="inventory-section-title">{t("inv.recentDeliveries")}</h2>
               {deliveries.length === 0 ? (
                 <div className="card"><EmptyState title={t("inv.noDeliveries")} /></div>

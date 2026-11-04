@@ -1,178 +1,58 @@
 "use client";
-import { appLocale } from "@/lib/format";
+import { useEffect,useRef,useState } from "react";
+import Link from "next/link";
 import InventoryNav from "@/components/InventoryNav";
-import { inventoryKey } from "@/lib/inventory/identity";
-
-import { useState, useEffect } from "react";
+import NativeDialog from "@/components/NativeDialog";
+import { Field,PageHeader,Panel } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
-import Icon from "@/components/Icon";
-import { toast } from "@/components/Toast";
-import { CardSkeleton } from "@/components/Skeleton";
-import { getBatchProducts, addBatch, getBatches, getExpirySummary, markBatchUsed, discardBatch } from "@/lib/queries/expiry";
-
-const fmtDate = (d: string) => { try { return new Date(d + "T12:00:00Z").toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "numeric", month: "short", year: "numeric" }); } catch { return d; } };
-
-export default function ExpiryPage() {
-  const { t } = useLang();
-  const [products, setProducts] = useState<any[]>([]);
-  const [batches, setBatches] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  const [adding, setAdding] = useState(false);
-  const [search, setSearch] = useState("");
-  const [sel, setSel] = useState<any>(null);
-  const [qty, setQty] = useState("1");
-  const [expiry, setExpiry] = useState("");
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
-
-  async function loadAll() {
-    // A failed request must end the skeleton and say so, not spin forever.
-    try {
-    const [p, b, s] = await Promise.all([getBatchProducts(), getBatches(), getExpirySummary()]);
-    if (p.ok) setProducts(p.products || []);
-    if (b.ok) setBatches(b.batches || []);
-    if (s.ok) setSummary(s);
-    setLoading(false);
-    } catch { toast(t("common.loadFailed"), "error"); }
-    finally { setLoading(false); }
-  }
-  useEffect(() => { loadAll(); }, []);
-
-  function resetForm() { setSel(null); setSearch(""); setQty("1"); setExpiry(""); setNote(""); setAdding(false); }
-
-  async function submit() {
-    if (!sel) { toast(t("expiry.pickProduct"), "error"); return; }
-    if (!(Number(qty) > 0)) { toast(t("expiry.enterQty"), "error"); return; }
-    if (!expiry) { toast(t("expiry.pickDate"), "error"); return; }
-    setBusy("add");
-    const r = await addBatch(sel.product, sel.category, Number(qty), sel.unit, expiry, note);
-    setBusy(null);
-    if (r.ok) { toast(t("expiry.added"), "success"); resetForm(); loadAll(); }
-    else toast(r.error || t("expiry.failed"), "error");
-  }
-  async function used(id: string) {
-    setBusy(id);
-    const r = await markBatchUsed(id); setBusy(null);
-    if (r.ok) { toast(t("expiry.markedUsed"), "success"); loadAll(); } else toast(r.error || t("expiry.failed"), "error");
-  }
-  async function discard(id: string) {
-    if (!confirm(t("expiry.confirmDiscard"))) return;
-    setBusy(id);
-    const r = await discardBatch(id); setBusy(null);
-    if (r.ok) { toast(t("expiry.discarded"), "success"); loadAll(); } else toast(r.error || t("expiry.failed"), "error");
-  }
-
-  const filtered = products.filter((p) => p.product.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
-  const badge = (b: any) => {
-    if (b.flag === "expired") return { c: "var(--danger)", label: b.daysToExpiry === 0 ? t("expiry.today") : t("expiry.expiredAgo", { n: Math.abs(b.daysToExpiry) }) };
-    if (b.flag === "soon") return { c: "var(--gold-ink)", label: b.daysToExpiry === 0 ? t("expiry.today") : t("expiry.inDays", { n: b.daysToExpiry }) };
-    return { c: "var(--success)", label: t("expiry.inDays", { n: b.daysToExpiry }) };
-  };
-
-  // group batches by product (batches arrive soonest-expiry first, so items[0] is the most urgent)
-  const groups = (() => {
-    const map: Record<string, any> = {};
-    for (const b of batches) {
-      if (!map[inventoryKey(b)]) map[inventoryKey(b)] = { product: b.product, unit: b.unit, items: [], total: 0 };
-      map[inventoryKey(b)].items.push(b);
-      map[inventoryKey(b)].total += Number(b.qty) || 0;
-    }
-    return Object.values(map).sort((a: any, z: any) => a.items[0].expiry_date.localeCompare(z.items[0].expiry_date));
-  })();
-
-  return (
-    <div className="fade-up">
-      <InventoryNav active="stock" />
-      <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("expiry.title")}</h1>
-      <div className="page-sub">{t("expiry.subtitle")}</div>
-
-      {summary && (summary.expired > 0 || summary.soon > 0) && (
-        <div className="card" style={{ margin: "12px 0", padding: 14, borderColor: summary.expired > 0 ? "rgba(231,76,60,0.4)" : "var(--accent-line)" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: summary.expired > 0 ? "var(--danger)" : "#d4a847" }}>
-            {summary.expired > 0 ? t("expiry.expiredCount", { n: summary.expired }) : t("expiry.soonCount", { n: summary.soon })}
-          </div>
-          <div className="ui-meta">{t("expiry.useFirst")}</div>
-        </div>
-      )}
-
-      {!adding ? (
-        <button className="btn-secondary" onClick={() => setAdding(true)}>+ {t("expiry.addBatch")}</button>
-      ) : (
-        <div className="card mb-4 p-4">
-          <div className="d-flex jc-sb ai-c mb-3">
-            <div className="card-title u-m0">{t("expiry.addBatch")}</div>
-            <button className="ui-icon-btn" type="button" aria-label={t("common.close")} onClick={resetForm}><Icon e="✕" size={16} /></button>
-          </div>
-          {!sel ? (
-            <>
-              <input className="form-input u-mb-2" aria-label={t("expiry.searchProduct")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("expiry.searchProduct")}
-                />
-              {search && (filtered.length === 0 ? <div className="ui-muted">{t("expiry.noProduct")}</div> : filtered.map((p) => (
-                <button className="ui-pick" key={p.product} onClick={() => { setSel(p); setSearch(""); }}>
-                  {p.product} <span className="ui-muted">({p.category})</span>
-                </button>
-              )))}
-            </>
-          ) : (
-            <>
-              <div className="d-flex jc-sb ai-c mb-3">
-                <div className="t-lg fw-6 u-text">{sel.product}</div>
-                <button className="ui-link-btn" onClick={() => setSel(null)}>{t("expiry.change")}</button>
-              </div>
-              <div className="d-flex gap-2 mb-3 ai-c">
-                <input aria-label={t("po.qty")} type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 84, padding: 11, textAlign: "center", borderRadius: 8, background: "var(--dark2)", color: "var(--white)", border: "1px solid var(--border)", fontSize: 15, fontWeight: 600 }} />
-                <span className="ui-muted-md">{sel.unit || ""}</span>
-              </div>
-              <label className="t-xs u-muted d-block mb-1">{t("expiry.expiryDate")}</label>
-              <input className="form-input u-mb-3" aria-label={t("expiry.expiryDate")} type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)}
-                />
-              <input className="form-input u-mb-3" aria-label={t("expiry.notePh")} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("expiry.notePh")}
-                />
-              <button className="btn-gold ui-block" onClick={submit} disabled={busy === "add"}>{busy === "add" ? "…" : t("expiry.addBatch")}</button>
-            </>
-          )}
-        </div>
-      )}
-
-      <div className="card-title u-mb-2">{t("expiry.batches")}</div>
-      {loading ? <CardSkeleton rows={3} /> : batches.length === 0 ? (
-        <div className="card ui-empty-msg">{t("expiry.none")}</div>
-      ) : groups.map((g: any) => {
-        const soonest = g.items[0];
-        const head = badge(soonest);
-        const multi = g.items.length > 1;
-        return (
-          <div key={g.product} className="card" style={{ marginBottom: 10, padding: 14, borderColor: soonest.flag === "expired" ? "rgba(231,76,60,0.35)" : soonest.flag === "soon" ? "var(--accent-line)" : "rgba(255,255,255,0.08)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: multi ? 10 : 6, marginBottom: multi ? 4 : 0, borderBottom: multi ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
-              <div>
-                <div className="t-lg fw-7 u-text">{g.product}</div>
-                <div className="ui-muted">{t("expiry.totalOnHand", { qty: Math.round(g.total * 10) / 10, unit: g.unit || "" })}{multi ? ` · ${g.items.length} ${t("expiry.batchesShort")}` : ""}</div>
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: head.c, whiteSpace: "nowrap" }}>{head.label}</span>
-            </div>
-            {g.items.map((b: any) => {
-              const bg = badge(b);
-              return (
-                <div key={b.id} style={{ padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
-                  <div className="u-between">
-                    <div>
-                      <div className="ui-body">{b.qty}{b.unit ? " " + b.unit : ""} <span className="ui-muted">· {t("expiry.expires")} {fmtDate(b.expiry_date)}</span></div>
-                      {b.note && <div className="t-xs u-muted fs-i">{b.note}</div>}
-                    </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: bg.c, whiteSpace: "nowrap" }}>{bg.label}</span>
-                  </div>
-                  <div className="ui-row-actions">
-                    <button onClick={() => used(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "rgba(39,174,96,0.12)", color: "var(--success)", border: "1px solid rgba(39,174,96,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("expiry.used")}</button>
-                    <button onClick={() => discard(b.id)} disabled={busy === b.id} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "rgba(231,76,60,0.1)", color: "var(--danger)", border: "1px solid rgba(231,76,60,0.3)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("expiry.discard")}</button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
-  );
+import { inventoryKey } from "@/lib/inventory/identity";
+import type { StockBatch } from "@/lib/inventory/batches";
+import { fmtDay } from "@/lib/time/berlinDate";
+import { getBatchProducts,addBatch,getBatches,consumeBatch,getBatchHistory,resolveBatchExpiry } from "@/lib/queries/expiry";
+type Product={product:string;category:string|null;unit:string|null};
+type Registration={product:string;qty:string;expiry:string;expiry_note:string;lot:string;note:string};
+type Action={batch:StockBatch;kind:"used"|"discarded";qty:string;note:string};
+type History=Awaited<ReturnType<typeof getBatchHistory>>;
+export default function ExpiryPage(){
+ const {locale}=useLang(),s=(en:string,de:string)=>locale==="de"?de:en;
+ const [batches,setBatches]=useState<StockBatch[]>([]),[products,setProducts]=useState<Product[]>([]),[canReceive,setCanReceive]=useState(false),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[search,setSearch]=useState(""),[filter,setFilter]=useState("active");
+ const [branchName,setBranchName]=useState("");
+ const [registration,setRegistration]=useState<Registration|null>(null),[action,setAction]=useState<Action|null>(null),[history,setHistory]=useState<{id:string;result:History}|null>(null);
+ const [expiryEdit,setExpiryEdit]=useState<{batch:StockBatch;date:string;note:string}|null>(null);
+ const seq=useRef(0),command=useRef<{body:string;id:string}|null>(null),closed=filter==="closed";
+ const number=(n:number)=>n.toLocaleString(locale==="de"?"de-DE":"en-GB",{maximumFractionDigits:6});
+ async function load(showClosed:boolean){const current=++seq.current;setLoading(true);setError("");try{const [b,p]=await Promise.all([getBatches(showClosed),getBatchProducts()]);if(current!==seq.current)return;if(!b.ok||!p.ok){setError(s("Could not load batches. Missing data is not zero stock.","Chargen konnten nicht geladen werden. Fehlende Daten sind kein Nullbestand."));return;}setBatches(b.batches);setBranchName("branchName" in b?(b.branchName??""):"");setProducts(p.products as Product[]);setCanReceive("canReceive" in b&&!!b.canReceive);}catch{if(current===seq.current)setError(s("Could not load batches.","Chargen konnten nicht geladen werden."));}finally{if(current===seq.current)setLoading(false);}}
+ useEffect(()=>{void load(closed);return()=>{seq.current++;};},[closed]);
+ useEffect(()=>{const q=new URLSearchParams(window.location.search).get("search");if(q)setSearch(q);},[]);
+ const active=batches.filter(b=>b.status==="active"),rows=batches.filter(b=>(closed?b.status!=="active":b.status==="active"&&(filter==="active"||b.flag===filter))&&`${b.product} ${b.category??""} ${b.lot_number} ${b.receipt_reference}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+ const groups=new Map<string,{product:string;category:string|null;unit:string|null;remaining:number;items:StockBatch[]}>();
+ for(const b of rows){const key=inventoryKey(b),g=groups.get(key)??{product:b.product,category:b.category,unit:b.unit,remaining:0,items:[]};g.remaining+=b.remaining_qty;g.items.push(b);groups.set(key,g);}
+ function key(body:string){if(command.current?.body!==body)command.current={body,id:crypto.randomUUID()};return command.current.id;}
+ async function save(){if(busy)return;setBusy(true);setError("");try{
+  let result:{ok:boolean;error?:string};
+  if(expiryEdit){result=await resolveBatchExpiry(expiryEdit.batch.id,key(JSON.stringify(expiryEdit)),expiryEdit.date,expiryEdit.note);}
+  else if(action){const id=key(JSON.stringify(action));result=await consumeBatch(action.batch.id,id,action.kind,Number(action.qty),action.note);}
+  else if(registration){const p=products.find(p=>inventoryKey(p)===registration.product);if(!p){setError(s("Choose a product.","Produkt wählen."));return;}const id=key(JSON.stringify(registration));result=await addBatch(p.product,p.category??"",Number(registration.qty),p.unit??"",registration.expiry,registration.note,{command:id,lot:registration.lot,expiry_note:registration.expiry_note});}
+  else return;
+  if(!result.ok){setError(result.error??s("Save failed; reload to verify before retrying.","Speichern fehlgeschlagen; vor erneutem Versuch neu laden und prüfen."));return;}
+  command.current=null;setAction(null);setRegistration(null);setExpiryEdit(null);setHistory(null);await load(closed);
+ }catch{setError(s("Save could not be confirmed. Inputs retained; reload to verify before retrying.","Speichern nicht bestätigt. Eingaben bleiben erhalten; vor erneutem Versuch neu laden und prüfen."));}finally{setBusy(false);}}
+ async function showHistory(id:string){setBusy(true);try{setHistory({id,result:await getBatchHistory(id)});}catch{setError(s("History unavailable.","Verlauf nicht verfügbar."));}finally{setBusy(false);}}
+ const flag=(b:StockBatch)=>b.flag==="unknown"?s("Expiry unknown — check label","Ablauf unbekannt — Etikett prüfen"):b.flag==="expired"?s("Expired","Abgelaufen"):b.daysToExpiry===0?s("Expires today","Läuft heute ab"):s(`Expires in ${b.daysToExpiry} days`,`Läuft in ${b.daysToExpiry} Tagen ab`);
+ return <div className="inventory-page"><InventoryNav active="stock"/><PageHeader title={s("Stock batches & expiry","Chargen und Ablauf")} subtitle={`${branchName} · ${s("Earliest recorded expiry first. Remaining quantities stay separate by product and unit.","Frühestes erfasstes Ablaufdatum zuerst. Restmengen bleiben je Produkt und Einheit getrennt.")}`} actions={canReceive?<Link className="btn-gold" href="/inventory/purchasing?receive=1">{s("Receive a delivery","Lieferung annehmen")}</Link>:undefined}/>
+  <Panel title={s("Where to record stock","Wo wird Bestand erfasst?")}><ol><li><strong>{s("New delivery","Neue Lieferung")}</strong> — {s("Purchasing → Receive a delivery, or receive against an existing order. Save quantities and expiry batches together, once.","Einkauf → Lieferung annehmen oder bestehende Bestellung annehmen. Mengen und Ablaufchargen einmal gemeinsam speichern.")}</li><li><strong>{s("Batch tracking","Chargen verfolgen")}</strong> — {s("Record partial use or waste here and check what remains. Unknown expiry dates are flagged, never guessed.","Hier Teilverbrauch oder Ausschuss erfassen und Restmengen prüfen. Unbekannte Ablaufdaten werden markiert, nie geschätzt.")}</li><li><strong>{s("Physical count","Physische Zählung")}</strong> — <Link href="/inventory/counts">{s("Count everything on the shelf","Alles im Regal zählen")}</Link>. {s("A count is a total, not another delivery. Batch totals cover registered batches only; reconcile with physical stock.","Eine Zählung ist ein Gesamtbestand, keine weitere Lieferung. Chargensummen umfassen nur registrierte Chargen; mit physischem Bestand abgleichen.")}</li></ol><p className="muted">{s("Batch balances reflect recorded receipts and batch actions. Sales, transfers and kitchen preparation are not automatically allocated to these lots; reconcile with physical stock.","Chargenrestmengen zeigen erfasste Eingänge und Chargenaktionen. Verkäufe, Transfers und Küchenvorbereitung werden diesen Chargen nicht automatisch zugeordnet; mit physischem Bestand abgleichen.")}</p></Panel>
+  <div className="inventory-insight-toolbar"><Field label={s("Search product, lot or receipt","Produkt, Charge oder Beleg suchen")}><input type="search" className="form-input" value={search} onChange={e=>setSearch(e.target.value)}/></Field><Field label={s("Batch view","Chargenansicht")}><select className="form-select" value={filter} disabled={busy} onChange={e=>setFilter(e.target.value)}>{[["active",s("All active batches","Alle aktiven Chargen")],["expired",s("Expired","Abgelaufen")],["soon",s("Expiring within 3 days","Ablauf in 3 Tagen")],["unknown",s("Unknown expiry","Ablauf unbekannt")],["closed",s("Closed history","Abgeschlossener Verlauf")]].map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></Field><button className="btn-secondary" disabled={busy||loading} onClick={()=>load(closed)}>{s("Refresh","Aktualisieren")}</button><button className="btn-secondary" disabled={busy||loading||!!error} onClick={()=>{setError("");setRegistration({product:"",qty:"",expiry:"",expiry_note:"",lot:"",note:""});}}>{s("Register existing stock","Vorhandenen Bestand registrieren")}</button></div>
+  {loading?<p role="status">{s("Loading batches…","Chargen werden geladen…")}</p>:error&&!registration&&!action&&!expiryEdit?<p role="alert">{error}</p>:<>
+   {!closed&&<div className="inventory-insight-coverage"><p>{s("Active registered batches","Aktive registrierte Chargen")}: <strong>{active.length}</strong></p><p>{s("Expired","Abgelaufen")}: <strong>{active.filter(b=>b.flag==="expired").length}</strong></p><p>{s("Expiring within 3 days","Ablauf in 3 Tagen")}: <strong>{active.filter(b=>b.flag==="soon").length}</strong></p><p>{s("Unknown expiry","Ablauf unbekannt")}: <strong>{active.filter(b=>b.flag==="unknown").length}</strong></p></div>}
+   {!rows.length&&<p>{s("No batches match. An empty register does not prove there is no physical stock.","Keine passenden Chargen. Ein leeres Register beweist keinen leeren physischen Bestand.")}</p>}
+   {[...groups.entries()].map(([id,g])=><Panel key={id} title={`${g.product} · ${g.category??""}`}><p><strong>{s("Tracked remaining","Erfasste Restmenge")}: {number(g.remaining)} {g.unit}</strong></p>{g.items.map(b=><article className="inventory-prep-plan" key={b.id} data-batch={b.id}><div className="inventory-insight-coverage"><strong>{number(b.remaining_qty)} {b.unit} {s("remaining","übrig")}</strong><span>{s("Originally registered","Ursprünglich registriert")}: {number(b.qty)} {b.unit}</span><span>{b.expiry_date?`${s("Expiry","Ablauf")}: ${fmtDay(b.expiry_date,locale)}`:s("Expiry not recorded","Ablauf nicht erfasst")}</span></div><p><strong className={b.flag==="expired"?"tone-danger":b.flag==="soon"||b.flag==="unknown"?"tone-warn":""}>{b.status==="active"?flag(b):b.status==="used"?s("Closed after use","Nach Verbrauch abgeschlossen"):s("Closed after waste","Nach Ausschuss abgeschlossen")}</strong></p><p>{s("Lot","Charge")}: {b.lot_number||s("Not recorded","Nicht erfasst")} · {b.purchase_id?s("Received","Erhalten"):s("Registered existing stock","Vorhandenen Bestand registriert")}: {fmtDay(b.received_date,locale)} · {b.receipt_reference&&`${s("Receipt","Beleg")}: ${b.receipt_reference}`}</p>{b.expiry_note&&<p>{b.expiry_note}</p>}{b.note&&<p className="muted">{b.note}</p>}
+    <div className="row-actions">{canReceive&&b.status==="active"&&!b.expiry_date&&<button className="btn-secondary" disabled={busy} onClick={()=>{setError("");setExpiryEdit({batch:b,date:"",note:""});}}>{s("Record labelled expiry","Etikettdatum erfassen")}</button>}{b.status==="active"&&<><button className="btn-secondary" disabled={busy} onClick={()=>{setError("");setAction({batch:b,kind:"used",qty:"",note:""});}}>{s("Record use","Verbrauch erfassen")}</button><button className="btn-secondary" disabled={busy} onClick={()=>{setError("");setAction({batch:b,kind:"discarded",qty:"",note:""});}}>{s("Record waste","Ausschuss erfassen")}</button></>}<button className="btn-secondary" disabled={busy} onClick={()=>showHistory(b.id)}>{s("Usage history","Verbrauchsverlauf")}</button></div>
+    {history?.id===b.id&&<div aria-live="polite">{!history.result.ok?<p role="alert">{s("History unavailable.","Verlauf nicht verfügbar.")}</p>:!history.result.events.length?<p>{s("No quantity actions recorded. Older full closures may have only closing-user/time evidence.","Keine Mengenaktionen erfasst. Ältere Vollabschlüsse haben gegebenenfalls nur Abschlussbenutzer und Zeit als Nachweis.")}</p>:<ul>{history.result.events.map(e=><li key={e.id}>{e.action==="expiry_recorded"?`${s("Expiry evidence recorded","Ablaufnachweis erfasst")}: ${b.expiry_date?fmtDay(b.expiry_date,locale):"—"}`:`${e.action==="used"?s("Used","Verbraucht"):s("Waste","Ausschuss")}: ${number(Number(e.qty))} ${b.unit??""}`} · {new Date(e.recorded_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})} · {e.note}</li>)}</ul>}</div>}
+   </article>)}</Panel>)}
+  </>}
+  {(registration||action||expiryEdit)&&<NativeDialog unsaved title={expiryEdit?s("Record labelled expiry","Etikettdatum erfassen"):registration?s("Register existing stock","Vorhandenen Bestand registrieren"):action?.kind==="used"?s("Record use","Verbrauch erfassen"):s("Record waste","Ausschuss erfassen")} busy={busy} onClose={()=>{setRegistration(null);setAction(null);setExpiryEdit(null);setError("");}}><form onSubmit={e=>{e.preventDefault();void save();}}><fieldset className="inventory-recipe-fields" disabled={busy}>{error&&<p role="alert">{error}</p>}
+   {expiryEdit?<><p>{expiryEdit.batch.product} · {s("Only fill a previously missing label date. This does not change quantity or extend an already recorded expiry.","Nur ein bisher fehlendes Etikettdatum ergänzen. Menge und bereits erfasstes Ablaufdatum werden nicht verändert.")}</p><Field label={s("Label expiry date","Ablaufdatum auf Etikett")}><input className="form-input" type="date" required value={expiryEdit.date} onChange={e=>setExpiryEdit({...expiryEdit,date:e.target.value})}/></Field><Field label={s("Evidence / reason","Nachweis / Grund")}><textarea className="form-input" required minLength={3} maxLength={1000} value={expiryEdit.note} onChange={e=>setExpiryEdit({...expiryEdit,note:e.target.value})}/></Field></>:registration?<><p>{s("For stock already on the shelf only. This registers expiry tracking, not another purchase or delivery. Do not duplicate batches created by receiving.","Nur für bereits vorhandene Ware. Dies registriert Ablaufverfolgung, keinen weiteren Einkauf oder Wareneingang. Beim Empfang erstellte Chargen nicht doppelt registrieren.")}</p><Field label={s("Product","Produkt")}><select className="form-select" required value={registration.product} onChange={e=>setRegistration({...registration,product:e.target.value})}><option value="">{s("Choose product","Produkt wählen")}</option>{products.map(p=><option key={inventoryKey(p)} value={inventoryKey(p)}>{p.product} · {p.category} · {p.unit}</option>)}</select></Field><Field label={s("Existing quantity (stock unit)","Vorhandene Menge (Bestandseinheit)")}><input className="form-input" type="number" min="0.000001" max="999999999" step="any" required value={registration.qty} onChange={e=>setRegistration({...registration,qty:e.target.value})}/></Field><Field label={s("Expiry date","Ablaufdatum")}><input className="form-input" type="date" value={registration.expiry} onChange={e=>setRegistration({...registration,expiry:e.target.value})}/></Field>{!registration.expiry&&<Field label={s("Reason expiry is unavailable / not applicable","Grund: Ablaufdatum fehlt / nicht zutreffend")}><input className="form-input" required minLength={3} maxLength={500} value={registration.expiry_note} onChange={e=>setRegistration({...registration,expiry_note:e.target.value})}/></Field>}<Field label={s("Lot number (if shown)","Chargennummer (falls angegeben)")}><input className="form-input" maxLength={160} value={registration.lot} onChange={e=>setRegistration({...registration,lot:e.target.value})}/></Field><Field label={s("Note","Notiz")}><textarea className="form-input" maxLength={1000} value={registration.note} onChange={e=>setRegistration({...registration,note:e.target.value})}/></Field></>:action?<><p>{action.batch.product} · {s("Tracked remaining","Erfasste Restmenge")}: {number(action.batch.remaining_qty)} {action.batch.unit}</p><Field label={`${s("Quantity","Menge")} (${action.batch.unit??"—"})`}><input className="form-input" type="number" required min="0.000001" max={action.batch.remaining_qty} step="any" value={action.qty} onChange={e=>setAction({...action,qty:e.target.value})}/></Field><Field label={s("Reason / note","Grund / Notiz")}><textarea className="form-input" required={action.kind==="discarded"} minLength={action.kind==="discarded"?3:undefined} maxLength={1000} value={action.note} onChange={e=>setAction({...action,note:e.target.value})}/></Field><p>{action.kind==="discarded"?s("This quantity is removed from this batch and posted to the waste log in one transaction. Do not log it again in Waste.","Diese Menge wird in einer Transaktion von der Charge abgezogen und als Ausschuss gebucht. Nicht nochmals unter Ausschuss erfassen."):s("Records use of this batch only. This is not a sales entry or another physical stock count.","Erfasst nur den Verbrauch dieser Charge. Dies ist kein Umsatz und keine weitere physische Bestandszählung.")}</p></>:null}
+   <div className="row-actions"><button className="btn-gold" type="submit">{s("Save","Speichern")}</button><button type="button" className="btn-secondary" onClick={()=>{setAction(null);setRegistration(null);setExpiryEdit(null);setError("");}}>{s("Cancel","Abbrechen")}</button></div>
+  </fieldset></form></NativeDialog>}
+ </div>;
 }
