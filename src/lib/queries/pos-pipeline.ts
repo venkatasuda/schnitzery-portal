@@ -7,7 +7,7 @@ export async function getPosPipeline(){
  const [branch,connections,imports]=await Promise.all([ctx.db.from("branches").select("name").eq("id",ctx.branch).single(),ctx.db.from("pos_connections").select("id,name,enabled").eq("branch_id",ctx.branch).order("created_at",{ascending:false}),ctx.db.from("pos_imports").select("id,connection_id,external_id,payload,status,received_at,review_note").eq("branch_id",ctx.branch).order("received_at",{ascending:false}).limit(50)]);
  if(branch.error||connections.error||imports.error)return{ok:false as const,error:"load"};
  let keys:Record<string,unknown>={};try{keys=JSON.parse(process.env.POS_INGEST_KEYS??"{}");if(!keys||typeof keys!=="object")keys={};}catch{/* A missing connector secret leaves ingestion disabled. */}
- return{ok:true as const,branch:branch.data!.name,connections:connections.data!.map(c=>({...c,credentialsConfigured:typeof keys[c.id]==="string"&&(keys[c.id] as string).length>=32})),imports:imports.data as {id:string;connection_id:string;external_id:string;payload:PosDailyPayload;status:string;received_at:string;review_note:string|null}[]};
+ return{ok:true as const,branchId:ctx.branch,branch:branch.data!.name,connections:connections.data!.map(c=>({...c,credentialsConfigured:typeof keys[c.id]==="string"&&(keys[c.id] as string).length>=32})),imports:imports.data as {id:string;connection_id:string;external_id:string;payload:PosDailyPayload;status:string;received_at:string;review_note:string|null}[]};
 }
 export async function configurePosConnection(id:string,name:string,enabled:boolean){
  if(!uuid(id)||typeof name!=="string"||!name.trim()||name.length>160||typeof enabled!=="boolean")return{ok:false as const};

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
-import { account, admin, authenticatedPage, BASE_URL, BRANCH, openContexts, unique } from "./local";
+import { account, admin, authenticatedPage, BASE_URL, BRANCH, openContexts, unique, authenticatedClient } from "./local";
 import { berlinToday } from "../src/lib/time/berlinDate";
 
 test.afterEach(async()=>{for(const context of openContexts.splice(0))await context.close();});
@@ -43,16 +43,29 @@ test("manual production resumes empty drafts, consumes batches once and creates 
     await info.attach("manual-production-mobile-de",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
     await page.getByRole("link",{name:"Fertigcharge ansehen",exact:true}).click();await expect(page.locator(`[data-batch="${output.data![0].id}"]`)).toBeVisible();
     await page.getByRole("link",{name:"Produktionsprotokoll",exact:true}).click();await expect(page.getByRole("heading",{name:`${finishedName} · Gebucht`,exact:true})).toBeVisible();
+  }finally{
+    // Immutable synthetic production and batch evidence remains in local staging.
+    expect((await db.from("inventory_master").update({is_active:false}).in("id",[raw,finished])).error).toBeNull();
+  }
+});
+
+test("batch lineage and mistaken production reversal load independently on mobile",async({browser},info)=>{
+ test.setTimeout(600_000);
+ const db=admin(),client=await authenticatedClient(account("manager")),raw=randomUUID(),finished=randomUUID(),batch=randomUUID(),run=randomUUID(),rawName=unique("Trace ingredient"),finishedName=unique("Trace food");
+ const day=(offset:number)=>new Date(Date.parse(berlinToday()+"T12:00:00Z")+offset*86400000).toISOString().slice(0,10);
+ expect((await db.from("inventory_master").insert([{id:raw,branch_id:BRANCH.A,product:rawName,category:"E2E",unit:"kg",soll:5,is_active:true},{id:finished,branch_id:BRANCH.A,product:finishedName,category:"E2E",unit:"kg",soll:5,is_active:true}])).error).toBeNull();
+ expect((await db.from("stock_batches").insert({id:batch,branch_id:BRANCH.A,product:rawName,category:"E2E",unit:"kg",qty:5,expiry_date:day(7),received_date:day(0),note:"Synthetic trace test",status:"active"})).error).toBeNull();
+ try{
+  const saved=await client.rpc("inventory_operation",{p_branch:BRANCH.A,p_command:run,p_action:"production_save",p_body:{draft:{output_product_id:finished,date:day(0),qty:2,expected_qty:2.5,expiry:day(5),lot:"KITCHEN-TEST",note:"Synthetic trace and reversal acceptance",inputs:[{batch_id:batch,qty:3,planned_qty:2.8}]}}});expect(saved.error).toBeNull();
+  expect((await client.rpc("inventory_operation",{p_branch:BRANCH.A,p_command:randomUUID(),p_action:"production_post",p_body:{id:run,revision:0,reviewed:true}})).error).toBeNull();
+  const page=await authenticatedPage(browser,account("manager"));await page.setViewportSize({width:375,height:812});
     await page.context().addCookies([{name:"lang",value:"en",url:BASE_URL}]);
     await page.goto("/inventory/batch-report");await page.getByRole("combobox",{name:"Select any batch (including closed)",exact:true}).selectOption(batch);
-    await expect(page.getByRole("heading",{name:"Affected finished batches",exact:true})).toBeVisible();await expect(page.getByText(`${finishedName} · KITCHEN-TEST · active`,{exact:true})).toBeVisible();
+    await expect(page.getByRole("heading",{name:"Affected finished batches",exact:true})).toBeVisible();await expect(page.getByRole("listitem").filter({hasText:`${finishedName} · KITCHEN-TEST · active`})).toBeVisible();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
     await info.attach("batch-report-mobile",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
     await page.goto(`/inventory/production?run=${run}`);await page.getByText("Correct a mistaken posting",{exact:true}).click();await page.getByLabel("Reversal reason",{exact:true}).fill("Synthetic record correction: no real food was cooked");await page.getByRole("checkbox").check();await page.getByRole("button",{name:"Reverse mistaken posting",exact:true}).click();
     await expect(page.getByRole("heading",{name:`${finishedName} · Reversed`,exact:true})).toBeVisible();
     expect(Number((await db.from("stock_batches").select("remaining_qty").eq("id",batch).single()).data!.remaining_qty)).toBe(5);
-  }finally{
-    // Immutable synthetic production and batch evidence remains in local staging.
-    expect((await db.from("inventory_master").update({is_active:false}).in("id",[raw,finished])).error).toBeNull();
-  }
+ }finally{expect((await db.from("inventory_master").update({is_active:false}).in("id",[raw,finished])).error).toBeNull();}
 });
