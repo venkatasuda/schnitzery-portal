@@ -2,7 +2,7 @@
 
 ## Release state
 
-Work branch: `codex/production-cost-traceability`, built on the ingredient-price work in PR #83. This is local/review work, not a production deployment. Do not close the entire inventory audit based on this document.
+Core implementation: PR #84 (merged externally during verification), including ingredient-price PR #83. Final fixes: `codex/inventory-acceptance-followup`. Production migration state and live workflows are not verified by these local acceptance results. Do not close the entire inventory audit based on this document.
 
 ## What changed
 
@@ -65,3 +65,7 @@ The service-role-only staging RPC is unavailable to ordinary authenticated clien
 Local migrations: `20261104161047_production_costs_and_reversals.sql`, then `20261104161758_pos_import_pipeline.sql`. Apply after the manual-production migration and release frontend/database together. These migrations do not insert demonstration stock or sales into production.
 
 Initial local validation on 4 November 2026: 134 unit tests, TypeScript, database regressions and local security advisors passed. POS browser review/branch/staff/German-phone acceptance passed. The combined production test reached the new report but exceeded its 60-second locator wait during the client-first initial load; original production/role/expiry assertions had passed before that point. Initial report/connection data now comes from the server, with branch-keyed client state, removing that extra request waterfall. Focused browser acceptance is rerun independently; see the PR for final results. This does not claim the complete live audit has passed.
+
+Final local acceptance: after the initial-render change, POS management review/branch/staff/German-phone acceptance passed again. The independent lineage/reversal test passed with the visible-list selector corrected (1.2 minutes). Shared inventory action groups now wrap with consistent spacing. TypeScript, 134 unit tests, money/security database checks and local security advisors passed; these are not a full post-release live audit.
+
+PR #84 was merged externally during verification at 16:51 UTC on 4 November. Rendering, label and acceptance refinements are therefore a follow-up release. The already-merged migration `20261104161047` is preserved byte-for-byte; `20261104170156_production_reversal_labels.sql` replaces the reversal function going forward and labels existing reversed outputs without changing quantities or cost snapshots. Apply it whether the earlier migrations have already been applied or are being installed together. The forward-only migration sequence is also exercised by the database regression check. Check the follow-up PR for final CI results; no production migration or live verification was performed by this work.
