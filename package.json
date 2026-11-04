@@ -12,15 +12,15 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
-    "@capacitor/android": "^8.5.3",
+    "@capacitor/android": "^8.6.0",
     "@capacitor/core": "^8.5.3",
-    "@sentry/nextjs": "^10.76.2",
+    "@sentry/nextjs": "^10.78.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.107.0",
     "@vercel/analytics": "^2.0.1",
-    "docx": "^9.12.0",
+    "docx": "^9.15.1",
     "html5-qrcode": "^2.3.8",
-    "lucide-react": "^1.59.0",
+    "lucide-react": "^1.66.0",
     "next": "16.4.3",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
@@ -30,7 +30,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.3",
+    "@capacitor/cli": "^8.6.0",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
