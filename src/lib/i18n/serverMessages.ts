@@ -4,6 +4,9 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "Active account required.": "Ein aktives Konto ist erforderlich.",
+  "Check quantity and note.": "Bitte Menge und Notiz prüfen.",
+  "Pick an expiry date or explain why unavailable.": "Bitte ein Ablaufdatum wählen oder begründen, warum es nicht verfügbar ist.",
   "Enter the end time and a short reason.": "Bitte Endzeit und kurzen Grund angeben.",
   "Shift not found.": "Schicht nicht gefunden.",
   "This shift is already closed.": "Diese Schicht ist bereits geschlossen.",
