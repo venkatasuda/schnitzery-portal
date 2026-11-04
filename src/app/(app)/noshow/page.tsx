@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getNoShows, getMissingAvailability, getNextWeekStart } from "@/lib/queries/availability";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
 export default function NoShowPage() {
   const { t } = useLang();
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
   const [tab, setTab] = useState<"noshow" | "missing">("noshow");
   const [denied, setDenied] = useState(false);

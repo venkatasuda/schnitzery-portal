@@ -206,7 +206,8 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
 
   const totalSales = (sales || []).reduce((s, r) => s + Number(r.amount || 0), 0);
   const laborHours = h1(laborMins);
-  const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
+  // Nothing to divide by = nothing measured: unknown ("—"), not 0% (which reads as a bad result).
+  const pct = (n: number, d: number): number | null => (d > 0 ? Math.round((n / d) * 1000) / 10 : null);
 
   const metrics = {
     attendancePct: pct(attended, scheduled),
@@ -216,7 +217,7 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
     laborHours,
     laborCost: Math.round(laborCost * 100) / 100,
     shiftCompliancePct: pct(compliant, scheduled),
-    utilizationPct: scheduledMins > 0 ? pct(laborMins, scheduledMins) : (laborMins > 0 ? 100 : 0),
+    utilizationPct: pct(laborMins, scheduledMins),
     salesPerLaborHour: laborMins > 0 && totalSales > 0 ? Math.round((totalSales / (laborMins / 60)) * 100) / 100 : null,
     laborCostPct: totalSales > 0 ? Math.round((laborCost / totalSales) * 1000) / 10 : null,
     scheduled, attended, totalSales: Math.round(totalSales * 100) / 100,
@@ -239,7 +240,7 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   const elapsedDays = days.filter(d => d <= todayStr()).length * targets.length;
   const salesTrend = days.map(day => ({ day, sales: (sales || []).filter(s => s.sale_date === day).reduce((sum, s) => sum + Number(s.amount), 0), recorded: (sales || []).some(s => s.sale_date === day) }));
   return { ok: true as const, period, from, to, scope, branchCount: targets.length, metrics, trend, teams,
-    business: { purchaseSpend, wasteEntries: (waste || []).length, missingWageStaff, salesDays, elapsedDays, salesTrend, coverage,
+    business: { purchaseSpend, purchaseRecords: (purchases || []).length, wasteEntries: (waste || []).length, missingWageStaff, salesDays, elapsedDays, salesTrend, coverage,
       purchasePct: pctOf(coverage.spend, coverage.sales) } };
 }
 

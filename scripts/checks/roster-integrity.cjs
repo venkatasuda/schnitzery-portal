@@ -7,7 +7,7 @@ const chain=table=>{let mutation=false;const q=new Proxy({}, {get:(_,method)=>{
 const out={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/schedule.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:out,require:n=>{
  if(n.endsWith('/activeBranch'))return AB;
  if(n.endsWith('/server'))return {createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from:chain})};
- if(n.endsWith('schedule-constants'))return {DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],SHIFT_MODEL:{Kitchen:[{shift:'Morning'}]}};
+ if(n.endsWith('schedule-constants'))return {DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],SHIFT_MODEL:{Kitchen:[{shift:'Morning'}]},TEAMS:['Manager','Preparation','Kitchen','Cashier','Dishwashing']};
  if(n.endsWith('berlinDate'))return {isCalendarDate:d=>/^\d{4}-\d{2}-\d{2}$/.test(d)};
  if(n.endsWith('calculations'))return {};throw Error(n);
 }});

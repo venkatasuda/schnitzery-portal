@@ -7,12 +7,13 @@ import Icon from "@/components/Icon";
 import { getShiftTimes, upsertShiftTime } from "@/lib/queries/shift-times";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
 type Row = { team: string; shift: string; start: string; end: string; breakMins: number; scope: string };
 
 export default function ShiftTimesPage() {
   const { t } = useLang();
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);

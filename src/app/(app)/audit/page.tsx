@@ -24,6 +24,11 @@ export default function AuditPage() {
 
   if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
+  // Readable entries: a name for the action and "field: old → new" for what changed.
+  const label = (a: string) => { const k = `audit.a_${a}`, v = t(k); return v === k ? (a || "").replace(/_/g, " ") : v; };
+  const val = (v: unknown) => (v == null || v === "" ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v));
+  const describe = (c: Record<string, unknown>) => Object.entries(c).map(([k, v]) =>
+    `${k.replace(/_/g, " ")}: ${v && typeof v === "object" && "to" in (v as object) ? `${val((v as { from: unknown }).from)} → ${val((v as { to: unknown }).to)}` : val(v)}`).join(" · ");
   const fmt = (iso: string) => new Date(iso).toLocaleString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
   return (
@@ -38,9 +43,9 @@ export default function AuditPage() {
       ) : (
         logs.map((l) => (
           <div key={l.id} style={{ ...card, marginBottom: 8, padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-            <div>
-              <div className="ui-strong">{(l.action || "").replace(/_/g, " ")}</div>
-              {l.details && <div className="ui-meta">{l.details}</div>}
+            <div className="mw-0">
+              <div className="ui-strong">{label(l.action)}{l.target_name ? ` · ${l.target_name}` : ""}</div>
+              {l.changes ? <div className="ui-meta">{describe(l.changes)}</div> : l.details && <div className="ui-meta">{l.details}</div>}
               <div className="ui-meta">{t("audit.by", { actor: l.actor || "—" })}</div>
             </div>
             <div className="t-xs u-muted ws-nw">{fmt(l.created_at)}</div>

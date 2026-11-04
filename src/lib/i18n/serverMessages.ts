@@ -4,6 +4,12 @@
 // New server messages: add them here (scripts/checks/server-messages.cjs enforces it).
 // Raw database errors are not fixed text and stay as they are.
 const DE: Record<string, string> = {
+  "Enter the end time and a short reason.": "Bitte Endzeit und kurzen Grund angeben.",
+  "Shift not found.": "Schicht nicht gefunden.",
+  "This shift is already closed.": "Diese Schicht ist bereits geschlossen.",
+  "You can only close shifts of people ranked below you.": "Du kannst nur Schichten von Personen mit niedrigerer Rolle schließen.",
+  "Enter an end time after the clock-in, not in the future, within 16 hours.": "Endzeit nach dem Einstempeln angeben – nicht in der Zukunft und höchstens 16 Stunden danach.",
+  "Give a short reason (3–500 characters).": "Bitte einen kurzen Grund angeben (3–500 Zeichen).",
   "Choose a person, a month and a PDF.": "Bitte Person, Monat und PDF wählen.",
   "Employee not found in this branch.": "Mitarbeiter:in nicht in dieser Filiale gefunden.",
   "Only PDF files.": "Nur PDF-Dateien.",

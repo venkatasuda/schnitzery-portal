@@ -5,6 +5,7 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { getDirectory } from "@/lib/queries/people";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import { TEAMS } from "@/lib/queries/schedule-constants";
 
 const TEAM_COLORS: Record<string, string> = {
   Manager: "var(--info)", Preparation: "var(--gold-ink)", Kitchen: "var(--success)", Cashier: "#9b59b6",
@@ -12,7 +13,7 @@ const TEAM_COLORS: Record<string, string> = {
 
 export default function DirectoryPage() {
   const { t } = useLang();
-  const teamLabel = (k: string) => (["Manager", "Preparation", "Kitchen", "Cashier"].includes(k) ? t("teams." + k) : k);
+  const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const [people, setPeople] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

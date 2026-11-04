@@ -31,7 +31,7 @@ function lastMonths(n: number, locale: string) {
 // server (page.tsx) so the numbers show without a second round trip after hydration.
 export default function SummaryClient({ initial }: { initial?: any }) {
   const { t, locale } = useLang();
-  const eur = (n: number) => formatEur((n || 0), locale, "auto");
+  const eur = (n: number | null | undefined) => (n == null ? "—" : formatEur(n, locale, "auto")); // unknown is "—", never €0
   const months = lastMonths(6, locale);
   const [month, setMonth] = useState(months[0].value);
   const [data, setData] = useState<any>(initial ?? null);

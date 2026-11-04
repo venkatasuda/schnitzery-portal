@@ -90,13 +90,7 @@ export default function MyDayPage() {
             title={t("myday.hoursSummary")}
             sub={t("myday.hoursSummarySub")}
           />
-          <HubLink
-            href="/timesheet"
-            icon="✍️"
-            grad="linear-gradient(135deg,#922b21,#c0392b)"
-            title={t("myday.signTimesheet")}
-            sub={t("myday.signTimesheetSub")}
-          />
+          {/* "Sign timesheet" removed: staff sign-off is not built yet (it only showed the time-off form). */}
         </div>
       )}
       {tab === "work" && (
