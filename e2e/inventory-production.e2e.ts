@@ -22,7 +22,7 @@ test("manual production resumes empty drafts, consumes batches once and creates 
     await page.getByLabel("Actual finished quantity (kg)",{exact:true}).fill("2");await page.getByLabel("Expected finished quantity (optional) (kg)",{exact:true}).fill("2.5");
     await page.getByLabel("Verified finished-batch expiry",{exact:true}).fill(day(5));await page.getByLabel("Finished-batch lot number (optional)",{exact:true}).fill("KITCHEN-TEST");
     await page.getByRole("button",{name:"Add ingredient batch",exact:true}).click();await page.getByRole("combobox",{name:"Ingredient batch 1",exact:true}).selectOption(batch);
-    await page.getByLabel("Quantity withdrawn 1 (kg)",{exact:true}).fill("3");await page.getByLabel("Production review note",{exact:true}).fill("Actual weights and labels verified in kitchen");
+    await page.getByLabel("Quantity withdrawn 1 (kg)",{exact:true}).fill("3");await page.getByLabel("Planned quantity (optional) 1 (kg)",{exact:true}).fill("2.8");await page.getByLabel("Production review note",{exact:true}).fill("Actual weights and labels verified in kitchen");
     await page.getByRole("button",{name:"Save draft",exact:true}).click();await expect(page.getByRole("checkbox")).toBeEnabled();
     await page.setViewportSize({width:375,height:812});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
@@ -43,6 +43,14 @@ test("manual production resumes empty drafts, consumes batches once and creates 
     await info.attach("manual-production-mobile-de",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
     await page.getByRole("link",{name:"Fertigcharge ansehen",exact:true}).click();await expect(page.locator(`[data-batch="${output.data![0].id}"]`)).toBeVisible();
     await page.getByRole("link",{name:"Produktionsprotokoll",exact:true}).click();await expect(page.getByRole("heading",{name:`${finishedName} · Gebucht`,exact:true})).toBeVisible();
+    await page.context().addCookies([{name:"lang",value:"en",url:BASE_URL}]);
+    await page.goto("/inventory/batch-report");await page.getByRole("combobox",{name:"Select any batch (including closed)",exact:true}).selectOption(batch);
+    await expect(page.getByRole("heading",{name:"Affected finished batches",exact:true})).toBeVisible();await expect(page.getByText(`${finishedName} · KITCHEN-TEST · active`,{exact:true})).toBeVisible();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
+    await info.attach("batch-report-mobile",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
+    await page.goto(`/inventory/production?run=${run}`);await page.getByText("Correct a mistaken posting",{exact:true}).click();await page.getByLabel("Reversal reason",{exact:true}).fill("Synthetic record correction: no real food was cooked");await page.getByRole("checkbox").check();await page.getByRole("button",{name:"Reverse mistaken posting",exact:true}).click();
+    await expect(page.getByRole("heading",{name:`${finishedName} · Reversed`,exact:true})).toBeVisible();
+    expect(Number((await db.from("stock_batches").select("remaining_qty").eq("id",batch).single()).data!.remaining_qty)).toBe(5);
   }finally{
     // Immutable synthetic production and batch evidence remains in local staging.
     expect((await db.from("inventory_master").update({is_active:false}).in("id",[raw,finished])).error).toBeNull();

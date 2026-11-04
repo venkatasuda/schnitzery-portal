@@ -50,6 +50,7 @@ const sb = {
       range: (start, end) => { from = start; to = end; return query; },
       select: () => query,
       limit: size => { to=size-1;return query; },
+      is: (col, value) => { filters.push(row => value === null ? row[col] == null : row[col] === value); return query; },
       eq: (col, value) => { filters.push(row => row[col] === value); return query; },
       gte: (col, value) => { filters.push(row => row[col] >= value); return query; },
       lte: (col, value) => { filters.push(row => row[col] <= value); return query; },

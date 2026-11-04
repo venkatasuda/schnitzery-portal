@@ -10,6 +10,9 @@ describe("manual production foundation", () => {
   it("rejects duplicate allocation and invalid quantities before a write", () => {
     expect(validProductionDraft({...blank,inputs:[{batch_id:batch,qty:1},{batch_id:batch,qty:2}]})).toBe(false);
     for (const qty of [0,-1,NaN,Infinity,"1",undefined]) expect(validProductionDraft({...blank,qty})).toBe(false);
+    expect(validProductionDraft({...blank,inputs:[{batch_id:batch,qty:1,planned_qty:2}]})).toBe(true);
+    expect(validProductionDraft({...blank,inputs:[{batch_id:batch,qty:1,planned_qty:0}]})).toBe(true);
+    expect(validProductionDraft({...blank,inputs:[{batch_id:batch,qty:1,planned_qty:-2}]})).toBe(false);
     expect(validProductionDraft({...blank,date:"2026-02-30"})).toBe(false);
     expect(validProductionDraft({...blank,inputs:[{batch_id:"foreign-or-invalid",qty:1}]})).toBe(false);
   });

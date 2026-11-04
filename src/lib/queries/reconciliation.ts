@@ -42,7 +42,7 @@ export async function getReconciliation(days = 90, branchId?: string | null) {
       .or(`updated_at.gte.${from},status.eq.sent`).order("id")),
     readAll(db.from("stock_reconciliation_reviews").select("from_count_id,to_count_id,note,figures,reviewed_by,created_at").eq("branch_id", branch).order("id")),
     readAll(db.from("inventory_supplier_returns").select("product,category,unit,qty,return_date").eq("branch_id",branch).gte("return_date",from).order("id")),
-    readAll(db.from("inventory_production_runs").select("product,category,unit,qty,production_date").eq("branch_id",branch).eq("status","posted").gte("production_date",from).order("id")),
+    readAll(db.from("inventory_production_runs").select("product,category,unit,qty,production_date").eq("branch_id",branch).eq("status","posted").is("reversed_at",null).gte("production_date",from).order("id")),
   ]);
   const failed = production.error || returns.error || counts.error || purchases.error || waste.error || transfers.error || reviews.error;
   if (failed) return { ok: false as const, error: "Reconciliation could not be loaded. Try again." };
