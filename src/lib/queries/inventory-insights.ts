@@ -46,7 +46,8 @@ export async function getInventoryInsights(days: number = 30) {
     if(rows.error)return{ok:false as const,error:"load"};receiptLines.push(...(rows.data??[]));
   }
   return {ok:true as const,branch:name.data!,from,today,previousFrom,days,generatedAt:new Date().toISOString(),
-    report:inventoryInsights({today,from,previousFrom,products:products.data??[],counts:counts.data??[],purchases:purchases.data??[],waste:waste.data??[],batches:batches.data??[],orders:orders.data??[],lines,receipts,receiptLines}),
+    report:inventoryInsights({productionCostingIncomplete:analytics.productionCostingIncomplete,today,from,previousFrom,products:products.data??[],counts:counts.data??[],purchases:purchases.data??[],waste:waste.data??[],batches:batches.data??[],orders:orders.data??[],lines,receipts,receiptLines}),
+    productionCostingIncomplete:analytics.productionCostingIncomplete??false,
     consumption:{value:analytics.totalUsageEur??null,complete:analytics.usageComplete??false,pct:analytics.cogsPct??null,span:analytics.usageSpan},
     sales:{value:analytics.totalSales??0,missingDays:analytics.missingSalesDays??0,enteredDays:analytics.salesDays},
   };

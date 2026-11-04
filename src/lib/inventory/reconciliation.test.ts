@@ -101,3 +101,10 @@ it("keeps supplier returns separate from consumption and waste", () => {
   expect(interval).toMatchObject({ returned: 3, wasted: 0, expected: 7, used: 1, status: "ok" });
   expect(reconcileIntervals(counts, [{ kind: "returned", date: "2026-10-05", qty: 3 }])[0].reasons).toContain("same_day");
 });
+
+it("includes finished production once and leaves ingredient use in measured depletion", () => {
+  const finished = reconcileIntervals([c("2026-10-01",0),c("2026-10-05",7)],[{kind:"produced",date:"2026-10-03",qty:10}])[0];
+  expect(finished).toMatchObject({produced:10,expected:10,used:3,status:"ok"});
+  const raw = reconcileIntervals([c("2026-10-01",10),c("2026-10-05",7)],[])[0];
+  expect(raw).toMatchObject({produced:0,sent:0,wasted:0,used:3});
+});

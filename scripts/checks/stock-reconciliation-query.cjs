@@ -8,7 +8,7 @@ let role='manager';const calls=[],inserts=[],rpcs=[];
 const admin={createClient:(url,key)=>({rpc:async(name,args)=>{rpcs.push([name,args,key]);return{error:null};}})};
 const data={
   inventory_counts:[{id:'c1',product:'Oil',category:'Dry',unit:'l',count_date:'2026-10-01',ist:10},{id:'c2',product:'Oil',category:'Dry',unit:'l',count_date:'2026-10-05',ist:12}],
-  inventory_supplier_returns:[],inventory_purchases:[],waste_log:[],stock_transfers:[],stock_events:[],stock_reconciliation_reviews:[],
+  inventory_production_runs:[],inventory_supplier_returns:[],inventory_purchases:[],waste_log:[],stock_transfers:[],stock_events:[],stock_reconciliation_reviews:[],
 };
 const chain=table=>{const q=new Proxy({}, {get:(_,k)=>{
   if(k==='then')return r=>r({data:data[table],error:null});
@@ -38,7 +38,7 @@ const q=load('src/lib/queries/reconciliation.ts',n=>n.endsWith('/activeBranch')?
   const [name,args,key]=rpcs[0];
   assert.equal(name,'record_stock_reconciliation_review');assert.equal(key,'service-key');
   assert.equal(args.p_actor,'me','Actor is the signed-in user');assert.equal(args.p_branch,'own');assert.equal(args.p_note,'Delivery 03.10 missing');
-  assert.deepEqual({...args.p_figures,reasons:[...args.p_figures.reasons]},{opening:10,delivered:0,received:0,sent:0,wasted:0,returned:0,closing:12,expected:10,used:-2,status:'gain',reasons:[]});
+  assert.deepEqual({...args.p_figures,reasons:[...args.p_figures.reasons]},{opening:10,delivered:0,received:0,sent:0,wasted:0,returned:0,produced:0,closing:12,expected:10,used:-2,status:'gain',reasons:[]});
   assert.equal(lib.sameSnapshot({...seen,reasons:['same_day','unit']},{...seen,reasons:['unit','same_day']}),true,'Reason order does not matter');
   // Review finding 6: a deleted transfer's surviving journal evidence makes the interval uncertain.
   data.stock_events=[{source_id:'gone',operation:'UPDATE',recorded_at:'2026-10-03T10:00:00Z',before_status:'requested',after_status:'sent',a_product:'Oil',a_category:'Dry'},

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { getStockHistory } from "@/lib/queries/stock-history";
+import Link from "next/link";
 import MovementDetails from "@/components/inventory/MovementDetails";
 
 type Event = {
@@ -46,7 +47,7 @@ export default function StockHistory() {
     </form>
     <div className="inventory-toolbar">
       <label>{t("stockHistory.source")}<select className="form-select" value={source} onChange={e => { setSource(e.target.value); setBefore(undefined); }}>
-        {["all", "inventory_counts", "inventory_purchases", "waste_log", "stock_transfers", "inventory_supplier_returns"].map(key => <option key={key} value={key}>{key==="inventory_supplier_returns"?(locale==="de"?"Lieferantenretouren":"Supplier returns"):t(`stockHistory.${key}`)}</option>)}
+        {["all", "inventory_counts", "inventory_purchases", "waste_log", "stock_transfers", "inventory_supplier_returns", "inventory_production_runs"].map(key => <option key={key} value={key}>{key==="inventory_production_runs"?(locale==="de"?"Küchenproduktion":"Kitchen production"):key==="inventory_supplier_returns"?(locale==="de"?"Lieferantenretouren":"Supplier returns"):t(`stockHistory.${key}`)}</option>)}
       </select></label>
       <button className="btn-secondary" onClick={() => { setBefore(undefined); setRetry(x => x + 1); }} disabled={loading}>{t("stockHistory.latest")}</button>
     </div>
@@ -60,7 +61,7 @@ export default function StockHistory() {
           return <tr key={event.id}>
             <td>{new Date(event.recorded_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin" })}<div className="muted">{event.actor_name||t("stockHistory.unknown")}</div></td>
             <td><strong>{String(row?.product ?? "—")}</strong><div className="page-sub">{String(row?.category ?? "")}</div></td>
-            <td>{event.source_table==="inventory_supplier_returns"?(locale==="de"?"Lieferantenretoure":"Supplier return"):t(`stockHistory.${event.source_table}`)}<div>{t(`stockHistory.${event.operation}`)}</div></td>
+            <td>{event.source_table==="inventory_production_runs"?(locale==="de"?"Küchenproduktion":"Kitchen production"):event.source_table==="inventory_supplier_returns"?(locale==="de"?"Lieferantenretoure":"Supplier return"):t(`stockHistory.${event.source_table}`)}<div>{t(`stockHistory.${event.operation}`)}</div></td>
             <td>{value(event.before_row, event.source_table === "inventory_counts")} → {value(event.after_row, event.source_table === "inventory_counts")}
               {event.source_table === "stock_transfers" && <div>{event.before_row?.status?t(`xfer.st_${event.before_row.status}`):"—"} → {event.after_row?.status?t(`xfer.st_${event.after_row.status}`):"—"}{event.after_row?.received_qty!=null&&` · ${t("inventoryOps.received")}: ${event.after_row.received_qty}`}</div>}</td>
             <td><details><summary>{t("stockHistory.details")}</summary>
@@ -68,10 +69,10 @@ export default function StockHistory() {
               <p>{t("stockHistory.actor")}: {event.actor_id || t("stockHistory.unknown")}</p>
               {([event.before_row, event.after_row] as const).map((snapshot, index) => snapshot && <div key={index}>
                 <strong>{t(index ? "stockHistory.after" : "stockHistory.before")}</strong>
-                <p>{String(snapshot.count_date ?? snapshot.purchase_date ?? snapshot.work_date ?? snapshot.created_at ?? "—")}</p>
+                <p>{String(snapshot.count_date ?? snapshot.purchase_date ?? snapshot.work_date ?? snapshot.return_date ?? snapshot.production_date ?? snapshot.created_at ?? "—")}</p>
                 <p>{String(snapshot.reason ?? "")} {String(snapshot.note ?? "")}</p>
               </div>)}
-            </details>{["waste_log","stock_transfers"].includes(event.source_table)&&<button className="btn-secondary" onClick={()=>setDetail({kind:event.source_table==="waste_log"?"waste":"transfer",id:event.source_id})}>{t("inventoryOps.openDetails")}</button>}</td>
+            </details>{["waste_log","stock_transfers"].includes(event.source_table)&&<button className="btn-secondary" onClick={()=>setDetail({kind:event.source_table==="waste_log"?"waste":"transfer",id:event.source_id})}>{t("inventoryOps.openDetails")}</button>}{event.source_table==="inventory_production_runs"&&<Link className="btn-secondary" href={`/inventory/production?run=${event.source_id}`}>{locale==="de"?"Produktionsprotokoll":"Production record"}</Link>}</td>
           </tr>;
         })}</tbody>
       </table></div>}

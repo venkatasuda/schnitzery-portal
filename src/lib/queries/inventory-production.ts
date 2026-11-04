@@ -1,0 +1,29 @@
+"use server";
+import { inventoryScope } from "@/lib/inventory/scope";
+import { readAll } from "@/lib/supabase/readAll";
+import { uuid } from "@/lib/inventory/operations";
+import type { ProductionRun, ProductionBatch, ProductionInput } from "@/lib/inventory/production";
+
+export async function getInventoryProduction(selected?: string) {
+  if (selected && !uuid(selected)) return {ok:false as const,error:"invalid"};
+  const ctx = await inventoryScope();
+  if (!ctx) return {ok:false as const,error:"access"};
+  const [branch, products, batches, runs] = await Promise.all([
+    ctx.db.from("branches").select("id,name").eq("id",ctx.branch).single(),
+    readAll(ctx.db.from("inventory_master").select("id,product,category,unit").eq("branch_id",ctx.branch).eq("is_active",true).order("product").order("id")),
+    readAll(ctx.db.from("stock_batches").select("id,product,category,unit,remaining_qty,expiry_date,received_date,lot_number").eq("branch_id",ctx.branch).eq("status","active").order("expiry_date",{ascending:true,nullsFirst:false}).order("id")),
+    ctx.db.from("inventory_production_runs").select("*").eq("branch_id",ctx.branch).order("created_at",{ascending:false}).order("id").limit(40),
+  ]);
+  if (branch.error || products.error || batches.error || runs.error) return {ok:false as const,error:"load"};
+  let run: ProductionRun|null = null;
+  let inputs: ProductionInput[] = [];
+  if (selected) {
+    const [record, lines] = await Promise.all([
+      ctx.db.from("inventory_production_runs").select("*").eq("id",selected).eq("branch_id",ctx.branch).single(),
+      readAll(ctx.db.from("inventory_production_inputs").select("id,batch_id,stock_action_id,product,category,unit,qty").eq("run_id",selected).eq("branch_id",ctx.branch).order("id")),
+    ]);
+    if (record.error || lines.error) return {ok:false as const,error:"load"};
+    run = record.data as ProductionRun; inputs = lines.data as ProductionInput[];
+  }
+  return {ok:true as const,branch:branch.data!,products:products.data as {id:string;product:string;category:string;unit:string|null}[],batches:batches.data as ProductionBatch[],runs:runs.data as ProductionRun[],run,inputs};
+}

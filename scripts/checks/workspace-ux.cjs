@@ -22,6 +22,7 @@ async function ui(page, result, url) {
     if(name==='@/lib/queries/schedule-constants')return moduleAt('src/lib/queries/schedule-constants.ts',require); // plain constants, not server actions
     if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:(_target,key)=>async(...args)=>{if(result instanceof Error)throw result;if(key==='getInventoryContext')return {ok:true,branch:{id:'branch',name:'Test branch'},countDate:'2026-10-13'}; return typeof result==='function'?result(key,args):result;}});
     if(name==='@/lib/inventory/identity')return moduleAt('src/lib/inventory/identity.ts',require);
+    if(name==='@/lib/inventory/production')return moduleAt('src/lib/inventory/production.ts',n=>n==='../time/berlinDate'?moduleAt('src/lib/time/berlinDate.ts',require):require(n));
     if(name==='@/lib/inventory/batches')return moduleAt('src/lib/inventory/batches.ts',n=>n==='../time/berlinDate'?moduleAt('src/lib/time/berlinDate.ts',require):require(n));
     if(name==='@/lib/pay/legal')return moduleAt('src/lib/pay/legal.ts',require);
     if(name==='@/components/TipPool')return {__esModule:true,default:()=>null};

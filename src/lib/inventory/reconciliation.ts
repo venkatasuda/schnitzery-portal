@@ -18,7 +18,7 @@ export function countDepletion(opening: number, delivered: number, closing: numb
 export type StockCount = { id: string; date: string; ist: number; unit?: string | null };
 export type StockMove = {
   // incoming = a transfer to this branch that was sent but not received (yet)
-  kind: "delivered" | "wasted" | "received" | "sent" | "returned" | "incoming";
+  kind: "delivered" | "wasted" | "received" | "sent" | "returned" | "produced" | "incoming";
   date: string;          // business date: purchase_date / work_date / Berlin date of the transfer event
   qty: number;
   unit?: string | null;
@@ -29,7 +29,7 @@ export type Reason = "same_day" | "unit" | "untimed_transfer" | "in_transit" | "
 export type IntervalStatus = "gain" | "unusual" | "uncertain" | "ok";
 export type StockInterval = {
   fromId: string; toId: string; from: string; to: string;
-  returned?: number; opening: number; delivered: number; received: number; sent: number; wasted: number;
+  produced?: number; returned?: number; opening: number; delivered: number; received: number; sent: number; wasted: number;
   closing: number; expected: number; used: number; usedPerDay: number;
   status: IntervalStatus; reasons: Reason[];
 };
@@ -56,7 +56,7 @@ export function reconcileIntervals(counts: StockCount[], moves: StockMove[], unu
   for (let i = 1; i < sorted.length; i++) {
     const a = sorted[i - 1].count, b = sorted[i].count;
     const reasons = new Set<Reason>();
-    const sum = { delivered: 0, wasted: 0, received: 0, sent: 0, returned: 0 };
+    const sum = { delivered: 0, wasted: 0, received: 0, sent: 0, returned: 0, produced: 0 };
     if (unitOf(a.unit) !== unitOf(b.unit) || sorted[i - 1].units.size > 1 || sorted[i].units.size > 1) reasons.add("unit");
     if (invalidDays.some(d => d > a.date && d < b.date)) reasons.add("invalid");
     for (const m of moves) {
@@ -76,7 +76,7 @@ export function reconcileIntervals(counts: StockCount[], moves: StockMove[], unu
       if (unitOf(m.unit) && unitOf(m.unit) !== unitOf(b.unit)) { reasons.add("unit"); continue; }
       sum[m.kind] += m.qty;
     }
-    const expected = a.ist + sum.delivered + sum.received - sum.sent - sum.wasted - sum.returned;
+    const expected = a.ist + sum.delivered + sum.received + sum.produced - sum.sent - sum.wasted - sum.returned;
     const used = expected - b.ist;
     const tolerance = 1e-9 * Math.max(1, Math.abs(a.ist), Math.abs(expected), Math.abs(b.ist));
     const usedPerDay = used / Math.max(1, dayIndex(b.date) - dayIndex(a.date));
@@ -124,12 +124,12 @@ export function transferMoves(branchId: string, t: TransferRow, events: Transfer
 
 // The evidence a manager reviews (review finding 7): every figure, the status and the
 // reasons, in a fixed shape so a review goes stale when any of it changes.
-const SNAPSHOT_KEYS = ["opening", "delivered", "received", "sent", "wasted", "returned", "closing", "expected", "used", "status", "reasons"] as const;
+const SNAPSHOT_KEYS = ["opening", "delivered", "received", "sent", "wasted", "returned", "produced", "closing", "expected", "used", "status", "reasons"] as const;
 export type ReviewSnapshot = Pick<StockInterval, (typeof SNAPSHOT_KEYS)[number]>;
 export function reviewSnapshot(iv: Partial<ReviewSnapshot> | null | undefined): ReviewSnapshot | null {
   if (!iv) return null;
   const out: Record<string, unknown> = {};
-  for (const k of SNAPSHOT_KEYS) out[k] = k === "reasons" ? Array.from((iv.reasons as string[] | undefined) || []).sort() : k === "returned" ? iv[k] ?? 0 : iv[k] ?? null;
+  for (const k of SNAPSHOT_KEYS) out[k] = k === "reasons" ? Array.from((iv.reasons as string[] | undefined) || []).sort() : k === "returned" || k === "produced" ? iv[k] ?? 0 : iv[k] ?? null;
   return out as ReviewSnapshot;
 }
 export const sameSnapshot = (a: Partial<ReviewSnapshot> | null | undefined, b: Partial<ReviewSnapshot> | null | undefined) =>
