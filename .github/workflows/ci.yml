@@ -81,6 +81,7 @@ jobs:
           node scripts/checks/atomic-workflows.cjs
           node scripts/checks/batch-hardening.cjs
           node scripts/checks/receiving-batches.cjs
+          node scripts/checks/ingredient-prices.cjs
           node scripts/checks/recipe-costing.cjs
           node scripts/checks/payroll-snapshots.cjs
           node scripts/checks/wage-history.cjs
