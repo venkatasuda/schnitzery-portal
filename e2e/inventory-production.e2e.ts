@@ -61,7 +61,7 @@ test("batch lineage and mistaken production reversal load independently on mobil
   const page=await authenticatedPage(browser,account("manager"));await page.setViewportSize({width:375,height:812});
     await page.context().addCookies([{name:"lang",value:"en",url:BASE_URL}]);
     await page.goto("/inventory/batch-report");await page.getByRole("combobox",{name:"Select any batch (including closed)",exact:true}).selectOption(batch);
-    await expect(page.getByRole("heading",{name:"Affected finished batches",exact:true})).toBeVisible();await expect(page.getByText(`${finishedName} · KITCHEN-TEST · active`,{exact:true})).toBeVisible();
+    await expect(page.getByRole("heading",{name:"Affected finished batches",exact:true})).toBeVisible();await expect(page.getByRole("listitem").filter({hasText:`${finishedName} · KITCHEN-TEST · active`})).toBeVisible();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
     await info.attach("batch-report-mobile",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
     await page.goto(`/inventory/production?run=${run}`);await page.getByText("Correct a mistaken posting",{exact:true}).click();await page.getByLabel("Reversal reason",{exact:true}).fill("Synthetic record correction: no real food was cooked");await page.getByRole("checkbox").check();await page.getByRole("button",{name:"Reverse mistaken posting",exact:true}).click();
