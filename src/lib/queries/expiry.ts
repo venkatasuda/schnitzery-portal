@@ -55,7 +55,7 @@ export async function getBatches(includeClosed=false) {
   const { supabase, user, branchId,profile } = await getMe();
   if (!user||profile?.status!=="active") return { ok: false, error: "Active account required.", batches: [] };
   const today = berlinToday();
-  let query=supabase.from("stock_batches").select("id,product,category,unit,qty,remaining_qty,expiry_date,received_date,status,note,lot_number,expiry_note,receipt_reference,receipt_line_id,purchase_id").eq("branch_id",branchId);
+  let query=supabase.from("stock_batches").select("id,product,category,unit,qty,remaining_qty,expiry_date,received_date,status,note,lot_number,expiry_note,receipt_reference,receipt_line_id,purchase_id,production_id").eq("branch_id",branchId);
   if(!includeClosed)query=query.eq("status","active");
   const [result,branch]=await Promise.all([readAll(query.order("expiry_date",{ascending:true,nullsFirst:false}).order("id")),supabase.from("branches").select("name").eq("id",branchId).single()]);
   const {data,error}=result;

@@ -320,7 +320,7 @@ export async function getInventoryAnalytics(days = 30) {
   const recDays = Math.min(180, Math.max(7, days));
   const recFrom = new Date(Date.parse(today + "T12:00:00Z") - recDays * 86400000).toISOString().slice(0, 10);
   const priceFrom = recFrom < sinceStr ? recFrom : sinceStr;
-  const [purchRes, histRes, countsRes, salesRes, workRes, prevRes, rec, catalogRes] = await Promise.all([
+  const [purchRes, histRes, countsRes, salesRes, workRes, prevRes, rec, catalogRes, productionRes] = await Promise.all([
     readAll(supabase.from("inventory_purchases").select("product, category, qty, cost, purchase_date, unit")
       .eq("branch_id", branchId).gte("purchase_date", sinceStr).lte("purchase_date", today).order("id")),
     priceHistory(supabase, branchId, priceFrom, today),
@@ -331,8 +331,9 @@ export async function getInventoryAnalytics(days = 30) {
     readAll(supabase.from("inventory_purchases").select("cost").eq("branch_id", branchId).gte("purchase_date", prevSinceStr).lt("purchase_date", sinceStr).order("id")),
     getReconciliation(recDays),
     readAll(supabase.from("inventory_master").select("product, category, unit").eq("branch_id", branchId).eq("is_active", true).order("id")),
+    supabase.from("inventory_production_runs").select("id").eq("branch_id",branchId).eq("status","posted").limit(1),
   ]);
-  const failed = purchRes.error || histRes.error || countsRes.error || salesRes.error || workRes.error || prevRes.error || catalogRes.error;
+  const failed = productionRes.error || purchRes.error || histRes.error || countsRes.error || salesRes.error || workRes.error || prevRes.error || catalogRes.error;
   if (failed) return { ok: false, error: failed.message };
   if (!rec.ok && !/Manager/.test(rec.error)) return { ok: false, error: rec.error };
   const P = purchRes.data || [], S = salesRes.data || [];
@@ -362,6 +363,8 @@ export async function getInventoryAnalytics(days = 30) {
   const dayBefore = new Date(Date.parse(sinceStr + "T12:00:00Z") - 86400000).toISOString().slice(0, 10);
   const sales = salesIn(dayBefore, today); // whole window, sinceStr inclusive
 
+  // Production transfers raw value into finished stock; until costs are allocated, do not double-count raw and finished consumption.
+  const productionCostingIncomplete=!!productionRes.data?.length;
   // Usage (cost of goods used) from reconciliation; null when nothing could be valued.
   const valued = rec.ok ? valueUsage(rec.rows, histRes.data || [], required) : null;
   const usage = valued && valued.products.length > 0 ? valued.usage : null;
@@ -378,18 +381,18 @@ export async function getInventoryAnalytics(days = 30) {
   return {
     ok: true, days,
     totalSpend: Math.round(spend.value), spendComplete: spend.complete, missingCosts: spend.missing.costs || 0,
-    totalUsageEur: usage ? Math.round(usage.value) : null, usageComplete: !!usage?.complete, usageMissing: usage?.missing || {},
-    stockValue: stockKnown ? Math.round(stock.value) : null, stockComplete: stock.complete,
-    needsReview: !usage?.complete,
+    totalUsageEur: !productionCostingIncomplete&&usage ? Math.round(usage.value) : null, usageComplete: !productionCostingIncomplete&&!!usage?.complete, usageMissing: usage?.missing || {},
+    stockValue: stockKnown ? Math.round(stock.value) : null, stockComplete: !productionCostingIncomplete&&stock.complete,
+    productionCostingIncomplete,needsReview: productionCostingIncomplete||!usage?.complete,
     totalSales: Math.round(sales.value), missingSalesDays: sales.missing.salesDays || 0,
     foodCostPct: pctOf(spend, sales), // purchases ÷ sales — labelled "Purchase spend / sales"
-    cogsPct, usageSpan: valued?.span ?? null, salesDays: new Set(S.map(s => s.sale_date)).size,
+    cogsPct:productionCostingIncomplete?null:cogsPct, usageSpan: valued?.span ?? null, salesDays: new Set(S.map(s => s.sale_date)).size,
     prevSpend: Math.round(prevSpend.value),
     spendPctChange: spend.complete && prevSpend.complete && prevSpend.value > 0 ? Math.round(((spend.value - prevSpend.value) / prevSpend.value) * 100) : null,
     byCategory, topCategory: byCategory[0] || null,
-    trend: dates.map(d => ({ date: d.slice(5), spend: Math.round((spendByDate[d] || 0) * 100) / 100, usageEur: usage ? Math.round((valued!.byDate[d] || 0) * 100) / 100 : null })),
+    trend: dates.map(d => ({ date: d.slice(5), spend: Math.round((spendByDate[d] || 0) * 100) / 100, usageEur: !productionCostingIncomplete&&usage ? Math.round((valued!.byDate[d] || 0) * 100) / 100 : null })),
     topSpend: Object.entries(spendByProduct).map(([k, eur]) => ({ product: JSON.parse(k)[1], category: JSON.parse(k)[0], eur: Math.round(eur) })).sort((a, b) => b.eur - a.eur).slice(0, 8),
-    topUsage: (valued?.products || []).slice(0, 8).map(p => ({ product: p.product, category: p.category, eur: Math.round(p.eur), qty: Math.round(p.qty * 10) / 10 })),
+    topUsage: (productionCostingIncomplete?[]:valued?.products || []).slice(0, 8).map(p => ({ product: p.product, category: p.category, eur: Math.round(p.eur), qty: Math.round(p.qty * 10) / 10 })),
     hasCounts: C.length > 0, hasPurchases: P.length > 0,
   };
 }

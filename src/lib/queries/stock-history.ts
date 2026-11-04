@@ -5,7 +5,7 @@ import { activeBranchFor } from "@/lib/activeBranch";
 import { isCalendarDate } from "@/lib/time/berlinDate";
 
 export async function getStockHistory(source = "all", before?: number, filters: {product?:string;from?:string;to?:string}={}) {
-  if (!filters || typeof filters!=="object" || Array.isArray(filters) || !["all", "inventory_counts", "inventory_purchases", "waste_log", "stock_transfers", "inventory_supplier_returns"].includes(source)
+  if (!filters || typeof filters!=="object" || Array.isArray(filters) || !["all", "inventory_counts", "inventory_purchases", "waste_log", "stock_transfers", "inventory_supplier_returns", "inventory_production_runs"].includes(source)
     || (before !== undefined && (!Number.isSafeInteger(before) || before < 1)) || (filters.product!==undefined&&(typeof filters.product!=="string"||filters.product.length>160))
     || (filters.from && !isCalendarDate(filters.from)) || (filters.to && !isCalendarDate(filters.to)) || (filters.from&&filters.to&&filters.from>filters.to)) {
     return { ok: false as const, error: "Invalid history filter." };

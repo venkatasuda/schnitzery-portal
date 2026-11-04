@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
 function mod(file,resolve,globals={}){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,require:resolve,...globals});return exports;}
 const batchHelpers=mod('src/lib/inventory/batches.ts',name=>name==='../time/berlinDate'?mod('src/lib/time/berlinDate.ts',require):require(name));
-const operations=mod('src/lib/inventory/operations.ts',name=>name==='./batches'?batchHelpers:name==='../time/berlinDate'?mod('src/lib/time/berlinDate.ts',require):require(name)),valid=operations.validOperation;
+const operations=mod('src/lib/inventory/operations.ts',name=>name==='./production'?mod('src/lib/inventory/production.ts',name=>name==='../time/berlinDate'?mod('src/lib/time/berlinDate.ts',require):require(name)):name==='./batches'?batchHelpers:name==='../time/berlinDate'?mod('src/lib/time/berlinDate.ts',require):require(name)),valid=operations.validOperation;
 const dictionary=mod('src/lib/i18n/messages.ts',require).messages;
 for(const file of ['src/components/inventory/Products.tsx','src/components/inventory/Suppliers.tsx','src/components/inventory/MovementDetails.tsx','src/app/(app)/inventory/purchasing/page.tsx']){
  for(const match of fs.readFileSync(file,'utf8').matchAll(/\bt\(["']([\w.]+)["']/g))for(const lang of ['en','de'])assert.equal(typeof match[1].split('.').reduce((v,k)=>v?.[k],dictionary[lang]),'string',`${lang}: missing ${match[1]}`);

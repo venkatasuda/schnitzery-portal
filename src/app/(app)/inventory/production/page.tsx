@@ -1,0 +1,92 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import InventoryNav from "@/components/InventoryNav";
+import { Field, PageHeader, Panel } from "@/components/ui";
+import { useLang } from "@/components/LanguageProvider";
+import { berlinToday, fmtDay } from "@/lib/time/berlinDate";
+import { getInventoryProduction } from "@/lib/queries/inventory-production";
+import { inventoryOperation } from "@/lib/queries/inventory-operations";
+import { validProductionDraft, productionVariance, type ProductionDraft, type ProductionRun } from "@/lib/inventory/production";
+
+type Data = Extract<Awaited<ReturnType<typeof getInventoryProduction>>, {ok:true}>;
+type Form = { output:string; date:string; qty:string; expected:string; expiry:string; lot:string; note:string; inputs:{batch:string;qty:string}[] };
+const blank = (): Form => ({output:"",date:berlinToday(),qty:"",expected:"",expiry:"",lot:"",note:"",inputs:[]});
+const fromDraft = (d:ProductionDraft):Form => ({output:d.output_product_id??"",date:d.date??"",qty:d.qty==null?"":String(d.qty),expected:d.expected_qty==null?"":String(d.expected_qty),expiry:d.expiry??"",lot:d.lot,note:d.note,inputs:d.inputs.map(i=>({batch:i.batch_id??"",qty:i.qty==null?"":String(i.qty)}))});
+const nullableNumber = (v:string) => v.trim()===""?null:Number(v);
+const toDraft = (f:Form):ProductionDraft => ({output_product_id:f.output||null,date:f.date||null,qty:nullableNumber(f.qty),expected_qty:nullableNumber(f.expected),expiry:f.expiry||null,lot:f.lot,note:f.note,inputs:f.inputs.map(i=>({batch_id:i.batch||null,qty:nullableNumber(i.qty)}))});
+
+export default function ProductionPage() {
+  const {locale} = useLang(), s=(en:string,de:string)=>locale==="de"?de:en;
+  const [data,setData] = useState<Data|null>(null), [form,setForm] = useState<Form|null>(null);
+  const [loading,setLoading] = useState(true), [busy,setBusy] = useState(false), [dirty,setDirty] = useState(false), [reviewed,setReviewed] = useState(false), [error,setError] = useState("");
+  const request=useRef(0), command=useRef<{key:string;id:string}|null>(null);
+  const canLeave = () => !dirty || window.confirm(s("Discard unsaved production changes?", "Ungespeicherte Produktionsänderungen verwerfen?"));
+  const number=(n:number)=>n.toLocaleString(locale==="de"?"de-DE":"en-GB",{maximumFractionDigits:6});
+  async function load(id?:string) {
+    const seq=++request.current;setLoading(true);setError("");
+    try {
+      const result=await getInventoryProduction(id);if(seq!==request.current)return false;
+      if(!result.ok){setError(s("Production data could not be loaded. Check branch access and retry.","Produktionsdaten konnten nicht geladen werden. Filialzugriff prüfen und erneut versuchen."));return false;}
+      setData(result);setForm(result.run?.status==="draft"?fromDraft(result.run.draft):null);setDirty(false);setReviewed(false);
+      const url=new URL(window.location.href);if(id)url.searchParams.set("run",id);else url.searchParams.delete("run");window.history.replaceState(null,"",url);return true;
+    }catch{if(seq===request.current)setError(s("Production data could not be loaded. Please retry.","Produktionsdaten konnten nicht geladen werden. Bitte erneut versuchen."));return false;}
+    finally{if(seq===request.current)setLoading(false);}
+  }
+  useEffect(()=>{void load(new URLSearchParams(window.location.search).get("run")||undefined);return()=>{request.current++;};},[]);
+  useEffect(()=>{const prevent=(event:BeforeUnloadEvent)=>{if(dirty){event.preventDefault();event.returnValue="";}};window.addEventListener("beforeunload",prevent);return()=>window.removeEventListener("beforeunload",prevent);},[dirty]);
+  function change(update:Partial<Form>){setForm(old=>old?{...old,...update}:old);setDirty(true);setReviewed(false);}
+  function start(){if(!data||!canLeave())return;setData({...data,run:null,inputs:[]});setForm(blank());setDirty(true);setReviewed(false);setError("");command.current=null;const url=new URL(window.location.href);url.searchParams.delete("run");window.history.replaceState(null,"",url);}
+  async function mutate(action:"production_save"|"production_post"|"production_cancel") {
+    if(!data||busy)return;
+    if(action==="production_save"&&(!form||!validProductionDraft(toDraft(form)))){setError(s("Check quantities, dates and duplicate ingredient batches. Blank fields can remain in a draft.","Mengen, Daten und doppelte Zutatenchargen prüfen. Leere Felder dürfen im Entwurf bleiben."));return;}
+    if(action!=="production_save"&&(!data.run||data.run.status!=="draft"))return;
+    if(action==="production_post"&&(dirty||!reviewed))return;
+    if(action==="production_cancel"&&!window.confirm(s("Cancel this saved draft? No stock will move.","Diesen gespeicherten Entwurf stornieren? Es wird kein Bestand bewegt.")))return;
+    const body={...(data.run?{id:data.run.id,revision:data.run.revision}:{}),...(action==="production_save"?{draft:toDraft(form!)}:{}),...(action==="production_post"?{reviewed:true}:{})};
+    const key=JSON.stringify({action,body});if(command.current?.key!==key)command.current={key,id:crypto.randomUUID()};setBusy(true);setError("");
+    try {
+      const result=await inventoryOperation(data.branch.id,command.current.id,action,body);
+      if(!result.ok){setError(result.error==="conflict"?s("The draft or ingredient stock changed. Reload before posting; your fields are retained.","Entwurf oder Zutatenbestand geändert. Vor dem Buchen neu laden; Eingaben bleiben erhalten."):s("Not confirmed. Check stock units, remaining quantities, label dates and review notes. Review saved records before retrying.","Nicht bestätigt. Bestandseinheiten, Restmengen, Etikettdaten und Prüfnotiz prüfen. Vor erneutem Versuch gespeicherte Belege prüfen."));return;}
+      if(await load(result.result.id))command.current=null;
+    }catch{setError(s("Not confirmed. Reload the saved run before retrying; do not enter the same production again.","Nicht bestätigt. Gespeicherten Lauf vor erneutem Versuch neu laden; dieselbe Produktion nicht nochmals erfassen."));}
+    finally{setBusy(false);}
+  }
+  const output=form?data?.products.find(p=>p.id===form.output):undefined;
+  const ready=!!form&&!!data?.run&&validProductionDraft(toDraft(form))&&!!output?.unit&&!!form.date&&form.date<=berlinToday()&&Number(form.qty)>0&&!!form.expiry&&form.expiry>=form.date&&form.note.trim().length>=3&&form.inputs.length>0&&form.inputs.every(line=>{const b=data?.batches.find(b=>b.id===line.batch);return b&&!!b.unit&&Number(line.qty)>0&&Number(line.qty)<=b.remaining_qty&&b.expiry_date&&b.expiry_date>=form.date&&b.received_date<=form.date;});
+  const run=data?.run, variance=run?.status==="posted"?productionVariance(run.qty,run.expected_qty):null;
+  const name=(r:ProductionRun)=>r.product||data?.products.find(p=>p.id===r.draft.output_product_id)?.product||s("Finished item not selected","Fertigware nicht gewählt");
+  return <div className="inventory-page"><InventoryNav active="stock" canLeave={canLeave}/>
+    <PageHeader title={s("Kitchen production","Küchenproduktion")} subtitle={data?.branch.name} actions={<button className="btn-gold" disabled={!data||loading||busy} onClick={start}>{s("New production draft","Neuer Produktionsentwurf")}</button>}/>
+    <p className="business-note">{s("Manual records: no recipe prices or POS connection required. Drafts move no stock. Posting consumes the ingredient batches you select and creates one finished batch together. Quantities in different units are never added.","Manuelle Erfassung: keine Rezeptpreise oder Kassenanbindung erforderlich. Entwürfe bewegen keinen Bestand. Beim Buchen werden die gewählten Zutatenchargen verbraucht und gemeinsam eine Fertigwarencharge erstellt. Mengen verschiedener Einheiten werden nie addiert.")}</p>
+    <div className="row-actions"><Link className="btn-secondary" href="/inventory/preparation">{s("Preparation planning","Vorbereitungsplanung")}</Link><Link className="btn-secondary" href="/inventory?view=catalog">{s("Set up products","Produkte einrichten")}</Link><Link className="btn-secondary" href="/expiry">{s("Ingredient batches & expiry","Zutatenchargen und Ablauf")}</Link></div>
+    {error&&<p role="alert">{error} <button className="btn-secondary" disabled={busy} onClick={()=>{if(canLeave())void load(run?.id);}}>{s("Reload saved record","Gespeicherten Beleg neu laden")}</button></p>}
+    {loading?<p role="status">{s("Loading production…","Produktion wird geladen…")}</p>:data&&<>
+      {(!data.products.length||!data.batches.length)&&<Panel title={s("Add your real data when ready","Reale Daten ergänzen, sobald sie vorliegen")}><p>{s("You can save an empty draft now. Before posting, create a finished-stock product with a unit, receive or register ingredient batches, and verify their label dates. No quantities or recipes are pre-filled.","Ein leerer Entwurf kann bereits gespeichert werden. Vor dem Buchen Fertigware mit Einheit anlegen, Zutatenchargen empfangen oder registrieren und Etikettdaten prüfen. Keine Mengen oder Rezepte werden vorausgefüllt.")}</p></Panel>}
+      {form&&<Panel title={run?s("Saved production draft","Gespeicherter Produktionsentwurf"):s("New production draft","Neuer Produktionsentwurf")}>
+        <form onSubmit={event=>{event.preventDefault();void mutate("production_save");}}><fieldset disabled={busy} className="inventory-fieldset">
+          <div className="ui-form-grid"><Field label={s("Finished-stock product","Fertigwarenprodukt")}><select className="form-select" aria-label={s("Finished-stock product","Fertigwarenprodukt")} value={form.output} onChange={event=>change({output:event.target.value,qty:"",expected:""})}><option value="">{s("Choose later","Später wählen")}</option>{data.products.map(p=><option key={p.id} value={p.id}>{p.product} · {p.unit||s("Unit missing","Einheit fehlt")}</option>)}</select></Field>
+          <Field label={s("Production date","Produktionsdatum")}><input className="form-input" type="date" min="2000-01-01" max="2100-12-31" value={form.date} onChange={event=>change({date:event.target.value})}/></Field>
+          <Field label={`${s("Actual finished quantity","Tatsächliche Fertigmenge")} (${output?.unit||"—"})`}><input className="form-input" type="number" min="0.000001" max="999999999" step="any" disabled={!output?.unit} value={form.qty} onChange={event=>change({qty:event.target.value})}/></Field>
+          <Field label={`${s("Expected finished quantity (optional)","Erwartete Fertigmenge (optional)")} (${output?.unit||"—"})`}><input className="form-input" type="number" min="0.000001" max="999999999" step="any" disabled={!output?.unit} value={form.expected} onChange={event=>change({expected:event.target.value})}/></Field>
+          <Field label={s("Verified finished-batch expiry","Geprüftes Ablaufdatum der Fertigcharge")}><input className="form-input" type="date" min={form.date||undefined} value={form.expiry} onChange={event=>change({expiry:event.target.value})}/></Field>
+          <Field label={s("Finished-batch lot number (optional)","Chargennummer der Fertigware (optional)")}><input className="form-input" maxLength={160} value={form.lot} onChange={event=>change({lot:event.target.value})}/></Field></div>
+          <h3>{s("Actual ingredients withdrawn","Tatsächlich entnommene Zutaten")}</h3><p>{s("Enter each batch's whole withdrawal, including normal trimming. Do not log the same quantity again as waste. Unknown or expired ingredient labels must be resolved before posting. Expected-output differences do not automatically create waste.","Je Charge die gesamte Entnahme einschließlich normalen Verschnitts angeben. Dieselbe Menge nicht nochmals als Ausschuss buchen. Unbekannte oder abgelaufene Zutatenetiketten vor dem Buchen klären. Abweichungen der erwarteten Fertigmenge erzeugen nicht automatisch Ausschuss.")}</p>
+          {form.inputs.map((line,index)=>{const b=data.batches.find(b=>b.id===line.batch);return <fieldset className="inventory-recipe-line" key={index}><legend>{s("Ingredient","Zutat")} {index+1}</legend><Field label={`${s("Ingredient batch","Zutatencharge")} ${index+1}`}><select className="form-select" aria-label={`${s("Ingredient batch","Zutatencharge")} ${index+1}`} value={line.batch} onChange={event=>change({inputs:form.inputs.map((v,i)=>i===index?{batch:event.target.value,qty:""}:v)})}><option value="">{s("Choose later","Später wählen")}</option>{line.batch&&!b&&<option value={line.batch}>{s("Batch no longer available — choose again","Charge nicht mehr verfügbar — erneut wählen")}</option>}{data.batches.map(batch=><option key={batch.id} value={batch.id}>{batch.product} · {batch.lot_number||batch.id.slice(0,8)} · {number(batch.remaining_qty)} {batch.unit} · {batch.expiry_date?fmtDay(batch.expiry_date,locale):s("Expiry unknown","Ablauf unbekannt")}</option>)}</select></Field><Field label={`${s("Quantity withdrawn","Entnommene Menge")} ${index+1} (${b?.unit||"—"})`}><input className="form-input" type="number" min="0.000001" max={b?.remaining_qty??999999999} step="any" value={line.qty} onChange={event=>change({inputs:form.inputs.map((v,i)=>i===index?{...v,qty:event.target.value}:v)})}/></Field><button type="button" className="btn-secondary" onClick={()=>change({inputs:form.inputs.filter((_,i)=>i!==index)})}>{s("Remove ingredient","Zutat entfernen")}</button></fieldset>;})}
+          <button type="button" className="btn-secondary" disabled={form.inputs.length>=100} onClick={()=>change({inputs:[...form.inputs,{batch:"",qty:""}]})}>{s("Add ingredient batch","Zutatencharge hinzufügen")}</button>
+          <Field label={s("Production review note","Prüfnotiz zur Produktion")}><textarea className="form-input" maxLength={1000} value={form.note} onChange={event=>change({note:event.target.value})}/></Field>
+          {dirty&&<p role="status">{s("Unsaved changes — save the draft before posting.","Ungespeicherte Änderungen — Entwurf vor dem Buchen speichern.")}</p>}
+          <div className="row-actions"><button className="btn-gold" type="submit">{s("Save draft","Entwurf speichern")}</button>{run&&<button className="btn-secondary" type="button" onClick={()=>void mutate("production_cancel")}>{s("Cancel saved draft","Gespeicherten Entwurf stornieren")}</button>}</div>
+          {run&&<><label><input type="checkbox" disabled={dirty||!ready} checked={reviewed} onChange={event=>setReviewed(event.target.checked)}/> {s("I checked the actual input quantities, output quantity and expiry labels. Posting moves stock and freezes this record.","Ich habe tatsächliche Entnahmen, Fertigmenge und Ablaufetiketten geprüft. Buchen bewegt Bestand und schließt diesen Beleg unveränderlich ab.")}</label><button className="btn-gold" type="button" disabled={dirty||!ready||!reviewed} onClick={()=>void mutate("production_post")}>{s("Post production & stock movements","Produktion und Bestandsbewegungen buchen")}</button></>}
+        </fieldset></form>
+      </Panel>}
+      {run&&run.status!=="draft"&&<Panel title={`${name(run)} · ${run.status==="posted"?s("Posted","Gebucht"):s("Cancelled","Storniert")}`}>
+        {run.status==="posted"&&<><p>{s("Actual output","Tatsächliche Fertigmenge")}: <strong>{number(run.qty!)} {run.unit}</strong> · {fmtDay(run.production_date!,locale)}</p><p>{s("Manual expected output","Manuell erwartete Fertigmenge")}: {run.expected_qty==null?s("Not entered","Nicht erfasst"):`${number(run.expected_qty)} ${run.unit}`}</p><p>{s("Yield difference","Ausbeuteabweichung")}: {variance?`${number(variance.quantity)} ${run.unit} (${number(variance.percent)}%)`:s("Expected output required","Erwartete Fertigmenge erforderlich")}</p><ul>{data.inputs.map(input=><li key={input.id}>{input.product}: {number(input.qty)} {input.unit}<details><summary>{s("Batch evidence","Chargennachweis")}</summary>{input.batch_id} · {input.stock_action_id}</details></li>)}</ul><Link className="btn-secondary" href={`/expiry?search=${encodeURIComponent("Production "+run.id)}`}>{s("View finished batch","Fertigcharge ansehen")}</Link><p>{s("No purchase cost is invented for the finished batch. This record is manual production evidence, not sales, profit or a complete accounting valuation.","Für die Fertigcharge werden keine Einkaufskosten erfunden. Dieser Beleg ist ein manueller Produktionsnachweis, kein Umsatz, Gewinn oder vollständige buchhalterische Bewertung.")}</p></>}
+        <p>{run.draft.note}</p><details><summary>{s("Production record ID","Produktionsbeleg-ID")}</summary>{run.id}</details>
+      </Panel>}
+      <Panel title={s("Recent production records · latest 40","Letzte Produktionsbelege · letzte 40")}>
+        {!data.runs.length?<p>{s("No production records yet. Start a draft and add real data when ready.","Noch keine Produktionsbelege. Einen Entwurf beginnen und reale Daten später ergänzen.")}</p>:<ul>{data.runs.map(r=><li key={r.id}><button type="button" className="btn-secondary" disabled={busy} onClick={()=>{if(canLeave())void load(r.id);}}>{name(r)} · {r.status==="draft"?s("Draft","Entwurf"):r.status==="posted"?s("Posted","Gebucht"):s("Cancelled","Storniert")} · {new Date(r.created_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})}</button></li>)}</ul>}
+      </Panel>
+    </>}
+  </div>;
+}

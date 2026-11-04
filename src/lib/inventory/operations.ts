@@ -1,6 +1,7 @@
+import { validProductionDraft } from "./production";
 import { validReceiptBatches } from "./batches";
 import { isCalendarDate } from "../time/berlinDate";
-export type InventoryAction = "purchase_cost" | "supplier_return" | "supplier_credit" | "pack_save" | "supplier_save" | "product_save" | "po_save" | "po_approve" | "po_send" | "po_cancel" | "po_close" | "receive" | "receive_direct" | "waste_correct" | "transfer_receive";
+export type InventoryAction = "production_save" | "production_post" | "production_cancel" | "purchase_cost" | "supplier_return" | "supplier_credit" | "pack_save" | "supplier_save" | "product_save" | "po_save" | "po_approve" | "po_send" | "po_cancel" | "po_close" | "receive" | "receive_direct" | "waste_correct" | "transfer_receive";
 export type Supplier = { id: string; name: string; email: string; lead_days: number; is_active: boolean; revision: number };
 export type Product = { id: string; product: string; category: string; unit: string | null; soll: number; reorder_point: number | null; reorder_qty: number | null; supplier_id: string | null; revision: number; is_active: boolean };
 export type PurchasePack = { id:string; product_id:string; label:string; base_qty:number; created_at:string };
@@ -16,6 +17,9 @@ const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v ===
 export function validOperation(action: InventoryAction, body: unknown): body is Record<string, unknown> {
   if (!object(body) || (body.id != null && !uuid(body.id)) || (body.note != null && !text(body.note, 1000))) return false;
   if (body.id != null && (!Number.isInteger(body.revision) || !number(body.revision))) return false;
+  if (action === "production_save") return validProductionDraft(body.draft);
+  if (action === "production_post") return uuid(body.id) && body.reviewed===true;
+  if (action === "production_cancel") return uuid(body.id);
   if (action === "purchase_cost") return uuid(body.purchase_id)&&(body.expected_cost===null||number(body.expected_cost))&&number(body.cost)&&Math.abs((body.cost as number)*100-Math.round((body.cost as number)*100))<1e-8&&text(body.reference,160,true)&&text(body.note,1000,true)&&(body.note as string).trim().length>=3;
   if (action === "supplier_return") return uuid(body.batch_id)&&number(body.qty,true)&&isCalendarDate(body.date)&&text(body.reference,160,true)&&text(body.note,1000,true)&&(body.note as string).trim().length>=3;
   if (action === "supplier_credit") return uuid(body.return_id)&&number(body.amount,true)&&Math.abs((body.amount as number)*100-Math.round((body.amount as number)*100))<1e-8&&isCalendarDate(body.date)&&text(body.reference,160,true)&&["net","gross","unconfirmed"].includes(body.tax_basis as string)&&text(body.note,1000,true)&&(body.note as string).trim().length>=3;

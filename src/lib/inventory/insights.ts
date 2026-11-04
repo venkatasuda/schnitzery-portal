@@ -19,7 +19,7 @@ export type InsightAction = { kind: "count" | "price" | "expiry" | "order" | "wa
 // Prices are comparable only within the same product/category/unit identity.
 // These are management estimates at recorded delivery prices, not a financial stock ledger.
 export function inventoryInsights(input: {
-  today: string; from: string; previousFrom: string; products: InsightProduct[]; counts: InsightCount[];
+  productionCostingIncomplete?:boolean; today: string; from: string; previousFrom: string; products: InsightProduct[]; counts: InsightCount[];
   purchases: InsightPurchase[]; waste: InsightWaste[]; batches: InsightBatch[];
   orders: InsightOrder[]; lines: InsightLine[]; receipts: InsightReceipt[]; receiptLines: InsightReceiptLine[];
 }) {
@@ -52,7 +52,7 @@ export function inventoryInsights(input: {
     if (priceChange != null && priceChange >= 5) actions.push({kind:"price",label:p.product,value:priceExposure,href:"/inventory?view=deliveries",priority:3});
     return {...p,qty,price,value,countDate:count?.count_date ?? null,priceDate:dates.at(-1)??null,age,fresh,suggested,priceChange,priorPrice,priceExposure};
   });
-  const stockValue = figure(stock.reduce((n,p)=>n+(p.value??0),0),{counts:stock.filter(p=>p.qty==null).length,prices:stock.filter(p=>p.qty!=null&&p.qty>0&&p.price==null).length});
+  const stockValue = figure(stock.reduce((n,p)=>n+(p.value??0),0),{production:input.productionCostingIncomplete?1:0,counts:stock.filter(p=>p.qty==null).length,prices:stock.filter(p=>p.qty!=null&&p.qty>0&&p.price==null).length});
   function wastePeriod(start: string, end: string, inclusive: boolean) {
     const rows = input.waste.filter(w=>w.work_date>=start&&(inclusive?w.work_date<=end:w.work_date<end));
     const byReason = new Map<string,{reason:string;value:number;entries:number;unpriced:number}>();

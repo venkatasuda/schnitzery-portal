@@ -49,6 +49,7 @@ const sb = {
     const query = {
       range: (start, end) => { from = start; to = end; return query; },
       select: () => query,
+      limit: size => { to=size-1;return query; },
       eq: (col, value) => { filters.push(row => row[col] === value); return query; },
       gte: (col, value) => { filters.push(row => row[col] >= value); return query; },
       lte: (col, value) => { filters.push(row => row[col] <= value); return query; },
@@ -122,6 +123,10 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory
   const originalMaster=tables.inventory_master;tables.inventory_master=[master('Milk','Dairy')];
   analytics=await exportsObject.getInventoryAnalytics();
   assert.equal(analytics.needsReview,false);assert.equal(analytics.totalUsageEur,14);assert.equal(analytics.stockValue,10);
+  tables.inventory_production_runs=[{id:'manual',branch_id:'branch',status:'posted',product:'Prepared stock',production_date:'2026-10-10',qty:1,unit:'kg'}];
+  const productionAnalytics=await exportsObject.getInventoryAnalytics();
+  assert.equal(productionAnalytics.productionCostingIncomplete,true);assert.equal(productionAnalytics.totalUsageEur,null);assert.equal(productionAnalytics.cogsPct,null);assert.equal(productionAnalytics.usageComplete,false);assert.equal(productionAnalytics.stockComplete,false,'Unallocated production costs are not complete valuation');
+  tables.inventory_production_runs=[];
   tables.inventory_purchases[0].cost=0;
   analytics=await exportsObject.getInventoryAnalytics();
   assert.equal(analytics.totalUsageEur,0);assert.equal(analytics.stockValue,0,'Explicit zero purchase price remains distinct from missing price');

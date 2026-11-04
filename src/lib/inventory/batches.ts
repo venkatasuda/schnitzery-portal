@@ -1,6 +1,6 @@
 import { isCalendarDate } from "../time/berlinDate";
 export type ReceiptBatch={qty:number;expiry:string|null;expiry_note:string;lot:string};
-export type StockBatch={id:string;product:string;category:string|null;unit:string|null;qty:number;remaining_qty:number;expiry_date:string|null;received_date:string;status:string;note:string|null;lot_number:string;expiry_note:string;receipt_reference:string;receipt_line_id:string|null;purchase_id:string|null;daysToExpiry:number|null;flag:"expired"|"soon"|"ok"|"unknown"};
+export type StockBatch={production_id?:string|null;id:string;product:string;category:string|null;unit:string|null;qty:number;remaining_qty:number;expiry_date:string|null;received_date:string;status:string;note:string|null;lot_number:string;expiry_note:string;receipt_reference:string;receipt_line_id:string|null;purchase_id:string|null;daysToExpiry:number|null;flag:"expired"|"soon"|"ok"|"unknown"};
 export function validReceiptBatches(value:unknown,accepted:number):value is ReceiptBatch[]{
  if(!Array.isArray(value)||value.length>100||!Number.isFinite(accepted)||accepted<0)return false;
  if(accepted===0)return value.length===0;

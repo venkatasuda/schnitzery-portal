@@ -2,6 +2,8 @@
 
 Implemented route: `/inventory/preparation`, linked from Inventory > Stock and Recipe costing. This is preparation planning, not a production stock ledger.
 
+Actual manual production now has a separate [draft-and-post workflow](INVENTORY-MANUAL-PRODUCTION.md). It can be configured without recipes or prices; planning still does not move stock.
+
 ## Workflow
 
 1. Save a recipe version with quantities of raw ingredients. A selling price may be left blank (stored as null, never inferred as zero). Ingredient costing can still be calculated when purchase prices are known; contribution and percentages require a selling price and the existing net-price review.
