@@ -24,6 +24,9 @@ test("manual production resumes empty drafts, consumes batches once and creates 
     await page.getByRole("button",{name:"Add ingredient batch",exact:true}).click();await page.getByRole("combobox",{name:"Ingredient batch 1",exact:true}).selectOption(batch);
     await page.getByLabel("Quantity withdrawn 1 (kg)",{exact:true}).fill("3");await page.getByLabel("Production review note",{exact:true}).fill("Actual weights and labels verified in kitchen");
     await page.getByRole("button",{name:"Save draft",exact:true}).click();await expect(page.getByRole("checkbox")).toBeEnabled();
+    await page.setViewportSize({width:375,height:812});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
+    await info.attach("manual-production-draft-mobile",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
     await page.getByRole("checkbox").check();await page.getByRole("button",{name:"Post production & stock movements",exact:true}).click();
     await expect(page.getByRole("heading",{name:`${finishedName} · Posted`,exact:true})).toBeVisible();
     await expect(page.getByText("-0.5 kg (-20%)",{exact:false})).toBeVisible();
