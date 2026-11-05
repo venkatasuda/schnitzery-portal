@@ -246,7 +246,7 @@ export default function InventoryPage() {
           <p className="page-sub">{context ? `${context.branch.name}${tab === "count" || tab === "overview" ? ` · ${t("inventoryWorkspace.countDate", { date: fmtDay(context.countDate, locale) })}` : ""}` : t("common.loading")}</p>
         </div>
         <div className="inventory-heading-actions">
-        {tab === "overview" && <button className="btn-gold" onClick={() => navigate("count")}>{t("inventoryWorkspace.openCount")}</button>}
+        {tab === "overview" && products.length > 0 && <button className="btn-gold" onClick={() => navigate("count")}>{t("inventoryWorkspace.openCount")}</button>}
         {tab === "count" && <><Link href="/inventory/counts" className="btn-gold">{t("countSession.title")}</Link><button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button></>}
         {tab === "forecast" && <><Link href="/inventory/purchasing?new=1" className="btn-gold">{t("inventoryOps.newOrder")}</Link><Link href="/inventory/order" className="btn-secondary">{t("orderDraft.title")}</Link></>}
         </div>
@@ -263,11 +263,14 @@ export default function InventoryPage() {
       {loading ? <CardSkeleton rows={4} /> : loadError ? null : (
         <>
           {tab === "overview" && <>
-            <div className="inventory-work-summary">
+            {products.length === 0 ? <EmptyState title={locale === "de" ? "Produktkatalog für diese Filiale einrichten" : "Set up this branch’s product catalogue"}
+              action={<button className="btn-gold" onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</button>}>
+              {locale === "de" ? "Zuerst Produkte und Bestandseinheiten hinzufügen. Danach Lieferungen mit Ablaufdaten erfassen und den physischen Bestand zählen." : "Add products and stock units first. Then receive deliveries with expiry dates and count the stock physically on the shelf."}
+            </EmptyState> : <div className="inventory-work-summary">
               <button onClick={() => navigate("count")}><span>{t("inventoryWorkspace.countProgress")}</span><strong>{countedProducts} / {products.length}</strong><small>{t("inventoryWorkspace.physicalCounts")}</small></button>
               <button onClick={() => navigate("count", "uncounted")}><span>{t("inventoryWorkspace.needsCount")}</span><strong>{products.length - countedProducts}</strong><small>{t("inventoryWorkspace.noZero")}</small></button>
               <button onClick={() => navigate("count", "low")}><span>{t("inventoryWorkspace.belowTarget")}</span><strong>{belowTarget}</strong><small>{t("inventoryWorkspace.snapshotNote")}</small></button>
-            </div>
+            </div>}
             <Panel title={t("inventoryWorkspace.dailyWork")}>
               <div className="inventory-task-grid">
                 <Link className="inventory-task" href="/inventory/insights"><strong>{locale === "de" ? "Geschäftsauswertung" : "Business insights"}</strong><span>{locale === "de" ? "Bestandswert, Ausschuss, Preisänderungen und Lieferantenleistung mit Datengrundlage." : "Stock value, waste, price changes and supplier performance with supporting evidence."}</span></Link>

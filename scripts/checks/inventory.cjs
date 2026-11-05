@@ -25,6 +25,7 @@ vm.runInNewContext(ts.transpileModule(source, {
     if (name === "next/link") return { __esModule: true, default: ({ children, ...props }) => React.createElement("a", props, children) };
     if (name === "@/components/LanguageProvider") return { useLang: () => ({ t: (key) => key }) };
     if (name === "@/components/inventory/Products") return {__esModule:true,default:()=>React.createElement('section',{'data-testid':'product-catalog'})};
+    if (name === "@/components/ui") return new Proxy({}, {get:(_,key)=>key==='EmptyState'?({title,children,action})=>React.createElement('section',null,title,children,action):()=>null});
     return new Proxy({ __esModule: true }, { get: (_, key) => key === "__esModule" ? true : () => null });
   },
 });
@@ -35,6 +36,9 @@ function render(overrides = {}) {
   return renderToStaticMarkup(React.createElement(exported.default));
 }
 const count = render();
+const emptyOverview = render({ tab: "overview", products: [] });
+assert.ok(emptyOverview.includes("Set up this branch’s product catalogue") && emptyOverview.includes("inventoryWorkflow.catalogTab"));
+assert.ok(!emptyOverview.includes("inventory-work-summary") && !emptyOverview.includes("inventoryWorkspace.openCount"));
 assert.ok(count.includes("Butter") && count.includes("Rice") && count.includes("Oil"));
 assert.ok(!count.includes("inv.removeProduct"));
 assert.ok(!count.includes("inventory-summary"));
