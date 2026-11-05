@@ -27,12 +27,12 @@ do $$ declare f record; body jsonb; r jsonb; cmd uuid:=gen_random_uuid(); l1 uui
  select id into l2 from public.inventory_order_lines where order_id=f.po and product_id=f.p2;
  if (select unit_price from public.inventory_order_lines where id=l1)<>0.005 then raise exception 'Fractional price lost';end if;
  if (select unit_price from public.inventory_order_lines where id=l2) is not null then raise exception 'Unknown price became zero';end if;
- begin update public.inventory_orders set status='sent' where id=f.po;raise exception 'Direct order write allowed';exception when insufficient_privilege then null;end;
+ begin update public.inventory_orders set status='sent' where id=f.po;get diagnostics n = row_count;if n<>0 then raise exception 'Direct order write allowed';end if;exception when insufficient_privilege then null;end;
  begin perform public.inventory_operation(f.a,gen_random_uuid(),'po_send',jsonb_build_object('id',f.po,'revision',0,'note','External email'));raise exception 'Approval skipped';exception when raise_exception then if sqlerrm='Approval skipped' then raise;end if;end;
  perform public.inventory_operation(f.a,gen_random_uuid(),'po_approve',jsonb_build_object('id',f.po,'revision',0));
- begin perform public.inventory_operation(f.a,gen_random_uuid(),'po_cancel',jsonb_build_object('id',f.po,'revision',0,'note','Stale tab'));raise exception 'Stale revision accepted';exception when serialization_failure then null;end;
+ begin perform public.inventory_operation(f.a,gen_random_uuid(),'po_cancel',jsonb_build_object('id',f.po,'revision',0,'note','Stale tab'));raise exception 'Stale revision accepted';exception when unique_violation then null;end;
  perform public.inventory_operation(f.a,gen_random_uuid(),'po_send',jsonb_build_object('id',f.po,'revision',1,'note','Sent manually via supplier email'));
- body:=jsonb_build_object('id',f.po,'revision',2,'invoice','Delivery-1','lines',jsonb_build_array(jsonb_build_object('id',l1,'accepted',6,'rejected',1,'cost',0.03,'note','Partial shipment, one damaged'),jsonb_build_object('id',l2,'accepted',2,'rejected',0,'cost',8,'note','Partial shipment')));
+ body:=jsonb_build_object('id',f.po,'revision',2,'invoice','Delivery-1','lines',jsonb_build_array(jsonb_build_object('id',l1,'accepted',6,'batches',jsonb_build_array(jsonb_build_object('qty',6,'expiry',null,'expiry_note','No date printed on test packaging')),'rejected',1,'cost',0.03,'note','Partial shipment, one damaged'),jsonb_build_object('id',l2,'accepted',2,'batches',jsonb_build_array(jsonb_build_object('qty',2,'expiry',null,'expiry_note','No date printed on test packaging')),'rejected',0,'cost',8,'note','Partial shipment')));
  perform public.inventory_operation(f.a,f.receipt,'receive',body);
  perform public.inventory_operation(f.a,f.receipt,'receive',body);
  if (select status from public.inventory_orders where id=f.po)<>'partial' then raise exception 'Partial status missing';end if;
@@ -41,11 +41,11 @@ do $$ declare f record; body jsonb; r jsonb; cmd uuid:=gen_random_uuid(); l1 uui
  if (select sum(cost) from public.inventory_purchases where receipt_id=f.receipt)<>8.03 then raise exception 'Actual line cost mismatch';end if;
  begin perform public.inventory_operation(f.a,gen_random_uuid(),'receive',body||jsonb_build_object('revision',3));raise exception 'Duplicate delivery reference accepted';exception when unique_violation then null;end;
  -- Every receipt is atomic: one valid line followed by an invalid identity rolls everything back.
- body:=jsonb_build_object('id',f.po,'revision',3,'invoice','Bad delivery','lines',jsonb_build_array(jsonb_build_object('id',l1,'accepted',4,'rejected',0,'cost',2,'note',''),jsonb_build_object('id',gen_random_uuid(),'accepted',1,'rejected',0,'cost',1,'note','')));
+ body:=jsonb_build_object('id',f.po,'revision',3,'invoice','Bad delivery','lines',jsonb_build_array(jsonb_build_object('id',l1,'accepted',4,'batches',jsonb_build_array(jsonb_build_object('qty',4,'expiry',null,'expiry_note','No date printed on test packaging')),'rejected',0,'cost',2,'note',''),jsonb_build_object('id',gen_random_uuid(),'accepted',1,'batches',jsonb_build_array(jsonb_build_object('qty',1,'expiry',null,'expiry_note','No date printed on test packaging')),'rejected',0,'cost',1,'note','')));
  begin perform public.inventory_operation(f.a,gen_random_uuid(),'receive',body);raise exception 'Foreign receipt line accepted';exception when raise_exception then if sqlerrm='Foreign receipt line accepted' then raise;end if;end;
  if (select received_qty from public.inventory_order_lines where id=l1)<>6 then raise exception 'Failed receipt leaked quantity';end if;
  if exists(select 1 from public.inventory_receipts where order_id=f.po and invoice='Bad delivery') then raise exception 'Failed receipt left header';end if;
- body:=jsonb_build_object('id',f.po,'revision',3,'invoice','Delivery-2','lines',jsonb_build_array(jsonb_build_object('id',l1,'accepted',4,'rejected',0,'cost',2,'note',''),jsonb_build_object('id',l2,'accepted',2,'rejected',0,'cost',8,'note','')));
+ body:=jsonb_build_object('id',f.po,'revision',3,'invoice','Delivery-2','lines',jsonb_build_array(jsonb_build_object('id',l1,'accepted',4,'batches',jsonb_build_array(jsonb_build_object('qty',4,'expiry',null,'expiry_note','No date printed on test packaging')),'rejected',0,'cost',2,'note',''),jsonb_build_object('id',l2,'accepted',2,'batches',jsonb_build_array(jsonb_build_object('qty',2,'expiry',null,'expiry_note','No date printed on test packaging')),'rejected',0,'cost',8,'note','')));
  perform public.inventory_operation(f.a,gen_random_uuid(),'receive',body);
  if (select status from public.inventory_orders where id=f.po)<>'closed' then raise exception 'Final receipt did not close';end if;
  -- Renaming/unit changes create a replacement; frozen order lines keep their old identity.
@@ -57,7 +57,7 @@ do $$ declare f record; body jsonb; r jsonb; cmd uuid:=gen_random_uuid(); l1 uui
  select to_jsonb(w) into original from public.waste_log w where id=f.waste;
  body:=jsonb_build_object('id',f.waste,'qty',2,'before',original,'note','Entry was overstated');cmd:=gen_random_uuid();
  perform public.inventory_operation(f.a,cmd,'waste_correct',body);perform public.inventory_operation(f.a,cmd,'waste_correct',body);
- begin perform public.inventory_operation(f.a,gen_random_uuid(),'waste_correct',body);raise exception 'Stale waste correction accepted';exception when serialization_failure then null;end;
+ begin perform public.inventory_operation(f.a,gen_random_uuid(),'waste_correct',body);raise exception 'Stale waste correction accepted';exception when unique_violation then null;end;
  select to_jsonb(w) into original from public.waste_log w where id=f.waste;
  perform public.inventory_operation(f.a,gen_random_uuid(),'waste_correct',jsonb_build_object('id',f.waste,'qty',0,'before',original,'note','Duplicate log, void it'));
  if exists(select 1 from public.waste_log where id=f.waste) then raise exception 'Void did not remove current record';end if;

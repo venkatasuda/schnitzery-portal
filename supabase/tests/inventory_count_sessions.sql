@@ -27,7 +27,8 @@ begin
  exception when insufficient_privilege then null; end;
  begin
    update public.inventory_count_sessions set status='completed' where id=f.session;
-   raise exception 'Direct write allowed';
+   get diagnostics n = row_count;
+   if n<>0 then raise exception 'Direct write allowed'; end if;
  exception when insufficient_privilege then null; end;
  begin
    perform public.edit_inventory_count(f.branch,f.session,'complete',0);
@@ -122,6 +123,7 @@ do $$ declare f record; begin
 end $$;
 reset role;
 -- Disabled managers cannot mutate drafts through either RPC path.
+select set_config('request.jwt.claim.sub','',true);
 update public.users set status='inactive' where id=(select manager from count_fixture);
 select set_config('request.jwt.claim.sub',manager::text,true) from count_fixture;
 set local role authenticated;
