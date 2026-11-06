@@ -17,7 +17,7 @@ async function ui(page, result, url) {
   const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(value){const i=cursor++;if(initial)states[i]={current:value};return states[i];}};
   const component=moduleAt(`src/app/(app)/${page}/${page==='labor'?'LaborClient':'page'}.tsx`, function resolve(name){ // labour page: server part loads data, client part renders
     if(name==='react')return hooks;
-    if(name==='next/navigation')return {usePathname:()=>new URL(url||'http://schnitzery.localhost:3100/inventory').pathname};
+    if(name==='next/navigation')return {usePathname:()=>new URL(url||'http://schnitzery.localhost:3100/inventory').pathname,useSearchParams:()=>new URL(url||'http://schnitzery.localhost:3100/inventory').searchParams};
     if(name==='recharts')return new Proxy({}, {get:()=>()=>null});
     if(name==='@/lib/time/berlinDate')return {...moduleAt('src/lib/time/berlinDate.ts',require),berlinToday:()=> '2026-10-13'};
     if(name==='@/lib/queries/schedule-constants')return moduleAt('src/lib/queries/schedule-constants.ts',require); // plain constants, not server actions

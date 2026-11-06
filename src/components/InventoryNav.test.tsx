@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Children, isValidElement, type ReactElement } from "react";
 import InventoryNav from "./InventoryNav";
+import { ManagementLocation } from "./ManagementNav";
 
 const context = vi.hoisted(() => ({ path: "/inventory/valuation", locale: "en" }));
 vi.mock("next/navigation", () => ({ usePathname: () => context.path }));
@@ -34,8 +35,22 @@ describe("inventory navigation", () => {
     const html = renderToStaticMarkup(<InventoryNav active="kitchen" />);
     expect(html).toContain('/inventory/preparation');
     expect(html).toContain('/inventory/consumption');
-    expect(html).toContain('/inventory/connections');
+    expect(html).not.toContain('/inventory/connections');
+    expect(html).not.toContain('/settings/integrations');
     expect(html).not.toContain('/inventory/valuation');
+  });
+  it("shows suppliers and returns as Purchasing tasks with the right current marker", () => {
+    context.path = "/inventory/purchasing";
+    const tree = InventoryNav({ active: "purchasing", purchasingTab: "returns" });
+    expect(link(tree, "/inventory/purchasing?tab=returns")?.props["aria-current"]).toBe("page");
+    expect(link(tree, "/inventory/purchasing?tab=suppliers")).toBeDefined();
+    expect(link(tree, "/inventory/purchasing")?.props["aria-current"]).not.toBe("page");
+  });
+  it("classifies integrations as Settings and sales imports as business reports", () => {
+    context.path = "/settings/integrations";
+    expect(renderToStaticMarkup(<ManagementLocation role="manager" />)).toContain("home.settings");
+    context.path = "/sales/imports";
+    expect(renderToStaticMarkup(<ManagementLocation role="manager" />)).toContain("workspace.reports");
   });
   it("applies the unsaved guard to the back link and preserves modified clicks", () => {
     context.path = "/inventory/valuation";

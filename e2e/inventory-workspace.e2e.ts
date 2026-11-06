@@ -16,7 +16,7 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   await packDialog.getByRole("checkbox").check();
   await packDialog.getByRole("button",{name:"Save pack version",exact:true}).click();await expect(packDialog).toBeHidden();
   await page.goto("/inventory/purchasing");
-  await page.getByRole("button",{name:"Suppliers",exact:true}).click();
+  await page.getByRole("link",{name:"Suppliers",exact:true}).click();
   await page.getByRole("button",{name:"Add supplier",exact:true}).click();
   let dialog=page.getByRole("dialog",{name:"Supplier",exact:true});
   await dialog.getByLabel("Name",{exact:true}).fill(supplier);
@@ -56,7 +56,7 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   const receipts=await admin().from("inventory_receipts").select("id").eq("order_id",orderId!);expect(receipts.error).toBeNull();expect(receipts.data).toHaveLength(2);
   const purchases=await admin().from("inventory_purchases").select("qty,cost").in("receipt_id",receipts.data!.map(r=>r.id));
   expect(purchases.data?.reduce((s,r)=>s+Number(r.qty),0)).toBe(2);expect(purchases.data?.filter(r=>r.cost==null)).toHaveLength(1);expect(purchases.data?.reduce((s,r)=>s+Number(r.cost),0)).toBe(2);
-  await page.getByRole("button",{name:"Returns & credits",exact:true}).click();
+  await page.getByRole("link",{name:"Returns & credits",exact:true}).click();
   await page.getByRole("button",{name:"Record goods sent back",exact:true}).click();
   dialog=page.getByRole("dialog",{name:"Record goods sent back",exact:true});
   const batch=await admin().from("stock_batches").select("id").eq("branch_id",BRANCH.A).eq("product",product).order("id").limit(1).single();expect(batch.error).toBeNull();

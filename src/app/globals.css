@@ -303,7 +303,7 @@ html.light .btn-gold { color: #fff; }
 .inventory-empty { text-align: center; padding: 32px !important; }
 .inventory-empty button { margin-left: 12px; }
 .inventory-section-title { font-size: 16px; font-weight: 600; margin: 0 0 16px; }
-.inventory-delivery-grid { display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+.inventory-delivery-grid { min-width: 0; }
 .inventory-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
 .inventory-report-grid > div { min-width: 0; margin-bottom: 0 !important; }
 .inventory-report-grid > div:nth-child(-n+2) { grid-column: 1 / -1; }

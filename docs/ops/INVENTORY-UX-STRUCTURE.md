@@ -6,7 +6,7 @@ The earlier workflow acceptance did not establish interface usability. Live insp
 
 - One shared navigation across inventory routes, expiry, labels, alerts, waste and transfers.
 - Six areas: Overview, Stock, Purchasing, Kitchen, Movements and Reports.
-- Stock: saved stocktakes, quick count, catalogue, batches/expiry and labels. Purchasing: orders, reorder planning, deliveries, ingredient reference prices and alerts. Kitchen: production, prep planning, recipes, sales consumption and till-import setup. Reports contains analysis, reconciliation, valuation and traceability.
+- Stock: saved stocktakes, quick count, catalogue, batches/expiry and labels. Purchasing: orders, reorder planning, deliveries, ingredient reference prices and alerts. Kitchen: production, prep planning, recipes and sales consumption. Till setup is now Settings / Integrations; sales intake and approval are Business reports (see [feature placement](INVENTORY-FEATURE-PLACEMENT.md)). Reports contains analysis, reconciliation, valuation and traceability.
 - Explicit parent return links with arrows; no dependency on browser history. Existing unsaved-edit checks also protect these links.
 - Persistent sibling links and current-page indication on detail screens. Removed the duplicate main-page tab definition.
 - Task-specific headings, shorter count guidance and on-demand explanations on five detailed screens. The consumption double-deduction caution remains visible.
