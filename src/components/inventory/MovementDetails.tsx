@@ -15,7 +15,7 @@ export default function MovementDetails({kind,id,onClose,onSaved}:{kind:"waste"|
   if(command.current?.key!==key)command.current={key,id:crypto.randomUUID()};
   const r=await inventoryOperation(data.branch,command.current.id,action,body);if(!r.ok){setError(t(`inventoryOps.error_${r.error}`));return;}onSaved();onClose();
  }catch{setError(t("inventoryOps.error_save"));}finally{setBusy(false);}}
- const row=data?.row,receive=kind==="transfer"&&row?.to_branch_id===data?.branch&&row?.status==="sent";
+ const row=data?.row,receive=kind==="transfer"&&row?.to_branch_id===data?.branch&&row?.status==="sent"&&!data?.lotTracked;
  return <NativeDialog unsaved={!!reason||(kind==="transfer"?qty!=="":qty!==String(row?.qty??""))} title={t("inventoryOps.movementDetails")} busy={busy} onClose={close}>
   <h2>{t("inventoryOps.movementDetails")}</h2>{error&&<ErrorState message={error} onRetry={load} retryLabel={t("business.retry")}/>}
   {loading?<p role="status">{t("common.loading")}</p>:row&&<>
@@ -23,7 +23,7 @@ export default function MovementDetails({kind,id,onClose,onSaved}:{kind:"waste"|
    <dl className="inventory-detail-grid"><div><dt>{t("inventoryOps.recordedQty")}</dt><dd>{String(row.qty)}</dd></div>
     {kind==="transfer"?<><div><dt>{t("xfer.fromBranch")}</dt><dd>{String(row.from_branch_name??"—")}</dd></div><div><dt>{t("inventoryOps.destination")}</dt><dd>{String(row.to_branch_name??"—")}</dd></div><div><dt>{t("inventoryOps.status")}</dt><dd>{t(`xfer.st_${row.status}`)}</dd></div><div><dt>{t("inventoryOps.received")}</dt><dd>{row.received_qty==null?t("inventoryOps.notRecorded"):String(row.received_qty)}</dd></div>{row.receipt_note!=null&&<div><dt>{t("inventoryOps.discrepancy")}</dt><dd>{String(row.receipt_note)}</dd></div>}</>:<div><dt>{t("inventoryOps.status")}</dt><dd>{t(row.voided?"inventoryOps.voided":"inventoryOps.recorded")}</dd></div>}
    </dl>
-   <p>{String(row.note??"")}</p><details><summary>{t("inventoryOps.evidence")}</summary><p>{id}</p>{["created_at","sent_at","received_at","sent_by","received_by","logged_by_name"].map(k=>row[k]?<p key={k}>{t(`inventoryOps.${k}`)}: {String(row[k])}</p>:null)}</details>
+   <p>{String(row.note??"")}</p>{kind==="transfer"&&data?.lotTracked&&<p className="business-note">{locale==="de"?"Dieser Transfer ist chargengebunden. Mengen und Ablaufdaten unter Transferchargen / Empfang prüfen.":"This transfer tracks individual batches. Review quantities and expiry under Transfer batches / receipt."}</p>}<details><summary>{t("inventoryOps.evidence")}</summary><p>{id}</p>{["created_at","sent_at","received_at","sent_by","received_by","logged_by_name"].map(k=>row[k]?<p key={k}>{t(`inventoryOps.${k}`)}: {String(row[k])}</p>:null)}</details>
    {(kind==="waste"&&!row.voided||receive)&&<form onSubmit={e=>{e.preventDefault();save();}}><fieldset disabled={busy} className="inventory-fieldset">
     <p className="page-sub">{t(kind==="waste"?"inventoryOps.correctionHelp":"inventoryOps.transferHelp")}</p>
     <Field label={t(kind==="waste"?"inventoryOps.correctQty":"inventoryOps.actualReceived")}><input required className="form-input" type="number" min="0" max={receive?Number(row.qty):undefined} step="any" value={qty} onChange={e=>setQty(e.target.value)}/></Field>

@@ -1,6 +1,7 @@
 "use client";
 import InventoryNav from "@/components/InventoryNav";
 import MovementDetails from "@/components/inventory/MovementDetails";
+import TransferLots from "@/components/inventory/TransferLots";
 
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -9,7 +10,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import {
   getTransferBranches, getTransferProducts, requestTransfer, getMyRequests, getFulfillQueue,
-  sendTransfer, rejectTransfer, cancelTransfer,
+  rejectTransfer, cancelTransfer,
 } from "@/lib/queries/transfer";
 import { Badge, ErrorState, Field, PageHeader, Panel, TabButton } from "@/components/ui";
 
@@ -17,6 +18,7 @@ const fmtWhen = (iso: string, locale: string) => { try { return new Date(iso).to
 
 export default function TransfersPage() {
   const [detail,setDetail]=useState<string|null>(null);
+  const [lotDetail,setLotDetail]=useState<string|null>(null);
   const { t, locale } = useLang();
   const [tab, setTab] = useState<"request" | "fulfill">("request");
   const [loading, setLoading] = useState(true);
@@ -80,6 +82,7 @@ export default function TransfersPage() {
     <div className="fade-up">
       <InventoryNav active="movements" />
       {detail&&<MovementDetails kind="transfer" id={detail} onClose={()=>setDetail(null)} onSaved={loadAll}/>}
+      {lotDetail&&<TransferLots id={lotDetail} onClose={()=>setLotDetail(null)} onSaved={loadAll}/>}
       <PageHeader icon={<Icon e="🔄" size={22} />} title={t("xfer.title")} subtitle={t("xfer.subtitle")} />
 
       <div className="hub-tabs" role="group" aria-label={t("xfer.title")}>
@@ -139,10 +142,10 @@ export default function TransfersPage() {
                     </div>
                     <Badge tone={stTone(r.status)}>{t("xfer.st_" + r.status)}</Badge>
                   </div>
-                  <button className="btn-secondary" onClick={()=>setDetail(r.id)}>{t("inventoryOps.movementDetails")}</button>
+                  {["sent","received"].includes(r.status)&&<button className="btn-secondary" onClick={()=>setLotDetail(r.id)}>{locale==="de"?"Transferchargen / Empfang":"Transfer batches / receipt"}</button>}<button className="btn-secondary" onClick={()=>setDetail(r.id)}>{t("inventoryOps.movementDetails")}</button>
                   {(r.status === "requested" || r.status === "sent") && (
                     <div className="ui-row-actions">
-                      {r.status === "sent" && <button type="button" className="btn-gold" onClick={() => setDetail(r.id)} disabled={busy === r.id}>{t("inventoryOps.actualReceived")}</button>}
+
                       {r.status === "requested" && <button type="button" className="btn-quiet-danger" onClick={() => act(cancelTransfer, r.id, "xfer.cancelled")} disabled={busy === r.id}>{t("xfer.cancel")}</button>}
                     </div>
                   )}
@@ -167,12 +170,12 @@ export default function TransfersPage() {
                   </div>
                   {r.status === "requested" && (
                     <div className="ui-row-actions">
-                      <button type="button" className="btn-gold" onClick={() => act(sendTransfer, r.id, "xfer.sent")} disabled={busy === r.id}>{t("xfer.markSent")}</button>
+                      <button type="button" className="btn-gold" onClick={() => setLotDetail(r.id)} disabled={busy === r.id}>{locale==="de"?"Chargen auswählen und versenden":"Choose batches & dispatch"}</button>
                       <button type="button" className="btn-quiet-danger" onClick={() => act(rejectTransfer, r.id, "xfer.rejected")} disabled={busy === r.id}>{t("xfer.reject")}</button>
                     </div>
                   )}
                   {r.status === "sent" && <div className="ui-note tone-warn">{t("xfer.awaitingReceipt")}</div>}
-                  <button className="btn-secondary" onClick={()=>setDetail(r.id)}>{t("inventoryOps.movementDetails")}</button>
+                  {["sent","received"].includes(r.status)&&<button className="btn-secondary" onClick={()=>setLotDetail(r.id)}>{locale==="de"?"Transferchargen / Empfang":"Transfer batches / receipt"}</button>}<button className="btn-secondary" onClick={()=>setDetail(r.id)}>{t("inventoryOps.movementDetails")}</button>
                 </div>
               ))}
             </div>

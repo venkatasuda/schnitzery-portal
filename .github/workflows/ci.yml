@@ -80,7 +80,7 @@ jobs:
           npm install --prefix .audit-db --no-save --package-lock=false @electric-sql/pglite@0.5.8
           node scripts/checks/atomic-workflows.cjs
           node scripts/checks/batch-hardening.cjs
-          node scripts/checks/receiving-batches.cjs
+          node scripts/checks/inventory-advanced.cjs
           node scripts/checks/ingredient-prices.cjs
           node scripts/checks/recipe-costing.cjs
           node scripts/checks/payroll-snapshots.cjs

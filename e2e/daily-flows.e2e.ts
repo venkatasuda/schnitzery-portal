@@ -68,6 +68,8 @@ test("transfer between branches: request, send, receive", async ({ browser }) =>
   const product = unique("Transfer");
   // The request form lists the REQUESTER's catalogue (you ask for what you stock).
   await addCatalogProduct(requester, product);
+  const today=new Date().toISOString().slice(0,10),expiry=new Date(Date.now()+14*86400000).toISOString().slice(0,10);
+  const seeded=await admin().from("stock_batches").insert({branch_id:BRANCH.B,product,category:"E2E",unit:"kg",qty:2,received_date:today,expiry_date:expiry,status:"active"});expect(seeded.error).toBeNull();
   try {
     await requester.goto("/transfers");
     await requester.getByRole("button", { name: /New request/ }).click();
@@ -82,16 +84,24 @@ test("transfer between branches: request, send, receive", async ({ browser }) =>
     await supplier.goto("/transfers");
     await supplier.getByRole("button", { name: /Requests to me/ }).click();
     const incoming = supplier.locator(".card, li, tr").filter({ hasText: product }).first();
-    await incoming.getByRole("button", { name: "Mark sent" }).click();
+    await incoming.getByRole("button", { name: "Choose batches & dispatch" }).click();
+    const dispatch=supplier.getByRole("dialog",{name:"Transfer batches"});
+    await dispatch.getByLabel("Quantity 1",{exact:true}).fill("2");
+    await dispatch.getByLabel("Dispatch reference / receipt discrepancy",{exact:true}).fill("Synthetic dispatch reviewed");
+    await dispatch.getByRole("checkbox").check();
+    await dispatch.getByRole("button",{name:"Dispatch selected batches"}).click();
+    await expect(dispatch).toBeHidden();
     await expect(incoming).toContainText("Sent");
 
     await requester.reload();
     const sent = requester.locator(".card, li, tr").filter({ hasText: product }).first();
-    await sent.getByRole("button", { name: "Actual received quantity" }).click();
-    const receipt=requester.getByRole("dialog",{name:"Movement details"});
-    await receipt.getByLabel("Actual received quantity",{exact:true}).fill("2");
+    await sent.getByRole("button", { name: "Transfer batches / receipt" }).click();
+    const receipt=requester.getByRole("dialog",{name:"Transfer batches"});
+    await receipt.getByLabel("Quantity 1",{exact:true}).fill("2");
+    await receipt.getByLabel("Dispatch reference / receipt discrepancy",{exact:true}).fill("Both kg received and checked");
+    await receipt.getByRole("checkbox").check();
     requester.once("dialog",d=>d.accept());
-    await receipt.getByRole("button",{name:"Confirm receipt",exact:true}).click();
+    await receipt.getByRole("button",{name:"Receive checked batches",exact:true}).click();
     await expect(receipt).toBeHidden();
     await expect(sent).toContainText("Received");
   } finally {
