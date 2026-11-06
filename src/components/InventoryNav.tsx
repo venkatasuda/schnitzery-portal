@@ -7,7 +7,7 @@ import { useLang } from "@/components/LanguageProvider";
 
 export type InventoryArea = "overview" | "stock" | "purchasing" | "kitchen" | "movements" | "reports";
 
-export default function InventoryNav({ active, currentView, onNavigate, canLeave }: { active: InventoryArea; currentView?: string; onNavigate?: (view: string) => void; canLeave?: () => boolean }) {
+export default function InventoryNav({ active, currentView, purchasingTab, onNavigate, canLeave }: { active: InventoryArea; currentView?: string; purchasingTab?: string; onNavigate?: (view: string) => void; canLeave?: () => boolean }) {
   const { t, locale } = useLang();
   const pathname = usePathname();
   const s = (en: string, de: string) => locale === "de" ? de : en;
@@ -17,15 +17,15 @@ export default function InventoryNav({ active, currentView, onNavigate, canLeave
     { id: "stock", label: t("inventoryWorkspace.stock"), href: "/inventory/counts" },
     { id: "purchasing", label: t("inventoryWorkspace.purchasing"), href: "/inventory/purchasing" },
     { id: "kitchen", label: s("Kitchen", "Küche"), href: "/inventory/production" },
-    { id: "movements", label: t("inventoryWorkspace.movements"), href: view("movements") },
+    { id: "movements", label: t("inventoryWorkspace.movements"), href: view("history") },
     { id: "reports", label: t("inventoryWorkspace.reports"), href: "/inventory/insights" },
   ];
   const sections: Record<InventoryArea, [string, string][]> = {
     overview: [],
     stock: [[s("Stocktakes", "Inventuren"), "/inventory/counts"], [s("Quick count", "Schnellzählung"), view("count")], [t("inventoryWorkflow.catalogTab"), view("catalog")], [s("Batches & expiry", "Chargen und Ablauf"), "/expiry"], [t("scan.labels"), "/labels"]],
-    purchasing: [[t("inventoryOps.orders"), "/inventory/purchasing"], [t("inventoryWorkflow.reorder"), view("forecast")], [t("inv.tabDeliveries"), view("deliveries")], [s("Ingredient prices", "Zutatenpreise"), "/inventory/prices"], [s("Stock alerts", "Bestandswarnungen"), "/stock-alerts"]],
-    kitchen: [[s("Production", "Produktion"), "/inventory/production"], [s("Prep planning", "Vorbereitungsplanung"), "/inventory/preparation"], [s("Recipes & costing", "Rezepte und Kalkulation"), "/inventory/recipes"], [s("Sales consumption", "Verkaufsverbrauch"), "/inventory/consumption"], [s("Till connections", "Kassenverbindungen"), "/inventory/connections"]],
-    movements: [[t("inventoryWorkspace.workflows"), view("movements")], [t("home.transfers"), "/transfers"], [t("home.wasteLog"), "/waste"], [t("stockHistory.title"), view("history")]],
+    purchasing: [[t("inventoryOps.orders"), "/inventory/purchasing"], [t("inventoryOps.suppliers"), "/inventory/purchasing?tab=suppliers"], [s("Returns & credits", "Retouren und Gutschriften"), "/inventory/purchasing?tab=returns"], [t("inventoryWorkflow.reorder"), view("forecast")], [t("inv.tabDeliveries"), view("deliveries")], [s("Ingredient prices", "Zutatenpreise"), "/inventory/prices"], [s("Stock alerts", "Bestandswarnungen"), "/stock-alerts"]],
+    kitchen: [[s("Production", "Produktion"), "/inventory/production"], [s("Prep planning", "Vorbereitungsplanung"), "/inventory/preparation"], [s("Recipes & costing", "Rezepte und Kalkulation"), "/inventory/recipes"], [s("Sales consumption", "Verkaufsverbrauch"), "/inventory/consumption"]],
+    movements: [[t("stockHistory.title"), view("history")], [t("home.transfers"), "/transfers"], [t("home.wasteLog"), "/waste"]],
     reports: [[s("Business insights", "Geschäftsauswertung"), "/inventory/insights"], [t("inventoryWorkflow.reports"), view("analytics")], [t("reconcile.title"), view("reconcile")], [s("Valuation close", "Bestandsabschluss"), "/inventory/valuation"], [s("Batch traceability", "Chargenherkunft"), "/inventory/batch-report"]],
   };
   function navigate(event: MouseEvent<HTMLAnchorElement>, href: string) {
@@ -37,7 +37,10 @@ export default function InventoryNav({ active, currentView, onNavigate, canLeave
   const parent = areas.find(area => area.id === active)!;
   const back = pathname === "/inventory" || pathname === parent.href ? areas[0] : parent;
   const isCurrent = (href: string) => href.startsWith("/inventory?view=")
-    ? pathname === "/inventory" && href === view(currentView ?? "overview") : pathname === href;
+    ? pathname === "/inventory" && href === view(currentView ?? "overview")
+    : href.startsWith("/inventory/purchasing") && pathname === "/inventory/purchasing"
+      ? (new URL(href, "http://local").searchParams.get("tab") ?? "orders") === (purchasingTab ?? "orders")
+      : pathname === href;
   return <div className="inventory-navigation">
     {(pathname !== "/inventory" || active !== "overview") && <Link className="inventory-back" href={back.href} onClick={event => navigate(event, back.href)}><span aria-hidden="true">←</span> {s("Back to", "Zurück zu")} {back.label}</Link>}
     <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>

@@ -19,12 +19,15 @@ test("item consumption and reconciled net valuation survive reload on a fresh sy
   expect((await client.rpc("save_inventory_recipe",{p_branch:branch,p_id:recipe,p_name:"Two rice portions",p_portions:2,p_net_price:null,p_lines:[{product_id:product,qty:1,unit:"kg"}],p_prices_net_confirmed:false})).error).toBeNull();
   expect((await client.rpc("configure_pos_connection",{p_branch:branch,p_id:connection,p_name:"Synthetic item export",p_enabled:true})).error).toBeNull();
   const page=await authenticatedPage(browser,who);
-  await page.goto("/inventory/consumption");
+  await page.goto("/sales/imports");
+  await page.getByText("Import a normalized export manually",{exact:true}).click();
   await page.getByLabel("Connection",{exact:true}).selectOption(connection);
   const payload={format:"schnitzery-pos-items-v1",external_id:external,currency:"EUR",days:[{date:berlinToday(),gross_sales:20}],items:[{date:berlinToday(),sku:"RICE",qty:4}]};
   await page.getByLabel("Normalized export JSON",{exact:true}).fill(JSON.stringify(payload));
   await page.getByRole("button",{name:"Import for review",exact:true}).click();
-  await expect(page.getByLabel("Sales export",{exact:true}).locator("option").filter({hasText:external})).toHaveCount(1);
+  await expect(page.locator("details.inventory-receipt").filter({hasText:external})).toHaveCount(1);
+  await page.goto("/inventory/consumption");
+  await page.getByLabel("Connection",{exact:true}).selectOption(connection);
   await page.getByLabel("SKU",{exact:true}).fill("RICE");
   await page.getByLabel("Recipe version",{exact:true}).selectOption(recipe);
   await page.getByLabel("Mapping review note",{exact:true}).fill("Two portions use one kg; source unit verified");

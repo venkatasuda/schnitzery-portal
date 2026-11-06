@@ -1,14 +1,20 @@
 # Advanced inventory release
 
+## Current locations and rollout
+
+See [feature placement](INVENTORY-FEATURE-PLACEMENT.md) for the current screen map. Connection configuration is under Settings / Integrations; normalized export intake and daily-sales approval are under Business reports / Sales imports. Kitchen retains recipe mapping and reviewed stock consumption. The former `/inventory/connections` URL redirects to Settings.
+
+The user reported applying the three migrations below, followed by a linked dry run reporting the remote database up to date. The feature-placement branch requires no further SQL.
+
 ## What changed
 
-### Transfers â†’ choose batches and dispatch
+### Transfers → choose batches and dispatch
 
 Source managers allocate exact, unexpired batches before dispatch. Allocation must equal the requested quantity. Destination managers record the actual quantity for every lot. Accepted quantities create destination batches with the original expiry, lot number and a frozen operational cost reference; shortages remain visible in the transfer evidence. These movements do not create purchase spending or revenue. Repeated commands do not duplicate stock.
 
 Legacy transfers already sent without batch information retain their original receipt path. New batch-linked transfers must use **Transfer batches / receipt**. Product-only dispatch is intentionally blocked. Source and destination permissions are checked in the database; browser clients cannot forge lineage or edit the transfer journal.
 
-### Reports â†’ recipe consumption
+### Kitchen → recipe consumption
 
 Create a till connection, then use the normalized export importer or the existing signed ingestion endpoint. Item exports use this structure:
 
@@ -30,7 +36,7 @@ Prepared dishes must reference finished-stock ingredients when raw ingredients w
 
 Mistaken stock posts can be reversed with a reason, preserving the original journal. Reversal restores only safe batch balances and does not rewrite daily sales. A corrected consumption can then be posted. Existing sales dates are not silently overwritten.
 
-### Reports â†’ valuation close
+### Reports → valuation close
 
 Review net cost per stock unit for each batch against real source evidence. Reviews are append-only versions; unknown costs are not assumed to be zero. The preview includes on-hand batches and dispatched stock still in transit. Closing requires reviewed costs and today's physical counts matching tracked on-hand quantities for every catalogue/batch identity.
 

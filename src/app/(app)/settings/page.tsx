@@ -79,6 +79,7 @@ export default function SettingsPage() {
           </div>
 
           <div style={{ marginTop: 20, marginBottom: 8, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: "var(--gray)", textTransform: "uppercase" }}>{t("set.devicesLocation")}</div>
+          <Link href="/settings/integrations" className="feature-card"><div className="feature-icon"><Icon e="🔌" size={22}/></div><div className="u-flex1"><div className="feature-title">{locale==="de"?"Integrationen":"Integrations"}</div><div className="feature-sub">{locale==="de"?"Kassenverbindungen und Datenquellen verwalten":"Manage till connections and data sources"}</div></div><span className="feature-chev">›</span></Link>
           <Link href="/kiosks" className="feature-card">
             <div className="feature-icon" style={{ background: "linear-gradient(135deg,#34495e,#5d6d7e)" }}><Icon e="🖥️" size={22} color="#fff" /></div>
             <div className="u-flex1"><div className="feature-title">{t("kioskadm.title")}</div><div className="feature-sub">{t("kioskadm.subtitle")}</div></div>

@@ -254,7 +254,8 @@ export default function InventoryPage() {
         <div className="inventory-heading-actions">
         {tab === "overview" && products.length > 0 && <button className="btn-gold" onClick={() => navigate("count")}>{t("inventoryWorkspace.openCount")}</button>}
         {tab === "count" && <><Link href="/inventory/counts" className="btn-gold">{t("countSession.title")}</Link><button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button></>}
-        {tab === "forecast" && <><Link href="/inventory/purchasing?new=1" className="btn-gold">{t("inventoryOps.newOrder")}</Link><Link href="/inventory/order" className="btn-secondary">{t("orderDraft.title")}</Link></>}
+        {tab === "deliveries" && <Link href="/inventory/purchasing?receive=1" className="btn-gold">{locale==="de"?"Lieferung annehmen":"Receive a delivery"}</Link>}
+        {tab === "forecast" && <><Link href="/inventory/purchasing?new=1" className="btn-gold">{t("inventoryOps.newOrder")}</Link></>}
         </div>
       </div>
 
@@ -274,12 +275,10 @@ export default function InventoryPage() {
             </div>}
             <Panel title={t("inventoryWorkspace.dailyWork")}>
               <div className="inventory-task-grid">
-                <Link className="inventory-task" href="/inventory/insights"><strong>{locale === "de" ? "Geschäftsauswertung" : "Business insights"}</strong><span>{locale === "de" ? "Bestandswert, Ausschuss, Preisänderungen und Lieferantenleistung mit Datengrundlage." : "Stock value, waste, price changes and supplier performance with supporting evidence."}</span></Link>
                 <Link className="inventory-task" href="/inventory/counts"><strong>{t("countSession.title")}</strong><span>{t("countSession.help")}</span></Link>
                 <Link className="inventory-task" href="/inventory/purchasing?receive=1"><strong>{t("inventoryOps.receive")}</strong><span>{t("inventoryWorkspace.receivingHelp")}</span></Link>
                 <button className="inventory-task" onClick={() => navigate("forecast")}><strong>{t("inventoryWorkflow.reorder")}</strong><span>{t("inventoryWorkspace.reorderHelp")}</span></button>
                 <Link className="inventory-task" href="/expiry"><strong>{locale==="de"?"Chargen und Ablauf":"Batches & expiry"}</strong><span>{t("inventoryWorkspace.expiryHelp")}</span></Link>
-                <button className="inventory-task" onClick={() => navigate("reconcile")}><strong>{t("reconcile.title")}</strong><span>{t("inventoryWorkspace.reviewHelp")}</span></button>
               </div>
             </Panel>
           </>}
@@ -408,11 +407,10 @@ export default function InventoryPage() {
             </>
           )}
 
+          {tab === "forecast" && <details className="inventory-help"><summary>{locale==="de"?"Optionales Druckblatt":"Optional printable worksheet"}</summary><p>{locale==="de"?"Dieses Arbeitsblatt speichert keine Bestellung. Für verbindliche Bestellungen den Bestellentwurf oben verwenden.":"This worksheet does not save an order. Use the order draft above for tracked purchasing."}</p><Link href="/inventory/order">{locale==="de"?"Nachbestell-Arbeitsblatt öffnen":"Open reorder worksheet"}</Link></details>}
           {/* ============ DELIVERIES ============ */}
           {tab === "deliveries" && (
             <div className="inventory-delivery-grid">
-              <p className="ui-note">{t("inventoryOps.quickDeliveryHelp")} <Link href="/inventory/purchasing">{t("inventoryOps.orders")}</Link></p>
-              <Panel title={t("inv.recordDelivery")}><p>{locale==="de"?"Lieferungen mit Mengen, Chargen und Ablaufdaten an einem Ort annehmen. Nicht als Bestandszählung erfassen.":"Receive quantities, batches and expiry dates together in one place. Do not record a delivery as a stock count."}</p><Link className="btn-gold" href="/inventory/purchasing?receive=1">{locale==="de"?"Lieferung annehmen":"Receive a delivery"}</Link><Link className="btn-secondary" href="/expiry">{locale==="de"?"Chargen und Ablauf":"Stock batches & expiry"}</Link></Panel>
               <section><h2 className="inventory-section-title">{t("inv.recentDeliveries")}</h2>
               {deliveries.length === 0 ? (
                 <div className="card"><EmptyState title={t("inv.noDeliveries")} /></div>

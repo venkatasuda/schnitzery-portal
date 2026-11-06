@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import {useSearchParams} from "next/navigation";
 import InventoryNav from "@/components/InventoryNav";
 import NativeDialog from "@/components/NativeDialog";
 import Suppliers from "@/components/inventory/Suppliers";
@@ -9,7 +10,7 @@ import SupplierReturns from "@/components/inventory/SupplierReturns";
 import DirectReceiving from "@/components/inventory/DirectReceiving";
 import ReceiptBatches,{blankReceiptLot,type ReceiptLotInput} from "@/components/inventory/ReceiptBatches";
 import { validReceiptBatches } from "@/lib/inventory/batches";
-import { EmptyState, ErrorState, Field, PageHeader, Panel, TabButton } from "@/components/ui";
+import { EmptyState, ErrorState, Field, PageHeader, Panel } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
 import { getInventoryOperations, inventoryOperation } from "@/lib/queries/inventory-operations";
 import { getPurchaseOrderDraft } from "@/lib/queries/inventory";
@@ -24,6 +25,9 @@ type OrderForm={id?:string;revision?:number;supplier_id:string;expected_date:str
 type ReceiptForm=Record<string,{accepted:string;rejected:string;cost:string;note:string;batches:ReceiptLotInput[]}>;
 export default function PurchasingPage(){
  const {t,locale}=useLang();const [data,setData]=useState<Data|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[tab,setTab]=useState("orders"),[search,setSearch]=useState("");
+ const searchParams=useSearchParams(),queryTab=searchParams.get("tab"),queryOrder=searchParams.get("order");
+ useEffect(()=>{const next=queryTab==="suppliers"||queryTab==="returns"?queryTab:"orders";setTab(next);if(data&&next==="orders"&&(data.order?.id??null)!==queryOrder)void load(queryOrder??undefined);},[queryTab,queryOrder]);
+ function showOrders(){setTab("orders");const url=new URL(window.location.href);url.searchParams.delete("tab");window.history.replaceState(null,"",url);}
  const [edit,setEdit]=useState<OrderForm|null>(null),[receiving,setReceiving]=useState<ReceiptForm|null>(null),[invoice,setInvoice]=useState(""),[note,setNote]=useState(""),[reviewed,setReviewed]=useState(false);
  const [receivedDate,setReceivedDate]=useState(berlinToday);
  const [direct,setDirect]=useState(false),[costPurchase,setCostPurchase]=useState<string|null>(null);
@@ -37,7 +41,7 @@ export default function PurchasingPage(){
  async function run(action:InventoryAction,body:Record<string,unknown>){if(!data||busy)return;setBusy(true);setError("");try{
   const key=JSON.stringify({action,body});if(command.current?.key!==key)command.current={key,id:crypto.randomUUID()};
   const r=await inventoryOperation(data.branch.id,command.current.id,action,body);if(!mounted.current)return;
-  if(!r.ok){setError(errorText(r.error));return;}command.current=null;setEdit(null);setReceiving(null);setTab("orders");await load(r.result.id);
+  if(!r.ok){setError(errorText(r.error));return;}command.current=null;setEdit(null);setReceiving(null);showOrders();await load(r.result.id);
  }catch{if(mounted.current)setError(errorText("save"));}finally{if(mounted.current)setBusy(false);}}
  function start(){setError("");setEdit({supplier_id:data?.suppliers.find(s=>s.is_active)?.id||"",expected_date:"",note:"",lines:[{product_id:"",qty:"",unit_price:""}]});}
  async function suggestions(){if(!edit||!data)return;if(edit.lines.some(l=>l.product_id)&&!window.confirm(t("inventoryOps.discard")))return;setBusy(true);setError("");try{const r=await getPurchaseOrderDraft();if(!r.ok){setError(errorText("load"));return;}
@@ -53,10 +57,9 @@ export default function PurchasingPage(){
  const formTotal=orderSummary((edit?.lines??[]).map(l=>({qty:l.qty,unitPrice:l.unit_price===""?null:Number(l.unit_price)})));
  const list=data?.orders.filter(o=>`${o.reference} ${o.supplier_name} ${o.status}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))??[];
  return <div className="inventory-page">
-  <InventoryNav active="purchasing" canLeave={()=>!(edit||receiving)||window.confirm(t("inventoryOps.discard"))}/>
-  <p className="business-note">{s("New delivery? Use Receive a delivery, or open an existing order and choose Receive goods. Quantities and expiry batches are saved together. Use Stock count only to verify the total physically on the shelf.","Neue Lieferung? Lieferung annehmen wählen oder bestehende Bestellung öffnen und Waren annehmen wählen. Mengen und Ablaufchargen werden gemeinsam gespeichert. Bestandszählung nur zur Prüfung des gesamten physischen Regalbestands verwenden.")} <Link href="/expiry">{s("View batches & expiry","Chargen und Ablauf ansehen")} →</Link></p>
-  <PageHeader title={t("inventoryOps.purchasing")} subtitle={data?.branch.name??t("common.loading")} actions={<>{!data?.order&&<button className="btn-gold" disabled={!data||busy||loading} onClick={()=>setDirect(true)}>{s("Receive a delivery","Lieferung annehmen")}</button>}<button className="btn-secondary" disabled={!data||busy||loading} onClick={start}>{t("inventoryOps.newOrder")}</button></>}/>
-  <div className="hub-tabs" role="group" aria-label={t("inventoryOps.purchasing")}><TabButton active={tab==="orders"} onClick={()=>setTab("orders")}>{t("inventoryOps.orders")}</TabButton><TabButton active={tab==="suppliers"} onClick={()=>setTab("suppliers")}>{t("inventoryOps.suppliers")}</TabButton><TabButton active={tab==="returns"} onClick={()=>setTab("returns")}>{s("Returns & credits","Retouren und Gutschriften")}</TabButton><Link className="hub-tab" href="/inventory?view=forecast">{t("inventoryWorkflow.reorder")}</Link></div>
+  <InventoryNav active="purchasing" purchasingTab={tab} canLeave={()=>!(edit||receiving)||window.confirm(t("inventoryOps.discard"))}/>
+
+  <PageHeader title={tab==="suppliers"?t("inventoryOps.suppliers"):tab==="returns"?s("Returns & credits","Retouren und Gutschriften"):t("inventoryOps.purchasing")} subtitle={data?.branch.name??t("common.loading")} actions={<>{tab==="orders"&&!data?.order&&<button className="btn-gold" disabled={!data||busy||loading} onClick={()=>setDirect(true)}>{s("Receive a delivery","Lieferung annehmen")}</button>}{tab==="orders"&&<button className="btn-secondary" disabled={!data||busy||loading} onClick={start}>{t("inventoryOps.newOrder")}</button>}</>}/>
   {error&&!edit&&!receiving&&<ErrorState message={error} onRetry={()=>load(data?.order?.id)} retryLabel={t("business.retry")}/>}
   {loading?<p role="status">{t("common.loading")}</p>:data&&<>
    {tab==="returns"?<SupplierReturns/>:tab==="suppliers"?<Panel><Suppliers branch={data.branch.id} suppliers={data.suppliers} onSaved={()=>load(data.order?.id)}/></Panel>:data.order?<>
@@ -96,7 +99,7 @@ export default function PurchasingPage(){
    <div className="row-actions"><button className="btn-gold" disabled={!edit.lines.length}>{t("common.save")}</button><button type="button" className="btn-secondary" onClick={close}>{t("common.cancel")}</button></div>
   </fieldset></form></NativeDialog>}
   {costPurchase&&<InvoiceCost key={costPurchase} purchase={costPurchase} onClose={()=>setCostPurchase(null)}/>}
-  {direct&&data&&<DirectReceiving branch={data.branch.id} products={data.products} suppliers={data.suppliers} onClose={()=>setDirect(false)} onSaved={async()=>{setDirect(false);setTab("orders");await load();}}/>}
+  {direct&&data&&<DirectReceiving branch={data.branch.id} products={data.products} suppliers={data.suppliers} onClose={()=>setDirect(false)} onSaved={async()=>{setDirect(false);showOrders();await load();}}/>}
   {data&&<Panel title={s("Direct delivery receipts · latest 40","Direkte Wareneingangsbelege · letzte 40")}>{!(data.directReceipts??[]).length?<p>{s("No direct deliveries recorded yet. Receipts against purchase orders remain with their orders.","Noch keine direkten Lieferungen erfasst. Bestellbezogene Belege bleiben bei den Bestellungen.")}</p>:(data.directReceipts??[]).map(r=><details className="inventory-receipt" key={r.id}><summary>{r.invoice} · {r.supplier} · {fmtDay(r.received_date,locale)}</summary><ul>{r.result.lines.map((l,i)=><li key={i}>{l.product} · {s("Accepted / rejected","Angenommen / abgelehnt")}: {l.accepted} / {l.rejected} {l.unit} · {s("Original receipt cost","Ursprüngliche Belegkosten")}: {l.cost==null?s("Cost unknown","Kosten unbekannt"):money(l.cost)}{l.purchase_id&&<button className="btn-secondary" onClick={()=>setCostPurchase(l.purchase_id!)}>{s("Invoice cost & history","Rechnungskosten und Verlauf")}</button>}</li>)}</ul><Link className="btn-secondary" href={`/expiry?search=${encodeURIComponent(r.invoice)}`}>{s("View linked batches","Verknüpfte Chargen ansehen")}</Link></details>)}</Panel>}
   {receiving&&data&&<NativeDialog wide unsaved title={t("inventoryOps.receive")} busy={busy} onClose={close}><form onSubmit={e=>{e.preventDefault();receive();}}><fieldset disabled={busy} className="inventory-fieldset"><h2>{t("inventoryOps.receive")} · {data.order?.reference}</h2><p>{t("inventoryOps.receiptHelp")}</p><p>{s("Enter accepted, rejected and batch quantities in the stock unit shown. Partial packs are allowed: use the frozen order conversion, not a newer supplier pack size.","Angenommene Mengen, abgelehnte Mengen und Chargenmengen in der angezeigten Bestandseinheit eingeben. Teilgebinde sind möglich: die gespeicherte Bestellumrechnung verwenden, keine neuere Lieferantengröße.")}</p>{error&&<ErrorState message={error}/>}
    <Field label={t("inventoryOps.invoice")}><input required className="form-input" maxLength={160} value={invoice} onChange={e=>setInvoice(e.target.value)}/></Field>

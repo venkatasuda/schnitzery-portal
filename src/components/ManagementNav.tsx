@@ -20,7 +20,7 @@ function navigationGroups(owner: boolean) {
       { href: "/approvals", label: "home.approvals", icon: ClipboardCheck, routes: ["/approvals"] },
     ] },
     { label: "workspace.business", items: [
-      { href: "/analytics", label: "workspace.reports", icon: ChartNoAxesCombined, routes: ["/analytics", "/labor", "/summary", "/export", "/waste-branches", "/simulator"] },
+      { href: "/analytics", label: "workspace.reports", icon: ChartNoAxesCombined, routes: ["/analytics", "/labor", "/summary", "/export", "/waste-branches", "/simulator", "/sales"] },
       { href: "/compliance", label: "home.compliance", icon: ShieldCheck, routes: ["/compliance", "/audit"] },
       { href: "/profile", label: "home.settings", icon: Settings, routes: ["/profile", "/settings", "/settings-hub", "/geofence", "/kiosks", "/notifications"] },
     ] },
