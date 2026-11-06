@@ -41,7 +41,7 @@ export default function InventoryNav({ active, currentView, onNavigate, canLeave
   return <div className="inventory-navigation">
     {(pathname !== "/inventory" || active !== "overview") && <Link className="inventory-back" href={back.href} onClick={event => navigate(event, back.href)}><span aria-hidden="true">←</span> {s("Back to", "Zurück zu")} {back.label}</Link>}
     <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>
-      {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? "location" : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
+      {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? (isCurrent(area.href) ? "page" : "location") : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
     </nav>
     {!!sections[active].length && <nav className="inventory-section-nav" aria-label={s("Tasks in this area", "Aufgaben in diesem Bereich")}>
       {sections[active].map(([label, href]) => <Link key={href} href={href} aria-current={isCurrent(href) ? "page" : undefined} onClick={event => navigate(event, href)}>{label}</Link>)}

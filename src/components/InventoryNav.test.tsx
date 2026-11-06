@@ -15,6 +15,12 @@ function link(tree: ReactElement, href: string): ReactElement<Record<string, unk
 }
 
 describe("inventory navigation", () => {
+  it("marks the overview as the current page when there is no task navigation", () => {
+    context.path = "/inventory";
+    const html = renderToStaticMarkup(<InventoryNav active="overview" currentView="overview" />);
+    expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+    expect(html).not.toContain('aria-current="location"');
+  });
   it("keeps report siblings and a deterministic back link on a deep page", () => {
     context.path = "/inventory/valuation";
     const html = renderToStaticMarkup(<InventoryNav active="reports" />);
