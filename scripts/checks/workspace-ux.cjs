@@ -17,10 +17,12 @@ async function ui(page, result, url) {
   const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(value){const i=cursor++;if(initial)states[i]={current:value};return states[i];}};
   const component=moduleAt(`src/app/(app)/${page}/${page==='labor'?'LaborClient':'page'}.tsx`, function resolve(name){ // labour page: server part loads data, client part renders
     if(name==='react')return hooks;
+    if(name==='next/navigation')return {usePathname:()=>new URL(url||'http://schnitzery.localhost:3100/inventory').pathname};
     if(name==='recharts')return new Proxy({}, {get:()=>()=>null});
     if(name==='@/lib/time/berlinDate')return {...moduleAt('src/lib/time/berlinDate.ts',require),berlinToday:()=> '2026-10-13'};
     if(name==='@/lib/queries/schedule-constants')return moduleAt('src/lib/queries/schedule-constants.ts',require); // plain constants, not server actions
     if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:(_target,key)=>async(...args)=>{if(result instanceof Error)throw result;if(key==='getInventoryContext')return {ok:true,branch:{id:'branch',name:'Test branch'},countDate:'2026-10-13'}; return typeof result==='function'?result(key,args):result;}});
+    if(name==='@/lib/inventory/valuation-close')return moduleAt('src/lib/inventory/valuation-close.ts',require);
     if(name==='@/lib/inventory/identity')return moduleAt('src/lib/inventory/identity.ts',require);
     if(name==='@/lib/inventory/production')return moduleAt('src/lib/inventory/production.ts',n=>n==='../time/berlinDate'?moduleAt('src/lib/time/berlinDate.ts',require):require(n));
     if(name==='@/lib/inventory/batches')return moduleAt('src/lib/inventory/batches.ts',n=>n==='../time/berlinDate'?moduleAt('src/lib/time/berlinDate.ts',require):require(n));
@@ -81,6 +83,9 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
   await new Promise(r=>setImmediate(r));
   assert.equal(attempts,2);
   assert.equal(find(inventory.tree(),e=>e.type==='input'&&e.props.type==='number').props.value,'','Successful retry clears the saved input');
+  const emptyValuation=(await ui('inventory/valuation',{ok:true,branchName:'Empty branch',preview:{lines:[],complete:false,unpriced:0,unreconciled:[],total_net:0},closes:[]})).render();
+  assert.match(emptyValuation,/No tracked stock to value/);
+  assert.doesNotMatch(emptyValuation,/Confirmed net cost per stock unit|Save immutable close|€0/);
   for(const page of ['inventory','staff','settings','profile','labor','attendance-hub']){
     for(const fail of [{ok:false,error:'Database unavailable'},new Error('Disconnected')]){
       const rendered=(await ui(page,fail)).render();

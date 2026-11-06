@@ -221,10 +221,23 @@ html.light .btn-gold { color: #fff; }
 .status-badge.good { background: var(--success-soft); color: var(--success); }
 .status-badge.warn { color: var(--gold-ink); box-shadow: inset 0 0 0 1px currentColor; }
 .inventory-page { width: 100%; }
-.inventory-area-nav { display: flex; gap: 6px; overflow-x: auto; padding: 5px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 10px; background: var(--dark); }
+.inventory-navigation { margin-bottom: 24px; min-width: 0; }
+.inventory-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 8px; color: var(--gray); text-decoration: none; font-size: 14px; }
+.inventory-back:hover { color: var(--white); text-decoration: underline; }
+.inventory-area-nav { display: flex; gap: 6px; overflow-x: auto; padding: 5px; border: 1px solid var(--border); border-radius: 10px; background: var(--dark); }
 .inventory-area-nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 18px; color: var(--gray); font-weight: 600; white-space: nowrap; text-decoration: none; border-radius: 7px; }
 .inventory-area-nav a:hover { background: var(--surface-2); color: var(--white); }
-.inventory-area-nav a[aria-current="page"] { background: var(--accent-soft); color: var(--gold-ink); }
+.inventory-area-nav a[aria-current] { background: var(--accent-soft); color: var(--gold-ink); }
+.inventory-section-nav { display: flex; flex-wrap: wrap; gap: 4px 16px; border-bottom: 1px solid var(--border); padding-top: 8px; }
+.inventory-section-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 0; border-bottom: 2px solid transparent; color: var(--gray); text-decoration: none; font-size: 13px; }
+.inventory-section-nav a:hover { color: var(--white); }
+.inventory-section-nav a[aria-current="page"] { border-bottom-color: var(--gold-ink); color: var(--gold-ink); font-weight: 600; }
+.inventory-help { margin: 12px 0 20px; color: var(--gray); font-size: 13px; line-height: 1.6; }
+.inventory-help summary { cursor: pointer; min-height: 44px; padding: 10px 0; color: var(--white); font-weight: 600; }
+@media (max-width: 600px) {
+  .inventory-section-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .inventory-section-nav a { flex-shrink: 0; white-space: nowrap; }
+}
 .inventory-work-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
 .inventory-work-summary button { text-align: left; background: var(--dark); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; color: var(--white); }
 .inventory-work-summary span, .inventory-work-summary small { display: block; color: var(--gray); line-height: 1.6; }
