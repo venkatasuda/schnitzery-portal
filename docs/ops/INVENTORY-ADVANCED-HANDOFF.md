@@ -57,3 +57,14 @@ Use the tested `postgres` deployment principal; existing functions retain their 
 - Existing transfer browser/SQL tests now allocate real synthetic batches.
 
 Run mutating browser and SQL tests only on isolated local staging. The schema and tests being implemented does not mean that a live POS provider is connected or every browser/device has passed acceptance. Record actual run results in the release review.
+
+## Recorded checks — 6 November 2026
+
+- All 12 inventory migrations applied successfully to the network-isolated backup restore. Original 96 table row counts matched; foreign keys validated.
+- Native PostgreSQL count-session, operations, lot-transfer, POS-stock and valuation tests passed with rollback-only fixtures.
+- Advanced in-memory SQL acceptance passed, including the existing receiving/production tests.
+- Focused form-label, CSV and POS parsing checks passed; TypeScript passed.
+- Browser write flow reached posted consumption, resumed/published physical count and saved valuation. Final export disclosure and cross-branch transfer checks are being rerun; browser acceptance remains open until results are recorded.
+- The initial PR commit passed clean CI build, lint, type-check, unit/security checks and Vercel preview. Follow-up fixes require a new CI run.
+
+These three migrations remain unapplied to production; PR #88 is not merged or deployed.
