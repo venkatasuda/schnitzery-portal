@@ -1,7 +1,7 @@
 // Schnitzery UI kit (Release F) — the shared building blocks. See docs/DESIGN-SYSTEM.md.
 // Styling lives in globals.css (.ui-*, .page-title, .card, .hub-tabs, .btn-*); these
 // components only add structure and accessibility. No local copies in pages.
-import type { ReactNode } from "react";
+import {cloneElement,isValidElement,type ReactNode} from "react";
 
 export type Tone = "default" | "success" | "warn" | "danger" | "info" | "action";
 const toneClass = (tone?: Tone) => (tone && tone !== "default" ? ` tone-${tone}` : "");
@@ -40,9 +40,11 @@ export function StatGrid({ children, label }: { children: ReactNode; label?: str
 
 /** Label + control (+ hint / error). Wraps the control in a <label> so clicks focus it. */
 export function Field({ label, hint, error, children }: { label: ReactNode; hint?: ReactNode; error?: ReactNode; children: ReactNode }) {
+  const control=typeof label==="string"&&isValidElement<Record<string,unknown>>(children)&&typeof children.type==="string"&&["input","select","textarea"].includes(children.type)&&!children.props["aria-label"]&&!children.props["aria-labelledby"]
+    ?cloneElement(children,{"aria-label":label}):children;
   return <label className="ui-field">
     <span className="ui-field-label">{label}</span>
-    {children}
+    {control}
     {hint && !error && <span className="ui-field-hint">{hint}</span>}
     {error && <span className="ui-field-error" role="alert">{error}</span>}
   </label>;

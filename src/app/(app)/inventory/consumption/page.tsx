@@ -16,7 +16,8 @@ export default function PosConsumption(){
  useEffect(()=>{void load();},[]);
  async function run(action:()=>Promise<{ok:boolean}>){if(busy)return;setBusy(true);setError(false);try{if(!(await action()).ok){setError(true);return;}setReviewed(false);setNote("");await load();}catch{setError(true);}finally{setBusy(false);}}
  const job=data?.imports.find(i=>i.id===selected),post=data?.posts.find(p=>p.import_id===selected),reversal=data?.reversals.find(r=>r.post_id===post?.id);
- const mappings:Record<string,string>={};for(const m of data?.mappings??[])if(m.connection_id===job?.connection_id&&!Object.hasOwn(mappings,m.sku))mappings[m.sku]=m.id;
+ const latestMappings=new Map<string,string>();for(const m of data?.mappings??[])if(m.connection_id===job?.connection_id&&!latestMappings.has(m.sku))latestMappings.set(m.sku,m.id);
+ const mappings:Record<string,string>=Object.fromEntries(latestMappings);
  const activePost=reversal?null:post;
  const ready=job?.status==="approved"&&!!job.payload.items?.length&&job.payload.items.every(i=>Object.hasOwn(mappings,i.sku));
  return <div className="inventory-page"><InventoryNav active="reports"/><PageHeader title={s("Sales recipe consumption","Rezeptverbrauch aus Verkäufen")} subtitle={data?.branchName??""}/>

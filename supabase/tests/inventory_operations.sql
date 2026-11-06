@@ -70,7 +70,7 @@ reset role;
 select set_config('request.jwt.claim.sub',other_manager::text,true) from ops_fixture;
 set local role authenticated;
 do $$declare f record;b uuid;begin select * into f from ops_fixture;
- insert into public.stock_batches(branch_id,product,category,unit,qty,received_date,expiry_date,status) values(f.b,'Oil','Dry','l',10,current_date,current_date+10,'active') returning id into b;
+ insert into public.stock_batches(branch_id,product,category,unit,qty,received_date,expiry_date,status,logged_by) values(f.b,'Oil','Dry','l',10,current_date,current_date+10,'active',auth.uid()) returning id into b;
  perform public.post_lot_transfer(f.b,f.transfer,gen_random_uuid(),'send',jsonb_build_array(jsonb_build_object('id',b,'qty',10)),'Source lots checked');end $$;
 do $$ declare f record;begin select * into f from ops_fixture;
  if exists(select 1 from public.inventory_orders where branch_id=f.a) then raise exception 'Other branch can read order';end if;

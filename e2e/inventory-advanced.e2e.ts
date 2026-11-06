@@ -15,7 +15,7 @@ test("item consumption and reconciled net valuation survive reload on a fresh sy
   expect((await db.from("users").upsert({id:user,email,branch_id:branch,role:"manager",status:"active",full_name:"E2E advanced manager",must_change_password:false,login_locked:false})).error).toBeNull();
   const client=await authenticatedClient(who);
   expect((await client.from("inventory_master").insert({id:product,branch_id:branch,product:name,category:"E2E",unit:"kg",soll:10,is_active:true})).error).toBeNull();
-  expect((await client.from("stock_batches").insert({id:batch,branch_id:branch,product:name,category:"E2E",unit:"kg",qty:10,received_date:berlinToday(),expiry_date:new Date(Date.now()+14*86400000).toISOString().slice(0,10),status:"active"})).error).toBeNull();
+  expect((await client.from("stock_batches").insert({id:batch,branch_id:branch,product:name,category:"E2E",unit:"kg",qty:10,logged_by:user,received_date:berlinToday(),expiry_date:new Date(Date.now()+14*86400000).toISOString().slice(0,10),status:"active"})).error).toBeNull();
   expect((await client.rpc("save_inventory_recipe",{p_branch:branch,p_id:recipe,p_name:"Two rice portions",p_portions:2,p_net_price:null,p_lines:[{product_id:product,qty:1,unit:"kg"}],p_prices_net_confirmed:false})).error).toBeNull();
   expect((await client.rpc("configure_pos_connection",{p_branch:branch,p_id:connection,p_name:"Synthetic item export",p_enabled:true})).error).toBeNull();
   const page=await authenticatedPage(browser,who);
@@ -55,8 +55,8 @@ test("item consumption and reconciled net valuation survive reload on a fresh sy
   await page.getByLabel("Close review note",{exact:true}).fill("All eight kg counted; cost and branch checked");
   await page.getByRole("checkbox",{name:/All stock, transit/}).check();
   await page.getByRole("button",{name:"Save immutable close",exact:true}).click();
-  await expect(page.getByRole("button",{name:"Export frozen CSV",exact:true})).toHaveCount(1);
-  await page.reload();await expect(page.getByRole("button",{name:"Export frozen CSV",exact:true})).toHaveCount(1);
+  await expect(page.locator("details.inventory-receipt")).toHaveCount(1);await page.locator("details.inventory-receipt summary").click();await expect(page.getByRole("button",{name:"Export frozen CSV",exact:true})).toBeVisible();
+  await page.reload();await expect(page.locator("details.inventory-receipt")).toHaveCount(1);await page.locator("details.inventory-receipt summary").click();await expect(page.getByRole("button",{name:"Export frozen CSV",exact:true})).toBeVisible();
   const close=await db.from("inventory_valuation_closes").select("snapshot").eq("branch_id",branch).single();expect(Number(close.data!.snapshot.total_net)).toBe(4);
   for(const width of [390,1440]){await page.setViewportSize({width,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await info.attach(`valuation-${width}`,{body:await page.screenshot({fullPage:true}),contentType:"image/png"});}
  }finally{

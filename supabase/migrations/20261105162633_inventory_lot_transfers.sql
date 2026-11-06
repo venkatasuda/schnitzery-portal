@@ -82,8 +82,8 @@ begin
    out_id:=null;
    if n>0 then
     out_id:=gen_random_uuid();
-    insert into public.stock_batches(id,branch_id,product,category,unit,qty,expiry_date,received_date,note,status,lot_number,expiry_note,receipt_reference,transfer_lot_id)
-    values(out_id,p_branch,l.product,l.category,l.unit,n,l.expiry_date,(now() at time zone 'Europe/Berlin')::date,trim(p_note),'active',l.lot_number,l.expiry_note,'Transfer '||t.id,l.id);
+    insert into public.stock_batches(id,branch_id,product,category,unit,qty,expiry_date,received_date,note,status,lot_number,expiry_note,receipt_reference,transfer_lot_id,logged_by,logged_by_name)
+    values(out_id,p_branch,l.product,l.category,l.unit,n,l.expiry_date,(now() at time zone 'Europe/Berlin')::date,trim(p_note),'active',l.lot_number,l.expiry_note,'Transfer '||t.id,l.id,auth.uid(),(select full_name from public.users where id=auth.uid()));
    end if;
    update public.inventory_transfer_lots set received_qty=n,destination_batch_id=out_id where id=l.id;
   end if;

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { account, addCatalogProduct, removeCatalogProduct, admin, BRANCH, expectToast, openContexts, signIn, unique } from "./local";
+import { account, addCatalogProduct, removeCatalogProduct, authenticatedPage, admin, BRANCH, expectToast, openContexts, signIn, unique } from "./local";
 
 // The five flows the restaurants run every day. Each test cleans up what it creates.
 
@@ -63,8 +63,8 @@ test("manager saves the roster", async ({ browser }) => {
 });
 
 test("transfer between branches: request, send, receive", async ({ browser }) => {
-  const supplier = await signIn(browser, account("manager", "B"));
-  const requester = await signIn(browser, account("manager", "A"));
+  const supplier = await authenticatedPage(browser, account("manager", "B"));
+  const requester = await authenticatedPage(browser, account("manager", "A"));
   const product = unique("Transfer");
   // The request form lists the REQUESTER's catalogue (you ask for what you stock).
   await addCatalogProduct(requester, product);
