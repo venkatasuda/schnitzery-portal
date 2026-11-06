@@ -1,0 +1,33 @@
+-- Isolated staging only; no real counts or costs are modified.
+\set ON_ERROR_STOP on
+begin;
+select set_config('request.jwt.claim.sub','',true);
+create temp table value_fixture(a uuid,m uuid,p uuid,b uuid,cost uuid,close_id uuid);
+insert into value_fixture select gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid();
+grant select on value_fixture to authenticated;
+insert into public.branches(id,name) select a,'Valuation test' from value_fixture;
+insert into auth.users(id,email) select m,m::text||'@valuation.invalid' from value_fixture;
+insert into public.users(id,branch_id,role,status) select m,a,'manager','active' from value_fixture on conflict(id) do update set branch_id=excluded.branch_id,role=excluded.role,status=excluded.status;
+select set_config('request.jwt.claim.sub',m::text,true) from value_fixture;
+insert into public.inventory_master(id,branch_id,product,category,unit,soll,is_active) select p,a,'Value test rice','Test','kg',10,true from value_fixture;
+insert into public.stock_batches(id,branch_id,product,category,unit,qty,received_date,expiry_date,status) select b,a,'Value test rice','Test','kg',10,current_date,current_date+10,'active' from value_fixture;
+insert into public.inventory_counts(branch_id,count_date,category,product,unit,ist,soll) select a,current_date,'Test','Value test rice','kg',10,10 from value_fixture;
+select set_config('request.jwt.claim.sub',m::text,true) from value_fixture;
+set local role authenticated;
+do $$declare f record;preview jsonb;begin select * into f from value_fixture;
+ preview:=public.inventory_valuation_preview(f.a);
+ if (preview->>'complete')::boolean or (preview->>'unpriced')::integer<>1 then raise exception 'Unknown cost treated as confirmed zero';end if;
+ begin perform public.close_inventory_valuation(f.a,f.close_id,'Incomplete close',true);raise exception 'Unpriced close accepted';exception when unique_violation then null;end;
+ perform public.review_batch_net_cost(f.a,f.cost,f.b,0,0.5,'Invoice TEST','Net basis and kg verified',true);
+ perform public.review_batch_net_cost(f.a,f.cost,f.b,0,0.5,'Invoice TEST','Net basis and kg verified',true);
+ begin perform public.review_batch_net_cost(f.a,gen_random_uuid(),f.b,0,0.75,'Stale invoice','Stale review',true);raise exception 'Stale cost accepted';exception when unique_violation then null;end;
+ perform public.close_inventory_valuation(f.a,f.close_id,'All counts and net costs reviewed',true);
+ perform public.close_inventory_valuation(f.a,f.close_id,'All counts and net costs reviewed',true);
+ perform public.review_batch_net_cost(f.a,gen_random_uuid(),f.b,1,0.75,'New invoice TEST','New cost evidence verified',true);
+ if (select (snapshot->>'total_net')::numeric from public.inventory_valuation_closes where id=f.close_id)<>5 then raise exception 'Later cost rewrote approved close';end if;
+ preview:=public.inventory_valuation_preview(f.a);
+ if (preview->>'total_net')::numeric<>7.5 or not(preview->>'complete')::boolean then raise exception 'Current preview did not use latest reviewed cost';end if;
+ raise notice 'PASS: missing-price guard, net-cost review revisions, close retry safety and immutable historical valuation';
+end $$;
+reset role;
+rollback;

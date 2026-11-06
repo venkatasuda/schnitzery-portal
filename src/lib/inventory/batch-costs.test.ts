@@ -14,3 +14,11 @@ it("values only documented batches and traces transitive production without reve
  runs[0].reversed_at="2026-01-02";expect(batchTrace("raw",batches,inputs,runs).descendants).toEqual([]);
  inputs[1].unit_cost=null;expect(batchCostReport(batches,inputs,runs,[]).rows.find(r=>r.id==="finished")?.value).toBeNull();
 });
+it("preserves transferred cost and a source-lot reference outside the selected branch",()=>{
+ const received:CostBatch={id:"dest",product:"Rice",category:"Dry",unit:"kg",qty:2,remaining_qty:2,purchase_id:null,production_id:null,transfer_lot_id:"lot",expiry_date:"2026-12-01",lot_number:"SRC-1",receipt_reference:"Transfer test",status:"active"};
+ const transfers=[{id:"lot",transfer_id:"transfer",source_batch_id:"source",destination_batch_id:"dest",received_qty:2,unit_cost:3,unit:"kg"}];
+ const report=batchCostReport([received],[],[],[],transfers);
+ expect(report.rows[0].source).toBe("transfer");expect(report.knownValue).toBe(6);
+ expect(batchTrace("dest",[received],[],[],transfers).ancestorRefs).toEqual(["source"]);
+ expect(batchCostReport([received],[],[],[],[{...transfers[0],unit_cost:null}]).unpriced).toBe(1);
+});

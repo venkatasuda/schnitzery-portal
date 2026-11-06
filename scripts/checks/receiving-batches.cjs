@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const {PGlite}=require('../../.audit-db/node_modules/@electric-sql/pglite');
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
-(async()=>{
+async function check(after){
  const db=new PGlite(),a=id(1),b=id(2),manager=id(3),staff=id(4),foreign=id(5),product=id(6);
  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema private;grant usage on schema auth,private to authenticated;
  create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
@@ -211,5 +211,8 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
  assert.equal((await db.query('select count(*)::int n from daily_sales')).rows[0].n,1,'Conflicting import rolls back every day');
  await db.query('select public.configure_pos_connection($1,$2,$3,false)',[a,connection,'Synthetic till']);await db.exec('reset role;set role service_role');await assert.rejects(stage(),/connection disabled/);await login(manager);
  await db.exec(`reset role;update users set status='inactive' where id='${manager}'`);await login(manager);await assert.rejects(op(144,'production_save',{draft:emptyProduction}),/Inventory access denied/);await assert.rejects(consume(34,'used',1),/Batch unavailable/);assert.equal((await db.query('select count(*)::int n from stock_batches')).rows[0].n,0);
+ if(after){try{await after(db);}catch(error){await db.close();throw error;}}
  await db.close();console.log('Receiving batches: atomic PO/direct receipts, expiry splits, unknown costs/dates, retries, partial use/waste, purchase-pack versions/conversions, supplier returns/credits, invoice cost audit/retries, manual production drafts/atomic posting/rollback, quantity guards and role/branch isolation pass.');
-})().catch(e=>{console.error(e);process.exitCode=1});
+}
+module.exports=check;
+if(require.main===module)check().catch(e=>{console.error(e);process.exitCode=1});

@@ -68,11 +68,11 @@ export async function getInventoryEntry(id: string, kind: "waste" | "transfer") 
   const ctx=await scope();if(!ctx)return{ok:false as const,error:"access"};
   let query=ctx.db.from(kind==="waste"?"waste_log":"stock_transfers").select("*").eq("id",id);
   query=kind==="waste"?query.eq("branch_id",ctx.branch):query.or(`from_branch_id.eq.${ctx.branch},to_branch_id.eq.${ctx.branch}`);
-  const [row,audit]=await Promise.all([query.single(),ctx.db.from("inventory_operation_events").select("id,action,request,before_data,result,recorded_at").eq("branch_id",ctx.branch).eq("request->>id",id).order("recorded_at",{ascending:false}).limit(50)]);
-  if(audit.error)return{ok:false as const,error:"load"};
+  const [row,audit,lots]=await Promise.all([query.single(),ctx.db.from("inventory_operation_events").select("id,action,request,before_data,result,recorded_at").eq("branch_id",ctx.branch).eq("request->>id",id).order("recorded_at",{ascending:false}).limit(50),kind==="transfer"?ctx.db.from("inventory_transfer_lots").select("id").eq("transfer_id",id).limit(1):Promise.resolve({data:[],error:null})]);
+  if(audit.error||lots.error)return{ok:false as const,error:"load"};
   const original=kind==="waste"&&audit.data?.find(e=>e.action==="waste_correct")?.before_data;
   if(row.error&&!original)return{ok:false as const,error:"load"};
-  return{ok:true as const,branch:ctx.branch,row:(row.data??{...original,voided:true}) as Record<string,unknown>,events:audit.data};
+  return{ok:true as const,branch:ctx.branch,row:(row.data??{...original,voided:true}) as Record<string,unknown>,events:audit.data,lotTracked:!!lots.data?.length};
 }
 
 export async function getSupplierReturns() {
