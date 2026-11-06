@@ -1,0 +1,46 @@
+import { describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Children, isValidElement, type ReactElement } from "react";
+import InventoryNav from "./InventoryNav";
+
+const context = vi.hoisted(() => ({ path: "/inventory/valuation", locale: "en" }));
+vi.mock("next/navigation", () => ({ usePathname: () => context.path }));
+vi.mock("@/components/LanguageProvider", () => ({ useLang: () => ({ locale: context.locale, t: (key: string) => key }) }));
+
+function link(tree: ReactElement, href: string): ReactElement<Record<string, unknown>> | undefined {
+  if (tree.props && (tree.props as Record<string, unknown>).href === href) return tree as ReactElement<Record<string, unknown>>;
+  for (const child of Children.toArray((tree.props as { children?: React.ReactNode }).children)) {
+    if (isValidElement(child)) { const found = link(child, href); if (found) return found; }
+  }
+}
+
+describe("inventory navigation", () => {
+  it("keeps report siblings and a deterministic back link on a deep page", () => {
+    context.path = "/inventory/valuation";
+    const html = renderToStaticMarkup(<InventoryNav active="reports" />);
+    expect(html).toContain('class="inventory-back"');
+    expect(html).toContain("Back to");
+    expect(link(InventoryNav({ active: "reports" }), "/inventory/valuation")?.props["aria-current"]).toBe("page");
+    expect(html).not.toContain('/inventory/connections');
+  });
+  it("groups recipes and sales consumption with kitchen tasks", () => {
+    context.path = "/inventory/recipes";
+    const html = renderToStaticMarkup(<InventoryNav active="kitchen" />);
+    expect(html).toContain('/inventory/preparation');
+    expect(html).toContain('/inventory/consumption');
+    expect(html).toContain('/inventory/connections');
+    expect(html).not.toContain('/inventory/valuation');
+  });
+  it("applies the unsaved guard to the back link and preserves modified clicks", () => {
+    context.path = "/inventory/valuation";
+    const canLeave = vi.fn(() => false), onNavigate = vi.fn(), preventDefault = vi.fn();
+    const tree = InventoryNav({ active: "reports", canLeave, onNavigate });
+    const back = link(tree, "/inventory/insights")!;
+    const click = back.props.onClick as (event: unknown) => void;
+    click({ button: 0, preventDefault });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(onNavigate).not.toHaveBeenCalled();
+    click({ button: 0, ctrlKey: true, preventDefault });
+    expect(canLeave).toHaveBeenCalledOnce();
+  });
+});

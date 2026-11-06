@@ -74,7 +74,6 @@ export default function OrderPage() {
   }
   return <div className="inventory-page">
     <InventoryNav active="purchasing" canLeave={() => !dirty || confirm(t("orderDraft.discard"))} />
-    <Link className="ui-link-btn" href="/inventory?view=forecast" onClick={event => { if (dirty && !confirm(t("orderDraft.discard"))) event.preventDefault(); }}>{t("orderDraft.back")}</Link>
     <PageHeader title={t("orderDraft.title")} subtitle={branchName || t("common.loading")} />
     <p className="ui-note">{t("orderDraft.notice")}</p>
     <Link className="btn-gold" href="/inventory/purchasing?new=1" onClick={event=>{if(dirty&&!confirm(t("orderDraft.discard")))event.preventDefault();}}>{t("inventoryOps.createSavedOrder")}</Link>

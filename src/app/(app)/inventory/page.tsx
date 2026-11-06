@@ -22,7 +22,7 @@ import Reconciliation from "./Reconciliation";
 import NativeDialog from "@/components/NativeDialog";
 import InventoryNav, { type InventoryArea } from "@/components/InventoryNav";
 import Products from "@/components/inventory/Products";
-import { EmptyState, Field, Panel, Segmented, Stat, TabButton } from "@/components/ui";
+import { EmptyState, Field, Panel, Segmented, Stat } from "@/components/ui";
 
 const GOLD = "var(--gold-ink)";
 const BLUE = "var(--info)";
@@ -233,16 +233,22 @@ export default function InventoryPage() {
   // Release D: an incomplete figure shows only its known part, marked as a lower bound.
   const atLeast = (complete: boolean | undefined, n: number | null | undefined) => (n != null && complete === false ? "≥ " : "") + eur(n);
   const area: InventoryArea = tab === "overview" ? "overview" : ["count", "catalog"].includes(tab) ? "stock" : ["forecast", "deliveries"].includes(tab) ? "purchasing" : ["movements", "history"].includes(tab) ? "movements" : "reports";
+  const titles: Record<View, string> = {
+    overview: t("inv.title"), count: locale === "de" ? "Schnellzählung" : "Quick stock count",
+    catalog: t("inventoryWorkflow.catalogTab"), forecast: t("inventoryWorkflow.reorder"),
+    deliveries: t("inv.tabDeliveries"), movements: t("inventoryWorkspace.movements"),
+    history: t("stockHistory.title"), analytics: t("inventoryWorkflow.reports"), reconcile: t("reconcile.title"),
+  };
   const countedProducts = products.filter(p => counts[inventoryKey(p)]).length;
   const belowTarget = products.filter(p => counts[inventoryKey(p)] && Number(counts[inventoryKey(p)].ist) < Number(p.soll)).length;
 
   return (
     <div className="inventory-page">
-      <InventoryNav active={area} onNavigate={navigate} />
+      <InventoryNav active={area} currentView={tab} onNavigate={navigate} />
       {loadError && <div role="alert" className="workspace-error"><p>{loadError}</p><button className="btn-secondary" onClick={async () => { await load(); await loadActiveTab(); }}>{t("business.retry")}</button></div>}
       <div className="inventory-heading">
         <div>
-          <h1 className="page-title u-row"><Icon e="📦" size={22} /> {t("inv.title")}</h1>
+          <h1 className="page-title u-row"><Icon e="📦" size={22} /> {titles[tab]}</h1>
           <p className="page-sub">{context ? `${context.branch.name}${tab === "count" || tab === "overview" ? ` · ${t("inventoryWorkspace.countDate", { date: fmtDay(context.countDate, locale) })}` : ""}` : t("common.loading")}</p>
         </div>
         <div className="inventory-heading-actions">
@@ -252,13 +258,8 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {tab === "count" && <p className="business-note">{locale==="de"?"Neue Ware unter Einkauf annehmen. Hier den gesamten physischen Regalbestand zählen, nicht nur die Liefermenge. Erfasste Chargenrestmengen und Ablaufdaten stehen unter Chargen und Ablauf.":"Receive new goods under Purchasing. Here, count the total physically on the shelf, not just the delivered quantity. Registered batch balances and dates are under Batches & expiry."}</p>}
-      {area !== "overview" && <div className="hub-tabs inventory-subnav" role="group" aria-label={t(`inventoryWorkspace.${area}`)}>
-        {area === "stock" && <><TabButton active={tab === "count"} onClick={() => navigate("count")}>{t("inv.tabCount")}</TabButton><TabButton active={tab === "catalog"} onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</TabButton><Link className="hub-tab" href="/inventory/prices">{locale === "de" ? "Zutatenpreise" : "Ingredient prices"}</Link><Link className="hub-tab" href="/inventory/production">{locale === "de" ? "Küchenproduktion" : "Kitchen production"}</Link><Link className="hub-tab" href="/inventory/preparation">{locale === "de" ? "Vorbereitungsplanung" : "Prep planning"}</Link><Link className="hub-tab" href="/expiry">{locale==="de"?"Chargen und Ablauf":"Batches & expiry"}</Link><Link className="hub-tab" href="/labels">{t("scan.labels")}</Link></>}
-        {area === "purchasing" && <><TabButton active={tab === "forecast"} onClick={() => navigate("forecast")}>{t("inventoryWorkflow.reorder")}</TabButton><Link className="hub-tab" href="/inventory/purchasing">{t("inventoryOps.orders")}</Link><TabButton active={tab === "deliveries"} onClick={() => navigate("deliveries")}>{t("inv.tabDeliveries")}</TabButton></>}
-        {area === "movements" && <><TabButton active={tab === "movements"} onClick={() => navigate("movements")}>{t("inventoryWorkspace.workflows")}</TabButton><TabButton active={tab === "history"} onClick={() => navigate("history")}>{t("stockHistory.title")}</TabButton></>}
-        {area === "reports" && <><Link className="hub-tab" href="/inventory/valuation">{locale === "de" ? "Bestandsabschluss" : "Valuation close"}</Link><Link className="hub-tab" href="/inventory/consumption">{locale === "de" ? "Rezeptverbrauch" : "Recipe consumption"}</Link><Link className="hub-tab" href="/inventory/connections">{locale === "de" ? "Kassenanbindung" : "Till connections"}</Link><Link className="hub-tab" href="/inventory/batch-report">{locale === "de" ? "Chargenkosten und Herkunft" : "Batch costs & traceability"}</Link><Link className="btn-secondary" href="/inventory/insights">{locale === "de" ? "Geschäftsauswertung" : "Business insights"}</Link><TabButton active={tab === "analytics"} onClick={() => navigate("analytics")}>{t("inventoryWorkflow.reports")}</TabButton><TabButton active={tab === "reconcile"} onClick={() => navigate("reconcile")}>{t("reconcile.title")}</TabButton></>}
-      </div>}
+      {tab === "count" && <p className="page-sub">{locale === "de" ? "Gesamten Regalbestand zählen. Neue Ware?" : "Count the total on the shelf. New delivery?"} <Link href="/inventory/purchasing?receive=1">{locale === "de" ? "Lieferung annehmen" : "Receive goods"} →</Link></p>}
+
 
       {loading ? <CardSkeleton rows={4} /> : loadError ? null : (
         <>

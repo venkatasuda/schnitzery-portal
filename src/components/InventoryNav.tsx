@@ -1,17 +1,50 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLang } from "@/components/LanguageProvider";
 
-export type InventoryArea = "overview" | "stock" | "purchasing" | "movements" | "reports";
-const views: Record<InventoryArea, string> = { overview: "overview", stock: "count", purchasing: "forecast", movements: "movements", reports: "analytics" };
+export type InventoryArea = "overview" | "stock" | "purchasing" | "kitchen" | "movements" | "reports";
 
-export default function InventoryNav({ active, onNavigate, canLeave }: { active: InventoryArea; onNavigate?: (view: string) => void; canLeave?: () => boolean }) {
-  const { t } = useLang();
-  return <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>
-    {(Object.entries(views) as [InventoryArea, string][]).map(([area, view]) => <Link key={area} href={`/inventory?view=${view}`} aria-current={active === area ? "page" : undefined}
-      onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; if (canLeave && !canLeave()) { event.preventDefault(); return; } if (onNavigate) { event.preventDefault(); onNavigate(view); } }}>
-      {t(`inventoryWorkspace.${area}`)}
-    </Link>)}
-  </nav>;
+export default function InventoryNav({ active, currentView, onNavigate, canLeave }: { active: InventoryArea; currentView?: string; onNavigate?: (view: string) => void; canLeave?: () => boolean }) {
+  const { t, locale } = useLang();
+  const pathname = usePathname();
+  const s = (en: string, de: string) => locale === "de" ? de : en;
+  const view = (name: string) => `/inventory?view=${name}`;
+  const areas: { id: InventoryArea; label: string; href: string }[] = [
+    { id: "overview", label: t("inventoryWorkspace.overview"), href: view("overview") },
+    { id: "stock", label: t("inventoryWorkspace.stock"), href: "/inventory/counts" },
+    { id: "purchasing", label: t("inventoryWorkspace.purchasing"), href: "/inventory/purchasing" },
+    { id: "kitchen", label: s("Kitchen", "Küche"), href: "/inventory/production" },
+    { id: "movements", label: t("inventoryWorkspace.movements"), href: view("movements") },
+    { id: "reports", label: t("inventoryWorkspace.reports"), href: "/inventory/insights" },
+  ];
+  const sections: Record<InventoryArea, [string, string][]> = {
+    overview: [],
+    stock: [[s("Stocktakes", "Inventuren"), "/inventory/counts"], [s("Quick count", "Schnellzählung"), view("count")], [t("inventoryWorkflow.catalogTab"), view("catalog")], [s("Batches & expiry", "Chargen und Ablauf"), "/expiry"], [t("scan.labels"), "/labels"]],
+    purchasing: [[t("inventoryOps.orders"), "/inventory/purchasing"], [t("inventoryWorkflow.reorder"), view("forecast")], [t("inv.tabDeliveries"), view("deliveries")], [s("Ingredient prices", "Zutatenpreise"), "/inventory/prices"], [s("Stock alerts", "Bestandswarnungen"), "/stock-alerts"]],
+    kitchen: [[s("Production", "Produktion"), "/inventory/production"], [s("Prep planning", "Vorbereitungsplanung"), "/inventory/preparation"], [s("Recipes & costing", "Rezepte und Kalkulation"), "/inventory/recipes"], [s("Sales consumption", "Verkaufsverbrauch"), "/inventory/consumption"], [s("Till connections", "Kassenverbindungen"), "/inventory/connections"]],
+    movements: [[t("inventoryWorkspace.workflows"), view("movements")], [t("home.transfers"), "/transfers"], [t("home.wasteLog"), "/waste"], [t("stockHistory.title"), view("history")]],
+    reports: [[s("Business insights", "Geschäftsauswertung"), "/inventory/insights"], [t("inventoryWorkflow.reports"), view("analytics")], [t("reconcile.title"), view("reconcile")], [s("Valuation close", "Bestandsabschluss"), "/inventory/valuation"], [s("Batch traceability", "Chargenherkunft"), "/inventory/batch-report"]],
+  };
+  function navigate(event: MouseEvent<HTMLAnchorElement>, href: string) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    if (canLeave && !canLeave()) { event.preventDefault(); return; }
+    const targetView = href.startsWith("/inventory?view=") ? href.split("=")[1] : null;
+    if (onNavigate && targetView) { event.preventDefault(); onNavigate(targetView); }
+  }
+  const parent = areas.find(area => area.id === active)!;
+  const back = pathname === "/inventory" || pathname === parent.href ? areas[0] : parent;
+  const isCurrent = (href: string) => href.startsWith("/inventory?view=")
+    ? pathname === "/inventory" && href === view(currentView ?? "overview") : pathname === href;
+  return <div className="inventory-navigation">
+    {(pathname !== "/inventory" || active !== "overview") && <Link className="inventory-back" href={back.href} onClick={event => navigate(event, back.href)}><span aria-hidden="true">←</span> {s("Back to", "Zurück zu")} {back.label}</Link>}
+    <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>
+      {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? "location" : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
+    </nav>
+    {!!sections[active].length && <nav className="inventory-section-nav" aria-label={s("Tasks in this area", "Aufgaben in diesem Bereich")}>
+      {sections[active].map(([label, href]) => <Link key={href} href={href} aria-current={isCurrent(href) ? "page" : undefined} onClick={event => navigate(event, href)}>{label}</Link>)}
+    </nav>}
+  </div>;
 }
