@@ -65,6 +65,6 @@ Run mutating browser and SQL tests only on isolated local staging. The schema an
 - Advanced in-memory SQL acceptance passed, including the existing receiving/production tests.
 - Focused form-label, CSV and POS parsing checks passed; TypeScript passed.
 - Browser write flow reached posted consumption, resumed/published physical count and saved valuation. Final export disclosure and cross-branch transfer checks are being rerun; browser acceptance remains open until results are recorded.
-- The initial PR commit passed clean CI build, lint, type-check, unit/security checks and Vercel preview. Follow-up fixes require a new CI run.
+- PR #88 was merged at 08:39 UTC on 6 November after clean CI build, lint, type-check, unit/security checks and Vercel preview. Follow-up fixes require a separate PR and new CI run.
 
-These three migrations remain unapplied to production; PR #88 is not merged or deployed.
+These three migrations were not applied to production by this work. Confirm production migration history before rollout; merging PR #88 does not apply SQL migrations.
