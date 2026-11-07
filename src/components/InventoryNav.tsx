@@ -22,8 +22,11 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
       else if (right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = right - nav.clientWidth;
     };
     revealCurrent();
-    window.addEventListener("resize", revealCurrent);
-    return () => window.removeEventListener("resize", revealCurrent);
+    const observer = new ResizeObserver(revealCurrent);
+    observer.observe(nav);
+    const current = nav.querySelector<HTMLElement>("[aria-current]");
+    if (current) observer.observe(current);
+    return () => observer.disconnect();
   }, [pathname, currentView, purchasingTab, locale]);
   const s = (en: string, de: string) => locale === "de" ? de : en;
   const view = (name: string) => `/inventory?view=${name}`;
