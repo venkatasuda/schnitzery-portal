@@ -18,3 +18,9 @@ The reviewed catalogue had no page-level horizontal overflow at mobile width. Su
 ## Verification
 
 TypeScript passed, ten focused tests passed and all 25 security/UI/design/accessibility regression scripts passed. Focused tests cover the clipped-task scroll and cleanup, task classification and separated setup/import forms. The UI harness covers receipt placement and catalogue initial-empty wording. Local browser acceptance tests were extended with mobile selected-task bounds and receipt visibility assertions; they still require a healthy local staging portal. These new fixes are local until their review branch is merged and deployed. No SQL migration is required.
+
+## Post-merge follow-up
+
+Confirmed on the live site: supplier and return tasks no longer show receipt history, empty catalogue setup wording is correct, duplicate catalogue heading is gone, and Kitchen contextual links are disclosed instead of competing with the primary task.
+
+A mobile follow-up reproduced clipping after the loading state changed the navigation strip width. Window resize listeners do not cover this layout change. The follow-up fix observes the strip and active link with native ResizeObserver, disconnecting on cleanup. The regression test shrinks the strip without dispatching a window resize and verifies the selected item is revealed. Viewport and original branch selection were restored after inspection; no operational transactions were submitted. The observer fix needs deployment before live confirmation.

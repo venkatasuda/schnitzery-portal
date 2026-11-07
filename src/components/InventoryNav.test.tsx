@@ -17,20 +17,30 @@ function link(tree: ReactElement, href: string): ReactElement<Record<string, unk
 }
 
 describe("inventory navigation", () => {
-  it("reveals a clipped current task horizontally and responds to resize", () => {
+  it("reveals the current task after the strip shrinks without a window resize", () => {
     const current = {offsetLeft:650,offsetWidth:120};
     const nav = {scrollLeft:0,scrollWidth:800,clientWidth:300,querySelector:()=>current};
-    const addEventListener=vi.fn(),removeEventListener=vi.fn();
-    vi.stubGlobal("window",{addEventListener,removeEventListener});
+    let notify=()=>{};
+    const observe=vi.fn(),disconnect=vi.fn();
+    vi.stubGlobal("ResizeObserver",class {
+      constructor(callback:()=>void){notify=callback;}
+      observe=observe;
+      disconnect=disconnect;
+    });
     context.nav=nav as unknown as HTMLElement;context.effects=[];
     InventoryNav({active:"kitchen"});
     const cleanup=context.effects[0]();
     expect(nav.scrollLeft).toBe(470);
+    expect(observe).toHaveBeenCalledWith(nav);
+    expect(observe).toHaveBeenCalledWith(current);
+    nav.clientWidth=260;
+    notify();
+    expect(nav.scrollLeft).toBe(510);
     current.offsetLeft=10;
-    addEventListener.mock.calls[0][1]();
+    notify();
     expect(nav.scrollLeft).toBe(10);
     if(cleanup)cleanup();
-    expect(removeEventListener).toHaveBeenCalledWith("resize",addEventListener.mock.calls[0][1]);
+    expect(disconnect).toHaveBeenCalledOnce();
     context.nav=null;vi.unstubAllGlobals();
   });
   it("marks the overview as the current page when there is no task navigation", () => {
