@@ -52,7 +52,7 @@ export default function OpsClient({ initial = null }: { initial?: Initial } = {}
   // live auto-refresh while viewing today
   useEffect(() => {
     if (date !== todayStr()) return;
-    const iv = setInterval(() => load(true), 45000);
+    const iv = setInterval(() => { if (!document.hidden) load(true); }, 45000);
     return () => clearInterval(iv);
   }, [date, load]);
 

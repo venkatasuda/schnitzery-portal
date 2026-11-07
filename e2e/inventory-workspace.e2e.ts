@@ -23,6 +23,7 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   await dialog.getByLabel("Email",{exact:true}).fill("orders@example.invalid");
   await dialog.getByLabel("Lead time (days)").fill("3");
   await dialog.getByRole("button",{name:"Save",exact:true}).click();await expect(dialog).toBeHidden();
+  await page.getByRole("link",{name:"Purchase orders",exact:true}).click(); // order actions live only on the Orders task
   await page.getByRole("button",{name:"New purchase order",exact:true}).click();
   dialog=page.getByRole("dialog",{name:"Saved order draft"});
   await dialog.getByRole("combobox",{name:"Supplier",exact:true}).selectOption({label:supplier});
@@ -33,8 +34,7 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   await dialog.getByLabel("Ordered quantity 1",{exact:true}).fill("1");
   await dialog.getByLabel("Unit price (€) 1",{exact:true}).fill("0.01");
   await dialog.getByRole("button",{name:"Save",exact:true}).click();await expect(dialog).toBeHidden();
-  // Open the saved order view after maintaining the supplier directory.
-  await page.getByRole("button",{name:"Purchase orders",exact:true}).click();
+  // Saving the draft opens the saved order directly.
   await expect(page.getByRole("heading",{name:/PO-.*Draft/})).toBeVisible();
   const orderURL=page.url(),orderId=new URL(orderURL).searchParams.get("order");expect(orderId).toBeTruthy();
   await page.getByRole("button",{name:"Approve order",exact:true}).click();
@@ -77,7 +77,7 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   const staff=await signIn(browser,account("staff","A"));await staff.goto(orderURL);await expect(staff.getByRole("alert").filter({hasText:"Active manager access"})).toBeVisible();
   const owner=await signIn(browser,account("brand_owner","A"));await owner.goto(orderURL);await expect(owner.getByRole("heading",{name:/PO-.*Closed/})).toBeVisible();
   await page.context().addCookies([{name:"lang",value:"de",url:BASE_URL}]);await page.setViewportSize({width:390,height:844});await page.goto("/inventory/purchasing");
-  await expect(page.getByRole("heading",{name:"Einkauf",exact:true})).toBeVisible();await expect(page.locator(".inventory-area-nav a")).toHaveCount(5);
+  await expect(page.getByRole("heading",{name:"Einkauf",exact:true})).toBeVisible();await expect(page.locator(".inventory-area-nav a")).toHaveCount(6);
   await expect(page.getByRole("button",{name:"Neue Bestellung",exact:true})).toBeEnabled();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
   await info.attach("purchasing-mobile-de",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
@@ -91,7 +91,7 @@ test("loaded purchasing mobile German layout",async({browser},info)=>{
  await page.setViewportSize({width:390,height:844});await page.goto("/inventory/purchasing");
  await expect(page.getByRole("heading",{name:"Einkauf",exact:true})).toBeVisible();
  await expect(page.getByRole("button",{name:"Neue Bestellung",exact:true})).toBeEnabled();
- await expect(page.locator(".inventory-area-nav a")).toHaveCount(5);
+ await expect(page.locator(".inventory-area-nav a")).toHaveCount(6);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
  await info.attach("purchasing-mobile-de-loaded",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
 });

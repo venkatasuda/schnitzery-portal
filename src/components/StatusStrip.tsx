@@ -26,7 +26,7 @@ export default function StatusStrip() {
     window.addEventListener("online", upd);
     window.addEventListener("offline", upd);
     window.addEventListener("sz-queue-changed", upd);
-    const iv = setInterval(() => { upd(); fetchK(); }, 60000);
+    const iv = setInterval(() => { upd(); if (!document.hidden) fetchK(); }, 60000); // no server calls from background tabs
     return () => {
       window.removeEventListener("online", upd);
       window.removeEventListener("offline", upd);
