@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
 import PurchasePacks from "./PurchasePacks";
 import NativeDialog from "@/components/NativeDialog";
@@ -22,7 +23,7 @@ export default function Products({onChanged}:{onChanged?:()=>void}){
  }catch{setError(t("inventoryOps.error_save"));}finally{setBusy(false);}}
  const shown=data?.products.filter(p=>(!category||p.category===category)&&`${p.product} ${p.category}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))??[];
  return <section className="card" aria-label={t("inventoryOps.products")}>
-  <div className="ui-toolbar"><h2>{t("inventoryOps.products")}</h2><button className="btn-gold" disabled={!data||loading} onClick={()=>open()}>{t("inventoryOps.newProduct")}</button></div>
+  <div className="ui-toolbar"><h2>{t("inventoryOps.products")}</h2><div className="row-actions"><Link className="btn-secondary" href="/labels">{s("Product labels","Produktetiketten")}</Link><button className="btn-gold" disabled={!data||loading} onClick={()=>open()}>{t("inventoryOps.newProduct")}</button></div></div>
   {!edit&&error?<ErrorState message={error} onRetry={load} retryLabel={t("business.retry")}/>:loading?<p role="status">{t("common.loading")}</p>:data&&<>
    <p className="page-sub">{data.branch.name} · {t("inventoryOps.catalogHelp")}</p>
    <div className="inventory-toolbar"><Field label={t("inventoryOps.search")}><input type="search" className="form-input" value={search} onChange={e=>setSearch(e.target.value)}/></Field><Field label={t("inv.category")}><select className="form-select" value={category} onChange={e=>setCategory(e.target.value)}><option value="">{t("inventoryWorkflow.allCategories")}</option>{[...new Set(data.products.map(p=>p.category))].map(c=><option key={c}>{c}</option>)}</select></Field></div>

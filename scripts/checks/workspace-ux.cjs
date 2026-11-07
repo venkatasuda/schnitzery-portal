@@ -86,6 +86,12 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
   const emptyValuation=(await ui('inventory/valuation',{ok:true,branchName:'Empty branch',preview:{lines:[],complete:false,unpriced:0,unreconciled:[],total_net:0},closes:[]})).render();
   assert.match(emptyValuation,/No tracked stock to value/);
   assert.doesNotMatch(emptyValuation,/Confirmed net cost per stock unit|Save immutable close|€0/);
+  for(const failure of [{ok:false},new Error('Disconnected')]){
+    const labels=(await ui('labels',failure)).render();
+    assert.match(labels,/role="alert"/);
+    assert.doesNotMatch(labels,/labels.none/,'Failed label reads are not an empty catalogue');
+    assert.match(labels,/disabled=""/,'Printing stays disabled when labels cannot be loaded');
+  }
   for(const page of ['inventory','staff','settings','profile','labor','attendance-hub']){
     for(const fail of [{ok:false,error:'Database unavailable'},new Error('Disconnected')]){
       const rendered=(await ui(page,fail)).render();

@@ -27,6 +27,7 @@ test("item consumption and reconciled net valuation survive reload on a fresh sy
   await page.getByRole("button",{name:"Import for review",exact:true}).click();
   await expect(page.locator("details.inventory-receipt").filter({hasText:external})).toHaveCount(1);
   await page.goto("/inventory/consumption");
+  await page.getByText("Manage recipe mappings",{exact:true}).click();
   await page.getByLabel("Connection",{exact:true}).selectOption(connection);
   await page.getByLabel("SKU",{exact:true}).fill("RICE");
   await page.getByLabel("Recipe version",{exact:true}).selectOption(recipe);

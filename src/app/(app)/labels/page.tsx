@@ -1,37 +1,40 @@
 "use client";
 import InventoryNav from "@/components/InventoryNav";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import {PageHeader,ErrorState} from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getProducts } from "@/lib/queries/inventory";
 
 export default function LabelsPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [products, setProducts] = useState<any[]>([]);
   const [qr, setQr] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      const res = await getProducts();
-      const list = res.ok ? (res.products || []) : [];
-      setProducts(list);
-      try {
-        const QRCode = (await import("qrcode")).default;
-        const map: Record<string, string> = {};
-        for (const p of list) {
-          map[p.id] = await QRCode.toDataURL(`sq:${p.id}`, { width: 220, margin: 1 });
-        }
-        setQr(map);
-      } catch { /* qr lib missing — names still print */ }
-      setLoading(false);
-    })();
-  }, []);
+  const [error,setError]=useState(false);
+  const request=useRef(0);
+  async function load(){
+    const seq=++request.current;setLoading(true);setError(false);
+    try{
+      const result=await getProducts();
+      if(!result.ok)throw new Error("Products unavailable");
+      const list=result.products||[],map:Record<string,string>={};
+      if(list.length){
+        const QRCode=(await import("qrcode")).default;
+        for(const product of list)map[product.id]=await QRCode.toDataURL(`sq:${product.id}`,{width:220,margin:1});
+      }
+      if(seq!==request.current)return;
+      setProducts(list);setQr(map);
+    }catch{if(seq===request.current)setError(true);}
+    finally{if(seq===request.current)setLoading(false);}
+  }
+  useEffect(()=>{void load();return()=>{request.current++;};},[]);
 
   function printLabels() {
+    if(loading||error||!products.length)return;
     const cells = products.map((p) => `
       <div class="lbl">
         ${qr[p.id] ? `<img src="${qr[p.id]}" />` : ""}
@@ -55,21 +58,15 @@ export default function LabelsPage() {
   }
 
   return (
-    <div className="fade-up">
+    <div className="inventory-page">
       <InventoryNav active="stock" />
-      <Link href="/inventory" style={{ color: "var(--gray)", fontSize: 13, textDecoration: "none" }}>‹ {t("labels.back")}</Link>
-      <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🏷️" size={22} /> {t("labels.title")}</h1>
-      <div className="page-sub">{t("labels.subtitle")}</div>
+      <PageHeader title={t("labels.title")} subtitle={t("labels.subtitle")} icon={<Icon e="🏷️" size={22}/>} actions={<button className="btn-gold" onClick={printLabels} disabled={loading||error||products.length===0}>{t("labels.print")}</button>}/>
 
-      <button className="btn-gold" onClick={printLabels} disabled={loading || products.length === 0}
-       >
-        🖨 {t("labels.print")}
-      </button>
 
-      {loading ? <CardSkeleton rows={4} /> : products.length === 0 ? (
+      {loading ? <CardSkeleton rows={4} /> : error ? <ErrorState message={locale==="de"?"Etiketten konnten nicht vorbereitet werden. Vor dem Drucken erneut versuchen.":"Labels could not be prepared. Retry before printing."} onRetry={load} retryLabel={t("business.retry")}/> : products.length === 0 ? (
         <div className="card ui-empty-msg">{t("labels.none")}</div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+        <div className="inventory-label-grid">
           {products.map((p) => (
             <div key={p.id} className="card u-center p-3">
               {qr[p.id] ? <img src={qr[p.id]} alt="" style={{ width: "70%", maxWidth: 120 }} /> : <div style={{ height: 100, color: "var(--gray)", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>{t("labels.qrPending")}</div>}

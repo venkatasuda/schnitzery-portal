@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import InventoryNav from "@/components/InventoryNav";
 import { useLang } from "@/components/LanguageProvider";
 import { ErrorState, EmptyState, PageHeader, Panel } from "@/components/ui";
@@ -68,7 +69,7 @@ export default function CountSessionsPage() {
 
   return <div className="inventory-page">
     <InventoryNav active="stock" canLeave={canLeave} />
-    <PageHeader title={t("countSession.title")} subtitle={data?.branch.name ?? t("common.loading")} />
+    <PageHeader title={t("countSession.title")} subtitle={data?.branch.name ?? t("common.loading")} actions={<Link className="btn-secondary" href="/inventory?view=count" aria-disabled={busy} onClick={event=>{if(busy||!canLeave())event.preventDefault();}}>{locale==="de"?"Einzelnen Artikel zählen":"Count one item"}</Link>} />
     <p className="page-sub">{t("countSession.help")}</p>
     {error && <ErrorState message={error} onRetry={() => { if (canLeave()) load(data?.session?.id); }} retryLabel={t("countSession.reload")} />}
     {loading ? <p role="status">{t("common.loading")}</p> : data && <>
