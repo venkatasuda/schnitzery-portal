@@ -46,6 +46,16 @@ describe("inventory navigation", () => {
     expect(link(tree, "/inventory/purchasing?tab=suppliers")).toBeDefined();
     expect(link(tree, "/inventory/purchasing")?.props["aria-current"]).not.toBe("page");
   });
+  it("groups quick count and label tools under their stock workflow instead of separate tabs", () => {
+    context.path = "/inventory";
+    let tree = InventoryNav({ active: "stock", currentView: "count" });
+    expect(link(tree, "/inventory?view=count")).toBeUndefined();
+    expect(link(tree, "/inventory/counts")?.props.className).toBe("inventory-back");
+    context.path = "/labels";
+    tree = InventoryNav({ active: "stock" });
+    expect(link(tree, "/labels")).toBeUndefined();
+    expect(link(tree, "/inventory?view=catalog")?.props.className).toBe("inventory-back");
+  });
   it("classifies integrations as Settings and sales imports as business reports", () => {
     context.path = "/settings/integrations";
     expect(renderToStaticMarkup(<ManagementLocation role="manager" />)).toContain("home.settings");

@@ -523,6 +523,9 @@ html.light .btn-gold { color: #fff; }
 .hub-tabs { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
 .hub-tab { flex-shrink: 0; white-space: nowrap; }
 .btn-gold, .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; line-height: 1.4; }
+.btn-gold, .btn-secondary, .btn-danger, .btn-quiet-danger { min-height: var(--control-h); font-family: inherit; font-size: var(--text-md); text-align: center; cursor: pointer; }
+.btn-gold[aria-disabled="true"], .btn-secondary[aria-disabled="true"] { opacity: .6; cursor: not-allowed; }
+.form-input:not(textarea), .form-select { min-height: var(--control-h); }
 .btn-gold:hover:not(:disabled), .workspace-button.primary:hover:not(:disabled) { filter: brightness(.94); }
 .form-input, .form-select { font-size: 14px; line-height: 1.5; }
 textarea.form-input { min-height: 100px; resize: vertical; }
@@ -620,9 +623,11 @@ html.light { --warn-soft: #fdf3e1; --info-soft: #e8f1fb; --accent-line: #a9d3cc;
 .ui-page-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-6); }
 .ui-page-header .page-title { display: flex; align-items: center; gap: var(--space-2); }
 .ui-page-header .page-sub { margin-bottom: 0; }
-.ui-page-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ui-page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); max-width: 100%; }
 /* Panel — card with a heading row */
-.ui-panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.ui-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.ui-panel-head > * { min-width: 0; max-width: 100%; }
+.ui-panel-head .ui-field, .inventory-toolbar .ui-field, .inventory-insight-toolbar .ui-field, .ui-toolbar .ui-field { margin-bottom: 0; }
 .ui-panel-head h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--text-lg); font-weight: 700; }
 .ui-stat.row + .ui-stat.row { border-top: 1px solid var(--border); }
 .ui-stat-label { display: flex; align-items: center; gap: var(--space-2); }
@@ -653,8 +658,14 @@ html.light { --warn-soft: #fdf3e1; --info-soft: #e8f1fb; --accent-line: #a9d3cc;
 .ui-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-3); }
 @media (max-width: 600px) { .ui-form-grid { grid-template-columns: minmax(0, 1fr); } }
 .ui-block { width: 100%; min-height: var(--control-h); }
-.ui-actions { display: flex; gap: var(--space-2); margin-top: var(--space-4); }
-.ui-actions > button { min-height: var(--control-h); }
+.ui-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-4); }
+.ui-actions > :is(button, a) { min-height: var(--control-h); }
+.workspace-dialog .row-actions { justify-content: flex-end; margin-top: var(--space-4); }
+.workspace-dialog .row-actions > :is(button, a) { min-width: 100px; }
+@media (max-width: 600px) {
+  .ui-page-actions { width: 100%; }
+  .ui-page-actions > :is(button, a), .workspace-dialog .row-actions > :is(button, a) { flex: 1 1 120px; }
+}
 .ui-dialog-title { font-size: var(--text-lg); font-weight: 700; color: var(--text); margin-bottom: var(--space-1); }
 .ui-big-input { font-size: var(--text-xl) !important; font-weight: 700; text-align: center; min-height: 56px; }
 .ui-list { list-style: none; margin: 0 0 var(--space-3); padding: 0 var(--space-4); }
@@ -935,6 +946,9 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 /* Inventory task dialogs retain the shared light/teal tokens and contained tables. */
 .workspace-dialog-wide { width: min(1120px, calc(100% - 32px)); }
 .inventory-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.inventory-fieldset > label:not(.ui-field) { display: flex; align-items: flex-start; gap: var(--space-2); min-height: var(--control-h); margin-block: var(--space-3); line-height: 1.5; }
+.inventory-fieldset > label:not(.ui-field) > input[type="checkbox"] { flex-shrink: 0; margin-top: var(--space-1); }
+.inventory-page > .row-actions { align-items: flex-end; margin-block: var(--space-4); }
 .inventory-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
 .inventory-detail-grid dt { color: var(--text-muted); font-size: var(--text-sm); }
 .inventory-detail-grid dd { margin: 4px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -1008,7 +1022,17 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
   .notification-panel { position: fixed; inset: 72px 12px auto; width: auto; max-width: none; }
 }
 .inventory-insight-toolbar, .inventory-insight-coverage, .inventory-insight-links { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
-.inventory-insight-toolbar { margin-block: 1rem; }
+.inventory-insight-toolbar { margin-block: 1rem; align-items: flex-end; }
+.inventory-coverage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-6); }
+.inventory-coverage > div { display: flex; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); font-size: var(--text-sm); }
+.inventory-coverage strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.inventory-coverage-bar { display: block; appearance: none; width: 100%; height: 8px; border: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-2); color: var(--action); }
+.inventory-coverage-bar::-webkit-progress-bar { background: var(--surface-2); }
+.inventory-coverage-bar::-webkit-progress-value { background: var(--action); }
+.inventory-coverage-bar::-moz-progress-bar { background: var(--action); }
+.inventory-work-summary .inventory-coverage-bar { margin-top: var(--space-2); }
+.inventory-label-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--space-3); }
+@media (max-width: 600px) { .inventory-work-summary .inventory-coverage-bar { grid-column: 1 / -1; } }
 .inventory-insight-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-block: 1rem; }
 .inventory-insight-details { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1rem; }
 .inventory-insight-actions { padding-inline-start: 1.5rem; }

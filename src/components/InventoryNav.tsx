@@ -22,7 +22,7 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
   ];
   const sections: Record<InventoryArea, [string, string][]> = {
     overview: [],
-    stock: [[s("Stocktakes", "Inventuren"), "/inventory/counts"], [s("Quick count", "Schnellzählung"), view("count")], [t("inventoryWorkflow.catalogTab"), view("catalog")], [s("Batches & expiry", "Chargen und Ablauf"), "/expiry"], [t("scan.labels"), "/labels"]],
+    stock: [[s("Stocktakes", "Inventuren"), "/inventory/counts"], [t("inventoryWorkflow.catalogTab"), view("catalog")], [s("Batches & expiry", "Chargen und Ablauf"), "/expiry"]],
     purchasing: [[t("inventoryOps.orders"), "/inventory/purchasing"], [t("inventoryOps.suppliers"), "/inventory/purchasing?tab=suppliers"], [s("Returns & credits", "Retouren und Gutschriften"), "/inventory/purchasing?tab=returns"], [t("inventoryWorkflow.reorder"), view("forecast")], [t("inv.tabDeliveries"), view("deliveries")], [s("Ingredient prices", "Zutatenpreise"), "/inventory/prices"], [s("Stock alerts", "Bestandswarnungen"), "/stock-alerts"]],
     kitchen: [[s("Production", "Produktion"), "/inventory/production"], [s("Prep planning", "Vorbereitungsplanung"), "/inventory/preparation"], [s("Recipes & costing", "Rezepte und Kalkulation"), "/inventory/recipes"], [s("Sales consumption", "Verkaufsverbrauch"), "/inventory/consumption"]],
     movements: [[t("stockHistory.title"), view("history")], [t("home.transfers"), "/transfers"], [t("home.wasteLog"), "/waste"]],
@@ -35,7 +35,10 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
     if (onNavigate && targetView) { event.preventDefault(); onNavigate(targetView); }
   }
   const parent = areas.find(area => area.id === active)!;
-  const back = pathname === "/inventory" || pathname === parent.href ? areas[0] : parent;
+  const back = pathname === "/labels"
+    ? { href: view("catalog"), label: t("inventoryWorkflow.catalogTab") }
+    : pathname === "/inventory" && currentView === "count" ? parent
+    : pathname === "/inventory" || pathname === parent.href ? areas[0] : parent;
   const isCurrent = (href: string) => href.startsWith("/inventory?view=")
     ? pathname === "/inventory" && href === view(currentView ?? "overview")
     : href.startsWith("/inventory/purchasing") && pathname === "/inventory/purchasing"
@@ -47,7 +50,7 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
       {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? (isCurrent(area.href) ? "page" : "location") : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
     </nav>
     {!!sections[active].length && <nav className="inventory-section-nav" aria-label={s("Tasks in this area", "Aufgaben in diesem Bereich")}>
-      {sections[active].map(([label, href]) => <Link key={href} href={href} aria-current={isCurrent(href) ? "page" : undefined} onClick={event => navigate(event, href)}>{label}</Link>)}
+      {sections[active].map(([label, href]) => <Link key={href} href={href} aria-current={isCurrent(href) ? "page" : (href===view("catalog")&&pathname==="/labels")||(href==="/inventory/counts"&&pathname==="/inventory"&&currentView==="count") ? "location" : undefined} onClick={event => navigate(event, href)}>{label}</Link>)}
     </nav>}
   </div>;
 }

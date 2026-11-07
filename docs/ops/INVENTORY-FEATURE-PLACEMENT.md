@@ -34,3 +34,15 @@ A recipe can link to reference ingredient prices; a stock report can link to its
 Eight focused rendering/navigation tests passed, including the separated forms, Purchasing selection and sidebar classification. TypeScript passed on the final changes. All 23 CI security/UI regression scripts passed on the final source.
 
 Browser acceptance remains unverified for this placement change: local preflight could not reach the portal while Next remained compiling instrumentation. The dev server was stopped. Updated local-only browser tests cover the moved import/approval workflow, consumption and Purchasing reload/Back navigation; run them with a healthy staging portal. Earlier browser passes belong to the older arrangement and are not evidence for this one. Production data, permissions and accounting semantics are unchanged.
+
+## Consolidation and control layout — 7 November 2026
+
+- Stock navigation is reduced to Stocktakes, Catalogue and Batches/expiry. Count-one-item remains available from the Stocktakes header and existing filtered-count drilldowns. Product QR labels are opened from Catalogue, with a return link back to Catalogue. No counting or printing capability was removed.
+- Overview starts the saved stocktake workflow. The quick-count screen keeps its scan tool and per-row recording, rather than presenting another competing stocktake action.
+- Sales consumption opens with the daily stock-review task. Versioned mapping setup/history are grouped in a Manage recipe mappings disclosure. Missing mappings remain visible and block posting as before.
+- Shared buttons and single-line fields use the same minimum control height and typography. Header actions, filter bars, checkboxes and modal footers align and wrap consistently; mobile action groups share the available width.
+- Small native progress bars explain catalogue coverage (counted/fresh/priced) and overview count completion. Empty denominators have no bar. Quantities in different units and uncertain costs remain in tables; no decorative aggregate chart was added.
+- The label page uses the common header and a responsive grid. Read/generation failures show an error and Retry; incomplete QR generation cannot silently enable printing.
+- Batch help now describes explicitly posted lot-linked transfers/production/consumption accurately; unposted plans and sales do not move stock.
+
+Browser visual acceptance is deliberately deferred for this pass, as requested. TypeScript, nine focused tests and all 25 security/UI/design/accessibility regression scripts passed. Do not treat screenshots from the earlier layout as acceptance of the consolidated layout.

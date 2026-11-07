@@ -252,8 +252,8 @@ export default function InventoryPage() {
           <p className="page-sub">{context ? `${context.branch.name}${tab === "count" || tab === "overview" ? ` · ${t("inventoryWorkspace.countDate", { date: fmtDay(context.countDate, locale) })}` : ""}` : t("common.loading")}</p>
         </div>
         <div className="inventory-heading-actions">
-        {tab === "overview" && products.length > 0 && <button className="btn-gold" onClick={() => navigate("count")}>{t("inventoryWorkspace.openCount")}</button>}
-        {tab === "count" && <><Link href="/inventory/counts" className="btn-gold">{t("countSession.title")}</Link><button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button></>}
+        {tab === "overview" && products.length > 0 && <Link className="btn-gold" href="/inventory/counts">{t("countSession.start")}</Link>}
+        {tab === "count" && <><button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button></>}
         {tab === "deliveries" && <Link href="/inventory/purchasing?receive=1" className="btn-gold">{locale==="de"?"Lieferung annehmen":"Receive a delivery"}</Link>}
         {tab === "forecast" && <><Link href="/inventory/purchasing?new=1" className="btn-gold">{t("inventoryOps.newOrder")}</Link></>}
         </div>
@@ -269,7 +269,7 @@ export default function InventoryPage() {
               action={<button className="btn-gold" onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</button>}>
               {locale === "de" ? "Zuerst Produkte und Bestandseinheiten hinzufügen. Danach Lieferungen mit Ablaufdaten erfassen und den physischen Bestand zählen." : "Add products and stock units first. Then receive deliveries with expiry dates and count the stock physically on the shelf."}
             </EmptyState> : <div className="inventory-work-summary">
-              <button onClick={() => navigate("count")}><span>{t("inventoryWorkspace.countProgress")}</span><strong>{countedProducts} / {products.length}</strong><small>{t("inventoryWorkspace.physicalCounts")}</small></button>
+              <button onClick={() => navigate("count")}><span>{t("inventoryWorkspace.countProgress")}</span><strong>{countedProducts} / {products.length}</strong><small>{t("inventoryWorkspace.physicalCounts")}</small><progress className="inventory-coverage-bar" value={countedProducts} max={products.length} aria-label={t("inventoryWorkspace.countProgress")}>{countedProducts} / {products.length}</progress></button>
               <button onClick={() => navigate("count", "uncounted")}><span>{t("inventoryWorkspace.needsCount")}</span><strong>{products.length - countedProducts}</strong><small>{t("inventoryWorkspace.noZero")}</small></button>
               <button onClick={() => navigate("count", "low")}><span>{t("inventoryWorkspace.belowTarget")}</span><strong>{belowTarget}</strong><small>{t("inventoryWorkspace.snapshotNote")}</small></button>
             </div>}
