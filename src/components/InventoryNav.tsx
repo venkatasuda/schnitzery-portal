@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLang } from "@/components/LanguageProvider";
@@ -10,6 +10,21 @@ export type InventoryArea = "overview" | "stock" | "purchasing" | "kitchen" | "m
 export default function InventoryNav({ active, currentView, purchasingTab, onNavigate, canLeave }: { active: InventoryArea; currentView?: string; purchasingTab?: string; onNavigate?: (view: string) => void; canLeave?: () => boolean }) {
   const { t, locale } = useLang();
   const pathname = usePathname();
+  const taskNav = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = taskNav.current;
+    if (!nav) return;
+    const revealCurrent = () => {
+      const current = nav.querySelector<HTMLElement>("[aria-current]");
+      if (!current || nav.scrollWidth <= nav.clientWidth) return;
+      const left = current.offsetLeft, right = left + current.offsetWidth;
+      if (left < nav.scrollLeft) nav.scrollLeft = left;
+      else if (right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = right - nav.clientWidth;
+    };
+    revealCurrent();
+    window.addEventListener("resize", revealCurrent);
+    return () => window.removeEventListener("resize", revealCurrent);
+  }, [pathname, currentView, purchasingTab, locale]);
   const s = (en: string, de: string) => locale === "de" ? de : en;
   const view = (name: string) => `/inventory?view=${name}`;
   const areas: { id: InventoryArea; label: string; href: string }[] = [
@@ -49,7 +64,7 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
     <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>
       {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? (isCurrent(area.href) ? "page" : "location") : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
     </nav>
-    {!!sections[active].length && <nav className="inventory-section-nav" aria-label={s("Tasks in this area", "Aufgaben in diesem Bereich")}>
+    {!!sections[active].length && <nav ref={taskNav} className="inventory-section-nav" aria-label={s("Tasks in this area", "Aufgaben in diesem Bereich")}>
       {sections[active].map(([label, href]) => <Link key={href} href={href} aria-current={isCurrent(href) ? "page" : (href===view("catalog")&&pathname==="/labels")||(href==="/inventory/counts"&&pathname==="/inventory"&&currentView==="count") ? "location" : undefined} onClick={event => navigate(event, href)}>{label}</Link>)}
     </nav>}
   </div>;

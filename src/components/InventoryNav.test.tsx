@@ -4,7 +4,8 @@ import { Children, isValidElement, type ReactElement } from "react";
 import InventoryNav from "./InventoryNav";
 import { ManagementLocation } from "./ManagementNav";
 
-const context = vi.hoisted(() => ({ path: "/inventory/valuation", locale: "en" }));
+const context = vi.hoisted(() => ({ path: "/inventory/valuation", locale: "en", nav: null as HTMLElement|null, effects: [] as (()=>void|(()=>void))[] }));
+vi.mock("react", async (original) => ({ ...await original<typeof import("react")>(), useRef: () => ({current:context.nav}), useEffect: (effect:()=>void|(()=>void)) => { context.effects.push(effect); } }));
 vi.mock("next/navigation", () => ({ usePathname: () => context.path }));
 vi.mock("@/components/LanguageProvider", () => ({ useLang: () => ({ locale: context.locale, t: (key: string) => key }) }));
 
@@ -16,6 +17,22 @@ function link(tree: ReactElement, href: string): ReactElement<Record<string, unk
 }
 
 describe("inventory navigation", () => {
+  it("reveals a clipped current task horizontally and responds to resize", () => {
+    const current = {offsetLeft:650,offsetWidth:120};
+    const nav = {scrollLeft:0,scrollWidth:800,clientWidth:300,querySelector:()=>current};
+    const addEventListener=vi.fn(),removeEventListener=vi.fn();
+    vi.stubGlobal("window",{addEventListener,removeEventListener});
+    context.nav=nav as unknown as HTMLElement;context.effects=[];
+    InventoryNav({active:"kitchen"});
+    const cleanup=context.effects[0]();
+    expect(nav.scrollLeft).toBe(470);
+    current.offsetLeft=10;
+    addEventListener.mock.calls[0][1]();
+    expect(nav.scrollLeft).toBe(10);
+    if(cleanup)cleanup();
+    expect(removeEventListener).toHaveBeenCalledWith("resize",addEventListener.mock.calls[0][1]);
+    context.nav=null;vi.unstubAllGlobals();
+  });
   it("marks the overview as the current page when there is no task navigation", () => {
     context.path = "/inventory";
     const html = renderToStaticMarkup(<InventoryNav active="overview" currentView="overview" />);

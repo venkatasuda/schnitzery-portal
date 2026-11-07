@@ -228,7 +228,8 @@ html.light .btn-gold { color: #fff; }
 .inventory-area-nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 18px; color: var(--gray); font-weight: 600; white-space: nowrap; text-decoration: none; border-radius: 7px; }
 .inventory-area-nav a:hover { background: var(--surface-2); color: var(--white); }
 .inventory-area-nav a[aria-current] { background: var(--accent-soft); color: var(--gold-ink); }
-.inventory-section-nav { display: flex; flex-wrap: wrap; gap: 4px 16px; border-bottom: 1px solid var(--border); padding-top: 8px; }
+.inventory-section-nav { position: relative; display: flex; flex-wrap: wrap; gap: 4px 16px; border-bottom: 1px solid var(--border); padding-top: 8px; }
+.inventory-catalog-actions { display: flex; justify-content: flex-end; margin-bottom: var(--space-3); }
 .inventory-section-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 0; border-bottom: 2px solid transparent; color: var(--gray); text-decoration: none; font-size: 13px; }
 .inventory-section-nav a:hover { color: var(--white); }
 .inventory-section-nav a[aria-current="page"] { border-bottom-color: var(--gold-ink); color: var(--gold-ink); font-weight: 600; }
@@ -948,7 +949,7 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .inventory-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .inventory-fieldset > label:not(.ui-field) { display: flex; align-items: flex-start; gap: var(--space-2); min-height: var(--control-h); margin-block: var(--space-3); line-height: 1.5; }
 .inventory-fieldset > label:not(.ui-field) > input[type="checkbox"] { flex-shrink: 0; margin-top: var(--space-1); }
-.inventory-page > .row-actions { align-items: flex-end; margin-block: var(--space-4); }
+.inventory-page > .row-actions, .workspace-page > .row-actions { align-items: flex-end; margin-block: var(--space-4); }
 .inventory-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
 .inventory-detail-grid dt { color: var(--text-muted); font-size: var(--text-sm); }
 .inventory-detail-grid dd { margin: 4px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }

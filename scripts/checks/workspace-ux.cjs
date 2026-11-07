@@ -12,10 +12,10 @@ function moduleAt(file, resolve, url = 'http://schnitzery.localhost:3100/invento
     { exports, require: resolve, URL, URLSearchParams, window, crypto:require('node:crypto').webcrypto, setTimeout, console });
   return exports;
 }
-async function ui(page, result, url) {
+async function ui(page, result, url, file) {
   const states=[], effects=[]; let cursor=0, initial=true;
   const hooks={...React,useState(value){const i=cursor++; if(initial) states[i]=value; return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect(fn){if(initial)effects.push(fn);},useRef(value){const i=cursor++;if(initial)states[i]={current:value};return states[i];}};
-  const component=moduleAt(`src/app/(app)/${page}/${page==='labor'?'LaborClient':'page'}.tsx`, function resolve(name){ // labour page: server part loads data, client part renders
+  const component=moduleAt(file||`src/app/(app)/${page}/${page==='labor'?'LaborClient':'page'}.tsx`, function resolve(name){ // labour page: server part loads data, client part renders
     if(name==='react')return hooks;
     if(name==='next/navigation')return {usePathname:()=>new URL(url||'http://schnitzery.localhost:3100/inventory').pathname,useSearchParams:()=>new URL(url||'http://schnitzery.localhost:3100/inventory').searchParams};
     if(name==='recharts')return new Proxy({}, {get:()=>()=>null});
@@ -40,8 +40,8 @@ async function ui(page, result, url) {
     if(name.startsWith('@/components/'))return {__esModule:true,default:()=>null,CardSkeleton:()=>null,Skeleton:()=>null};
     return require(name);
   },url).default;
-  component(); for(const effect of effects) effect(); await new Promise(r=>setImmediate(r)); initial=false;
-  return {render(){cursor=0;return renderToStaticMarkup(component());},tree(){cursor=0;return component();}};
+  component({}); for(const effect of effects) effect(); await new Promise(r=>setImmediate(r)); initial=false;
+  return {render(){cursor=0;return renderToStaticMarkup(component({}));},tree(){cursor=0;return component({});}};
 }
 function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray(tree.props?.children)){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
@@ -92,6 +92,15 @@ function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(t
     assert.doesNotMatch(labels,/labels.none/,'Failed label reads are not an empty catalogue');
     assert.match(labels,/disabled=""/,'Printing stays disabled when labels cannot be loaded');
   }
+  const purchasing={ok:true,branch:{id:'branch',name:'Test branch'},orders:[],order:null,products:[],suppliers:[],lines:[],directReceipts:[]};
+  for(const task of ['suppliers','returns']){
+    const screen=(await ui('inventory/purchasing',purchasing,`http://schnitzery.localhost/inventory/purchasing?tab=${task}`)).render();
+    assert.doesNotMatch(screen,/Direct delivery receipts/,'Delivery receipts do not belong in supplier/return tasks');
+  }
+  assert.match((await ui('inventory/purchasing',purchasing,'http://schnitzery.localhost/inventory/purchasing')).render(),/Direct delivery receipts/);
+  const emptyCatalog=(await ui('inventory',{...purchasing},undefined,'src/components/inventory/Products.tsx')).render();
+  assert.match(emptyCatalog,/No products in this branch yet/);
+  assert.doesNotMatch(emptyCatalog,/inventoryWorkflow.noMatches/);
   for(const page of ['inventory','staff','settings','profile','labor','attendance-hub']){
     for(const fail of [{ok:false,error:'Database unavailable'},new Error('Disconnected')]){
       const rendered=(await ui(page,fail)).render();
