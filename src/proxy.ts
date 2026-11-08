@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isManagerPath, MANAGER_ROLES } from "@/lib/auth/manager-paths";
 
 // Single gatekeeper for auth. Runs on every request.
 // Avoids redirect loops by carefully checking the path BEFORE redirecting.
@@ -52,6 +53,19 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // Manager pages: plain staff get an instant "no access" page instead of a manager screen that
+  // loads and then refuses. Data stays protected by the database either way; this is UX only.
+  // Shift leaders (staff) still reach /inventory/counts (stocktake); other inventory pages refuse in-page.
+  if (user && request.method === "GET" && isManagerPath(path)) {
+    const { data: me } = await supabase.from("users").select("role").eq("id", String(user.sub)).maybeSingle();
+    if (me && !MANAGER_ROLES.includes(String(me.role))) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/no-access";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   // Everything else: let it through
