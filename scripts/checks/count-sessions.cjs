@@ -9,8 +9,7 @@ let userRole='manager',active=branch,calls=0;
 const db={auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from(){return this},select(){return this},eq(){return this},single:async()=>({data:{role:userRole,branch_id:branch,status:'active'}}),rpc:async()=>{calls++;return{data:{id:session},error:null}}};
 const exportsBox={};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/count-sessions.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:exportsBox,require(name){
- if(name==='@/lib/supabase/server')return{createClient:async()=>db};
- if(name==='@/lib/activeBranch')return{activeBranchFor:async()=>active,MULTI_BRANCH_ROLES:['manager','branch_owner','brand_owner','super_admin']};
+ if(name==='@/lib/inventory/shift-scope')return{shiftScope:async()=>userRole==='staff'?null:{db,branch:active,user:{id:'manager'},manager:true}};
  if(name==='@/lib/supabase/readAll')return{};
  throw Error(name);
 }});

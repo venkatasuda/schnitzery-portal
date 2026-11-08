@@ -40,10 +40,10 @@ export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let profile: { full_name: string | null; role: string | null; team: string | null; avatar_url: string | null } | null = null;
+  let profile: { full_name: string | null; role: string | null; team: string | null; avatar_url: string | null; branch_id?: string | null } | null = null;
   if (user) {
     const { data } = await supabase
-      .from("users").select("full_name, role, team, avatar_url").eq("id", user.id).single();
+      .from("users").select("full_name, role, team, avatar_url, branch_id").eq("id", user.id).single();
     profile = data;
   }
   const role = profile?.role || "staff";
@@ -62,7 +62,7 @@ export default async function HomePage() {
 
   // ── data ──
   let staffHours: { totalHours: number; shifts: number; targetHours: number | null } | null = null;
-  let staffClockedIn = false, staffOnBreak = false;
+  let staffClockedIn = false, staffOnBreak = false, staffShiftLeader = false;
   let org: OrgOverview | null = null;
   let mOps: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null = null;
   let mLive: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null = null;
@@ -106,7 +106,9 @@ export default async function HomePage() {
     if (otRes.ok) mOt = { totalWorkedMins: otRes.totalWorkedMins || 0, totalOvertimeMins: otRes.totalOvertimeMins || 0, peopleOver: otRes.peopleOver || 0 };
     if (schedRes.ok) mSched = { submissionCount: schedRes.submissionCount || 0, staffCount: schedRes.staffCount || 0, rosterExists: schedRes.rosterExists || false };
   } else {
-    const [h, st] = await Promise.all([getMyHours(), getMyStatus()]);
+    const [h, st, lead] = await Promise.all([getMyHours(), getMyStatus(),
+      profile?.branch_id ? supabase.rpc("can_plan_prep", { p_branch: profile.branch_id }) : Promise.resolve({ data: false })]);
+    staffShiftLeader = lead.data === true;
     if (h.ok) staffHours = { totalHours: h.totalHours || 0, shifts: h.shifts || 0, targetHours: h.targetHours ?? null };
     if (st.ok) { staffClockedIn = st.clockedIn || false; staffOnBreak = st.onBreak || false; }
   }
@@ -169,15 +171,15 @@ export default async function HomePage() {
           <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
         </>
       ) : (
-        <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} t={t} locale={locale} />
+        <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} shiftLeader={staffShiftLeader} t={t} locale={locale} />
       )}
     </div>
   );
 }
 
 // ─────────── STAFF DASHBOARD ───────────
-function StaffDash({ hours, clockedIn, onBreak, t, locale }: {
-  locale: string;
+function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
+  locale: string; shiftLeader: boolean;
   hours: { totalHours: number; shifts: number; targetHours: number | null } | null;
   clockedIn: boolean; onBreak: boolean; t: Tf;
 }) {
@@ -188,15 +190,6 @@ function StaffDash({ hours, clockedIn, onBreak, t, locale }: {
 
   return (
     <>
-      <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "var(--success-soft)" : "var(--dark)" }}>
-        <div className="feature-icon" style={{ background: "var(--accent-soft)" }}><Icon e="🕐" size={22} color="var(--gold-ink)" /></div>
-        <div className="u-flex1">
-          <div className="feature-title">{clockTitle}</div>
-          <div className="feature-sub">{clockSub}</div>
-        </div>
-        <span className="feature-chev">›</span>
-      </Link>
-
       <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "4px 0 14px", padding: 16 }}>
         {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
@@ -206,12 +199,28 @@ function StaffDash({ hours, clockedIn, onBreak, t, locale }: {
         </div>
       </div>
 
+      {/* One Workplace list: clock first (highlighted while working), then the daily tools. Shift leaders get
+          Inventory, which already contains waste and expiry; everyone else keeps those two tiles. */}
       <div className="section-label">{t("home.workplace")}</div>
+      <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "var(--success-soft)" : "var(--dark)" }}>
+        <div className="feature-icon" style={{ background: "var(--accent-soft)" }}><Icon e="🕐" size={22} color="var(--gold-ink)" /></div>
+        <div className="u-flex1">
+          <div className="feature-title">{clockTitle}</div>
+          <div className="feature-sub">{clockSub}</div>
+        </div>
+        <span className="feature-chev">›</span>
+      </Link>
+
       <Shortcut href="/announcements" icon="📣" title={t("home.announcements")} sub={t("home.announcementsSub")} />
       <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} sub={t("home.reportIncidentSub")} />
       <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} sub={t("home.tempLogSub")} />
-      <Shortcut href="/waste" icon="🗑️" title={t("home.wasteLog")} sub={t("home.wasteLogSub")} />
-      <Shortcut href="/expiry" icon="📅" title={t("home.expiry")} sub={t("home.expirySub")} />
+      <Shortcut href="/prep" icon="🥗" title={t("home.prepList")} sub={t("home.prepListSub")} />
+      {shiftLeader
+        ? <Shortcut href="/shift" icon="📦" title={t("home.shiftInventory")} sub={t("home.shiftInventorySub")} />
+        : <>
+          <Shortcut href="/waste" icon="🗑️" title={t("home.wasteLog")} sub={t("home.wasteLogSub")} />
+          <Shortcut href="/expiry" icon="📅" title={t("home.expiry")} sub={t("home.expirySub")} />
+        </>}
     </>
   );
 }

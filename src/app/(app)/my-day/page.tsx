@@ -96,13 +96,6 @@ export default function MyDayPage() {
       {tab === "work" && (
         <div className="hub-tab-panel active">
           <HubLink
-            href="/prep"
-            icon="🥗"
-            grad="linear-gradient(135deg,#b9770e,#d4ac0d)"
-            title={t("myday.todaysPrep")}
-            sub={t("myday.todaysPrepSub")}
-          />
-          <HubLink
             href="/checklist"
             icon="✅"
             grad="linear-gradient(135deg,#1e8449,#27ae60)"

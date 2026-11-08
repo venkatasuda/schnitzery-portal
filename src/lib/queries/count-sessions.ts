@@ -1,21 +1,15 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { activeBranchFor, MULTI_BRANCH_ROLES } from "@/lib/activeBranch";
+import { shiftScope } from "@/lib/inventory/shift-scope";
 import { readAll } from "@/lib/supabase/readAll";
 
 export type CountSession = { id: string; branch_id: string; count_date: string; status: "draft" | "completed" | "cancelled"; revision: number; created_at: string; completed_at: string | null };
 export type CountLine = { id: string; product: string; category: string; unit: string | null; target: number; quantity: number | null };
 const uuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
 
+// Managers, or active shift leaders (they may start/save/cancel; the database refuses "complete").
 async function scope() {
-  const db = await createClient();
-  const { data: { user } } = await db.auth.getUser();
-  if (!user) return null;
-  const { data: profile } = await db.from("users").select("role,branch_id,status").eq("id", user.id).single();
-  if (profile?.status !== "active" || !MULTI_BRANCH_ROLES.includes(profile?.role ?? "")) return null;
-  const branch = await activeBranchFor(db, profile);
-  return branch ? { db, branch } : null;
+  return shiftScope();
 }
 
 export async function getCountSessions(selected?: string) {
@@ -37,7 +31,7 @@ export async function getCountSessions(selected?: string) {
   }
   const lines = session ? await readAll(ctx.db.from("inventory_count_lines").select("id,product,category,unit,target,quantity").eq("session_id", session.id).order("category").order("product").order("id")) : { data: [], error: null };
   if (lines.error) return { ok: false as const, error: "load" };
-  return { ok: true as const, branch: branch.data!, sessions: recent.data as CountSession[], session, lines: lines.data as CountLine[] };
+  return { ok: true as const, canPublish: ctx.manager, branch: branch.data!, sessions: recent.data as CountSession[], session, lines: lines.data as CountLine[] };
 }
 
 export async function editCountSession(branch: string, id: string, action: "start" | "save" | "complete" | "cancel", revision: number, lines: { id: string; quantity: number | null }[] = []) {

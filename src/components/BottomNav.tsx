@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useLang } from "@/components/LanguageProvider";
 
 // Hub-based bottom navigation — mirrors the old app's clean structure.
-//  staff   → Home · My Day · Shifts · Profile
+//  staff   → Home · My Day · Shifts · Profile   (shift-leader Inventory lives in the home Workplace list)
 //  manager → Home · Schedule · Attendance · Inventory · Profile
 //  owner   → Home · Branches · Schedule · Inventory · Profile
 //
