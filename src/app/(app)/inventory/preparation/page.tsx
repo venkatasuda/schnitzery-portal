@@ -1,75 +1,31 @@
 "use client";
-import { useEffect,useRef,useState } from "react";
+// Inventory → Kitchen → Prep planning: evening leftovers → tomorrow's list → send; history; setup.
+import { useState } from "react";
 import Link from "next/link";
 import InventoryNav from "@/components/InventoryNav";
-import { Field,PageHeader,Panel } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
-import { berlinToday,fmtDay } from "@/lib/time/berlinDate";
-import { preparationNeeds,type RecipeYield,type PreparationPlan } from "@/lib/inventory/preparation";
-import { getInventoryPreparation,saveInventoryYield,saveInventoryPreparation } from "@/lib/queries/inventory-preparation";
-type Data=Extract<Awaited<ReturnType<typeof getInventoryPreparation>>,{ok:true}>;
-export default function PreparationPage(){
- const {locale}=useLang(),s=(en:string,de:string)=>locale==="de"?de:en;
- const [day,setDay]=useState(berlinToday),[data,setData]=useState<Data|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[message,setMessage]=useState("");
- const [recipeId,setRecipe]=useState(""),[output,setOutput]=useState(""),[unit,setUnit]=useState("kg"),[losses,setLosses]=useState<string[]>([]),[confirmed,setConfirmed]=useState(false),[note,setNote]=useState("");
- const [yieldId,setYield]=useState(""),[target,setTarget]=useState(""),[reserve,setReserve]=useState(""),[usable,setUsable]=useState(""),[incoming,setIncoming]=useState("");
- const seq=useRef(0),command=useRef<{body:string;id:string}|null>(null);
- const number=(n:number)=>n.toLocaleString(locale==="de"?"de-DE":"en-GB",{maximumFractionDigits:6});
- async function load(date:string){const current=++seq.current;setLoading(true);setError("");try{const r=await getInventoryPreparation(date);if(current!==seq.current)return;if(r.ok)setData(r);else{setData(null);setError(r.error);}}catch{if(current===seq.current){setData(null);setError("load");}}finally{if(current===seq.current)setLoading(false);}}
- useEffect(()=>{void load(day);return()=>{seq.current++;};},[day]);
- const recipesById=new Map(data?.recipes.map(r=>[r.id,r])),yieldsById=new Map(data?.yields.map(y=>[y.id,y]));
- const recipe=recipesById.get(recipeId),selectedYield=yieldsById.get(yieldId),planRecipe=selectedYield?recipesById.get(selectedYield.recipe_id):undefined;
- const inputs=[target,reserve,usable,incoming],validInputs=inputs.every(n=>n.trim()!==""&&Number.isFinite(Number(n))&&Number(n)>=0&&Number(n)<1e9);
- const needs=selectedYield&&planRecipe&&validInputs?preparationNeeds(selectedYield,planRecipe.ingredients,...inputs.map(Number) as [number,number,number,number]):null;
- const validYield=!!recipe&&output.trim()!==""&&Number(output)>0&&Number(output)<1e9&&losses.length===recipe.ingredients.length&&losses.every((n,i)=>n.trim()!==""&&Number.isFinite(Number(n))&&Number(n)>=0&&Number(n)<=recipe.ingredients[i].qty);
- async function save(kind:"yield"|"plan"){
-  if(!data||busy)return;setBusy(true);setError("");setMessage("");
-  const body=JSON.stringify({kind,branch:data.branch.id,day,recipeId,output,unit,losses,confirmed,note,yieldId,inputs});
-  if(command.current?.body!==body)command.current={body,id:crypto.randomUUID()};
-  try{const id=command.current.id;const r=kind==="yield"?await saveInventoryYield(data.branch.id,id,recipeId,Number(output),unit,losses.map(Number),confirmed,note):await saveInventoryPreparation(data.branch.id,id,yieldId,day,...inputs.map(Number) as [number,number,number,number]);
-   if(!r.ok){setError(r.error);return;}command.current=null;await load(day);if(kind==="yield")setYield(id);setMessage(kind==="yield"?s("Yield version saved.","Ausbeuteversion gespeichert."):s("Preparation plan saved.","Vorbereitungsplan gespeichert."));
-  }catch{setError("save");}finally{setBusy(false);}
- }
- function planView(plan:PreparationPlan){const y=yieldsById.get(plan.yield_id),r=y?recipesById.get(y.recipe_id):undefined;return y&&r?{y,r,needs:preparationNeeds(y,r.ingredients,plan.target_qty,plan.reserve_qty,plan.usable_qty,plan.incoming_qty)}:null;}
- // Saved entries are immutable revisions; newest per recipe version/date is active.
- const seenRecipes=new Set<string>();
- const latestPlans=[...(data?.plans??[])].sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.id.localeCompare(a.id)).filter(p=>{const id=yieldsById.get(p.yield_id)?.recipe_id;if(!id||seenRecipes.has(id))return false;seenRecipes.add(id);return true;});
- return <div className="inventory-page"><InventoryNav active="kitchen"/><PageHeader title={s("Kitchen preparation","Küchenvorbereitung")} subtitle={data?.branch.name} actions={<Link className="btn-secondary" href="/inventory/recipes">{s("Recipe costing","Rezeptkalkulation")}</Link>}/>
-  <details className="inventory-help"><summary>{s("How this works", "So funktioniert es")}</summary><p className="business-note">{s("Planning only. No stock deductions, waste entries or purchase orders are posted. Raw recipe quantities already include trimming: never add trimming twice. Only confirmed usable batch yields unlock ingredient planning.","Nur Planung. Keine Bestandsabzüge, Ausschussbuchungen oder Bestellungen. Rohe Rezeptmengen enthalten den Verschnitt bereits: nicht doppelt addieren. Nur bestätigte nutzbare Ansatzmengen ermöglichen die Zutatenplanung.")}</p></details>
-  <details><summary>{s("Stuttgart preparation reference · supplied document, page 7","Vorbereitungsreferenz Stuttgart · bereitgestelltes Dokument, Seite 7")}</summary><p>{s("Reference only, not a forecast or an approved target for every branch. Mon–Thu values apply each day. Pick today's service demand and verify actual stock before saving. Salad and chicken output weights still need yield review.","Nur Referenz, keine Prognose oder freigegebenen Ziele für jede Filiale. Mo–Do gilt jeweils pro Tag. Heutigen Servicebedarf festlegen und tatsächlichen Bestand vor dem Speichern prüfen. Ausgabemengen für Salat und Hähnchen benötigen noch eine Ausbeuteprüfung.")}</p><div className="table-scroll" role="region" aria-label={s("Document preparation targets","Vorbereitungsziele aus dem Dokument")} tabIndex={0}><table className="data-table"><thead><tr>{[s("Prepared item","Vorbereitete Ware"),s("Mon–Thu daily","Mo–Do täglich"),s("Friday","Freitag"),s("Saturday","Samstag"),s("Sunday","Sonntag"),s("Separate reserve","Separate Reserve")].map(h=><th scope="col" key={h}>{h}</th>)}</tr></thead><tbody>{[
-   [s("Chicken","Hähnchen"),"100–120 kg","140–160 kg","180–220 kg","140–150 kg",s("40 kg; Saturday 20–40 kg","40 kg; Samstag 20–40 kg")],
-   [s("Kraut salad","Krautsalat"),"30–40 kg","45 kg","60 kg","45 kg","15 kg"],
-   [s("Rotkohl salad","Rotkohlsalat"),"30 kg","45 kg","45 kg","30–45 kg","15 kg"],
-   [s("Cheese sauce containers","Käsesaucebehälter"),"4–5","6–7","8","6–7",s("Not specified","Nicht angegeben")],
-   [s("Parmesan, usable","Parmesan, nutzbar"),"4 kg","4 kg","4 kg","4 kg",s("Not specified","Nicht angegeben")],
-   [s("Mango curry batches","Mangocurryansätze"),"2","2","2","2",s("Not specified","Nicht angegeben")],
-  ].map(row=><tr key={row[0]}><th scope="row">{row[0]}</th>{row.slice(1).map((value,i)=><td key={i}>{value}</td>)}</tr>)}</tbody></table></div></details>
-  <Field label={s("Preparation date","Vorbereitungsdatum")}><input className="form-input" type="date" min="2000-01-01" max="2100-12-31" required value={day} disabled={busy} onChange={e=>{if(e.target.value){setDay(e.target.value);setMessage("");}}}/></Field>
-  {message&&<p role="status">{message}</p>}{error&&<p role="alert">{s("Could not load or save preparation data. Check branch access, installed schema and entered quantities. Unsaved fields are retained.","Vorbereitungsdaten konnten nicht geladen oder gespeichert werden. Filialzugriff, installiertes Schema und Mengen prüfen. Ungespeicherte Felder bleiben erhalten.")}</p>}
-  {loading?<p role="status">{s("Loading preparation…","Vorbereitung wird geladen…")}</p>:!data?<button className="btn-secondary" onClick={()=>load(day)}>{s("Retry","Erneut versuchen")}</button>:<>
-   <Panel title={s("1. Confirm recipe output and trimming","1. Rezeptausbeute und Verschnitt bestätigen")}><form onSubmit={e=>{e.preventDefault();void save("yield");}}><fieldset className="inventory-recipe-fields" disabled={busy}><legend className="sr-only">{s("Recipe yield","Rezeptausbeute")}</legend>
-    <Field label={s("Recipe version","Rezeptversion")}><select className="form-select" required value={recipeId} onChange={e=>{const r=recipesById.get(e.target.value);setRecipe(e.target.value);setLosses(r?.ingredients.map(()=>"")??[]);setOutput("");setConfirmed(false);setNote("");}}><option value="">{s("Choose saved recipe","Gespeichertes Rezept wählen")}</option>{data.recipes.map(r=><option key={r.id} value={r.id}>{r.name} · {r.id.slice(0,8)}</option>)}</select></Field>
-    {!data.recipes.length&&<p>{s("Save a recipe with raw ingredient quantities first.","Zuerst ein Rezept mit rohen Zutatenmengen speichern.")}</p>}
-    <div className="inventory-insight-coverage"><Field label={s("Usable output per batch","Nutzbare Menge pro Ansatz")}><input className="form-input" type="number" min="0.000001" max="999999999" step="any" required value={output} onChange={e=>{setOutput(e.target.value);setConfirmed(false);}}/></Field><Field label={s("Output unit","Ausgabeeinheit")}><select className="form-select" value={unit} onChange={e=>{setUnit(e.target.value);setConfirmed(false);}}>{["kg","l","pcs"].map(u=><option key={u}>{u}</option>)}</select></Field></div>
-    <p>{s("Enter expected trimming in each ingredient’s stock unit. Enter 0 explicitly when none is expected. Do not infer finished weight by adding litres and kilograms.","Erwarteten Verschnitt in der Bestandseinheit jeder Zutat eingeben. Ohne erwarteten Verschnitt ausdrücklich 0 eingeben. Fertiggewicht nicht aus Litern und Kilogramm zusammenrechnen.")}</p>
-    {recipe?.ingredients.map((i,index)=><div className="inventory-recipe-line" key={index}><span>{i.product} · {s("Raw per batch","Roh pro Ansatz")}: {number(i.qty)} {i.unit}</span><Field label={`${s("Expected trimming","Erwarteter Verschnitt")} ${index+1} (${i.unit})`}><input className="form-input" type="number" min="0" max={i.qty} step="any" required value={losses[index]??""} onChange={e=>{setLosses(prev=>prev.map((v,n)=>n===index?e.target.value:v));setConfirmed(false);}}/></Field></div>)}
-    <Field label={s("Yield evidence / notes","Ausbeutenachweis / Notizen")}><textarea className="form-input" maxLength={1000} value={note} onChange={e=>setNote(e.target.value)}/></Field>
-    <label className="inventory-prep-confirm"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{s("I verified the usable batch output and trimming quantities.","Ich habe nutzbare Ansatzmenge und Verschnitt geprüft.")}</label>
-    <button type="submit" className="btn-gold" disabled={!validYield||busy}>{s("Save yield version","Ausbeuteversion speichern")}</button>
-   </fieldset></form></Panel>
-   <details><summary>{s("Saved yield versions","Gespeicherte Ausbeuteversionen")} ({data.yields.length})</summary><ul>{[...data.yields].sort((a,b)=>b.created_at.localeCompare(a.created_at)).map(y=><li key={y.id}>{recipesById.get(y.recipe_id)?.name} · {number(y.output_qty)} {y.output_unit} · {y.confirmed?s("Confirmed","Bestätigt"):s("Unconfirmed — planning blocked","Unbestätigt — Planung gesperrt")} · {y.id.slice(0,8)}{y.note&&<p>{y.note}</p>}</li>)}</ul></details>
-   <Panel title={s("2. Plan the day","2. Tagesvorbereitung planen")}><form onSubmit={e=>{e.preventDefault();void save("plan");}}><fieldset className="inventory-recipe-fields" disabled={busy}><legend className="sr-only">{s("Daily plan","Tagesplan")}</legend>
-    <Field label={s("Confirmed yield version","Bestätigte Ausbeuteversion")}><select className="form-select" required value={yieldId} onChange={e=>setYield(e.target.value)}><option value="">{s("Choose confirmed yield","Bestätigte Ausbeute wählen")}</option>{data.yields.filter(y=>y.confirmed).sort((a,b)=>b.created_at.localeCompare(a.created_at)).map((y:RecipeYield)=><option key={y.id} value={y.id}>{recipesById.get(y.recipe_id)?.name} · {number(y.output_qty)} {y.output_unit} · {y.id.slice(0,8)}</option>)}</select></Field>
-    <p>{s("All quantities below use the selected finished-output unit. Usable stock and incoming refer to prepared food, not raw ingredients. Include incoming only if expected before service. Reserve is a stock target, not extra consumption every day.","Alle folgenden Mengen verwenden die gewählte Fertigwareneinheit. Nutzbarer Bestand und Zulauf beziehen sich auf vorbereitete Ware, nicht rohe Zutaten. Nur Zulauf vor Servicebeginn berücksichtigen. Reserve ist ein Bestandsziel, kein täglicher Zusatzverbrauch.")}</p>
-    <div className="inventory-insight-coverage">{[[s("Service demand","Servicebedarf"),target,setTarget],[s("Reserve target","Reserveziel"),reserve,setReserve],[s("Usable prepared stock","Nutzbarer vorbereiteter Bestand"),usable,setUsable],[s("Incoming prepared stock","Zulauf vorbereiteter Ware"),incoming,setIncoming]].map(([label,value,setter])=><Field key={label as string} label={`${label} (${selectedYield?.output_unit??"—"})`}><input className="form-input" type="number" required min="0" max="999999999" step="any" value={value as string} onChange={e=>(setter as (v:string)=>void)(e.target.value)}/></Field>)}</div>
-    {needs&&<><p><strong>{needs.batches} {s("whole batches","ganze Ansätze")}</strong> · {s("Required","Benötigt")}: {number(needs.required)} {selectedYield?.output_unit} · {s("Planned output","Geplante Menge")}: {number(needs.prepared)} {selectedYield?.output_unit} · {s("Batch-rounding excess","Mehrmenge durch Ansatzrundung")}: {number(needs.excess)} {selectedYield?.output_unit}</p><ul>{needs.ingredients.map((i,index)=><li key={index}>{i.product}: {number(i.raw)} {i.unit} {s("raw","roh")} · {number(i.trim)} {i.unit} {s("expected trimming included","erwarteter Verschnitt enthalten")}</li>)}</ul></>}
-    <button type="submit" className="btn-gold" disabled={!needs||busy}>{s("Save daily plan version","Tagesplanversion speichern")}</button>
-   </fieldset></form></Panel>
-   <Panel title={`${s("Saved daily plans","Gespeicherte Tagespläne")} · ${fmtDay(day,locale)}`}><p>{s("Newest plan per recipe version is active; earlier plans remain below for audit. Plans are not summed together.","Neuester Plan je Rezeptversion ist aktiv; frühere Pläne bleiben unten nachvollziehbar. Pläne werden nicht addiert.")}</p>
-    {!latestPlans.length&&<p>{s("No plans for this date.","Keine Pläne für dieses Datum.")}</p>}
-    {latestPlans.map(p=>{const v=planView(p);return <article className="inventory-prep-plan" key={p.id}><h3>{v?.r.name??s("Recipe unavailable","Rezept nicht verfügbar")}</h3><p>{v?.needs?`${v.needs.batches} ${s("whole batches","ganze Ansätze")} · ${number(v.needs.prepared)} ${v.y.output_unit}`:s("Yield unavailable; quantities withheld.","Ausbeute fehlt; Mengen ausgeblendet.")}</p><p>{s("Demand / reserve / usable / incoming","Bedarf / Reserve / Bestand / Zulauf")}: {[p.target_qty,p.reserve_qty,p.usable_qty,p.incoming_qty].map(number).join(" / ")} {v?.y.output_unit}</p><ul>{v?.needs?.ingredients.map((i,index)=><li key={index}>{i.product}: {number(i.raw)} {i.unit} · {s("Included trimming","Enthaltener Verschnitt")}: {number(i.trim)} {i.unit}</li>)}</ul><small>{new Date(p.created_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})} · {p.id.slice(0,8)}</small></article>;})}
-    <details><summary>{s("All saved revisions","Alle gespeicherten Versionen")} ({data.plans.length})</summary><ul>{[...data.plans].sort((a,b)=>b.created_at.localeCompare(a.created_at)).map(p=><li key={p.id}>{planView(p)?.r.name} · {new Date(p.created_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})} · {p.id.slice(0,8)}</li>)}</ul></details>
-   </Panel>
-  </>}
- </div>;
+import PrepDay from "@/components/prep/PrepDay";
+import PrepHistory from "@/components/prep/PrepHistory";
+import PrepSetup from "@/components/prep/PrepSetup";
+import RecipeYields from "@/components/prep/RecipeYields";
+
+const TABS = ["day", "history", "setup"] as const;
+export default function PreparationPage() {
+  const { locale } = useLang();
+  const s = (en: string, de: string) => (locale === "de" ? de : en);
+  const [tab, setTab] = useState<(typeof TABS)[number]>("day");
+  const label = { day: s("Tonight & tomorrow", "Heute Abend & morgen"), history: s("History", "Verlauf"), setup: s("Setup", "Einrichtung") };
+  return <div className="inventory-page"><InventoryNav active="kitchen" />
+    <PageHeader title={s("Prep planning", "Vorbereitungsplanung")} subtitle={s("Count tonight's leftovers, plan tomorrow, send it to the prep team.", "Heutige Reste zählen, morgen planen, ans Vorbereitungsteam senden.")}
+      actions={<Link className="btn-secondary" href="/inventory/recipes">{s("Recipes & costing", "Rezepte & Kalkulation")}</Link>} />
+    <div className="row-actions" role="tablist" aria-label={s("Prep planning", "Vorbereitungsplanung")}>
+      {TABS.map((t) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "btn-gold" : "btn-secondary"} onClick={() => setTab(t)}>{label[t]}</button>)}
+    </div>
+    <div role="tabpanel" aria-label={label[tab]}>
+      {tab === "day" && <PrepDay />}
+      {tab === "history" && <PrepHistory />}
+      {tab === "setup" && <><PrepSetup /><RecipeYields /></>}
+    </div>
+  </div>;
 }

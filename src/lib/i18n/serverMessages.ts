@@ -76,6 +76,7 @@ const DE: Record<string, string> = {
   "No branch assigned.": "Keine Filiale zugewiesen.",
   "No branch selected.": "Keine Filiale ausgewählt.",
   "No branch.": "Keine Filiale.",
+  "Enter team, task (3+ characters) and at least one weekday.": "Team, Aufgabe (mind. 3 Zeichen) und mindestens einen Wochentag angeben.",
   "No branches.": "Keine Filialen.",
   "No changes supplied.": "Keine Änderungen.",
   "Not a valid Schnitzery clock QR.": "Kein gültiger Schnitzery-Stempel-QR-Code.",
