@@ -5,6 +5,11 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import PWARegister from "@/components/PWARegister";
 import CookieNotice from "@/components/CookieNotice";
+import { Playfair_Display, DM_Sans } from "next/font/google";
+
+// Self-hosted at build time: no visitor IP goes to Google (German GDPR case law) and the CSP stays 'self'.
+const display = Playfair_Display({ subsets: ["latin"], weight: ["600", "700"], display: "swap", variable: "--font-display-src" });
+const body = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--font-body-src" });
 
 export const metadata: Metadata = {
   title: "Schnitzery Portal",
@@ -33,15 +38,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // translation treat German content as German (the locale is stored in a cookie).
   const lang = (await cookies()).get("lang")?.value === "de" ? "de" : "en";
   return (
-    <html lang={lang} translate="no" suppressHydrationWarning>
+    <html lang={lang} translate="no" suppressHydrationWarning className={`${display.variable} ${body.variable}`}>
       <head>
         <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body suppressHydrationWarning><PWARegister />{children}<CookieNotice /><Analytics /></body>
     </html>

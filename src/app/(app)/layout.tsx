@@ -54,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <LanguageProvider initialLocale={locale}>
-    <div className={isManager ? "management-shell" : "employee-shell"}>
+    <div className={isManager ? "management-shell" : "employee-shell"} data-view={activeBranch === "hq" ? "hq" : undefined}>
       <a href="#main-content" className="skip-link">{locale === "de" ? "Zum Inhalt" : "Skip to content"}</a>
       {isManager && <ManagementNav role={navRole} />}
       <header className="app-header">

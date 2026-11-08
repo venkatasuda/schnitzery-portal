@@ -19,6 +19,7 @@ export default function NativeDialog({ title, busy=false, wide=false, unsaved=fa
   },[unsaved]);
   return <dialog ref={dialog} className={`workspace-dialog${wide?" workspace-dialog-wide":""}`} aria-label={title}
     onCancel={event => { event.preventDefault(); if (!busy) onClose(); }} onClose={onClose}>
+    <h2 className="workspace-dialog-title">{title}</h2>
     {children}
   </dialog>;
 }

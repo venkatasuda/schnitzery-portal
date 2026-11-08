@@ -63,6 +63,7 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
       ? (new URL(href, "http://local").searchParams.get("tab") ?? "orders") === (purchasingTab ?? "orders")
       : pathname === href;
   return <div className="inventory-navigation">
+    {/* Shown only inside the HQ view (CSS: [data-view="hq"] .inventory-hq-note). */}<p role="note" className="business-note inventory-hq-note">{s("Inventory is kept per branch. You are in “All branches (HQ)”, so this shows your home branch — choose a branch at the top to switch.", "Inventar wird je Filiale geführt. Du bist in „Alle Filialen (HQ)“, daher siehst du deine Stammfiliale — oben eine Filiale wählen, um zu wechseln.")}</p>
     {(pathname !== "/inventory" || active !== "overview") && <Link className="inventory-back" href={back.href} onClick={event => navigate(event, back.href)}><span aria-hidden="true">←</span> {s("Back to", "Zurück zu")} {back.label}</Link>}
     <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>
       {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? (isCurrent(area.href) ? "page" : "location") : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}

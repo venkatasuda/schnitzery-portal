@@ -39,10 +39,11 @@ export async function activeBranchFor(db: Db, profile: { role?: string | null; b
   return (await accessibleBranchIds(db)).includes(wanted) ? wanted : home;
 }
 
-// Picker data for the header: every branch the user may work in, by name.
+// Picker data for the header: every open branch the user may work in, by name.
+// Closed (deactivated) branches stay reachable by their own home staff, not via the picker.
 export async function branchChoices(db: Db): Promise<{ id: string; name: string }[]> {
   const ids = await accessibleBranchIds(db);
   if (ids.length === 0) return [];
-  const { data } = await db.from("branches").select("id, name").in("id", ids).order("name");
+  const { data } = await db.from("branches").select("id, name").in("id", ids).eq("is_active", true).order("name");
   return (data as { id: string; name: string }[] | null) || [];
 }
