@@ -30,6 +30,7 @@ const NOTIF: Record<string, { key: string; icon: string; href: string }> = {
   forgot_checkout:     { key: "notif.forgotCheckout",    icon: "🚪", href: "/attendance" },
   missing_attendance:  { key: "notif.missingAttendance", icon: "❓", href: "/attendance/corrections" },
   upcoming_shift:      { key: "notif.upcomingShift",     icon: "📅", href: "/schedule" },
+  prep_list:           { key: "notif.prepList",          icon: "🥗", href: "/prep" },
   // manager
   employee_late:       { key: "notif.employeeLate",      icon: "⏰", href: "/ops" },
   mgr_missing:         { key: "notif.mgrMissing",        icon: "🚫", href: "/ops" },

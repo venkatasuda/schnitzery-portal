@@ -1,103 +1,82 @@
 "use client";
 
-import { appLocale } from "@/lib/format";
-import { toast } from "@/components/Toast";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CardSkeleton } from "@/components/Skeleton";
-import { getChecklistOversight } from "@/lib/queries/operations";
+import { getTodayChecklist, toggleTask, saveTaskValue } from "@/lib/queries/operations";
 import { useLang } from "@/components/LanguageProvider";
-import Icon from "@/components/Icon";
+import { PageHeader, Panel, ErrorState, EmptyState } from "@/components/ui";
+import { CardSkeleton } from "@/components/Skeleton";
 
-// YYYY-MM-DD in Europe/Berlin (business day)
-function berlinTodayStr() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-}
+// Today's checklist for everyone on shift: tick tasks, enter readings. Tasks come from the
+// branch's weekday templates (managed under /checklist/templates) plus any added by hand.
+// Team / section names are stored in English; show them in German when the user reads German.
+const TEAM_DE: Record<string, string> = { Manager: "Leitung", Preparation: "Vorbereitung", Kitchen: "Küche", Cashier: "Kasse", Dishwashing: "Spüler", Morning: "Früh", Evening: "Spät", Lager: "Lager" };
+const teamLabel = (group: string, locale: string) => locale === "de" ? group.split(" · ").map((p) => TEAM_DE[p] ?? p).join(" · ") : group;
+type Task = { id: string; type: string | null; task: string | null; task_de: string | null; done: boolean; input_kind: string; value: string | null; completed_at: string | null };
 
-export default function ChecklistStatusPage() {
-  const { t } = useLang();
-  const [date, setDate] = useState(berlinTodayStr());
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [summary, setSummary] = useState({ done: 0, total: 0 });
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+export default function ChecklistPage() {
+  const { locale } = useLang();
+  const s = (en: string, de: string) => (locale === "de" ? de : en);
+  const [tasks, setTasks] = useState<Task[] | null>(null);
+  const [team, setTeam] = useState<string | null>(null);
+  const [canManage, setCanManage] = useState(false);
+  const [mine, setMine] = useState(true);
+  const [error, setError] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [values, setValues] = useState<Record<string, string>>({});
 
-  async function load(d: string) {
-    // A failed request must end the skeleton and say so, not spin forever.
+  async function load() {
     try {
-    setLoading(true); setErr(null);
-    const res = await getChecklistOversight(d);
-    if (res.ok) { setTasks(res.tasks); setSummary({ done: res.done, total: res.total }); }
-    else { setTasks([]); setSummary({ done: 0, total: 0 }); setErr(res.error || ""); }
-    setLoading(false);
-    } catch { toast(t("common.loadFailed"), "error"); }
-    finally { setLoading(false); }
+      const r = await getTodayChecklist();
+      if (!r.ok) { setError(true); return; }
+      setTasks(r.tasks as Task[]); setTeam(r.team); setCanManage(r.canManage); setError(false);
+    } catch { setError(true); }
   }
-  useEffect(() => { load(date); }, [date]);
+  useEffect(() => { void load(); }, []);
 
-  const opening = tasks.filter((it) => it.type === "opening");
-  const closing = tasks.filter((it) => it.type === "closing");
+  async function act(id: string, fn: () => Promise<{ ok: boolean }>) {
+    if (busy) return;
+    setBusy(id);
+    try { if (!(await fn()).ok) setError(true); await load(); } catch { setError(true); } finally { setBusy(null); }
+  }
 
-  const fmtTime = (ts: string | null) => {
-    if (!ts) return "";
-    try { return new Date(ts).toLocaleTimeString(appLocale(), { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); } catch { return ""; }
-  };
+  if (error && !tasks) return <ErrorState message={s("Checklist could not be loaded.", "Checkliste konnte nicht geladen werden.")} onRetry={load} retryLabel={s("Retry", "Erneut versuchen")} />;
+  if (!tasks) return <CardSkeleton rows={5} />;
 
-  const Section = ({ title, items }: { title: string; items: any[] }) => (
-    <div style={{ ...card, marginBottom: 12 }}>
-      <div className="ui-title spaced">{title}</div>
-      {items.length === 0 ? (
-        <div className="ui-muted-md">{t("checklist.noTasks")}</div>
-      ) : items.map((it) => (
-        <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
-          <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-            background: it.done ? "#27ae60" : "transparent", border: it.done ? "none" : "2px solid rgba(236,112,99,0.55)" }}>
-            {it.done && <Icon e="✓" size={13} color="#fff" />}
-          </div>
-          <div className="u-grow">
-            <div style={{ fontSize: 14, color: "var(--text)" }}>{it.task}</div>
-            <div className={`t-xs mt-h ${it.done ? "u-muted" : "tone-danger"}`.trim()}>
-              {it.done
-                ? `${it.completed_by_name ? `${t("checklist.by")} ${it.completed_by_name}` : ""}${it.completed_at ? ` · ${fmtTime(it.completed_at)}` : ""}`.trim()
-                : t("checklist.notDone")}
-            </div>
-          </div>
-          {it.input_kind === "number" && (
-            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "var(--font-body)", color: it.value ? "#d4a847" : "var(--gray)", flexShrink: 0 }}>
-              {it.value || "—"}
-            </div>
-          )}
-        </div>
+  const myGroup = (type: string | null) => !!team && (type ?? "").toLowerCase().startsWith(team.toLowerCase());
+  const hasMine = tasks.some((t) => myGroup(t.type));
+  const shown = mine && hasMine ? tasks.filter((t) => myGroup(t.type)) : tasks;
+  const groups = [...new Map(shown.map((t) => [t.type ?? "—", [] as Task[]])).entries()];
+  for (const t of shown) groups.find(([g]) => g === (t.type ?? "—"))![1].push(t);
+  const done = shown.filter((t) => t.done).length;
+
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto" }}>
+      <PageHeader title={s("Today's checklist", "Heutige Checkliste")} subtitle={`${done} / ${shown.length} ${s("done", "erledigt")}`}
+        actions={canManage ? <div className="row-actions"><Link className="btn-secondary" href="/checklist/templates">{s("Manage templates", "Vorlagen verwalten")}</Link><Link className="btn-secondary" href="/checklist-status">{s("Status & history", "Status & Verlauf")}</Link></div> : undefined} />
+      {error && <ErrorState message={s("Last change not confirmed. Check the list and retry.", "Letzte Änderung nicht bestätigt. Liste prüfen und erneut versuchen.")} onRetry={load} retryLabel={s("Refresh", "Aktualisieren")} />}
+      {hasMine && <div className="row-actions" role="group" aria-label={s("Show tasks", "Aufgaben anzeigen")}>
+        <button className={mine ? "btn-gold" : "btn-secondary"} aria-pressed={mine} onClick={() => setMine(true)}>{s("My team", "Mein Team")} · {teamLabel(team ?? "", locale)}</button>
+        <button className={!mine ? "btn-gold" : "btn-secondary"} aria-pressed={!mine} onClick={() => setMine(false)}>{s("All teams", "Alle Teams")}</button>
+      </div>}
+      {shown.length === 0 && <EmptyState title={s("No tasks for today", "Keine Aufgaben für heute")}>{canManage ? s("Add standing tasks per team and weekday under Manage templates.", "Feste Aufgaben je Team und Wochentag unter Vorlagen verwalten anlegen.") : s("Ask your manager to set up the checklist.", "Bitte die Leitung, die Checkliste einzurichten.")}</EmptyState>}
+      {groups.map(([group, items]) => (
+        <Panel key={group} title={`${teamLabel(group, locale)} ·${items.filter((t) => t.done).length}/${items.length}`}>
+          <ul className="checklist-list">
+            {items.map((t) => {
+              const label = (locale === "de" && t.task_de) || t.task || "—";
+              return <li key={t.id} className="checklist-item">
+                {t.input_kind === "number"
+                  ? <form className="row-actions" onSubmit={(e) => { e.preventDefault(); void act(t.id, () => saveTaskValue(t.id, values[t.id] ?? t.value ?? "")); }}>
+                      <label className="u-grow">{label}<input className="form-input" inputMode="decimal" aria-label={label} value={values[t.id] ?? t.value ?? ""} onChange={(e) => setValues({ ...values, [t.id]: e.target.value })} disabled={busy === t.id} /></label>
+                      <button className="btn-secondary" disabled={busy === t.id}>{s("Save", "Speichern")}</button>
+                    </form>
+                  : <label className="checklist-check"><input type="checkbox" checked={t.done} disabled={busy === t.id} onChange={(e) => void act(t.id, () => toggleTask(t.id, e.target.checked))} /><span className={t.done ? "u-muted" : undefined}>{label}</span></label>}
+              </li>;
+            })}
+          </ul>
+        </Panel>
       ))}
     </div>
   );
-
-  return (
-    <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
-      <p className="u-muted t-sm mb-4">{t("checklist.statusSub")}</p>
-
-      <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <label className="t-sm u-muted fs-0">{t("checklist.pickDate")}</label>
-        <input aria-label={t("checklist.pickDate")} type="date" value={date} max={berlinTodayStr()} onChange={(e) => setDate(e.target.value || berlinTodayStr())} style={{ ...input, flex: 1 }} />
-        {!loading && summary.total > 0 && (
-          <span style={{ fontSize: 14, fontWeight: 700, flexShrink: 0, color: summary.done === summary.total ? "var(--success)" : "#d4a847" }}>
-            {summary.done}/{summary.total}
-          </span>
-        )}
-      </div>
-
-      {loading && <CardSkeleton rows={4} />}
-      {!loading && err && <div style={{ ...card, color: "var(--danger)", fontSize: 13 }}>{err}</div>}
-      {!loading && !err && tasks.length === 0 && <div style={{ ...card, color: "var(--gray)", fontSize: 13 }}>{t("checklist.noTasksDate")}</div>}
-      {!loading && !err && tasks.length > 0 && (
-        <>
-          <Section title={t("checklist.openingTasks")} items={opening} />
-          <Section title={t("checklist.closingTasks")} items={closing} />
-        </>
-      )}
-    </div>
-  );
 }
-
-const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
-const input: React.CSSProperties = { padding: "10px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };

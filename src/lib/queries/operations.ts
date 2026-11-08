@@ -31,20 +31,79 @@ function todayStr() { return berlinToday(); }
 
 // ─────────────── CHECKLISTS ───────────────
 
-// Get today's checklist (auto-seeds from the template if none exists yet).
+// ISO weekday (1 = Monday … 7 = Sunday) of a Berlin calendar date.
+const isoWeekday = (day: string) => new Date(`${day}T12:00:00Z`).getUTCDay() || 7;
+const groupOf = (t: { team: string; section: string | null }) => t.section ? `${t.team} · ${t.section}` : t.team;
+
+// Today's checklist. The first visit of the day copies the branch's active templates for this
+// weekday into today's rows; the (branch, day, template) unique index ignores repeats/races.
 export async function getTodayChecklist() {
   const { supabase, user, branchId, profile } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in.", tasks: [], canManage: false };
+  if (!user) return { ok: false, error: "Not logged in.", tasks: [], canManage: false, team: null as string | null };
+  if (!branchId) return { ok: false, error: "No branch.", tasks: [], canManage: false, team: null as string | null };
   const today = todayStr();
 
-  const { data: tasks } = await supabase
+  const { data: templates } = await supabase.from("checklist_templates")
+    .select("id, team, section, task, task_de, input_kind, sort")
+    .eq("branch_id", branchId).eq("is_active", true).contains("weekdays", [isoWeekday(today)]).order("sort").order("id");
+  if (templates?.length) {
+    // Missing table (migration not applied) or a race: ignore — the read below still works.
+    await supabase.from("checklists").upsert(templates.map((t) => ({
+      branch_id: branchId, work_date: today, template_id: t.id, type: groupOf(t), task: t.task, task_de: t.task_de,
+      input_kind: t.input_kind, done: false,
+    })), { onConflict: "branch_id,work_date,template_id", ignoreDuplicates: true });
+  }
+
+  const { data: tasks, error } = await supabase
     .from("checklists")
     .select("*")
     .eq("branch_id", branchId)
     .eq("work_date", today)
     .order("type").order("id");
+  if (error) return { ok: false, error: error.message, tasks: [], canManage: false, team: null as string | null };
+  const { data: me } = await supabase.from("users").select("team").eq("id", user.id).maybeSingle();
+  // Keep the template order within each team (hand-added tasks last).
+  const order = new Map((templates ?? []).map((t) => [t.id, t.sort as number]));
+  const sorted = [...(tasks || [])].sort((a, b) => String(a.type ?? "").localeCompare(String(b.type ?? ""))
+    || (order.get(a.template_id) ?? 1e9) - (order.get(b.template_id) ?? 1e9) || String(a.id).localeCompare(String(b.id)));
+  return { ok: true, tasks: sorted, canManage: isManager(profile?.role), today, team: (me?.team as string | null) ?? null };
+}
 
-  return { ok: true, tasks: tasks || [], canManage: isManager(profile?.role), today };
+// ── Checklist templates (manager): standing tasks per team and weekday ──
+export type ChecklistTemplateInput = { team: string; section: string; task: string; task_de: string; weekdays: number[]; input_kind: string };
+export async function getChecklistTemplates() {
+  const { supabase, user, branchId, profile } = await getMe();
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (!isManager(profile?.role)) return { ok: false as const, error: "Managers only." };
+  const { data, error } = await supabase.from("checklist_templates")
+    .select("id, team, section, task, task_de, weekdays, input_kind, sort, is_active")
+    .eq("branch_id", branchId).order("team").order("section").order("sort").order("created_at");
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const, templates: data || [] };
+}
+export async function saveChecklistTemplate(id: string | null, input: ChecklistTemplateInput) {
+  const { supabase, user, branchId, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  if (!branchId) return { ok: false, error: "No branch." };
+  const clean = (s: unknown, max: number) => (typeof s === "string" ? s.trim().slice(0, max) : "");
+  const team = clean(input?.team, 60), section = clean(input?.section, 60), task = clean(input?.task, 300), taskDe = clean(input?.task_de, 300);
+  const weekdays = [...new Set((Array.isArray(input?.weekdays) ? input.weekdays : []).map(Number))].filter((d) => Number.isInteger(d) && d >= 1 && d <= 7).sort();
+  if (!team || task.length < 3 || (taskDe && taskDe.length < 3) || weekdays.length === 0) return { ok: false, error: "Enter team, task (3+ characters) and at least one weekday." };
+  const row = { team, section: section || null, task, task_de: taskDe || null, weekdays, input_kind: input?.input_kind === "number" ? "number" : "check" };
+  const { error } = id
+    ? await supabase.from("checklist_templates").update(row).eq("id", id).eq("branch_id", branchId)
+    : await supabase.from("checklist_templates").insert({ ...row, branch_id: branchId, created_by: user.id });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+export async function setChecklistTemplateActive(id: string, active: boolean) {
+  const { supabase, user, branchId, profile } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  const { error } = await supabase.from("checklist_templates").update({ is_active: !!active }).eq("id", id).eq("branch_id", branchId);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 // Read-only checklist oversight for owners/managers: every task for a given
