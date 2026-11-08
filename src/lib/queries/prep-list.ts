@@ -2,6 +2,8 @@
 // Daily prep list: evening leftover count → tomorrow's list → send (notifies that day's Preparation roster).
 // Any active user may read their branch's sent lists; planning is checked in the database (private.can_plan_prep).
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { sendPushToUser } from "@/lib/push/delivery";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { readAll } from "@/lib/supabase/readAll";
 import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
@@ -73,7 +75,23 @@ export async function savePrepList(branch: string, day: string, lines: PrepLine[
   const c = await scope(); if (!c || c.branch !== branch) return { ok: false as const, error: "access" };
   const { data, error } = await c.db.rpc("save_prep_list", { p_branch: branch, p_date: day, p_lines: lines, p_note: note, p_send: send, p_version: version });
   if (error) return { ok: false as const, error: error.code === "40001" ? "conflict" : error.code === "42501" ? "access" : "save" };
-  return { ok: true as const, notified: Number((data as { notified?: number })?.notified ?? 0) };
+  const r = data as { id?: string; version?: number; notified?: number };
+  if (send && r?.notified && r.id) await pushPrepList(r.id, Number(r.version), day).catch(() => { /* best effort: the bell notification exists */ });
+  return { ok: true as const, notified: Number(r?.notified ?? 0) };
+}
+
+// Phone push for the people the database just notified (same recipients, found by the notification title).
+// Without VAPID keys or push subscriptions sendPushToUser sends nothing.
+async function pushPrepList(listId: string, version: number, day: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return;
+  const admin = createAdminClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  const { data } = await admin.from("notifications").select("user_id, message").eq("type", "prep_list").eq("title", `prep:${listId}:v${version}`);
+  const date = (de: boolean) => new Date(`${day}T12:00:00Z`).toLocaleDateString(de ? "de-DE" : "en-GB", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "UTC" });
+  await Promise.all((data ?? []).map((n) => sendPushToUser(n.user_id as string, {
+    title: `Prep list · ${date(false)}`, body: String(n.message ?? ""), url: "/prep",
+    de: { title: `Vorbereitungsliste · ${date(true)}`, body: String(n.message ?? "") },
+  })));
 }
 
 // Week/month analysis: per item, prepared (sent lists) vs. leftover counted the evening after.

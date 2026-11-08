@@ -184,7 +184,6 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
   clockedIn: boolean; onBreak: boolean; t: Tf;
 }) {
   const clockTitle = onBreak ? t("home.clockOnBreak") : clockedIn ? t("home.clockWorking") : t("home.clockInOut");
-  const clockSub = onBreak ? t("home.clockSubBreak") : clockedIn ? t("home.clockSubWorking") : t("home.clockSubIdle");
   const target = hours?.targetHours ?? null;
   const pct = target && target > 0 ? Math.min(100, Math.round(((hours?.totalHours || 0) / target) * 100)) : 0;
 
@@ -206,20 +205,19 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
         <div className="feature-icon" style={{ background: "var(--accent-soft)" }}><Icon e="🕐" size={22} color="var(--gold-ink)" /></div>
         <div className="u-flex1">
           <div className="feature-title">{clockTitle}</div>
-          <div className="feature-sub">{clockSub}</div>
         </div>
         <span className="feature-chev">›</span>
       </Link>
 
-      <Shortcut href="/announcements" icon="📣" title={t("home.announcements")} sub={t("home.announcementsSub")} />
-      <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} sub={t("home.reportIncidentSub")} />
-      <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} sub={t("home.tempLogSub")} />
-      <Shortcut href="/prep" icon="🥗" title={t("home.prepList")} sub={t("home.prepListSub")} />
+      <Shortcut href="/announcements" icon="📣" title={t("home.announcements")} />
+      <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
+      <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} />
+      <Shortcut href="/prep" icon="🥗" title={t("home.prepList")} />
       {shiftLeader
-        ? <Shortcut href="/shift" icon="📦" title={t("home.shiftInventory")} sub={t("home.shiftInventorySub")} />
+        ? <Shortcut href="/shift" icon="📦" title={t("home.shiftInventory")} />
         : <>
-          <Shortcut href="/waste" icon="🗑️" title={t("home.wasteLog")} sub={t("home.wasteLogSub")} />
-          <Shortcut href="/expiry" icon="📅" title={t("home.expiry")} sub={t("home.expirySub")} />
+          <Shortcut href="/waste" icon="🗑️" title={t("home.wasteLog")} />
+          <Shortcut href="/expiry" icon="📅" title={t("home.expiry")} />
         </>}
     </>
   );
@@ -295,10 +293,10 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     <section className="dashboard-workflows">
       <h2>{t("homeDashboard.workflows")}</h2>
       <div className="dashboard-tools">
-        <Shortcut href="/summary" icon="📄" title={t("home.monthlySummary")} sub={t("home.monthlySummarySub")} />
-        <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} sub={t("home.tempLogSubMgr")} />
-        <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} sub={t("home.reportIncidentSubMgr")} />
-        <Shortcut href="/announcements" icon="📣" title={t("home.postAnnouncement")} sub={t("home.postAnnouncementSub")} />
+        <Shortcut href="/summary" icon="📄" title={t("home.monthlySummary")} />
+        <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} />
+        <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
+        <Shortcut href="/announcements" icon="📣" title={t("home.postAnnouncement")} />
       </div>
     </section>
   </div>;
@@ -341,13 +339,13 @@ function OwnerDash({ t, data, waste }: { t: Tf; data: OrgOverview | null; waste?
 }
 
 // ─────────── SHARED ───────────
-function Shortcut({ href, icon, title, sub }: { href: string; icon: string; title: string; sub: string }) {
+function Shortcut({ href, icon, title, sub }: { href: string; icon: string; title: string; sub?: string }) {
   return (
     <Link href={href} className="feature-card">
       <div className="feature-icon" style={{ background: "var(--accent-soft)" }}><Icon e={icon} size={20} color="var(--gold-ink)" /></div>
       <div className="u-flex1">
         <div className="feature-title">{title}</div>
-        <div className="feature-sub">{sub}</div>
+        {sub && <div className="feature-sub">{sub}</div>}
       </div>
       <span className="feature-chev">›</span>
     </Link>
