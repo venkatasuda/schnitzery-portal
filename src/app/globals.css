@@ -1065,3 +1065,9 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .prep-week label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
 .prep-table input.form-input { min-width: 80px; }
 @media (max-width: 640px) { .prep-week { grid-template-columns: repeat(4, 1fr); } }
+/* Shift-leader Inventory tab */
+.shift-tiles { display: grid; gap: 12px; }
+.shift-tile { display: flex; align-items: center; gap: 14px; padding: 16px; min-height: 64px; border: 1px solid var(--border); border-radius: 14px; background: var(--dark); color: var(--white); text-decoration: none; }
+.shift-tile:hover { background: var(--surface-2); }
+.shift-tile > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.shift-tile-icon { font-size: 26px; }

@@ -68,8 +68,8 @@ export default function CountSessionsPage() {
   }
 
   return <div className="inventory-page">
-    <InventoryNav active="stock" canLeave={canLeave} />
-    <PageHeader title={t("countSession.title")} subtitle={data?.branch.name ?? t("common.loading")} actions={<Link className="btn-secondary" href="/inventory?view=count" aria-disabled={busy} onClick={event=>{if(busy||!canLeave())event.preventDefault();}}>{locale==="de"?"Einzelnen Artikel zählen":"Count one item"}</Link>} />
+    {data?.canPublish !== false ? <InventoryNav active="stock" canLeave={canLeave} /> : <Link className="inventory-back" href="/shift">← {locale==="de"?"Zurück zu Inventar":"Back to Inventory"}</Link>}
+    <PageHeader title={t("countSession.title")} subtitle={data?.branch.name ?? t("common.loading")} actions={data?.canPublish === false ? undefined : <Link className="btn-secondary" href="/inventory?view=count" aria-disabled={busy} onClick={event=>{if(busy||!canLeave())event.preventDefault();}}>{locale==="de"?"Einzelnen Artikel zählen":"Count one item"}</Link>} />
     <p className="page-sub">{t("countSession.help")}</p>
     {error && <ErrorState message={error} onRetry={() => { if (canLeave()) load(data?.session?.id); }} retryLabel={t("countSession.reload")} />}
     {loading ? <p role="status">{t("common.loading")}</p> : data && <>
@@ -93,11 +93,11 @@ export default function CountSessionsPage() {
           </tr>)}{visibleLines.length === 0 && <tr><td colSpan={3}>{t("inventoryWorkflow.noMatches")} <button className="btn-secondary" onClick={() => setSearch("")}>{t("inventoryWorkflow.reset")}</button></td></tr>}</tbody></table>
         </div>
         {draft && <>
-          <p className="muted">{t("countSession.publishHelp")}</p>
-          <label><input type="checkbox" checked={reviewed} disabled={dirty || busy} onChange={event => setReviewed(event.target.checked)} /> {t("countSession.review")}</label>
+          <p className="muted">{data.canPublish !== false ? t("countSession.publishHelp") : (locale==="de"?"Speichere deinen Stand. Eine Führungskraft prüft und veröffentlicht die Zählung.":"Save your progress. A manager reviews and publishes the count.")}</p>
+          {data.canPublish !== false && <label><input type="checkbox" checked={reviewed} disabled={dirty || busy} onChange={event => setReviewed(event.target.checked)} /> {t("countSession.review")}</label>}
           <div className="row-actions">
             <button className="btn-gold" disabled={busy || !dirty || invalid} onClick={() => mutate("save")}>{t("countSession.save")}</button>
-            <button className="btn-secondary" disabled={busy || dirty || !reviewed || counted !== data.lines.length || !counted} onClick={() => mutate("complete")}>{t("countSession.complete")}</button>
+            {data.canPublish !== false && <button className="btn-secondary" disabled={busy || dirty || !reviewed || counted !== data.lines.length || !counted} onClick={() => mutate("complete")}>{t("countSession.complete")}</button>}
             <button className="btn-secondary" disabled={busy} onClick={() => mutate("cancel")}>{t("countSession.cancel")}</button>
           </div>
         </>}

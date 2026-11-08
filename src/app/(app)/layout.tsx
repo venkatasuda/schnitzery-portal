@@ -50,6 +50,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // Branch picker: brand owners always (HQ + branches); managers/owners with 2+ branches.
   const branches = isManager ? await branchChoices(supabase) : [];
   const showPicker = isHQ || branches.length > 1;
+  // Shift leaders are staff with extra inventory tasks (public.shift_leaders): badge in the header.
+  const shiftLeader = !isManager && !!profile?.branch_id && (await supabase.rpc("can_plan_prep", { p_branch: profile.branch_id })).data === true;
   const activeBranch = showPicker ? (isHQ && viewMode === "hq" ? "hq" : await activeBranchFor(supabase, { role, branch_id: profile?.branch_id })) : null;
 
   return (
@@ -62,7 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {isManager && <ManagementNav role={navRole} mobile />}
           <div className="header-context">
           {isManager ? <ManagementLocation role={navRole} /> : <div className="brand">Schnitzery Portal</div>}
-          <div className="sub">{t(`roles.${role}`)}</div>
+          <div className="sub">{t(`roles.${role}`)}{shiftLeader ? ` · ${locale === "de" ? "Schichtleitung" : "Shift leader"}` : ""}</div>
           </div>
         </div>
         {/* key: remount when the active branch changes elsewhere (e.g. "Open" on All my branches) */}

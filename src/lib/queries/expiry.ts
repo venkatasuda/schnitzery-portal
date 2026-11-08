@@ -63,7 +63,10 @@ export async function getBatches(includeClosed=false) {
   const batches = (data || []).map(b => {
     return { ...b,qty:Number(b.qty),remaining_qty:Number(b.remaining_qty),...batchFlag(b.expiry_date,today) } as StockBatch;
   });
-  return { ok: true, batches,canReceive:MULTI_BRANCH_ROLES.includes(profile.role),branchName:branch.data!.name as string };
+  const manager=MULTI_BRANCH_ROLES.includes(profile.role);
+  // Shift leaders may fill a missing label date (database: resolve_stock_batch_expiry); returns stay manager-only.
+  const canResolve=manager||(await supabase.rpc("can_plan_prep",{p_branch:branchId})).data===true;
+  return { ok: true, batches,canReceive:manager,canResolve,branchName:branch.data!.name as string };
 }
 
 export async function getExpirySummary() {
@@ -97,7 +100,8 @@ export async function getBatchHistory(id:string){
 }
 export async function resolveBatchExpiry(id:string,command:string,expiry:string,note:string){
  if(!uuid(id)||!uuid(command)||!isCalendarDate(expiry)||typeof note!=="string"||note.trim().length<3||note.length>1000)return{ok:false,error:"Enter the label date and evidence."};
- const {supabase,user,branchId,profile}=await getMe();if(!user||!branchId||profile?.status!=="active"||!MULTI_BRANCH_ROLES.includes(profile.role))return{ok:false,error:"Manager access required."};
+ const {supabase,user,branchId,profile}=await getMe();if(!user||!branchId||profile?.status!=="active")return{ok:false,error:"Manager access required."};
+ if(!MULTI_BRANCH_ROLES.includes(profile.role)&&(await supabase.rpc("can_plan_prep",{p_branch:branchId})).data!==true)return{ok:false,error:"Manager access required."};
  const {error}=await supabase.rpc("resolve_stock_batch_expiry",{p_branch:branchId,p_id:id,p_command:command,p_expiry:expiry,p_note:note});
  return error?{ok:false,error:error.code==="23505"?"Expiry already recorded or batch changed. Reload.":"Could not confirm expiry evidence. Reload before retrying."}:{ok:true};
 }

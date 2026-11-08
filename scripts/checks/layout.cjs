@@ -63,6 +63,7 @@ console.log("Navigation exports and role renders, theme initialization pass.");
       if (name === "@/lib/supabase/server") return { createClient: async () => ({
         auth: { getUser: async () => ({ data: { user: { id: "user" } } }) },
         from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: profile() }) }) }) }),
+        rpc: async () => ({ data: false }), // can_plan_prep: not a shift leader
       }) };
       if (name === "@/lib/activeBranch") return { branchChoices: async () => [], activeBranchFor: async () => branch };
       if (name === "@/lib/viewMode") return { getViewMode: async () => mode };
