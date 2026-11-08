@@ -28,7 +28,8 @@ export async function getCountSessions(selected?: string) {
     ctx.db.from("inventory_count_sessions").select("*").eq("branch_id", ctx.branch).eq("status", "draft").maybeSingle(),
   ]);
   if (branch.error || recent.error || open.error) return { ok: false as const, error: "load" };
-  let session = (open.data ?? recent.data?.[0] ?? null) as CountSession | null;
+  // Only an open draft opens by itself; finished or cancelled counts open from the Recent list.
+  let session = (open.data ?? null) as CountSession | null;
   if (selected) {
     const result = await ctx.db.from("inventory_count_sessions").select("*").eq("id", selected).eq("branch_id", ctx.branch).single();
     if (result.error) return { ok: false as const, error: "load" };

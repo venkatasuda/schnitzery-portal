@@ -13,8 +13,8 @@
   --radius:12px; --radius-sm:8px;
   --shadow:0 2px 8px rgba(0,0,0,0.12);
   --shadow-red:var(--shadow);
-  --font-display:"Playfair Display", Georgia, serif;
-  --font-body:"DM Sans", system-ui, -apple-system, sans-serif;
+  --font-display:var(--font-display-src, "Playfair Display"), Georgia, serif;
+  --font-body:var(--font-body-src, "DM Sans"), system-ui, -apple-system, sans-serif;
 }
 
 /* ── LIGHT MODE (toggled via .light on <html>) ── */
@@ -1049,3 +1049,7 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .inventory-recipe-line > * { min-width: 0; max-width: 100%; }
 .inventory-prep-confirm { display: flex; align-items: start; gap: .75rem; margin-block: 1rem; }
 .inventory-prep-plan { border-block-start: 1px solid var(--border); padding-block: 1rem; overflow-wrap: anywhere; }
+
+/* Inventory is per branch: explain the home-branch fallback only in "All branches (HQ)" view. */
+.inventory-hq-note { display: none; }
+[data-view="hq"] .inventory-hq-note { display: block; }
