@@ -34,7 +34,6 @@ export default function OverviewPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🏢" size={22} /> {t("org.title")}</h1>
-      <div className="page-sub">{t("org.subtitle")}</div>
 
       {loading || !data ? (
         <><div className="mb-4"><StatsSkeleton count={3} /></div><Skeleton height={220} radius={14} /></>

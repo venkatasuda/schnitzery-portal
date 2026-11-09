@@ -25,7 +25,7 @@ export default function MovementDetails({kind,id,onClose,onSaved}:{kind:"waste"|
    </dl>
    <p>{String(row.note??"")}</p>{kind==="transfer"&&data?.lotTracked&&<p className="business-note">{locale==="de"?"Dieser Transfer ist chargengebunden. Mengen und Ablaufdaten unter Transferchargen / Empfang prüfen.":"This transfer tracks individual batches. Review quantities and expiry under Transfer batches / receipt."}</p>}<details><summary>{t("inventoryOps.evidence")}</summary><p>{id}</p>{["created_at","sent_at","received_at","sent_by","received_by","logged_by_name"].map(k=>row[k]?<p key={k}>{t(`inventoryOps.${k}`)}: {String(row[k])}</p>:null)}</details>
    {(kind==="waste"&&!row.voided||receive)&&<form onSubmit={e=>{e.preventDefault();save();}}><fieldset disabled={busy} className="inventory-fieldset">
-    <p className="page-sub">{t(kind==="waste"?"inventoryOps.correctionHelp":"inventoryOps.transferHelp")}</p>
+    
     <Field label={t(kind==="waste"?"inventoryOps.correctQty":"inventoryOps.actualReceived")}><input required className="form-input" type="number" min="0" max={receive?Number(row.qty):undefined} step="any" value={qty} onChange={e=>setQty(e.target.value)}/></Field>
     <Field label={t("inventoryOps.reason")}><textarea required={kind==="waste"||Number(qty)!==Number(row.qty)} minLength={3} maxLength={1000} className="form-input" value={reason} onChange={e=>setReason(e.target.value)}/></Field>
     <button className="btn-gold">{t(kind==="waste"?"inventoryOps.saveCorrection":"inventoryOps.confirmReceiptButton")}</button>

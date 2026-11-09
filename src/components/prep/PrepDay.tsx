@@ -15,7 +15,8 @@ type Data = Extract<Awaited<ReturnType<typeof getPrepDay>>, { ok: true }>;
 type Edit = { target: string; reserve: string; override: string; reason: string };
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
-export default function PrepDay({ initialDay, allowPicker = true }: { initialDay?: string; allowPicker?: boolean }) {
+// readOnly: the team's view (Workplace → Prep list) — only the sent list, even for planners.
+export default function PrepDay({ initialDay, allowPicker = true, readOnly = false }: { initialDay?: string; allowPicker?: boolean; readOnly?: boolean }) {
   const { locale } = useLang();
   const de = locale === "de", s = (en: string, d: string) => (de ? d : en);
   const fmt = (n: number) => n.toLocaleString(de ? "de-DE" : "en-GB", { maximumFractionDigits: 2 });
@@ -38,7 +39,7 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
       if (n !== seq.current) return;
       if (!r.ok) { setData(null); setError(r.error); return; }
       // Employee page: planners work in the evening, so they land on tomorrow.
-      if (!allowPicker && firstLoad.current && r.canPlan && d === berlinToday()) { firstLoad.current = false; setDay(addDays(d, 1)); return; }
+      if (!allowPicker && !readOnly && firstLoad.current && r.canPlan && d === berlinToday()) { firstLoad.current = false; setDay(addDays(d, 1)); return; }
       firstLoad.current = false;
       setData(r);
       const saved = new Map(r.lines.map((l) => [l.item_id, l]));
@@ -66,7 +67,8 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
   });
   const valid = draftLines.every((l) => [l.target, l.reserve, l.leftover ?? 0, l.override ?? 0].every((v) => Number.isFinite(v) && v >= 0 && v < 1e6));
   const countDate = addDays(day, -1);
-  const editable = data.canPlan && day >= today;
+  const canPlan = data.canPlan && !readOnly;
+  const editable = canPlan && day >= today;
   const sent = data.list?.status === "sent";
   const leftDirty = items.some((i) => (left[i.id] ?? "") !== (savedLeft[i.id] ?? ""));
   const counted = items.filter((i) => num(left[i.id] ?? "") != null).length;
@@ -108,7 +110,7 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
   return <div className="prep-day">
     {/* Date bar */}
     <div className="prep-bar">
-      {(allowPicker || data.canPlan) && <div className="prep-seg" role="group" aria-label={s("Prep date", "Vorbereitungsdatum")}>
+      {<div className="prep-seg" role="group" aria-label={s("Prep date", "Vorbereitungsdatum")}>
         {[today, tomorrow].map((d, i) => <button key={d} type="button" aria-pressed={d === day} onClick={() => setDay(d)}>{i ? s("Tomorrow", "Morgen") : s("Today", "Heute")}</button>)}
         {allowPicker && <input className="prep-date" type="date" aria-label={s("Choose date", "Datum wählen")} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} />}
       </div>}
@@ -138,7 +140,7 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
       <div className="prep-actions"><button className="btn-gold" disabled={busy}>{s("Next day", "Nächster Tag")} →</button></div>
     </form>}
 
-    {!!items.length && (editable ? step === 2 : data.lines.length > 0 && (sent || data.canPlan)) && <div className="prep-card">
+    {!!items.length && (editable ? step === 2 : data.lines.length > 0 && (sent || canPlan)) && <div className="prep-card">
       <div className="table-scroll" role="region" aria-label={s("Prep list", "Vorbereitungsliste")} tabIndex={0}><table className="data-table prep-table">
         <thead><tr>
           <th scope="col">{s("Item", "Artikel")}</th><th scope="col">{s("Target", "Ziel")}</th>
@@ -176,6 +178,6 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
       </> : <div className="prep-actions">{data.list?.note && <p className="prep-note-ro">{data.list.note}</p>}<button className="btn-secondary" onClick={() => void share()}>{s("Share", "Teilen")}</button></div>}
     </div>}
 
-    {!editable && !!items.length && !(data.lines.length > 0 && (sent || data.canPlan)) && <EmptyState title={data.canPlan ? s("Not planned", "Nicht geplant") : s("Not sent yet", "Noch nicht gesendet")} />}
+    {!editable && !!items.length && !(data.lines.length > 0 && (sent || canPlan)) && <EmptyState title={canPlan ? s("Not planned", "Nicht geplant") : s("Not sent yet", "Noch nicht gesendet")} />}
   </div>;
 }

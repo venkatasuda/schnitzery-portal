@@ -77,7 +77,6 @@ export default function ProfileSettings() {
         <div className="u-between">
           <div>
             <div className="t-lg fw-6 u-text">{t("settings.lightMode")}</div>
-            <div className="ui-muted">{t("settings.lightModeSub")}</div>
           </div>
           <button
             onClick={toggleTheme}

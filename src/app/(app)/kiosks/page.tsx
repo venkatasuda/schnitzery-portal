@@ -55,7 +55,6 @@ export default function KiosksPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🖥️" size={22} /> {t("kioskadm.title")}</h1>
-      <div className="page-sub">{t("kioskadm.subtitle")}</div>
 
       {/* add */}
       <div className="d-flex gap-2 mb-4">

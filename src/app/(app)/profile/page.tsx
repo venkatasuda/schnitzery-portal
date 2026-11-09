@@ -55,7 +55,6 @@ export default function ProfilePage() {
   if (loading) return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="👤" size={22} /> {t("profile.title")}</h1>
-      <div className="page-sub">{t("profile.subtitle")}</div>
       <CardSkeleton rows={5} />
     </div>
   );
@@ -67,7 +66,6 @@ export default function ProfilePage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="👤" size={22} /> {t("profile.title")}</h1>
-      <div className="page-sub">{t("profile.subtitle")}</div>
 
       <div className="card p-6">
         {/* avatar + name */}

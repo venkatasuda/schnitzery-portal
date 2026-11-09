@@ -48,7 +48,6 @@ export default function ShiftTimesPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="⏱️" size={22} /> {t("shiftcfg.title")}</h1>
-      <div className="page-sub">{t("shiftcfg.subtitle")}</div>
 
       {loading ? (
         <CardSkeleton rows={4} />

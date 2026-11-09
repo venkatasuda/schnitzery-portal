@@ -67,7 +67,6 @@ export default function SimulatorPage() {
     <div className="fade-up">
       <Link href="/summary" style={{ color: "var(--gray)", fontSize: 13, textDecoration: "none" }}>‹ {t("sim.back")}</Link>
       <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}><Icon e="🎛️" size={22} /> {t("sim.title")}</h1>
-      <div className="page-sub">{t("sim.subtitle")}</div>
 
       {loading ? <CardSkeleton rows={4} /> : !base || !base.hasSales ? (
         <div className="card" style={{ textAlign: "center", color: "var(--gray)", padding: 26, fontSize: 13, marginTop: 12 }}>{t("sim.needData")}</div>

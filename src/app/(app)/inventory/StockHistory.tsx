@@ -37,7 +37,7 @@ export default function StockHistory() {
   const value = (row: Event["before_row"], count: boolean) => row ? String(row[count ? "ist" : "qty"] ?? "—") + (row.unit ? ` ${row.unit}` : "") : "—";
   return <section className="card" aria-label={t("stockHistory.title")} aria-busy={loading}>
     <h2>{t("stockHistory.title")}</h2>
-    <p className="page-sub">{t("stockHistory.note")}</p>
+    
     {detail&&<MovementDetails {...detail} onClose={()=>setDetail(null)} onSaved={()=>setRetry(v=>v+1)}/>}
     <form className="inventory-toolbar" onSubmit={e=>{e.preventDefault();setFilters({...draft});setBefore(undefined);const url=new URL(window.location.href);for(const [key,value] of Object.entries(draft)){if(value)url.searchParams.set(`history${key[0].toUpperCase()}${key.slice(1)}`,value);else url.searchParams.delete(`history${key[0].toUpperCase()}${key.slice(1)}`);}window.history.replaceState(null,"",url);}}>
       <label>{t("inventoryOps.product")}<input type="search" className="form-input" maxLength={160} value={draft.product} onChange={e=>setDraft({...draft,product:e.target.value})}/></label>

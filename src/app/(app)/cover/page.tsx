@@ -91,7 +91,6 @@ export default function CoverPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🔁" size={22} /> {t("cover.title")}</h1>
-      <div className="page-sub">{t("cover.subtitle")}</div>
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "my" ? " active" : ""}`} onClick={() => setTab("my")}>{t("cover.tabMy")}</button>

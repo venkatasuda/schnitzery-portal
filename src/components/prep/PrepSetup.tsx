@@ -68,7 +68,7 @@ export default function PrepSetup() {
       </table></div>}
     </Panel>
     <Panel title={s("Shift leaders", "Schichtleitung")}>
-      <p className="t-xs u-muted">{s("Shift leaders are employees who may count leftovers and plan and send the prep list. Managers always may.", "Schichtleitungen sind Mitarbeitende, die Reste zählen und die Vorbereitungsliste planen und senden dürfen. Die Leitung darf immer.")}</p>
+      
       <ul className="checklist-list">{data.staff.map((u) => <li key={u.id} className="checklist-item"><label className="checklist-check">
         <input type="checkbox" checked={data.shiftLeaders.includes(u.id)} disabled={busy} onChange={(e) => void run(() => setShiftLeader(u.id, e.target.checked))} />
         <span>{u.full_name ?? "—"}{u.team ? <span className="t-xs u-muted"> · {u.team}</span> : null}</span></label></li>)}</ul>

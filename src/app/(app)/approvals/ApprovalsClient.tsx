@@ -108,7 +108,6 @@ export default function ApprovalsClient({ initial = null }: { initial?: Raw | nu
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("approvals.title")}</h1>
-      <div className="page-sub">{t("approvals.subtitle")}</div>
 
       <div className="hub-tabs" role="group" aria-label={t("approvals.title")}>
         <button aria-pressed={filter === "all"} className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>

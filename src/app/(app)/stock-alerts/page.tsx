@@ -64,7 +64,6 @@ export default function StockAlertsPage() {
     <div className="fade-up">
       <InventoryNav active="purchasing" />
       <h1 className="page-title u-row"><Icon e="📦" size={22} /> {t("salert.title")}</h1>
-      <div className="page-sub">{t("salert.subtitle")}</div>
 
       <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "12px 0", padding: 14 }}>
         <div>

@@ -18,7 +18,6 @@ export default function MyDayPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("myday.title")}</h1>
-      <div className="page-sub">{t("myday.subtitle")}</div>
 
       <div className="hub-tabs">
         <button className={`hub-tab${tab === "avail" ? " active" : ""}`} onClick={() => setTab("avail")}>

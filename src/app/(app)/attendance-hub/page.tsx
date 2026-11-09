@@ -123,7 +123,6 @@ export default function AttendanceHubPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🕐" size={22} /> {t("nav.attendance")}</h1>
-      <div className="page-sub">{t("ahub.subtitle")}</div>
 
       <div className="hub-tabs" role="group" aria-label={t("nav.attendance")}>
         <button aria-pressed={tab === "live"} className={`hub-tab${tab === "live" ? " active" : ""}`} onClick={() => openTab("live")}>{t("ahub.tabLive")}</button>

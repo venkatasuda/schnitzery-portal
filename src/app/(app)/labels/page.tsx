@@ -60,7 +60,7 @@ export default function LabelsPage() {
   return (
     <div className="inventory-page">
       <InventoryNav active="stock" />
-      <PageHeader title={t("labels.title")} subtitle={t("labels.subtitle")} icon={<Icon e="🏷️" size={22}/>} actions={<button className="btn-gold" onClick={printLabels} disabled={loading||error||products.length===0}>{t("labels.print")}</button>}/>
+      <PageHeader title={t("labels.title")} icon={<Icon e="🏷️" size={22}/>} actions={<button className="btn-gold" onClick={printLabels} disabled={loading||error||products.length===0}>{t("labels.print")}</button>}/>
 
 
       {loading ? <CardSkeleton rows={4} /> : error ? <ErrorState message={locale==="de"?"Etiketten konnten nicht vorbereitet werden. Vor dem Drucken erneut versuchen.":"Labels could not be prepared. Retry before printing."} onRetry={load} retryLabel={t("business.retry")}/> : products.length === 0 ? (

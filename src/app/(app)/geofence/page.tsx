@@ -88,7 +88,6 @@ export default function GeofencePage() {
   if (!canEdit) return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1>
-      <div className="page-sub">{t("geo.subtitle")}</div>
       <div className="card p-4">{t("geo.managersOnly")}</div>
     </div>
   );
@@ -98,7 +97,7 @@ export default function GeofencePage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1>
-      <div className="page-sub">{branchName} · {t("geo.subtitle")}</div>
+      <div className="page-sub">{branchName}</div>
 
       {/* MODE */}
       <div className="section-label">{t("geo.modeLabel")}</div>

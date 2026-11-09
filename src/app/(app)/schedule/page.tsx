@@ -66,7 +66,6 @@ export default function SchedulePage() {
         <Icon e="🔁" size={20} color="var(--action)" />
         <div className="u-flex1">
           <div className="ui-strong">{t("cover.title")}</div>
-          <div className="ui-muted">{t("cover.navSub")}</div>
         </div>
         <span className="feature-chev">›</span>
       </Link>
