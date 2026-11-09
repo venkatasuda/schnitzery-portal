@@ -37,6 +37,9 @@ begin
   select count(distinct unit_id) into logged from public.temp_logs l join public.temp_units u on u.id = l.unit_id
     where l.branch_id = p_branch and l.work_date = p_date and u.is_active;
   select count(*), count(*) filter (where done) into total_tasks, done_tasks from public.checklists where branch_id = p_branch and work_date = p_date;
+  -- Today's list is created when someone first opens it: if nobody did, the weekday's templates still count as open.
+  total_tasks := greatest(total_tasks, (select count(*) from public.checklist_templates
+    where branch_id = p_branch and is_active and extract(isodow from p_date)::smallint = any(weekdays)));
   select count(*) into items from public.prep_items where branch_id = p_branch and is_active;
   select count(*) into counted from public.prep_leftovers l join public.prep_items i on i.id = l.item_id
     where l.branch_id = p_branch and l.count_date = p_date and i.is_active;

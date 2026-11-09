@@ -73,9 +73,10 @@ export function ProgressRing({ pct, label, tone = "gold", size = 118 }: {
   const v = Math.max(0, Math.min(100, Math.round(pct || 0)));
   const color = toneColor(c, tone);
   return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+    // One readable image ("42% of target"); the chart itself is decorative and must not take keyboard focus.
+    <div role="img" aria-label={`${v}%${label ? ` ${label}` : ""}`} style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <RadialBarChart innerRadius="72%" outerRadius="100%" data={[{ value: v }]} startAngle={90} endAngle={-270}>
+        <RadialBarChart accessibilityLayer={false} innerRadius="72%" outerRadius="100%" data={[{ value: v }]} startAngle={90} endAngle={-270}>
           <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
           <RadialBar background={{ fill: c.grid }} dataKey="value" cornerRadius={12} fill={color} />
         </RadialBarChart>
