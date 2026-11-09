@@ -76,7 +76,6 @@ export default function ScheduleHubClient({ initial = null }: { initial?: any } 
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("schedhub.title")}</h1>
-      <div className="page-sub">{t("schedhub.subtitle")}</div>
 
       {/* quick actions */}
       <div className="workspace-toolbar">

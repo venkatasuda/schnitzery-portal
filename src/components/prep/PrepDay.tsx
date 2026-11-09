@@ -15,7 +15,8 @@ type Data = Extract<Awaited<ReturnType<typeof getPrepDay>>, { ok: true }>;
 type Edit = { target: string; reserve: string; override: string; reason: string };
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
-export default function PrepDay({ initialDay, allowPicker = true }: { initialDay?: string; allowPicker?: boolean }) {
+// readOnly: the team's view (Workplace → Prep list) — only the sent list, even for planners.
+export default function PrepDay({ initialDay, allowPicker = true, readOnly = false }: { initialDay?: string; allowPicker?: boolean; readOnly?: boolean }) {
   const { locale } = useLang();
   const de = locale === "de", s = (en: string, d: string) => (de ? d : en);
   const fmt = (n: number) => n.toLocaleString(de ? "de-DE" : "en-GB", { maximumFractionDigits: 2 });
@@ -38,7 +39,7 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
       if (n !== seq.current) return;
       if (!r.ok) { setData(null); setError(r.error); return; }
       // Employee page: planners work in the evening, so they land on tomorrow.
-      if (!allowPicker && firstLoad.current && r.canPlan && d === berlinToday()) { firstLoad.current = false; setDay(addDays(d, 1)); return; }
+      if (!allowPicker && !readOnly && firstLoad.current && r.canPlan && d === berlinToday()) { firstLoad.current = false; setDay(addDays(d, 1)); return; }
       firstLoad.current = false;
       setData(r);
       const saved = new Map(r.lines.map((l) => [l.item_id, l]));
@@ -66,7 +67,8 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
   });
   const valid = draftLines.every((l) => [l.target, l.reserve, l.leftover ?? 0, l.override ?? 0].every((v) => Number.isFinite(v) && v >= 0 && v < 1e6));
   const countDate = addDays(day, -1);
-  const editable = data.canPlan && day >= today;
+  const canPlan = data.canPlan && !readOnly;
+  const editable = canPlan && day >= today;
   const sent = data.list?.status === "sent";
   const leftDirty = items.some((i) => (left[i.id] ?? "") !== (savedLeft[i.id] ?? ""));
   const counted = items.filter((i) => num(left[i.id] ?? "") != null).length;
@@ -108,7 +110,7 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
   return <div className="prep-day">
     {/* Date bar */}
     <div className="prep-bar">
-      {(allowPicker || data.canPlan) && <div className="prep-seg" role="group" aria-label={s("Prep date", "Vorbereitungsdatum")}>
+      {!readOnly && <div className="prep-seg" role="group" aria-label={s("Prep date", "Vorbereitungsdatum")}>
         {[today, tomorrow].map((d, i) => <button key={d} type="button" aria-pressed={d === day} onClick={() => setDay(d)}>{i ? s("Tomorrow", "Morgen") : s("Today", "Heute")}</button>)}
         {allowPicker && <input className="prep-date" type="date" aria-label={s("Choose date", "Datum wählen")} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} />}
       </div>}
@@ -132,18 +134,18 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
         <legend className="sr-only">{s("Leftovers", "Reste")}</legend>
         {items.map((i) => <label key={i.id} className="prep-left-row">
           <span>{name(i.id)}</span>
-          <span className="prep-unit-input"><input className="form-input" type="number" inputMode="decimal" min="0" step="any" placeholder="0" value={left[i.id] ?? ""} onChange={(e) => setLeft({ ...left, [i.id]: e.target.value })} /><em>{i.unit}</em></span>
+          <span className="prep-unit-input"><input className="form-input" type="number" inputMode="decimal" min="0" step="any" placeholder="—" value={left[i.id] ?? ""} onChange={(e) => setLeft({ ...left, [i.id]: e.target.value })} /><em>{i.unit}</em></span>
         </label>)}
       </fieldset>
       <div className="prep-actions"><button className="btn-gold" disabled={busy}>{s("Next day", "Nächster Tag")} →</button></div>
     </form>}
 
-    {!!items.length && (editable ? step === 2 : data.lines.length > 0 && (sent || data.canPlan)) && <div className="prep-card">
+    {!!items.length && (editable ? step === 2 : data.lines.length > 0 && (sent || canPlan)) && <div className="prep-card">
       <div className="table-scroll" role="region" aria-label={s("Prep list", "Vorbereitungsliste")} tabIndex={0}><table className="data-table prep-table">
         <thead><tr>
-          <th scope="col">{s("Item", "Artikel")}</th><th scope="col">{s("Target", "Ziel")}</th>
-          <th scope="col" title={s("Blank = nothing left", "Leer = nichts übrig")}>{s("Left", "Rest")}</th>
-          <th scope="col">{s("Reserve", "Reserve")}</th><th scope="col" className="prep-col-main">{s("To prepare", "Vorbereiten")}</th>
+          <th scope="col">{s("Item", "Artikel")}</th>{!readOnly && <th scope="col">{s("Target", "Ziel")}</th>}
+          <th scope="col" title={s("Blank = nothing left", "Leer = nichts übrig")}>{readOnly ? s("Left over", "Reste") : s("Left", "Rest")}</th>
+          {!readOnly && <th scope="col">{s("Reserve", "Reserve")}</th>}<th scope="col" className="prep-col-main">{s("To prepare", "Vorbereiten")}</th>
         </tr></thead>
         <tbody>{viewLines.map((l) => {
           const it = items.find((i) => i.id === l.item_id), n = it ? name(l.item_id) : ("item_name" in l ? (l as { item_name: string }).item_name : "—");
@@ -151,9 +153,9 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
           const c = containers(amount, it?.container_size ?? null), e = lines[l.item_id], ing = ingredients(l.item_id, amount);
           return <tr key={l.item_id} className={amount > 0 ? undefined : "is-zero"}>
             <th scope="row">{n}{ing && <div className="prep-sub">{ing}</div>}</th>
-            <td>{editable ? <input className="form-input prep-num" type="number" min="0" step="any" aria-label={`${s("Target", "Ziel")}: ${n}`} value={e?.target ?? ""} onChange={(ev) => set(l.item_id, { target: ev.target.value })} disabled={busy} /> : `${fmt(l.target)} ${unit}`}</td>
+            {!readOnly && <td>{editable ? <input className="form-input prep-num" type="number" min="0" step="any" aria-label={`${s("Target", "Ziel")}: ${n}`} value={e?.target ?? ""} onChange={(ev) => set(l.item_id, { target: ev.target.value })} disabled={busy} /> : `${fmt(l.target)} ${unit}`}</td>}
             <td>{l.leftover == null ? <span className="u-muted">—</span> : `${fmt(l.leftover)} ${unit}`}</td>
-            <td>{editable ? <input className="form-input prep-num" type="number" min="0" step="any" aria-label={`${s("Reserve", "Reserve")}: ${n}`} value={e?.reserve ?? ""} onChange={(ev) => set(l.item_id, { reserve: ev.target.value })} disabled={busy} /> : l.reserve > 0 ? `+${fmt(l.reserve)} ${unit}` : "—"}</td>
+            {!readOnly && <td>{editable ? <input className="form-input prep-num" type="number" min="0" step="any" aria-label={`${s("Reserve", "Reserve")}: ${n}`} value={e?.reserve ?? ""} onChange={(ev) => set(l.item_id, { reserve: ev.target.value })} disabled={busy} /> : l.reserve > 0 ? `+${fmt(l.reserve)} ${unit}` : "—"}</td>}
             <td className="prep-col-main">
               {editable ? <span className="prep-unit-input"><input className={`form-input prep-num prep-result${l.override != null ? " is-changed" : ""}`} type="number" min="0" step="any" placeholder={fmt(auto)} aria-label={`${s("To prepare", "Vorbereiten")}: ${n}`} title={l.override != null ? `${s("Calculated", "Berechnet")}: ${fmt(auto)} ${unit}` : undefined} value={e?.override ?? ""} onChange={(ev) => set(l.item_id, { override: ev.target.value })} disabled={busy} /><em>{unit}</em></span>
                 : <strong className="prep-result-ro">{fmt(amount)} {unit}</strong>}
@@ -173,9 +175,9 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
           <button className={shareFirst ? "btn-gold" : "btn-secondary"} disabled={busy || !valid} onClick={() => void share()}>{s("Share", "Teilen")}</button>
           <button className={shareFirst ? "btn-secondary" : "btn-gold"} disabled={busy || !valid} onClick={() => { if (window.confirm(s("Send to the Preparation team?", "An das Vorbereitungsteam senden?"))) void saveList(true); }}>{sent ? s("Send update", "Update senden") : s("Send", "Senden")}</button>
         </div>
-      </> : <div className="prep-actions">{data.list?.note && <p className="prep-note-ro">{data.list.note}</p>}<button className="btn-secondary" onClick={() => void share()}>{s("Share", "Teilen")}</button></div>}
+      </> : <div className="prep-actions">{data.list?.note && <p className="prep-note-ro">{data.list.note}</p>}{!readOnly && <button className="btn-secondary" onClick={() => void share()}>{s("Share", "Teilen")}</button>}</div>}
     </div>}
 
-    {!editable && !!items.length && !(data.lines.length > 0 && (sent || data.canPlan)) && <EmptyState title={data.canPlan ? s("Not planned", "Nicht geplant") : s("Not sent yet", "Noch nicht gesendet")} />}
+    {!editable && !!items.length && !(data.lines.length > 0 && (sent || canPlan)) && <EmptyState title={canPlan ? s("Not planned", "Nicht geplant") : s("Not sent yet", "Noch nicht gesendet")} />}
   </div>;
 }

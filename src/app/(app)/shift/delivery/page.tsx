@@ -20,7 +20,6 @@ export default function ShiftDeliveryPage() {
   return <div style={{ maxWidth: 760, margin: "0 auto" }}>
     <Link className="inventory-back" href="/shift">← {s("Back to Inventory", "Zurück zu Inventar")}</Link>
     <PageHeader title={s("Record a delivery", "Lieferung erfassen")} subtitle={data.branch.name} />
-    <p className="page-sub">{s("Enter what arrived and the dates on the labels. Prices are added later by a manager.", "Gelieferte Mengen und Etikettdaten eintragen. Preise ergänzt später die Leitung.")}</p>
     {saved > 0 && <p role="status">{s(`${saved} delivery saved.`, `${saved} Lieferung gespeichert.`)}</p>}
     {!open && <button className="btn-gold" onClick={() => setOpen(true)}>{saved ? s("Record another delivery", "Weitere Lieferung erfassen") : s("Record a delivery", "Lieferung erfassen")}</button>}
     {open && <DirectReceiving branch={data.branch.id} products={data.products} suppliers={data.suppliers} costHidden submit={shiftReceiveDirect}

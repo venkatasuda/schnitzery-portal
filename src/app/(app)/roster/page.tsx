@@ -162,7 +162,7 @@ export default function RosterPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📋" size={22} /> {t("roster.title")}</h1>
-      <div className="page-sub">{t("roster.subtitle", { week: weekLabel || "…" })}</div>
+      <div className="page-sub">{weekLabel || "…"}</div>
       {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
       {/* week nav + save */}

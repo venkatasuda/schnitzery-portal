@@ -20,7 +20,7 @@ export default function OfflineReview({manager=false}:{manager?:boolean}) {
   }
   return <section className="card" aria-label={t("offlineReview.title")} aria-busy={loading}>
     <h2 className="card-title">{t("offlineReview.title")}</h2>
-    <p className="page-sub">{t(manager?"offlineReview.managerHelp":"offlineReview.employeeHelp")}</p>
+    
     <div className="workspace-toolbar">
       <button className="btn-secondary" disabled={loading||!!busy} onClick={()=>setRefresh(n=>n+1)}>{t("offlineReview.refresh")}</button>
       {manager&&<button className="btn-secondary" disabled={!!busy} aria-pressed={history} onClick={()=>setHistory(v=>!v)}>{t(history?"offlineReview.pending":"offlineReview.history")}</button>}

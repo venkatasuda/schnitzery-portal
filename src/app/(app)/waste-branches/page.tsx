@@ -35,7 +35,6 @@ export default function WasteByBranchPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🗑️" size={22} /> {t("wbranch.title")}</h1>
-      <div className="page-sub">{t("wbranch.subtitle")}</div>
 
       <div style={{ display: "flex", gap: 6, margin: "12px 0" }}>
         {[7, 30, 90].map((d) => (

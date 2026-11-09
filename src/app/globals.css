@@ -1064,6 +1064,7 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .prep-week { display: grid; grid-template-columns: repeat(7, minmax(56px, 1fr)); gap: 6px; }
 .prep-week label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
 .prep-table input.form-input { min-width: 80px; }
+.prep-suggest { font-size: var(--text-xs); font-weight: 700; color: var(--gold-ink); cursor: help; }
 @media (max-width: 640px) { .prep-week { grid-template-columns: repeat(4, 1fr); } }
 /* Prep day: date bar → stepper → leftovers / plan */
 .prep-day { display: grid; gap: 14px; }

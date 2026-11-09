@@ -83,7 +83,7 @@ export default function TransfersPage() {
       <InventoryNav active="movements" />
       {detail&&<MovementDetails kind="transfer" id={detail} onClose={()=>setDetail(null)} onSaved={loadAll}/>}
       {lotDetail&&<TransferLots id={lotDetail} onClose={()=>setLotDetail(null)} onSaved={loadAll}/>}
-      <PageHeader icon={<Icon e="🔄" size={22} />} title={t("xfer.title")} subtitle={t("xfer.subtitle")} />
+      <PageHeader icon={<Icon e="🔄" size={22} />} title={t("xfer.title")} />
 
       <div className="hub-tabs" role="group" aria-label={t("xfer.title")}>
         <TabButton active={tab === "request"} onClick={() => setTab("request")}>{t("xfer.tabRequest")}</TabButton>

@@ -130,13 +130,11 @@ export default function SummaryClient({ initial }: { initial?: any }) {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("summary.title")}</h1>
-      <div className="page-sub">{t("summary.subtitle")}</div>
 
       <Link href="/simulator" className="card" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", margin: "12px 0 0" }}>
         <Icon e="🎛️" size={18} color="var(--gold)" />
         <div className="u-flex1">
           <div className="t-sm fw-6 u-text">{t("summary.simulator")}</div>
-          <div className="ui-muted">{t("summary.simulatorSub")}</div>
         </div>
         <span className="u-muted">›</span>
       </Link>

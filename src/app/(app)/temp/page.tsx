@@ -80,7 +80,6 @@ export default function TempPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🌡️" size={22} /> {t("temp.title")}</h1>
-      <div className="page-sub">{t("temp.subtitle")}</div>
 
       {summary && (
         <div className="card" style={{ margin: "12px 0", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: summary.breachesToday > 0 ? "rgba(231,76,60,0.4)" : summary.pending > 0 ? "var(--accent-line)" : "rgba(39,174,96,0.3)" }}>

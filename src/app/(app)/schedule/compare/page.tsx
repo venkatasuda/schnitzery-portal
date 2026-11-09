@@ -69,7 +69,6 @@ export default function ComparePage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("cmp.title")}</h1>
-      <div className="page-sub">{t("cmp.subtitle")}</div>
 
       {/* week nav */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 14px" }}>

@@ -49,7 +49,6 @@ export default function ActionClient({ initial = null }: { initial?: Initial } =
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🎯" size={22} /> {t("act.title")}</h1>
-      <div className="page-sub">{t("act.subtitle")}</div>
 
       {!loading && alerts.length > 0 && (
         <div className="card mb-4 p-4">

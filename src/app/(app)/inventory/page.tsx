@@ -259,7 +259,7 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {tab === "count" && <p className="page-sub">{locale === "de" ? "Gesamten Regalbestand zählen. Neue Ware?" : "Count the total on the shelf. New delivery?"} <Link href="/inventory/purchasing?receive=1">{locale === "de" ? "Lieferung annehmen" : "Receive goods"} →</Link></p>}
+      {tab === "count" && <p className="row-actions"><Link href="/inventory/purchasing?receive=1">{locale === "de" ? "Lieferung annehmen" : "Receive goods"} →</Link></p>}
 
 
       {loading ? <CardSkeleton rows={4} /> : loadError ? null : (

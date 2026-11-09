@@ -133,7 +133,6 @@ export default function PayrollExportPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="💶" size={22} /> {t("pay.title")}</h1>
-      <div className="page-sub">{t("pay.subtitle")}</div>
 
       <div className="card d-flex ai-c gap-3 f-wrap">
         <label className="ui-muted" htmlFor="payroll-month">{t("pay.month")}</label>

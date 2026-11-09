@@ -33,7 +33,6 @@ export default function BranchesPage() {
   return (
     <div>
       <h1 className="page-title u-row"><Icon e="🏢" size={22} /> {roleLabel}</h1>
-      <p className="page-sub">{t("branches.subtitle", { n: totals?.branches || 0 })}</p>
 
       {loading ? (
         <CardSkeleton rows={3} />

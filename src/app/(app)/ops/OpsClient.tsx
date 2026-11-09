@@ -71,7 +71,7 @@ export default function OpsClient({ initial = null }: { initial?: Initial } = {}
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📡" size={22} /> {t("ops.title")}</h1>
-      <div className="page-sub">{t("ops.subtitle")}{data?.asOf ? ` · ${t("ops.asOf")} ${fmtClock(data.asOf)}` : ""}</div>
+      <div className="page-sub">{data?.asOf ? `${t("ops.asOf")} ${fmtClock(data.asOf)}` : ""}</div>
 
       {/* FILTERS */}
       <div className="workspace-toolbar">

@@ -88,7 +88,6 @@ export default function ExpiringDocsPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📑" size={22} /> {t("exp.title")}</h1>
-      <div className="page-sub">{t("exp.subtitle")}</div>
 
       {loading ? (
         <CardSkeleton rows={4} />

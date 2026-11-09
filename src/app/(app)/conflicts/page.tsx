@@ -27,7 +27,6 @@ export default function ConflictsPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="⚠️" size={22} /> {t("conf.title")}</h1>
-      <div className="page-sub">{t("conf.subtitle")}</div>
 
       {loading ? (
         <CardSkeleton rows={3} />

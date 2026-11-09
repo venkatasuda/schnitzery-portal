@@ -47,7 +47,7 @@ export default function HygieneLogbookPage() {
   return <div className="logbook">
     <div className="no-print">
       <Link className="inventory-back" href="/compliance">← {s("Back to Compliance", "Zurück zu Compliance")}</Link>
-      <PageHeader title={s("Hygiene logbook", "Hygiene-Protokoll")} subtitle={s("Temperatures and cleaning checklists for an inspection", "Temperaturen und Reinigungslisten für eine Kontrolle")}
+      <PageHeader title={s("Hygiene logbook", "Hygiene-Protokoll")}
         actions={<button className="btn-gold" disabled={!data} onClick={() => window.print()}>{s("Print / save as PDF", "Drucken / als PDF speichern")}</button>} />
       <div className="row-actions" role="group" aria-label={s("Period", "Zeitraum")}>
         {presets.map((p) => <button key={p.key} className={p.from === from && p.to === to ? "btn-gold" : "btn-secondary"} aria-pressed={p.from === from && p.to === to} onClick={() => { setFrom(p.from); setTo(p.to); }}>{p.label}</button>)}

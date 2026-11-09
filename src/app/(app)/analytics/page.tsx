@@ -75,7 +75,7 @@ export default function AnalyticsPage() {
     <div className="fade-up analytics-workspace">
       <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("business.performance")}</h1>
       <Link className="btn-secondary" href="/sales/imports">{locale==="de"?"Umsatzimporte prüfen":"Review sales imports"}</Link>
-      <div className="page-sub">{data?.scope ? `${data.scope} · ` : ""}{t("bana.subtitle")}</div>
+      <div className="page-sub">{data?.scope ?? ""}</div>
 
       <div className="hub-tabs" role="group" aria-label={t("business.reportView")}>
         {["business", "workforce"].map(v => <button key={v} aria-pressed={view === v} className={`hub-tab${view === v ? " active" : ""}`} onClick={() => setView(v)}>{t(`business.${v}`)}</button>)}

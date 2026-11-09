@@ -16,7 +16,7 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
     create table public.temp_logs(id uuid primary key default gen_random_uuid(), branch_id uuid, unit_id uuid, work_date date);
     create table public.checklists(id uuid primary key default gen_random_uuid(), branch_id uuid, work_date date, done boolean default false);
     create table public.checklist_templates(id uuid primary key default gen_random_uuid(), branch_id uuid, is_active boolean default true, weekdays smallint[]);
-    create table public.daily_sales(id uuid primary key default gen_random_uuid(), branch_id uuid, sale_date date, amount numeric);
+    create table public.daily_sales(id uuid primary key default gen_random_uuid(), branch_id uuid, sale_date date, amount numeric, unique(branch_id, sale_date));
     create table public.attendance_logs(id uuid primary key default gen_random_uuid(), user_id uuid, branch_id uuid, work_date date, clock_in timestamptz, status text);
     create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
     create function public.is_manager() returns boolean language sql security definer as $$ select exists(select 1 from public.users where id = auth.uid() and role <> 'staff') $$;
@@ -55,9 +55,16 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   assert.equal(Number(row.cash_difference), -4.5, "Counted 395.50 vs POS cash 400.00 = −4.50");
   assert.deepEqual(Object.keys(row.reasons).sort(), ["cash", "clocked_in", "temps"], "Only reasons for open points are kept");
   assert.equal(row.closed_by, LEAD);
+  assert.equal(Number((await db.query("select amount from public.daily_sales where branch_id = $1 and sale_date = $2::date", [B, today])).rows[0].amount), 2430, "A day without sales gets the POS total in daily_sales (the dashboards' source)");
+  // Yesterday already has an imported figure: a different POS total needs a reason and never overwrites it.
+  await db.exec(`insert into public.daily_sales(branch_id, sale_date, amount) values ('${B}', '${yesterday}', 2000)`);
+  const why = { temps: "x broken", checklists: "late close", clocked_in: "Ali forgot" };
+  await assert.rejects(close(LEAD, 2100, 400, 400, why, yesterday), /Reason required for sales/, "POS total differs from the recorded sales");
+  await close(LEAD, 2100, 400, 400, { ...why, sales: "refund not in import" }, yesterday);
+  assert.equal(Number((await db.query("select amount from public.daily_sales where branch_id = $1 and sale_date = $2::date", [B, yesterday])).rows[0].amount), 2000, "Imported sales are not overwritten");
   await assert.rejects(close(MGR, 2430, 400, 400, {}), /Day already closed/, "One close per day");
   await assert.rejects(as(MGR, `update public.day_closes set counted_cash = 400 where id = '${id}'`), /permission denied/, "Closes cannot be edited");
-  assert.equal((await as(LEAD, "select count(*)::int n from public.day_closes")).rows[0].n, 1, "Shift leader reads closes");
+  assert.equal((await as(LEAD, "select count(*)::int n from public.day_closes")).rows[0].n, 2, "Shift leader reads closes");
   assert.equal((await as(STAFF, "select count(*)::int n from public.day_closes")).rows[0].n, 0, "Plain staff cannot read closes");
   console.log("Day closes: shift leaders + managers only, reasons for every open point, cash difference, one immutable close per day.");
 })().catch((e) => { console.error(e); process.exitCode = 1; });

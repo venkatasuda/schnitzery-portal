@@ -17,7 +17,7 @@ export default function PreparationPage() {
   const [tab, setTab] = useState<(typeof TABS)[number]>("day");
   const label = { day: s("Tonight & tomorrow", "Heute Abend & morgen"), history: s("History", "Verlauf"), setup: s("Setup", "Einrichtung") };
   return <div className="inventory-page"><InventoryNav active="kitchen" />
-    <PageHeader title={s("Prep planning", "Vorbereitungsplanung")} subtitle={s("Count tonight's leftovers, plan tomorrow, send it to the prep team.", "Heutige Reste zählen, morgen planen, ans Vorbereitungsteam senden.")}
+    <PageHeader title={s("Prep planning", "Vorbereitungsplanung")}
       actions={<Link className="btn-secondary" href="/inventory/recipes">{s("Recipes & costing", "Rezepte & Kalkulation")}</Link>} />
     <div className="row-actions" role="tablist" aria-label={s("Prep planning", "Vorbereitungsplanung")}>
       {TABS.map((t) => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "btn-gold" : "btn-secondary"} onClick={() => setTab(t)}>{label[t]}</button>)}

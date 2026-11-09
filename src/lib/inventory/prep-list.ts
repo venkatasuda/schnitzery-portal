@@ -46,3 +46,25 @@ export function shareText(day: string, items: PrepItem[], lines: PrepLine[], loc
     ...(note ? [note] : []),
   ].join("\n");
 }
+
+// Target suggestions from history. Daily use = left the evening before + prepared (sent list) − left that evening;
+// a day counts only when both evenings were counted. Per weekday (Mon..Sun): the 75th percentile of the uses,
+// rounded up, so the list covers 3 of 4 typical days; null with fewer than `minDays` days.
+// soldOut = days that ended at 0 — real demand was higher than measured there.
+// ponytail: plain percentile; seasonality / holidays / weather are not modelled.
+export type UsageDay = { date: string; start: number | null; prepared: number; end: number | null };
+export type TargetSuggestion = { days: number; avg: number; suggest: number; soldOut: number } | null;
+export function suggestTargets(history: UsageDay[], minDays = 3): TargetSuggestion[] {
+  const by: { use: number; soldOut: boolean }[][] = Array.from({ length: 7 }, () => []);
+  for (const d of history) {
+    if (d.start == null || d.end == null) continue;
+    const use = d.start + d.prepared - d.end;
+    if (Number.isFinite(use) && use >= 0) by[weekdayIndex(d.date)].push({ use, soldOut: d.end === 0 });
+  }
+  return by.map((list) => {
+    if (list.length < minDays) return null;
+    const uses = list.map((x) => x.use).sort((a, b) => a - b);
+    const p75 = uses[Math.ceil(0.75 * uses.length) - 1];
+    return { days: uses.length, avg: Math.round((uses.reduce((a, b) => a + b, 0) / uses.length) * 10) / 10, suggest: Math.ceil(p75 - 1e-9), soldOut: list.filter((x) => x.soldOut).length };
+  });
+}

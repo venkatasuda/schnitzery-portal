@@ -7,8 +7,8 @@ Updated 8 November 2026. One list for everything still open (Claude + Codex + te
 - [x] **C5 — keyboard-only pass** (9 Nov, staging): skip link, visible focus, Tab through Workplace, Esc closes dialogs with discard guard, first field focused in dialogs — OK. Fixed: progress ring was a focusable unlabelled chart (now one labelled image).
 - [x] **E2 — end-of-day close:** `/day-close` + migration `20261109090000_day_closes.sql` (built 9 Nov; staging test + release pending).
 - [x] **E3 — hygiene logbook PDF:** `/compliance/logbook` (managers), print layout → "Save as PDF" (built 9 Nov; staging test + release pending).
-- [ ] **E4 — shift swaps** with manager approval and Mindestlohn / Minijob / rest-time checks.
-- [ ] **E5 — prep targets suggested from history** (prepared vs. left over).
+- [x] **E4 — shift swaps** (built 9 Nov): merged into Shift cover — claimer may offer one of their shifts in return; approval moves both roster entries atomically (`20261109120000_cover_swaps.sql`); manager sees overlap / <11 h rest / Minijob-cap warnings. Old day-name swap form removed; old pending swaps can only be declined.
+- [x] **E5 — prep target suggestions** (built 9 Nov): Prep planning → Setup shows "→ 110" per weekday (75th percentile of counted daily use, last 8 weeks, ≥3 days; ↑ = sold out some days) and "Use suggestions" fills the form for review. Staging sample data: `scripts/ops/seed-staging-prep-history.sql` (guarded, staging only).
 - [ ] **E1 — food cost per dish** (recipe vs. actual) — blocked by missing prices (see Team data).
 - [ ] **D — load test** on a Supabase test branch (50 → 500 → 2,000 simulated users), after more real usage.
 - [ ] **Switch the app to Supabase publishable/secret API keys** — required before the legacy JWT secret can ever be revoked. Do NOT revoke it before.

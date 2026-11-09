@@ -65,7 +65,7 @@ export default function WastePage() {
     <div className="fade-up">
       <InventoryNav active="movements" />
       {detail&&<MovementDetails kind="waste" id={detail} onClose={()=>setDetail(null)} onSaved={loadAll}/>}
-      <PageHeader icon={<Icon e="🗑️" size={22} />} title={t("waste.title")} subtitle={t("waste.subtitle")} />
+      <PageHeader icon={<Icon e="🗑️" size={22} />} title={t("waste.title")} />
 
       {summary && summary.count > 0 && (
         <div className="card">

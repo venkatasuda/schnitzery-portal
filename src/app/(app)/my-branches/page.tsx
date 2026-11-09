@@ -54,7 +54,6 @@ export default function MyBranchesPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🏪" size={22} /> {t("mybr.title")}</h1>
-      <p className="page-sub">{t("mybr.subtitle")}</p>
       {loading ? <CardSkeleton rows={3} />
         : error ? <ErrorState message={error} onRetry={load} retryLabel={t("business.retry")} />
         : rows.length === 0 ? <EmptyState title={t("mybr.none")} />

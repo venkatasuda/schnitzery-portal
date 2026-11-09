@@ -70,7 +70,6 @@ export default function CountSessionsPage() {
   return <div className="inventory-page">
     {data?.canPublish !== false ? <InventoryNav active="stock" canLeave={canLeave} /> : <Link className="inventory-back" href="/shift">← {locale==="de"?"Zurück zu Inventar":"Back to Inventory"}</Link>}
     <PageHeader title={t("countSession.title")} subtitle={data?.branch.name ?? t("common.loading")} actions={data?.canPublish === false ? undefined : <Link className="btn-secondary" href="/inventory?view=count" aria-disabled={busy} onClick={event=>{if(busy||!canLeave())event.preventDefault();}}>{locale==="de"?"Einzelnen Artikel zählen":"Count one item"}</Link>} />
-    <p className="page-sub">{t("countSession.help")}</p>
     {error && <ErrorState message={error} onRetry={() => { if (canLeave()) load(data?.session?.id); }} retryLabel={t("countSession.reload")} />}
     {loading ? <p role="status">{t("common.loading")}</p> : data && <>
       <div className="row-actions">
