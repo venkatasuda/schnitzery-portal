@@ -7,7 +7,7 @@ import { sendPushToUser } from "@/lib/push/delivery";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { readAll } from "@/lib/supabase/readAll";
 import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
-import { addDays, type PrepItem, type PrepLine } from "@/lib/inventory/prep-list";
+import { addDays, suggestTargets, type PrepItem, type PrepLine, type TargetSuggestion, type UsageDay } from "@/lib/inventory/prep-list";
 import type { RecipeVersion } from "@/lib/inventory/recipes";
 import type { RecipeYield } from "@/lib/inventory/preparation";
 
@@ -129,11 +129,34 @@ export async function getPrepSetup() {
   ]);
   if (items.error || shiftLeaders.error || staff.error || yields.error || recipes.error) return { ok: false as const, error: "load" };
   const names = new Map((recipes.data ?? []).map((r) => [r.id, r.name as string]));
-  return { ok: true as const, branch: c.branch,
+  const suggestions = await targetSuggestions(c.db, c.branch).catch(() => ({} as Record<string, TargetSuggestion[]>));
+  return { ok: true as const, branch: c.branch, suggestions,
     items: (items.data ?? []) as unknown as PrepItem[],
     shiftLeaders: (shiftLeaders.data ?? []).map((p) => p.user_id as string),
     staff: (staff.data ?? []) as { id: string; full_name: string | null; team: string | null }[],
     yields: (yields.data ?? []).map((y) => ({ id: y.id as string, label: `${names.get(y.recipe_id) ?? "—"} · ${Number(y.output_qty)} ${y.output_unit}` })) };
+}
+
+// Last 8 weeks of sent lists + evening counts → suggested weekday targets per item.
+async function targetSuggestions(db: Awaited<ReturnType<typeof createClient>>, branch: string) {
+  const to = addDays(berlinToday(), -1), from = addDays(to, -55);
+  const [lists, left] = await Promise.all([
+    readAll(db.from("prep_lists").select("id,plan_date").eq("branch_id", branch).eq("status", "sent").gte("plan_date", from).lte("plan_date", to).order("plan_date").order("id")),
+    readAll(db.from("prep_leftovers").select("count_date,item_id,qty").eq("branch_id", branch).gte("count_date", addDays(from, -1)).lte("count_date", to).order("count_date").order("item_id")),
+  ]);
+  if (lists.error || left.error || !lists.data?.length) return {};
+  const dateOf = new Map(lists.data.map((l) => [l.id, l.plan_date as string]));
+  const lines = await readAll(db.from("prep_list_lines").select("list_id,item_id,to_prepare").in("list_id", [...dateOf.keys()]).order("list_id").order("item_id"));
+  if (lines.error) return {};
+  const leftBy = new Map((left.data ?? []).map((l) => [`${l.count_date}|${l.item_id}`, Number(l.qty)]));
+  const byItem = new Map<string, UsageDay[]>();
+  for (const l of lines.data ?? []) {
+    const date = dateOf.get(l.list_id)!;
+    const list = byItem.get(l.item_id) ?? [];
+    list.push({ date, start: leftBy.get(`${addDays(date, -1)}|${l.item_id}`) ?? null, prepared: Number(l.to_prepare), end: leftBy.get(`${date}|${l.item_id}`) ?? null });
+    byItem.set(l.item_id, list);
+  }
+  return Object.fromEntries([...byItem].map(([id, h]) => [id, suggestTargets(h)]));
 }
 
 export type PrepItemInput = { name: string; name_de: string; unit: string; container_size: number | null; container_label: string; target_min: number[]; target_max: number[]; reserve: number[]; sort: number; yield_id: string | null };

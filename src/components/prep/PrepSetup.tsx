@@ -30,6 +30,16 @@ export default function PrepSetup() {
 
   const toInput = (f: Form): PrepItemInput => ({ name: f.name, name_de: f.name_de, unit: f.unit, container_size: f.container_size.trim() ? Number(f.container_size) : null, container_label: f.container_label,
     target_min: f.target_min.map(Number), target_max: f.target_max.map(Number), reserve: f.reserve.map(Number), sort: Number(f.sort) || 0, yield_id: f.yield_id || null });
+  // Suggested target for a weekday, only when it differs from the current "up to" target.
+  const sug = (id: string, n: number) => { const g = data.suggestions[id]?.[n]; const it = data.items.find((x) => x.id === id); return g && it && g.suggest !== Number(it.target_max[n]) ? g : null; };
+  // Open the item in the form; with `apply`, suggested weekdays are filled in (the manager reviews and saves).
+  const edit = (i: Setup["items"][number], apply = false) => {
+    const max = i.target_max.map((v, n) => String(apply && sug(i.id, n) ? sug(i.id, n)!.suggest : v));
+    setEditing(i.id);
+    setForm({ name: i.name, name_de: i.name_de ?? "", unit: i.unit, container_size: i.container_size == null ? "" : String(i.container_size), container_label: i.container_label ?? "",
+      target_min: i.target_min.map((v, n) => String(Math.min(Number(v), Number(max[n])))), target_max: max, reserve: i.reserve.map(String), sort: String(i.sort), yield_id: i.yield_id ?? "" });
+    window.scrollTo({ top: 0 });
+  };
   const week = (key: "target_min" | "target_max" | "reserve", label: string) => <fieldset className="prep-week"><legend>{label}</legend>
     {days.map((d, i) => <label key={d}>{d}<input className="form-input" type="number" min="0" step="any" value={form[key][i]} onChange={(e) => setForm({ ...form, [key]: form[key].map((v, n) => (n === i ? e.target.value : v)) })} /></label>)}
   </fieldset>;
@@ -59,9 +69,11 @@ export default function PrepSetup() {
         <thead><tr><th scope="col">{s("Item", "Artikel")}</th>{days.map((d) => <th scope="col" key={d}>{d}</th>)}<th scope="col">{s("Actions", "Aktionen")}</th></tr></thead>
         <tbody>{data.items.map((i) => <tr key={i.id} className={i.is_active ? undefined : "u-muted"}>
           <th scope="row">{(locale === "de" && i.name_de) || i.name} <span className="t-xs u-muted">({i.unit}{i.container_size ? ` · ${i.container_size}/${i.container_label ?? s("container", "Behälter")}` : ""})</span></th>
-          {days.map((d, n) => <td key={d}>{Number(i.target_min[n]) === Number(i.target_max[n]) ? i.target_max[n] : `${i.target_min[n]}–${i.target_max[n]}`}{Number(i.reserve[n]) > 0 && <div className="t-xs u-muted">+{i.reserve[n]}</div>}</td>)}
+          {days.map((d, n) => { const g = sug(i.id, n); return <td key={d}>{Number(i.target_min[n]) === Number(i.target_max[n]) ? i.target_max[n] : `${i.target_min[n]}–${i.target_max[n]}`}{Number(i.reserve[n]) > 0 && <div className="t-xs u-muted">+{i.reserve[n]}</div>}
+            {g && <div className="prep-suggest" title={s(`${g.days} days counted · average use ${g.avg}${g.soldOut ? ` · sold out ${g.soldOut}×` : ""}`, `${g.days} Tage gezählt · Ø Verbrauch ${g.avg}${g.soldOut ? ` · ${g.soldOut}× ausverkauft` : ""}`)}>→ {g.suggest}{g.soldOut ? "↑" : ""}</div>}</td>; })}
           <td><div className="row-actions">
-            <button className="btn-secondary" disabled={busy} onClick={() => { setEditing(i.id); setForm({ name: i.name, name_de: i.name_de ?? "", unit: i.unit, container_size: i.container_size == null ? "" : String(i.container_size), container_label: i.container_label ?? "", target_min: i.target_min.map(String), target_max: i.target_max.map(String), reserve: i.reserve.map(String), sort: String(i.sort), yield_id: i.yield_id ?? "" }); window.scrollTo({ top: 0 }); }}>{s("Edit", "Bearbeiten")}</button>
+            <button className="btn-secondary" disabled={busy} onClick={() => edit(i)}>{s("Edit", "Bearbeiten")}</button>
+            {days.some((_, n) => sug(i.id, n)) && <button className="btn-gold" disabled={busy} onClick={() => edit(i, true)}>{s("Use suggestions", "Vorschläge übernehmen")}</button>}
             <button className="btn-secondary" disabled={busy} onClick={() => void run(() => setPrepItemActive(i.id, !i.is_active))}>{i.is_active ? s("Pause", "Pausieren") : s("Resume", "Fortsetzen")}</button>
           </div></td>
         </tr>)}</tbody>
