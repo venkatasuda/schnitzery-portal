@@ -117,6 +117,8 @@ const DE: Record<string, string> = {
   "Task can't be empty.": "Aufgabe darf nicht leer sein.",
   "That's your own request.": "Das ist deine eigene Anfrage.",
   "This request is no longer open.": "Diese Anfrage ist nicht mehr offen.",
+  "Choose the type of time off.": "Art der Abwesenheit wählen.",
+  "Upload the sick note again.": "Krankmeldung bitte erneut hochladen.",
   "Choose one of your own upcoming shifts.": "Wähle eine deiner eigenen kommenden Schichten.",
   "Old swap request: decline it and use Shift cover (swap) instead.": "Alte Tauschanfrage: bitte ablehnen und stattdessen über Schicht abgeben / tauschen.",
   "This staff member isn't in your branch.": "Dieser Mitarbeiter ist nicht in deiner Filiale.",

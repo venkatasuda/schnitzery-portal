@@ -26,7 +26,7 @@ export async function getHygieneLog(from: string, to: string) {
 
   const [branch, units, temps, tasks] = await Promise.all([
     db.from("branches").select("name").eq("id", branchId).single(),
-    readAll(db.from("temp_units").select("id,name,kind,min_temp,max_temp,is_active").eq("branch_id", branchId).order("name").order("id")),
+    readAll(db.from("temp_units").select("id,name,kind,min_temp,max_temp,is_active").eq("branch_id", branchId).order("sort").order("name").order("id")),
     readAll(db.from("temp_logs").select("unit_id,work_date,temp,in_range,note,corrective_action,recorded_by_name,recorded_at").eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).order("recorded_at").order("id")),
     readAll(db.from("checklists").select("work_date,type,task,done,value,completed_at,completed_by").eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).order("work_date").order("type").order("id")),
   ]);

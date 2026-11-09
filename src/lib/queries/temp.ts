@@ -23,35 +23,40 @@ export async function getTempUnits() {
   const today = berlinToday();
 
   const { data: units } = await supabase
-    .from("temp_units").select("*").eq("branch_id", branchId).eq("is_active", true).order("name");
+    .from("temp_units").select("*").eq("branch_id", branchId).eq("is_active", true).order("sort").order("name");
 
   const { data: todayLogs } = await supabase
     .from("temp_logs").select("unit_id, temp, in_range, recorded_at, recorded_by_name")
     .eq("branch_id", branchId).eq("work_date", today).order("recorded_at", { ascending: false });
 
   const latest: Record<string, any> = {};
-  const count: Record<string, number> = {};
+  const opening = new Set<string>(), closing = new Set<string>();
   for (const l of todayLogs || []) {
-    count[l.unit_id] = (count[l.unit_id] || 0) + 1;
     if (!latest[l.unit_id]) latest[l.unit_id] = l; // first seen = latest (desc order)
+    (isClosing(l.recorded_at) ? closing : opening).add(l.unit_id);
   }
 
   const enriched = (units || []).map((u: any) => ({
     ...u,
-    todayCount: count[u.id] || 0,
+    opening: opening.has(u.id), closing: closing.has(u.id),
     latest: latest[u.id] || null,
   }));
-  return { ok: true, units: enriched, isManager: isManager(profile?.role) };
+  return { ok: true, units: enriched, isManager: isManager(profile?.role), closingNow: isClosing(new Date().toISOString()) };
 }
 
-export async function addTempUnit(name: string, kind: string, minTemp: number, maxTemp: number) {
+// Two checks a day: before 15:00 Berlin = opening, from 15:00 = closing (same rule as the day close).
+function isClosing(iso: string) {
+  return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Berlin", hour: "2-digit", hour12: false }).format(new Date(iso))) >= 15;
+}
+
+export async function addTempUnit(name: string, kind: string, minTemp: number, maxTemp: number, room = "") {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
   if (!name) return { ok: false, error: "Name required." };
   if (!(maxTemp > minTemp)) return { ok: false, error: "Max must be greater than min." };
   const { error } = await supabase.from("temp_units").insert({
-    branch_id: branchId, name, kind: kind || "fridge", min_temp: minTemp, max_temp: maxTemp, is_active: true,
+    branch_id: branchId, name, kind: kind || "fridge", min_temp: minTemp, max_temp: maxTemp, is_active: true, room: room.trim().slice(0, 40) || null,
   });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
@@ -111,16 +116,18 @@ export async function getTempSummary() {
   const { data: units } = await supabase
     .from("temp_units").select("id").eq("branch_id", branchId).eq("is_active", true);
   const { data: logs } = await supabase
-    .from("temp_logs").select("unit_id, in_range").eq("branch_id", branchId).eq("work_date", today);
+    .from("temp_logs").select("unit_id, in_range, recorded_at").eq("branch_id", branchId).eq("work_date", today);
 
-  const logged = new Set((logs || []).map((l: any) => l.unit_id));
+  const active = new Set((units || []).map((u: any) => u.id));
+  const checks = new Set((logs || []).filter((l: any) => active.has(l.unit_id)).map((l: any) => `${l.unit_id}|${isClosing(l.recorded_at) ? "c" : "o"}`));
   const breaches = (logs || []).filter((l: any) => !l.in_range).length;
-  const total = (units || []).length;
+  const total = active.size * 2; // opening + closing per unit
   return {
     ok: true,
-    totalUnits: total,
-    loggedUnits: logged.size,
-    pending: Math.max(0, total - logged.size),
+    totalUnits: active.size,
+    totalChecks: total,
+    doneChecks: checks.size,
+    pending: Math.max(0, total - checks.size),
     breachesToday: breaches,
   };
 }
