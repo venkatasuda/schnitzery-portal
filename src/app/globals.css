@@ -1071,3 +1071,6 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .shift-tile:hover { background: var(--surface-2); }
 .shift-tile > span:last-child { display: flex; flex-direction: column; gap: 2px; }
 .shift-tile-icon { font-size: 26px; }
+/* End-of-day close */
+.day-close-row { align-items: flex-start; }
+.day-close-row input.form-input { margin-top: 6px; width: 100%; }

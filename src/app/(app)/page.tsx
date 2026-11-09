@@ -293,6 +293,7 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     <section className="dashboard-workflows">
       <h2>{t("homeDashboard.workflows")}</h2>
       <div className="dashboard-tools">
+        <Shortcut href="/day-close" icon="🔒" title={t("home.dayClose")} />
         <Shortcut href="/summary" icon="📄" title={t("home.monthlySummary")} />
         <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} />
         <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
