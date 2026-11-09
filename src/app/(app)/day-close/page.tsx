@@ -35,7 +35,8 @@ export default function DayClosePage() {
   const snap: DaySnapshot = data.closed?.snapshot ?? data.snapshot;
   const diff = num(counted) != null && num(posCash) != null ? Math.round((num(counted)! - num(posCash)!) * 100) / 100 : null;
   const checks: { key: string; ok: boolean; label: string; value: string; link?: string }[] = [
-    { key: "sales", ok: (data.closed ? data.closed.pos_total : num(posTotal)) != null, label: s("POS sales", "Kassenumsatz"), value: eur(data.closed ? data.closed.pos_total : num(posTotal)) },
+    // Same rule as private.close_day: entered, and equal to any figure already in daily_sales.
+    { key: "sales", ok: data.closed ? !(data.closed.snapshot.open_points ?? []).includes("sales") : num(posTotal) != null && (snap.recorded_sales == null || Math.abs(num(posTotal)! - Number(snap.recorded_sales)) < 0.01), label: s("POS sales", "Kassenumsatz"), value: eur(data.closed ? data.closed.pos_total : num(posTotal)) },
     { key: "cash", ok: data.closed ? data.closed.cash_difference === 0 : diff === 0, label: s("Cash difference", "Kassendifferenz"), value: eur(data.closed ? data.closed.cash_difference : diff) },
     { key: "temps", ok: snap.temps.logged >= snap.temps.units, label: s("Temperatures", "Temperaturen"), value: `${snap.temps.logged} / ${snap.temps.units}`, link: "/temp" },
     { key: "checklists", ok: snap.checklists.done >= snap.checklists.total, label: s("Checklists", "Checklisten"), value: `${snap.checklists.done} / ${snap.checklists.total}`, link: "/checklist" },

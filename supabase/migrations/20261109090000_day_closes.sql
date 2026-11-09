@@ -71,7 +71,9 @@ begin
 
   snap := private.day_close_snapshot(p_branch, p_date);
   diff := case when p_counted_cash is not null and p_pos_cash is not null then round(p_counted_cash - p_pos_cash, 2) end;
-  if p_pos_total is null then open_points := array_append(open_points, 'sales'); end if;
+  -- Sales: missing, or different from the figure already in daily_sales (POS import / manager entry) → needs a reason.
+  if p_pos_total is null or (snap->>'recorded_sales' is not null and abs(p_pos_total - (snap->>'recorded_sales')::numeric) >= 0.01) then
+    open_points := array_append(open_points, 'sales'); end if;
   if (snap->'temps'->>'logged')::int < (snap->'temps'->>'units')::int then open_points := array_append(open_points, 'temps'); end if;
   if (snap->'checklists'->>'done')::int < (snap->'checklists'->>'total')::int then open_points := array_append(open_points, 'checklists'); end if;
   if (snap->'leftovers'->>'counted')::int < (snap->'leftovers'->>'items')::int then open_points := array_append(open_points, 'leftovers'); end if;
@@ -87,6 +89,12 @@ begin
     (select coalesce(jsonb_object_agg(key, left(trim(value), 300)), '{}'::jsonb) from jsonb_each_text(p_reasons) where key = any(open_points)),
     nullif(trim(p_note), ''), auth.uid())
   returning id into new_id;
+  -- daily_sales stays the single sales source for every dashboard. Fill a missing day from the close;
+  -- never overwrite an existing figure (POS import or manager entry wins, a mismatch is kept as a reason above).
+  if p_pos_total is not null then
+    insert into public.daily_sales (branch_id, sale_date, amount) values (p_branch, p_date, round(p_pos_total, 2))
+    on conflict (branch_id, sale_date) do nothing;
+  end if;
   return new_id;
 end $$;
 

@@ -123,6 +123,8 @@ export async function decideSwap(id: string, decision: "approved" | "denied") {
   const { supabase, user, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
+  // Legacy swaps have no week and never changed the roster: decline only; new swaps go through Cover.
+  if (decision === "approved") return { ok: false, error: "Old swap request: decline it and use Shift cover (swap) instead." };
 
   const { data: row, error } = await supabase
     .from("swap_requests")
@@ -134,9 +136,9 @@ export async function decideSwap(id: string, decision: "approved" | "denied") {
 
   await pushSafe(
     row?.requester_id,
-    decision === "approved" ? { title: "Shift swap approved", body: "Your shift-swap request was approved." } : { title: "Shift swap declined", body: "Your shift-swap request was declined." },
-    decision === "approved" ? { title: "Schichttausch genehmigt", body: "Dein Antrag auf Schichttausch wurde genehmigt." } : { title: "Schichttausch abgelehnt", body: "Dein Antrag auf Schichttausch wurde abgelehnt." },
-    "/schedule",
+    { title: "Shift swap declined", body: "Please ask a colleague through Shift cover." },
+    { title: "Schichttausch abgelehnt", body: "Bitte über Schicht abgeben / tauschen anfragen." },
+    "/cover",
   );
   return { ok: true };
 }

@@ -180,46 +180,4 @@ export async function saveRoster(weekStart: string, rosterData: any, expected: {
   return {ok:true,expected:{id:changed.id,roster:changed.roster_data}};
 }
 
-// ── SWAP REQUESTS ──
-export async function getStaffForSwap() {
-  const { supabase, user, branchId } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in.", staff: [] };
-  const { data } = await supabase
-    .from("users")
-    .select("id, full_name")
-    .eq("branch_id", branchId)
-    .neq("id", user.id)
-    .order("full_name");
-  return { ok: true, staff: data || [] };
-}
-
-export async function submitSwap(myDay: string, otherUserId: string, otherDay: string) {
-  const { supabase, user, branchId } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in." };
-  if (!myDay || !otherUserId || !otherDay) return { ok: false, error: "Fill in all fields." };
-
-  const { error } = await supabase.from("swap_requests").insert({
-    branch_id: branchId,
-    requester_id: user.id,
-    my_day: myDay,
-    other_person_id: otherUserId,
-    their_day: otherDay,
-    status: "pending",
-  });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
-
-export async function getMySwaps() {
-  const { supabase, user } = await getMe();
-  if (!user) return { ok: false, error: "Not logged in.", swaps: [] };
-
-  const { data, error } = await supabase
-    .from("swap_requests")
-    .select("*")
-    .eq("requester_id", user.id)
-    .order("created_at", { ascending: false });
-
-  if (error) return { ok: false, error: error.message, swaps: [] };
-  return { ok: true, swaps: data || [] };
-}
+// Shift swaps run through the cover flow (src/lib/queries/cover.ts), which updates the roster on approval.

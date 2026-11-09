@@ -7,7 +7,7 @@ Updated 8 November 2026. One list for everything still open (Claude + Codex + te
 - [x] **C5 — keyboard-only pass** (9 Nov, staging): skip link, visible focus, Tab through Workplace, Esc closes dialogs with discard guard, first field focused in dialogs — OK. Fixed: progress ring was a focusable unlabelled chart (now one labelled image).
 - [x] **E2 — end-of-day close:** `/day-close` + migration `20261109090000_day_closes.sql` (built 9 Nov; staging test + release pending).
 - [x] **E3 — hygiene logbook PDF:** `/compliance/logbook` (managers), print layout → "Save as PDF" (built 9 Nov; staging test + release pending).
-- [ ] **E4 — shift swaps** with manager approval and Mindestlohn / Minijob / rest-time checks.
+- [x] **E4 — shift swaps** (built 9 Nov): merged into Shift cover — claimer may offer one of their shifts in return; approval moves both roster entries atomically (`20261109120000_cover_swaps.sql`); manager sees overlap / <11 h rest / Minijob-cap warnings. Old day-name swap form removed; old pending swaps can only be declined.
 - [ ] **E5 — prep targets suggested from history** (prepared vs. left over).
 - [ ] **E1 — food cost per dish** (recipe vs. actual) — blocked by missing prices (see Team data).
 - [ ] **D — load test** on a Supabase test branch (50 → 500 → 2,000 simulated users), after more real usage.

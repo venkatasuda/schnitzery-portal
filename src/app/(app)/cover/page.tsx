@@ -17,7 +17,14 @@ const fmtDate = (wd: string) => {
 };
 
 export default function CoverPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const s = (en: string, de: string) => (locale === "de" ? de : en);
+  const [claimFor, setClaimFor] = useState<string | null>(null);
+  const [giveBack, setGiveBack] = useState("");
+  const swapLabel = (r: any) => r.return_work_date ? ` ⇄ ${fmtDate(r.return_work_date)} · ${r.return_shift}` : "";
+  const warnText = (w: any) => w.kind === "overlap" ? s(`${w.who}: overlaps another shift`, `${w.who}: überschneidet sich mit einer Schicht`)
+    : w.kind === "rest" ? s(`${w.who}: only ${w.restH} h rest (11 h required)`, `${w.who}: nur ${w.restH} Std. Ruhezeit (11 Std. nötig)`)
+    : s(`${w.who} (Minijob): ${w.earnings} € this month, cap ${w.cap} €`, `${w.who} (Minijob): ${w.earnings} € im Monat, Grenze ${w.cap} €`);
   const [tab, setTab] = useState<"my" | "open" | "review">("my");
   const [loading, setLoading] = useState(true);
   const [isMgr, setIsMgr] = useState(false);
@@ -56,8 +63,9 @@ export default function CoverPage() {
   }
   async function doClaim(id: string) {
     setBusy(id);
-    const r = await claimCover(id); setBusy(null);
-    if (r.ok) { toast(t("cover.claimed"), "success"); loadAll(); }
+    const g = shifts.find((x) => `${x.work_date}|${x.team}|${x.shift}` === giveBack);
+    const r = await claimCover(id, g ? { work_date: g.work_date, team: g.team, shift: g.shift } : null); setBusy(null);
+    if (r.ok) { toast(t("cover.claimed"), "success"); setClaimFor(null); setGiveBack(""); loadAll(); }
     else toast(r.error || t("cover.failed"), "error");
   }
   async function doCancel(id: string) {
@@ -67,7 +75,8 @@ export default function CoverPage() {
     if (r.ok) { toast(t("cover.cancelled"), "success"); loadAll(); }
     else toast(r.error || t("cover.failed"), "error");
   }
-  async function doDecide(id: string, decision: "approved" | "rejected") {
+  async function doDecide(id: string, decision: "approved" | "rejected", warnings: any[] = []) {
+    if (decision === "approved" && warnings.length && !confirm(`${warnings.map(warnText).join("\n")}\n\n${s("Approve anyway?", "Trotzdem genehmigen?")}`)) return;
     setBusy(id);
     const r = await decideCover(id, decision); setBusy(null);
     if (r.ok) {
@@ -132,7 +141,7 @@ export default function CoverPage() {
                       <div>
                         <div className="ui-body">{fmtDate(r.work_date)} · {r.shift} <span className="ui-muted">({r.team})</span></div>
                         <div style={{ fontSize: 12, color: statusColor(r.status) }}>
-                          {t("cover.st_" + r.status)}{r.claimer?.full_name && r.status !== "rejected" ? ` · ${r.claimer.full_name}` : ""}
+                          {t("cover.st_" + r.status)}{r.claimer?.full_name && r.status !== "rejected" ? ` · ${r.claimer.full_name}${swapLabel(r)}` : ""}
                         </div>
                       </div>
                       {(r.status === "open" || r.status === "claimed") && (
@@ -158,8 +167,20 @@ export default function CoverPage() {
                       <div className="ui-muted">{c.team} · {c.requester?.full_name || "—"}</div>
                       {c.reason && <div className="ui-quote">“{c.reason}”</div>}
                     </div>
-                    <button className="btn-gold" onClick={() => doClaim(c.id)} disabled={busy === c.id}>{busy === c.id ? "…" : t("cover.claim")}</button>
+                    {claimFor !== c.id && <button className="btn-gold" onClick={() => { setClaimFor(c.id); setGiveBack(""); }}>{t("cover.claim")}</button>}
                   </div>
+                  {claimFor === c.id && (
+                    <div className="mt-3 bt-1 pt-3">
+                      <select className="form-input" aria-label={s("In return", "Im Gegenzug")} value={giveBack} onChange={(e) => setGiveBack(e.target.value)}>
+                        <option value="">{s("Just cover — nothing in return", "Nur übernehmen — ohne Tausch")}</option>
+                        {shifts.filter((x) => !x.requestStatus).map((x) => <option key={`${x.work_date}|${x.team}|${x.shift}`} value={`${x.work_date}|${x.team}|${x.shift}`}>{s("Swap for my", "Tausch gegen meine")} {fmtDate(x.work_date)} · {x.shift} ({x.team})</option>)}
+                      </select>
+                      <div className="ui-row-actions">
+                        <button className="btn-gold" onClick={() => doClaim(c.id)} disabled={busy === c.id}>{busy === c.id ? "…" : giveBack ? s("Offer swap", "Tausch anbieten") : t("cover.claim")}</button>
+                        <button className="btn-secondary" onClick={() => setClaimFor(null)}>{t("cover.cancel")}</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -169,7 +190,7 @@ export default function CoverPage() {
                   {claimedByMe.filter((r) => r.status === "claimed" || r.status === "approved").map((r) => (
                     <div key={r.id} className="card ui-item-card">
                       <div className="ui-body">{fmtDate(r.work_date)} · {r.shift} <span className="ui-muted">({r.team})</span></div>
-                      <div style={{ fontSize: 12, color: statusColor(r.status) }}>{t("cover.st_" + r.status)} · {r.requester?.full_name}</div>
+                      <div style={{ fontSize: 12, color: statusColor(r.status) }}>{t("cover.st_" + r.status)} · {r.requester?.full_name}{swapLabel(r)}</div>
                     </div>
                   ))}
                 </>
@@ -186,12 +207,13 @@ export default function CoverPage() {
                 <div key={c.id} className="card ui-item-card">
                   <div className="ui-strong">{fmtDate(c.work_date)} · {c.shift} <span className="ui-muted">({c.team})</span></div>
                   <div className="ui-meta">
-                    {c.requester?.full_name} → {c.claimer?.full_name || <span className="tone-info">{t("cover.awaitingClaim")}</span>}
+                    {c.requester?.full_name} {c.return_work_date ? "⇄" : "→"} {c.claimer?.full_name || <span className="tone-info">{t("cover.awaitingClaim")}</span>}{swapLabel(c)}
                   </div>
                   {c.reason && <div className="ui-quote">“{c.reason}”</div>}
+                  {(c.warnings || []).map((w: any, i: number) => <div key={i} className="ui-note tone-warn">⚠ {warnText(w)}</div>)}
                   {c.status === "claimed" ? (
                     <div className="ui-row-actions">
-                      <button className="btn-gold" onClick={() => doDecide(c.id, "approved")} disabled={busy === c.id}>{busy === c.id ? "…" : t("cover.approve")}</button>
+                      <button className="btn-gold" onClick={() => doDecide(c.id, "approved", c.warnings)} disabled={busy === c.id}>{busy === c.id ? "…" : t("cover.approve")}</button>
                       <button className="btn-quiet-danger" onClick={() => doDecide(c.id, "rejected")} disabled={busy === c.id}>{t("cover.reject")}</button>
                     </div>
                   ) : (

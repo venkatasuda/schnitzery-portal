@@ -132,7 +132,7 @@ export default function PrepDay({ initialDay, allowPicker = true }: { initialDay
         <legend className="sr-only">{s("Leftovers", "Reste")}</legend>
         {items.map((i) => <label key={i.id} className="prep-left-row">
           <span>{name(i.id)}</span>
-          <span className="prep-unit-input"><input className="form-input" type="number" inputMode="decimal" min="0" step="any" placeholder="0" value={left[i.id] ?? ""} onChange={(e) => setLeft({ ...left, [i.id]: e.target.value })} /><em>{i.unit}</em></span>
+          <span className="prep-unit-input"><input className="form-input" type="number" inputMode="decimal" min="0" step="any" placeholder="—" value={left[i.id] ?? ""} onChange={(e) => setLeft({ ...left, [i.id]: e.target.value })} /><em>{i.unit}</em></span>
         </label>)}
       </fieldset>
       <div className="prep-actions"><button className="btn-gold" disabled={busy}>{s("Next day", "Nächster Tag")} →</button></div>
