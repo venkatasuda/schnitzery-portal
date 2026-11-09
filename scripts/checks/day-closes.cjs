@@ -15,6 +15,7 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
     create table public.temp_units(id uuid primary key default gen_random_uuid(), branch_id uuid, name text, is_active boolean default true);
     create table public.temp_logs(id uuid primary key default gen_random_uuid(), branch_id uuid, unit_id uuid, work_date date);
     create table public.checklists(id uuid primary key default gen_random_uuid(), branch_id uuid, work_date date, done boolean default false);
+    create table public.checklist_templates(id uuid primary key default gen_random_uuid(), branch_id uuid, is_active boolean default true, weekdays smallint[]);
     create table public.daily_sales(id uuid primary key default gen_random_uuid(), branch_id uuid, sale_date date, amount numeric);
     create table public.attendance_logs(id uuid primary key default gen_random_uuid(), user_id uuid, branch_id uuid, work_date date, clock_in timestamptz, status text);
     create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
@@ -32,7 +33,8 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
     insert into public.temp_units(id, branch_id, name) values ('00000000-0000-0000-0000-0000000000f1', '${B}', 'Fridge 1'), ('00000000-0000-0000-0000-0000000000f2', '${B}', 'Fridge 2');
     insert into public.temp_logs(branch_id, unit_id, work_date) values ('${B}', '00000000-0000-0000-0000-0000000000f1', '${today}');
     insert into public.checklists(branch_id, work_date, done) values ('${B}', '${today}', true), ('${B}', '${today}', true);
-    insert into public.attendance_logs(user_id, branch_id, work_date, clock_in, status) values ('${STAFF}', '${B}', '${today}', now(), 'active');`);
+    insert into public.attendance_logs(user_id, branch_id, work_date, clock_in, status) values ('${STAFF}', '${B}', '${today}', now(), 'active');
+    insert into public.checklist_templates(branch_id, weekdays) values ('${B}', '{1,2,3,4,5,6,7}');`);
   const as = async (uid, sql, params) => { await db.exec(`set role authenticated; set test.uid = '${uid}';`); try { return await db.query(sql, params); } finally { await db.exec("reset role;"); } };
   const close = (uid, posTotal, posCash, counted, reasons, d = today) => as(uid, "select public.close_day($1, $2::date, $3, $4, $5, $6::jsonb, 'note') id", [B, d, posTotal, posCash, counted, JSON.stringify(reasons)]);
 
@@ -41,6 +43,8 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   assert.deepEqual(snap.checklists, { total: 2, done: 2 });
   assert.equal(snap.clocked_in.length, 1, "Ali still clocked in");
   await assert.rejects(as(STAFF, "select public.day_close_snapshot($1, $2::date) s", [B, today]), /Day close access required/, "Plain staff cannot see the close");
+  const yesterday = (await db.query("select ((now() at time zone 'Europe/Berlin')::date - 1)::text d")).rows[0].d;
+  assert.deepEqual((await as(LEAD, "select public.day_close_snapshot($1, $2::date) s", [B, yesterday])).rows[0].s.checklists, { total: 1, done: 0 }, "Checklist never opened: the weekday's templates still count as open");
   await assert.rejects(close(STAFF, 2430, 400, 400, {}), /Day close access required/, "Plain staff cannot close");
   await assert.rejects(close(LEAD, 2430, 400, 395.5, { temps: "Fridge 2 broken, reported" }), /Reason required for clocked_in/, "Every open point needs a reason");
   await assert.rejects(close(LEAD, 2430, 400, 395.5, { temps: "Fridge 2 broken", clocked_in: "Ali forgot, manager fixes" }), /Reason required for cash/, "A cash difference needs a reason");
