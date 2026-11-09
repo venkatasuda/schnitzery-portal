@@ -5,7 +5,7 @@ Updated 8 November 2026. One list for everything still open (Claude + Codex + te
 ## Code (Claude)
 - [x] **C4 — instant refusal on manager pages.** `src/proxy.ts` + `src/lib/auth/manager-paths.ts`: plain staff opening a manager page go straight to `/no-access`; shift leaders keep `/inventory/counts`. *(built 8 Nov, release pending)*
 - [ ] **C5 — keyboard-only pass** on staging (Tab/Enter/Esc, visible focus, dialogs). Fix findings.
-- [ ] **E2 — end-of-day close:** one sign-off at closing (sales, cash, temperatures, checklist completeness, prep leftovers).
+- [x] **E2 — end-of-day close:** `/day-close` + migration `20261109090000_day_closes.sql` (built 9 Nov; staging test + release pending).
 - [ ] **E3 — hygiene logbook PDF** (temperatures + cleaning checklists for a period) for food inspection.
 - [ ] **E4 — shift swaps** with manager approval and Mindestlohn / Minijob / rest-time checks.
 - [ ] **E5 — prep targets suggested from history** (prepared vs. left over).

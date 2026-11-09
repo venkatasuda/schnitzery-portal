@@ -19,6 +19,7 @@ export default function ShiftInventoryPage() {
     { href: "/inventory/counts", icon: "📋", title: s("Stocktake", "Inventur"), sub: s("Count the shelves and save; a manager publishes", "Regale zählen und speichern; die Leitung veröffentlicht") },
     { href: "/shift/delivery", icon: "🚚", title: s("Delivery", "Lieferung"), sub: s("Record a delivery with expiry dates (no prices)", "Lieferung mit Ablaufdaten erfassen (ohne Preise)") },
     { href: "/expiry", icon: "⏳", title: s("Waste, use & expiry", "Ausschuss, Verbrauch & Ablauf"), sub: s("Record use or waste per batch, check what expires", "Verbrauch oder Ausschuss je Charge, Ablauf prüfen") },
+    { href: "/day-close", icon: "🔒", title: s("Close the day", "Tagesabschluss"), sub: s("POS report, cash count and the day's checks", "Kassenbericht, Bargeld und Tagesprüfungen") },
   ];
   return <div style={{ maxWidth: 680, margin: "0 auto" }}>
     <PageHeader title={s("Inventory", "Inventar")} subtitle={s("Shift leader tasks", "Aufgaben der Schichtleitung")} />
