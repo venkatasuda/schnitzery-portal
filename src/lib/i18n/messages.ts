@@ -813,6 +813,7 @@ export const messages = {
       validWage: "Enter a valid wage.", wageSaved: "Wage saved.",
     },
     comp: {
+      hygieneLogbook: "Hygiene logbook (PDF)",
       subtitle: "German ArbZG · last 14 days · from actual clock-ins",
       breakIssues: "Break Issues", restIssues: "Rest Issues", over10h: "Over 10h",
       allCompliant: "All compliant", nothingChecked: "No completed shifts in the last 14 days, so there is nothing to check yet.", checkedNote: "{n} shifts checked over the last 14 days — no break, rest, or overtime issues.",
@@ -1714,6 +1715,7 @@ export const messages = {
       validWage: "Gib einen gültigen Lohn ein.", wageSaved: "Lohn gespeichert.",
     },
     comp: {
+      hygieneLogbook: "Hygiene-Protokoll (PDF)",
       subtitle: "ArbZG · letzte 14 Tage · aus echten Einstempelungen",
       breakIssues: "Pausen-Probleme", restIssues: "Ruhezeit-Probleme", over10h: "Über 10 Std.",
       allCompliant: "Alles konform", nothingChecked: "Keine abgeschlossenen Schichten in den letzten 14 Tagen – noch nichts zu prüfen.", checkedNote: "{n} Schichten in den letzten 14 Tagen geprüft — keine Pausen-, Ruhezeit- oder Überstundenprobleme.",

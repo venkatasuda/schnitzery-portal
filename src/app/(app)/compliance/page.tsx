@@ -34,6 +34,7 @@ export default function CompliancePage() {
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="⚖️" size={22} /> {t("home.compliance")}</h1>
       <div className="page-sub">{t("comp.subtitle")}</div>
+      <div className="row-actions"><Link className="btn-secondary" href="/compliance/logbook">{t("comp.hygieneLogbook")}</Link></div>
 
       {loading ? (
         <>
