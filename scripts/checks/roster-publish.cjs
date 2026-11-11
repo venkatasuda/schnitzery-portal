@@ -42,5 +42,11 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   assert.equal((await db.query("select count(*)::int n from public.roster_drafts")).rows[0].n, 0, "Draft removed after publishing");
   assert.equal((await db.query("select count(*)::int n from public.notifications where user_id = $1 and type = 'roster'", [ANA])).rows[0].n, 1);
   await assert.rejects(as(MGR, "select public.publish_roster($1, $2::date)", [B, W]), /No draft to publish/);
-  console.log("Roster publish: drafts/tiers manager-only, publish copies draft live, stale drafts refused, staff notified.");
+  // Staffing targets (migration 20261111140000): managers of the branch only.
+  await db.exec(fs.readFileSync("supabase/migrations/20261111140000_staffing_targets.sql", "utf8"));
+  await as(MGR, "insert into public.staffing_targets(branch_id, weekday, team, shift, needed) values ($1, 4, 'Kitchen', 'Night', 4)", [B]);
+  assert.equal((await as(ANA, "select count(*)::int n from public.staffing_targets")).rows[0].n, 0, "Staff cannot read staffing targets");
+  await assert.rejects(as(OTHER, "insert into public.staffing_targets(branch_id, weekday, team, shift, needed) values ($1, 4, 'Kitchen', 'Night', 9)", [B]), /row-level security/, "Other branch cannot write");
+  await assert.rejects(as(MGR, "insert into public.staffing_targets(branch_id, weekday, team, shift, needed) values ($1, 7, 'Kitchen', 'Night', 1)", [B]), /check constraint/, "Weekday 0–6 only");
+  console.log("Roster publish: drafts/tiers manager-only, publish copies draft live, stale drafts refused, staff notified; staffing targets manager-only.");
 })().catch((e) => { console.error(e); process.exitCode = 1; });

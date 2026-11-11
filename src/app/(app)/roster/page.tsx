@@ -13,6 +13,8 @@ import RosterLabourPanel from "@/components/RosterLabourPanel";
 import { getRosterPlanning } from "@/lib/queries/owner-insights";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { draftRoster } from "@/lib/roster/draft";
+import { smartSchedule } from "@/lib/roster/smart";
+import { getStaffingTargets } from "@/lib/queries/staffing";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // Every team a manager can roster — not only the ones that happen to have preset
@@ -136,6 +138,28 @@ export default function RosterPage() {
     finally { setDrafting(false); }
   }
 
+  // Smart automate: fills the week from the staffing targets (src/lib/roster/smart.ts) — 11 h rest, contract and
+  // Minijob caps, Tier 1 weekend bonus, furthest-behind-hours first. Screen only; Save draft / Publish as usual.
+  async function smartAutomate() {
+    if (drafting || saving || loading || loadError || !weekStart) return;
+    if (totalAssigned > 0 && !confirm(t("roster.smartReplace"))) return;
+    setDrafting(true);
+    try {
+      const [tg, st, plan] = await Promise.all([getStaffingTargets(), getShiftTimes(), getRosterPlanning(weekStart)]);
+      if (!tg.ok || !tg.targets.some((x) => x.needed > 0)) { toast(t("roster.smartNoTargets"), "error"); return; }
+      const res = smartSchedule({
+        weekStart, targets: tg.targets, avail,
+        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0 })),
+        times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
+        minijobbers: plan.ok ? plan.minijobbers : [],
+      });
+      setRoster(res.roster as Roster); setOpenSlots(res.open.map(({ day, team, shift }) => ({ day, team, shift })));
+      const missing = res.open.reduce((n, o) => n + o.missing, 0);
+      toast(t("roster.smartDone", { n: res.assigned, o: missing }), missing ? "error" : "success");
+    } catch { toast(t("roster.loadFailed"), "error"); }
+    finally { setDrafting(false); }
+  }
+
   async function doSave() {
     if(saving || loading || loadError)return;
     setSaving(true);
@@ -205,6 +229,9 @@ export default function RosterPage() {
           </span>
           <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
         </div>
+        <button className="btn-secondary" onClick={smartAutomate} disabled={drafting||saving||loading||!!loadError}>
+          {drafting ? t("common.loading") : t("roster.smart")}
+        </button>
         <button className="btn-secondary" onClick={autoDraft} disabled={drafting||saving||loading||!!loadError} title={t("roster.draftHint")}>
           {drafting ? t("common.loading") : t("roster.draft")}
         </button>

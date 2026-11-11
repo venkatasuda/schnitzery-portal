@@ -9,6 +9,7 @@ import { getShiftTimes, upsertShiftTime, type ShiftTime } from "@/lib/queries/sh
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { TEAMS } from "@/lib/queries/schedule-constants";
+import StaffingTargets from "@/components/StaffingTargets";
 
 type Row = Omit<ShiftTime, "friSatStart" | "friSatEnd"> & { friSatStart: string; friSatEnd: string };
 const pair = (a: string, b: string) => (a === "" && b === "") || (/^\d{2}:\d{2}$/.test(a) && /^\d{2}:\d{2}$/.test(b));
@@ -77,6 +78,7 @@ export default function ShiftTimesPage() {
           </div>
         </div>
       ))}
+      {!loading && <StaffingTargets />}
       <Link href="/schedule-hub" className="ui-back-link">← {t("schedhub.title")}</Link>
     </div>
   );

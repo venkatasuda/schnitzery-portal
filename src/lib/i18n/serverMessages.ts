@@ -119,6 +119,7 @@ const DE: Record<string, string> = {
   "This request is no longer open.": "Diese Anfrage ist nicht mehr offen.",
   "Enter both times as HH:MM, or leave both empty.": "Beide Zeiten als HH:MM eingeben oder beide leer lassen.",
   "Invalid roster. Reload before saving.": "Ungültiger Dienstplan. Vor dem Speichern neu laden.",
+  "Invalid staffing targets.": "Ungültige Besetzungswerte.",
   "Invalid tier.": "Ungültige Stufe.",
   "Choose the type of time off.": "Art der Abwesenheit wählen.",
   "Upload the sick note again.": "Krankmeldung bitte erneut hochladen.",

@@ -355,6 +355,8 @@ html.light .btn-gold { color: #fff; }
 .management-shell .avatar { background: var(--accent-soft); color: var(--gold-ink); box-shadow: none; font-family: var(--font-body); }
 .management-mobile-nav { display: none; }
 .employee-shell .screen-wrap { max-width: 820px; }
+/* The Shifts grid uses the full width on desktop (week columns / month matrix). */
+.employee-shell .screen-wrap:has(.shifts-page), .screen-wrap:has(.shifts-page) { max-width: none; }
 .employee-shell .bottom-nav { max-width: 820px; }
 .dashboard-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .dashboard-page-heading h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.7px; }
@@ -1119,6 +1121,8 @@ label.btn-secondary:focus-within { outline: 2px solid var(--gold-ink); outline-o
 .roster-status.is-draft { background: var(--accent-soft); color: var(--gold-ink); }
 .roster-status.is-live { background: var(--success-soft); color: var(--success); }
 .roster-stale { margin: 8px 0; color: var(--danger); font-weight: 600; }
+.staffing-table input.form-input { width: 64px; min-width: 0; text-align: center; padding: 6px; }
+.staffing-table th[scope="row"] { white-space: nowrap; }
 body.has-cookie-notice { padding-bottom: 120px; }
 .leave-attach { cursor: pointer; }
 .leave-attach:focus-within { outline: 2px solid var(--action); outline-offset: 2px; }
