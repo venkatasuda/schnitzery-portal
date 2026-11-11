@@ -18,6 +18,7 @@ export default function LeavePage() {
   const typeLabel = (k: string) => ({ vacation: s("Vacation", "Urlaub"), sick: s("Sick leave", "Krank"), unpaid: s("Unpaid", "Unbezahlt"), special: s("Special leave", "Sonderurlaub") } as Record<string, string>)[k] ?? k;
   const [type, setType] = useState("vacation");
   const [file, setFile] = useState<File | null>(null);
+  const [fileKey, setFileKey] = useState(0); // remounts the file input so a sent file doesn't stay selected
   const stLabel = (st: string) => (["approved", "denied", "pending"].includes(st) ? t("shifts.status_" + st) : st);
   const [tab, setTab] = useState<"request" | "mine">("request");
   const [fromDate, setFromDate] = useState("");
@@ -49,10 +50,10 @@ export default function LeavePage() {
       const res = await submitLeave(fromDate, toDate, reason, type, notePath);
       if (res.ok) {
         toast(t("leave.submitted"), "success");
-        setFromDate(""); setToDate(""); setReason(""); setFile(null); setType("vacation");
+        setFromDate(""); setToDate(""); setReason(""); setFile(null); setType("vacation"); setFileKey((k) => k + 1);
         loadMine();
       } else toast(res.error || t("leave.failSubmit"), "error");
-    } catch { toast(t("leave.failSubmit"), "error"); }
+    } catch (e: any) { toast(`${t("leave.failSubmit")}${e?.message ? ` (${e.message})` : ""}`, "error"); }
     finally { setWorking(false); }
   }
   // Upload into the employee's own private folder; returns the storage path.
@@ -74,7 +75,7 @@ export default function LeavePage() {
       const r = await attachSickNote(id, await uploadNote(f));
       if (r.ok) { toast(s("Sick note attached.", "Krankmeldung angehängt."), "success"); loadMine(); }
       else toast(r.error || t("leave.failSubmit"), "error");
-    } catch { toast(t("leave.failSubmit"), "error"); }
+    } catch (e: any) { toast(`${t("leave.failSubmit")}${e?.message ? ` (${e.message})` : ""}`, "error"); }
     finally { setWorking(false); }
   }
   async function openNote(id: string) {
@@ -92,7 +93,6 @@ export default function LeavePage() {
   return (
     <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <h1 className="page-title u-row"><Icon e="🌴" size={22} /> {t("leave.title")}</h1>
-      <p className="ui-lede">{t("leave.subtitle")}</p>
 
       <div className="ui-segmented" role="group">
         <TabBtn active={tab === "request"} onClick={() => setTab("request")}>{t("leave.tabRequest")}</TabBtn>
@@ -115,7 +115,7 @@ export default function LeavePage() {
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("leave.reasonPlaceholder")} rows={3} style={{ ...input, resize: "vertical" }} />
           </Field>
           {type === "sick" && <Field label={s("Sick note (PDF or photo, optional)", "Krankmeldung / AU (PDF oder Foto, optional)")}>
-            <input className="form-input" type="file" accept="application/pdf,image/*"onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <input key={fileKey} className="form-input" type="file" accept="application/pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </Field>}
           <button className="btn-gold ui-block" onClick={submit} disabled={working}>{working ? t("common.submitting") : t("leave.submit")}</button>
         </div>

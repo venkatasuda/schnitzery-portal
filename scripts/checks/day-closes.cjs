@@ -14,7 +14,7 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
     create table public.inventory_recipe_yields(id uuid primary key);
     create table public.temp_units(id uuid primary key default gen_random_uuid(), branch_id uuid, name text, is_active boolean default true);
     create table public.temp_logs(id uuid primary key default gen_random_uuid(), branch_id uuid, unit_id uuid, work_date date, recorded_at timestamptz);
-    create table public.checklists(id uuid primary key default gen_random_uuid(), branch_id uuid, work_date date, done boolean default false);
+    create table public.checklists(id uuid primary key default gen_random_uuid(), branch_id uuid, work_date date, done boolean default false, template_id uuid);
     create table public.checklist_templates(id uuid primary key default gen_random_uuid(), branch_id uuid, is_active boolean default true, weekdays smallint[]);
     create table public.daily_sales(id uuid primary key default gen_random_uuid(), branch_id uuid, sale_date date, amount numeric, unique(branch_id, sale_date));
     create table public.attendance_logs(id uuid primary key default gen_random_uuid(), user_id uuid, branch_id uuid, work_date date, clock_in timestamptz, status text);
@@ -37,9 +37,9 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
       ('${B}', '00000000-0000-0000-0000-0000000000f1', '${today}', ('${today} 08:00'::timestamp at time zone 'Europe/Berlin')),
       ('${B}', '00000000-0000-0000-0000-0000000000f1', '${today}', ('${today} 21:00'::timestamp at time zone 'Europe/Berlin')),
       ('${B}', '00000000-0000-0000-0000-0000000000f2', '${today}', ('${today} 08:30'::timestamp at time zone 'Europe/Berlin'));
-    insert into public.checklists(branch_id, work_date, done) values ('${B}', '${today}', true), ('${B}', '${today}', true);
+    insert into public.checklists(branch_id, work_date, done, template_id) values ('${B}', '${today}', true, '00000000-0000-0000-0000-0000000000c1'), ('${B}', '${today}', true, null);
     insert into public.attendance_logs(user_id, branch_id, work_date, clock_in, status) values ('${STAFF}', '${B}', '${today}', now(), 'active');
-    insert into public.checklist_templates(branch_id, weekdays) values ('${B}', '{1,2,3,4,5,6,7}');`);
+    insert into public.checklist_templates(id, branch_id, weekdays) values ('00000000-0000-0000-0000-0000000000c1', '${B}', '{1,2,3,4,5,6,7}');`);
   const as = async (uid, sql, params) => { await db.exec(`set role authenticated; set test.uid = '${uid}';`); try { return await db.query(sql, params); } finally { await db.exec("reset role;"); } };
   const close = (uid, posTotal, posCash, counted, reasons, d = today) => as(uid, "select public.close_day($1, $2::date, $3, $4, $5, $6::jsonb, 'note') id", [B, d, posTotal, posCash, counted, JSON.stringify(reasons)]);
 
@@ -50,6 +50,10 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   await assert.rejects(as(STAFF, "select public.day_close_snapshot($1, $2::date) s", [B, today]), /Day close access required/, "Plain staff cannot see the close");
   const yesterday = (await db.query("select ((now() at time zone 'Europe/Berlin')::date - 1)::text d")).rows[0].d;
   assert.deepEqual((await as(LEAD, "select public.day_close_snapshot($1, $2::date) s", [B, yesterday])).rows[0].s.checklists, { total: 1, done: 0 }, "Checklist never opened: the weekday's templates still count as open");
+  // Codex T2: finished unrelated tasks must not hide a required template nobody opened.
+  const twoAgo = (await db.query("select ((now() at time zone 'Europe/Berlin')::date - 2)::text d")).rows[0].d;
+  await db.exec(`insert into public.checklists(branch_id, work_date, done) values ('${B}', '${twoAgo}', true), ('${B}', '${twoAgo}', true), ('${B}', '${twoAgo}', true)`);
+  assert.deepEqual((await as(LEAD, "select public.day_close_snapshot($1, $2::date) s", [B, twoAgo])).rows[0].s.checklists, { total: 4, done: 3 }, "3 unrelated done + 1 unopened template = 1 open");
   await assert.rejects(close(STAFF, 2430, 400, 400, {}), /Day close access required/, "Plain staff cannot close");
   await assert.rejects(close(LEAD, 2430, 400, 395.5, { temps: "Fridge 2 broken, reported" }), /Reason required for clocked_in/, "Every open point needs a reason");
   await assert.rejects(close(LEAD, 2430, 400, 395.5, { temps: "Fridge 2 broken", clocked_in: "Ali forgot, manager fixes" }), /Reason required for cash/, "A cash difference needs a reason");

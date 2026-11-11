@@ -35,7 +35,7 @@ export default function PurchasePacks({ branch, product, packs, onClose, onSaved
   return <NativeDialog title={s("Purchase packs", "Einkaufsgebinde")} busy={busy} unsaved={!!label || !!quantity} onClose={close}>
     <form onSubmit={event => { event.preventDefault(); void save(); }}><fieldset disabled={busy} className="inventory-fieldset">
       <h2>{product.product} · {s("Purchase packs", "Einkaufsgebinde")}</h2>
-      <p>{s("Enter the stock quantity in ONE purchase pack. Example: one case of six 1-litre bottles contains 6 litres. Verify the supplier label. Existing order conversions never change.", "Bestandsmenge in EINEM Einkaufsgebinde angeben. Beispiel: Ein Karton mit sechs 1-Liter-Flaschen enthält 6 Liter. Lieferantenetikett prüfen. Umrechnungen bestehender Bestellungen bleiben unverändert.")}</p>
+
       <p>{s("Stock unit", "Bestandseinheit")}: <strong>{product.unit || "—"}</strong></p>
       {error && <p role="alert">{error}</p>}
       <ul>{packs.filter(pack => pack.product_id === product.id).map(pack => <li key={pack.id}>{pack.label}: {pack.base_qty} {product.unit}</li>)}</ul>

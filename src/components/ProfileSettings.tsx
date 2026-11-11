@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/Toast";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import LanguageToggle from "@/components/LanguageToggle";
 import { pushSupported, currentPushState, subscribeToPush, unsubscribeFromPush } from "@/lib/push/client";
 
 // Shared profile footer for every role: Light Mode (reuses the same theme
@@ -73,6 +74,12 @@ export default function ProfileSettings() {
     <>
       {/* PREFERENCES */}
       <div className="section-label">{t("settings.preferences")}</div>
+      <div className="card mb-3">
+        <div className="u-between">
+          <div className="t-lg fw-6 u-text">{t("misc.language")}</div>
+          <LanguageToggle />
+        </div>
+      </div>
       <div className="card">
         <div className="u-between">
           <div>
@@ -97,7 +104,7 @@ export default function ProfileSettings() {
             <div>
               <div className="t-lg fw-6 u-text">{t("settings.notifications")}</div>
               <div className="ui-muted">
-                {pushState === "denied" ? t("settings.notificationsBlocked") : t("settings.notificationsSub")}
+                {pushState === "denied" ? t("settings.notificationsBlocked") : null}
               </div>
             </div>
             <button

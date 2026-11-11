@@ -48,7 +48,6 @@ export default function TargetsPage() {
   return (
     <div className="ui-narrow">
       <h1 className="page-title u-row"><Icon e="🎯" size={22} /> {t("targets.title")}</h1>
-      <p className="ui-lede">{t("targets.subtitle")}</p>
       {loading ? <CardSkeleton rows={3} />
         : error ? <ErrorState message={error} onRetry={load} retryLabel={t("business.retry")} />
         : (

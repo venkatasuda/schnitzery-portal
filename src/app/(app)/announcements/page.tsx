@@ -79,7 +79,6 @@ export default function AnnouncementsPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="📣" size={22} /> {t("announcements.title")}</h1>
-      <p className="ui-lede">{t("announcements.subtitle")}</p>
 
       {canPost && (
         <>

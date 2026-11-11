@@ -2,7 +2,7 @@
 
 import { appLocale } from "@/lib/format";
 import { useEffect, useRef, useState } from "react";
-import { getRoster, saveRoster, getWeekStart } from "@/lib/queries/schedule";
+import { getRoster, saveRoster, getWeekStart, publishRoster, discardRosterDraft } from "@/lib/queries/schedule";
 import { SHIFT_MODEL, TEAMS } from "@/lib/queries/schedule-constants";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -38,7 +38,11 @@ export default function RosterPage() {
   const [saving, setSaving] = useState(false);
   const [denied, setDenied] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const [expected,setExpected] = useState<{id:string;roster:any}|null>(null);
+  const [expected,setExpected] = useState<{draft:any}|null>(null);
+  // What is on screen vs. what is saved: saved = the draft if one exists, else the published roster.
+  const [savedRoster, setSavedRoster] = useState<Roster>({});
+  const [status, setStatus] = useState<{ hasDraft: boolean; draftStale: boolean; publishedAt: string | null; hasPublished: boolean }>({ hasDraft: false, draftStale: false, publishedAt: null, hasPublished: false });
+  const [publishing, setPublishing] = useState(false);
   const loadSerial=useRef(0);
   const [drafting, setDrafting] = useState(false);
   const [openSlots, setOpenSlots] = useState<{ day: string; team: string; shift: string }[]>([]);
@@ -61,17 +65,19 @@ export default function RosterPage() {
       const res = await getRoster(ws);
       if(serial!==loadSerial.current)return;
       if (!res.ok) { if (res.error?.includes("managers")) setDenied(true); throw Error(res.error); }
-      setWeekStart(res.weekStart || ""); setRoster(res.roster || {}); setExpected(res.expected || null); setOpenSlots([]);
+      setWeekStart(res.weekStart || ""); setRoster(res.roster || {}); setSavedRoster(res.roster || {}); setExpected(res.expected || null); setOpenSlots([]);
+      setStatus({ hasDraft: !!(res as any).hasDraft, draftStale: !!(res as any).draftStale, publishedAt: (res as any).publishedAt ?? null, hasPublished: (res as any).published != null });
       setStaff(res.staff || []); setAvail((res as any).avail || {});
     } catch { if(serial===loadSerial.current)setLoadError(t("roster.loadFailed")); }
     finally { if(serial===loadSerial.current)setLoading(false); }
   }
 
-  useEffect(() => { load(0); return()=>{loadSerial.current++;}; }, []);
+  // ?offset=N opens N weeks from now (used by "Edit in roster" on the Shifts page).
+  useEffect(() => { const o = Math.max(-52, Math.min(52, Number(new URLSearchParams(window.location.search).get("offset")) || 0)); setWeekOffset(o); load(o); return()=>{loadSerial.current++;}; }, []);
 
   function changeWeek(delta: number) {
     if(saving || loading)return;
-    if(JSON.stringify(roster)!==JSON.stringify(expected?.roster || {}) && !confirm(t("roster.discardChanges")))return;
+    if(dirty && !confirm(t("roster.discardChanges")))return;
     const next = weekOffset + delta;
     setWeekOffset(next);
     load(next);
@@ -135,10 +141,32 @@ export default function RosterPage() {
     setSaving(true);
     try {
       const res = await saveRoster(weekStart, roster, expected);
-      if (res.ok && res.expected) { setExpected(res.expected); setRoster(res.expected.roster); toast(t("roster.saved"), "success"); }
+      if (res.ok && res.expected) { setExpected(res.expected); setRoster(res.expected.draft); setSavedRoster(res.expected.draft); setStatus((st) => ({ ...st, hasDraft: true })); toast(t("roster.saved"), "success"); }
       else { const code = (res as { code?: string }).code; toast(code ? t(`roster.${code}`) : (res.error || t("roster.saveFailed")), "error"); }
     } catch { toast(t("roster.saveFailed"),"error"); }
     finally { setSaving(false); }
+  }
+
+  // Publish: saves pending edits first, then makes the draft live and notifies the staff on it.
+  async function doPublish() {
+    if (publishing || saving || loading || loadError || !weekStart) return;
+    if (!confirm(t("roster.publishConfirm"))) return;
+    setPublishing(true);
+    try {
+      if (dirty || !status.hasDraft) {
+        const saved = await saveRoster(weekStart, roster, expected);
+        if (!saved.ok) { const code = (saved as { code?: string }).code; toast(code ? t(`roster.${code}`) : (saved.error || t("roster.saveFailed")), "error"); return; }
+      }
+      const res = await publishRoster(weekStart);
+      if (res.ok) { toast(t("roster.published", { n: res.notified }), "success"); await load(weekOffset); }
+      else toast(res.code ? t(`roster.${res.code}`) : (res.error || t("roster.saveFailed")), "error");
+    } catch { toast(t("roster.saveFailed"), "error"); }
+    finally { setPublishing(false); }
+  }
+  async function doDiscard() {
+    if (!status.hasDraft || !confirm(t("roster.discardDraftConfirm"))) return;
+    const res = await discardRosterDraft(weekStart);
+    if (res.ok) { toast(t("roster.draftDiscarded"), "success"); await load(weekOffset); } else toast(res.error || t("roster.saveFailed"), "error");
   }
 
   const weekLabel = (() => {
@@ -150,6 +178,8 @@ export default function RosterPage() {
   })();
 
   const totalAssigned = DAYS.reduce((sum, d) => sum + (roster[d]?.length || 0), 0);
+  const dirty = JSON.stringify(roster) !== JSON.stringify(savedRoster);
+  const statusText = status.hasDraft || dirty ? (dirty ? t("roster.stUnsaved") : t("roster.stDraft")) : status.hasPublished ? t("roster.stPublished") : t("roster.stEmpty");
 
   // availability helpers for this week
   const submitted = (uid: string) => !!avail[uid];
@@ -162,7 +192,8 @@ export default function RosterPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="📋" size={22} /> {t("roster.title")}</h1>
-      <div className="page-sub">{weekLabel || "…"}</div>
+      <div className="page-sub">{weekLabel || "…"} <span className={`roster-status${status.hasDraft || dirty ? " is-draft" : status.hasPublished ? " is-live" : ""}`}>{statusText}</span></div>
+      {status.draftStale && <p role="alert" className="roster-stale">{t("roster.errStale")}</p>}
       {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
       {/* week nav + save */}
@@ -177,8 +208,12 @@ export default function RosterPage() {
         <button className="btn-secondary" onClick={autoDraft} disabled={drafting||saving||loading||!!loadError} title={t("roster.draftHint")}>
           {drafting ? t("common.loading") : t("roster.draft")}
         </button>
-        <button className="btn-gold" onClick={doSave} disabled={saving||loading||!!loadError}>
+        {status.hasDraft && <button className="btn-secondary" onClick={doDiscard} disabled={saving||publishing||loading}>{t("roster.discardDraft")}</button>}
+        <button className="btn-secondary" onClick={doSave} disabled={saving||publishing||loading||!!loadError||!dirty}>
           {saving ? t("common.saving") : t("roster.saveRoster")}
+        </button>
+        <button className="btn-gold" onClick={doPublish} disabled={saving||publishing||loading||!!loadError||status.draftStale||(!dirty&&!status.hasDraft)}>
+          {publishing ? t("common.saving") : t("roster.publish")}
         </button>
       </div>
 
@@ -309,7 +344,7 @@ export default function RosterPage() {
                     </Field>
                     <Field label={t("roster.shift")}>
                       <select className="form-input" value={selShift} onChange={(e) => setSelShift(e.target.value)}>
-                        {presetsFor(selTeam).map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time})</option>)}
+                        {presetsFor(selTeam).map((s) => <option key={s.shift} value={s.shift}>{shiftLabel(s.shift)} ({s.time || t("roster.timePending")})</option>)}
                         <option value={CUSTOM}>{t("roster.customTime")}</option>
                       </select>
                     </Field>

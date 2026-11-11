@@ -26,7 +26,7 @@ export async function getHygieneLog(from: string, to: string) {
 
   const [branch, units, temps, tasks] = await Promise.all([
     db.from("branches").select("name").eq("id", branchId).single(),
-    readAll(db.from("temp_units").select("id,name,kind,min_temp,max_temp,is_active").eq("branch_id", branchId).order("sort").order("name").order("id")),
+    readAll(db.from("temp_units").select("id,name,kind,min_temp,max_temp,is_active,created_at").eq("branch_id", branchId).order("sort").order("name").order("id")),
     readAll(db.from("temp_logs").select("unit_id,work_date,temp,in_range,note,corrective_action,recorded_by_name,recorded_at").eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).order("recorded_at").order("id")),
     readAll(db.from("checklists").select("work_date,type,task,done,value,completed_at,completed_by").eq("branch_id", branchId).gte("work_date", from).lte("work_date", to).order("work_date").order("type").order("id")),
   ]);
@@ -42,7 +42,9 @@ export async function getHygieneLog(from: string, to: string) {
   const used = new Set((temps.data ?? []).map((t) => t.unit_id));
   return {
     ok: true as const, branchName: branch.data!.name as string, from, to, days,
-    units: (units.data ?? []).filter((u) => u.is_active || used.has(u.id)).map((u) => ({ ...u, min_temp: Number(u.min_temp), max_temp: Number(u.max_temp) })) as { id: string; name: string; kind: string; min_temp: number; max_temp: number; is_active: boolean }[],
+    units: (units.data ?? []).filter((u) => u.is_active || used.has(u.id)).map((u) => ({ ...u, min_temp: Number(u.min_temp), max_temp: Number(u.max_temp),
+      // First day the unit had to be checked (Berlin date it was added).
+      since: new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(new Date(u.created_at as string)) })) as { id: string; name: string; kind: string; min_temp: number; max_temp: number; is_active: boolean; since: string }[],
     temps: (temps.data ?? []).map((t) => ({ ...t, temp: Number(t.temp) })) as LogbookTemp[],
     tasks: (tasks.data ?? []).map((t) => ({ work_date: t.work_date, type: t.type, task: t.task, done: !!t.done, value: t.value, completed_at: t.completed_at, completed_by_name: t.completed_by ? names.get(t.completed_by) ?? "—" : null })) as LogbookTask[],
   };

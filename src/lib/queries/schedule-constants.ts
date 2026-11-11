@@ -5,18 +5,23 @@ export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sa
 // Every team, in one place (was copied into 13 files; 10 had lost "Dishwashing").
 export const TEAMS = ["Manager", "Preparation", "Kitchen", "Cashier", "Dishwashing"];
 
-// Your restaurant's teams + shifts. Times are placeholders — edit later.
+// Teams + shifts with default (Sun–Thu) times. Fri/Sat times and per-branch changes live in
+// Settings → Shift times (shift_times), which override these. "" = time pending (not decided yet).
+// "Night" is the stored key of the evening shift (existing rosters use it); it is shown as "Evening".
+const RESTAURANT_SHIFTS = [
+  { shift: "Morning", time: "10:30–17:30" },
+  { shift: "Mid", time: "" },
+  { shift: "Night", time: "17:30–23:30" },
+];
 export const SHIFT_MODEL: Record<string, { shift: string; time: string }[]> = {
   Manager: [
-    { shift: "Morning", time: "08:00–16:00" },
-    { shift: "Evening", time: "14:00–22:00" },
+    { shift: "Morning", time: "10:30–17:30" },
+    { shift: "Evening", time: "17:30–23:30" },
   ],
   Preparation: [
-    { shift: "Morning", time: "07:00–13:00" },
+    { shift: "Morning", time: "08:00–13:00" },
   ],
-  Kitchen: [
-    { shift: "Morning", time: "08:00–14:00" },
-    { shift: "Mid", time: "12:00–18:00" },
-    { shift: "Night", time: "17:00–23:00" },
-  ],
+  Kitchen: RESTAURANT_SHIFTS,
+  Cashier: RESTAURANT_SHIFTS,
+  Dishwashing: RESTAURANT_SHIFTS,
 };

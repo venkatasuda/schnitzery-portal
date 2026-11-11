@@ -73,7 +73,7 @@ export async function getScheduleComparison(weekStart: string) {
   for (const day of DAYS) {
     const date = dateOfDay(weekStart, day);
     for (const e of (rd[day] || [])) {
-      const tm = rosterEntryTimes(e, timeMap); // preset or custom "HH:MM–HH:MM"
+      const tm = rosterEntryTimes(e, timeMap, date); // preset or custom "HH:MM–HH:MM"
       if (!tm) continue;
       const S = zonedToUtc(date, tm.start);
       let E = zonedToUtc(date, tm.end);

@@ -38,8 +38,10 @@ begin
     where l.branch_id = p_branch and l.work_date = p_date and u.is_active;
   select count(*), count(*) filter (where done) into total_tasks, done_tasks from public.checklists where branch_id = p_branch and work_date = p_date;
   -- Today's list is created when someone first opens it: if nobody did, the weekday's templates still count as open.
-  total_tasks := greatest(total_tasks, (select count(*) from public.checklist_templates
-    where branch_id = p_branch and is_active and extract(isodow from p_date)::smallint = any(weekdays)));
+  -- Plus every required template for this weekday that has no task row yet (list not opened = still open).
+  total_tasks := total_tasks + (select count(*) from public.checklist_templates t
+    where t.branch_id = p_branch and t.is_active and extract(isodow from p_date)::smallint = any(t.weekdays)
+      and not exists (select 1 from public.checklists c where c.branch_id = p_branch and c.work_date = p_date and c.template_id = t.id));
   select count(*) into items from public.prep_items where branch_id = p_branch and is_active;
   select count(*) into counted from public.prep_leftovers l join public.prep_items i on i.id = l.item_id
     where l.branch_id = p_branch and l.count_date = p_date and i.is_active;
@@ -60,7 +62,7 @@ end $$;
 -- Close the day. Reasons: {"sales": "...", "temps": "...", ...} for every open point.
 create or replace function private.close_day(p_branch uuid, p_date date, p_pos_total numeric, p_pos_cash numeric, p_counted_cash numeric, p_reasons jsonb, p_note text)
 returns uuid language plpgsql security definer set search_path = '' as $$
-declare snap jsonb; diff numeric; open_points text[] := '{}'; k text; new_id uuid;
+declare snap jsonb; diff numeric; open_points text[] := '{}'; k text; new_id uuid; recorded numeric;
 begin
   if not private.can_plan_prep(p_branch) then raise exception 'Day close access required' using errcode = '42501'; end if;
   if p_date is null or p_date > (now() at time zone 'Europe/Berlin')::date or p_date < (now() at time zone 'Europe/Berlin')::date - 2 then raise exception 'Invalid close date'; end if;
@@ -69,15 +71,23 @@ begin
   perform pg_advisory_xact_lock(hashtextextended('day-close:' || p_branch::text || ':' || p_date::text, 0));
   if exists (select 1 from public.day_closes where branch_id = p_branch and work_date = p_date) then raise exception 'Day already closed' using errcode = '23505'; end if;
 
-  snap := private.day_close_snapshot(p_branch, p_date);
+  -- daily_sales stays the single sales source for every dashboard. Fill a missing day from the close first,
+  -- never overwrite (POS import / manager entry wins), then lock and compare against the row that actually won,
+  -- so a concurrent import cannot slip in a different amount without a reason. Rolled back if the close fails.
+  if p_pos_total is not null then
+    insert into public.daily_sales (branch_id, sale_date, amount) values (p_branch, p_date, round(p_pos_total, 2))
+    on conflict (branch_id, sale_date) do nothing;
+  end if;
+  select amount into recorded from public.daily_sales where branch_id = p_branch and sale_date = p_date for update;
+  snap := private.day_close_snapshot(p_branch, p_date) || jsonb_build_object('recorded_sales', recorded);
   diff := case when p_counted_cash is not null and p_pos_cash is not null then round(p_counted_cash - p_pos_cash, 2) end;
-  -- Sales: missing, or different from the figure already in daily_sales (POS import / manager entry) → needs a reason.
-  if p_pos_total is null or (snap->>'recorded_sales' is not null and abs(p_pos_total - (snap->>'recorded_sales')::numeric) >= 0.01) then
+  -- Sales: missing, or different from the recorded figure → needs a reason.
+  if p_pos_total is null or (recorded is not null and abs(p_pos_total - recorded) >= 0.01) then
     open_points := array_append(open_points, 'sales'); end if;
   if (snap->'temps'->>'logged')::int < (snap->'temps'->>'units')::int then open_points := array_append(open_points, 'temps'); end if;
   if (snap->'checklists'->>'done')::int < (snap->'checklists'->>'total')::int then open_points := array_append(open_points, 'checklists'); end if;
   if (snap->'leftovers'->>'counted')::int < (snap->'leftovers'->>'items')::int then open_points := array_append(open_points, 'leftovers'); end if;
-  if (snap->'leftovers'->>'items')::int > 0 and snap->>'next_prep_list' <> 'sent' then open_points := array_append(open_points, 'prep_list'); end if;
+  if (snap->'leftovers'->>'items')::int > 0 and (snap->>'next_prep_list') is distinct from 'sent' then open_points := array_append(open_points, 'prep_list'); end if;
   if jsonb_array_length(snap->'clocked_in') > 0 then open_points := array_append(open_points, 'clocked_in'); end if;
   if p_counted_cash is null or p_pos_cash is null or diff <> 0 then open_points := array_append(open_points, 'cash'); end if;
   foreach k in array open_points loop
@@ -89,12 +99,6 @@ begin
     (select coalesce(jsonb_object_agg(key, left(trim(value), 300)), '{}'::jsonb) from jsonb_each_text(p_reasons) where key = any(open_points)),
     nullif(trim(p_note), ''), auth.uid())
   returning id into new_id;
-  -- daily_sales stays the single sales source for every dashboard. Fill a missing day from the close;
-  -- never overwrite an existing figure (POS import or manager entry wins, a mismatch is kept as a reason above).
-  if p_pos_total is not null then
-    insert into public.daily_sales (branch_id, sale_date, amount) values (p_branch, p_date, round(p_pos_total, 2))
-    on conflict (branch_id, sale_date) do nothing;
-  end if;
   return new_id;
 end $$;
 

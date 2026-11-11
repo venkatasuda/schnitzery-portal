@@ -40,7 +40,7 @@ export function draftRoster(inp: DraftInput) {
     roster[day] = [];
     const onDay = new Set<string>();
     for (const e of inp.template[day] || []) {
-      const t = rosterEntryTimes(e, inp.times);
+      const t = rosterEntryTimes(e, inp.times, dateOf(inp.weekStart, di));
       if (!t) { if (active.has(e.user_id) && !onDay.has(e.user_id)) { roster[day].push(e); onDay.add(e.user_id); } continue; } // unknown times: keep as is
       const s = di * 1440 + hm(t.start);
       let en = di * 1440 + hm(t.end); if (en <= s) en += 1440;

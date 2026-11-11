@@ -170,12 +170,12 @@ async function coverWarnings(db: any, branchId: string, claimed: any[]): Promise
     wageMapForBranches(db, [branchId]).catch(() => null),
     db.from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out, status").in("user_id", people).eq("status", "complete").gte("work_date", `${today.slice(0, 7)}-01`).lt("work_date", today),
   ]);
-  const tmap = new Map((((times as any).items ?? []) as { team: string; shift: string; start: string; end: string; breakMins: number }[]).map((t) => [`${t.team}|${t.shift}`, t]));
+  const tmap = new Map((((times as any).items ?? []) as { team: string; shift: string; start: string; end: string; breakMins: number; friSatStart: string | null; friSatEnd: string | null }[]).map((t) => [`${t.team}|${t.shift}`, t]));
   type S = Slot & { user: string; team: string; shift: string; mins: number };
   const slots: S[] = [];
   for (const r of rosters.data || []) for (const [i, day] of DAYS.entries()) for (const e of (r.roster_data as any)?.[day] || []) {
-    const tm = rosterEntryTimes(e, tmap as any); if (!e?.user_id || !tm) continue;
-    const date = addDays(r.week_start, i), [a, b] = interval({ date, ...tm });
+    const date = addDays(r.week_start, i), tm = rosterEntryTimes(e, tmap as any, date); if (!e?.user_id || !tm) continue;
+    const [a, b] = interval({ date, ...tm });
     slots.push({ user: e.user_id, team: e.team, shift: e.shift, date, ...tm, mins: (b - a) / 6e4 - (tmap.get(`${e.team}|${e.shift}`)?.breakMins ?? 0) });
   }
   const userOf = new Map<string, { full_name: string | null; contract_type: string | null }>((users.data || []).map((u: any) => [u.id, u]));

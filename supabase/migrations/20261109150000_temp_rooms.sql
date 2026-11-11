@@ -20,8 +20,10 @@ begin
     having bool_or(extract(hour from l.recorded_at at time zone 'Europe/Berlin') < 15)
        and bool_or(extract(hour from l.recorded_at at time zone 'Europe/Berlin') >= 15)) done;
   select count(*), count(*) filter (where done) into total_tasks, done_tasks from public.checklists where branch_id = p_branch and work_date = p_date;
-  total_tasks := greatest(total_tasks, (select count(*) from public.checklist_templates
-    where branch_id = p_branch and is_active and extract(isodow from p_date)::smallint = any(weekdays)));
+  -- Plus every required template for this weekday that has no task row yet (list not opened = still open).
+  total_tasks := total_tasks + (select count(*) from public.checklist_templates t
+    where t.branch_id = p_branch and t.is_active and extract(isodow from p_date)::smallint = any(t.weekdays)
+      and not exists (select 1 from public.checklists c where c.branch_id = p_branch and c.work_date = p_date and c.template_id = t.id));
   select count(*) into items from public.prep_items where branch_id = p_branch and is_active;
   select count(*) into counted from public.prep_leftovers l join public.prep_items i on i.id = l.item_id
     where l.branch_id = p_branch and l.count_date = p_date and i.is_active;

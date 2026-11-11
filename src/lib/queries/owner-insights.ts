@@ -90,7 +90,7 @@ export async function getOwnerInsights() {
   let unknownShifts = 0;
   DAYS.forEach((day, i) => {
     for (const e of data[day] || []) {
-      const mins = rosterEntryMinutes(e, tmap); // preset or custom "HH:MM–HH:MM"
+      const mins = rosterEntryMinutes(e, tmap, dates[i]); // preset or custom "HH:MM–HH:MM"
       if (!e.user_id || mins == null) { unknownShifts++; continue; }
       planned.push({ date: dates[i], user_id: e.user_id, mins });
     }
@@ -170,7 +170,7 @@ export async function getRosterPlanning(weekStart: string) {
     minijobbers,
     history: (sales.data || []).map((r) => ({ sale_date: r.sale_date as string, amount: Number(r.amount) })),
     wages: wages ?? {}, wagesKnown: wages != null,
-    times: (times && times.ok ? times.items : []).map(({ team, shift, start, end, breakMins }) => ({ team, shift, start, end, breakMins })),
+    times: (times && times.ok ? times.items : []).map(({ team, shift, start, end, breakMins, friSatStart, friSatEnd }) => ({ team, shift, start, end, breakMins, friSatStart, friSatEnd })),
     labourTarget: target.data?.labour_pct != null ? Number(target.data.labour_pct) : null,
   };
 }

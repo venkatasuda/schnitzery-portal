@@ -1,101 +1,83 @@
 "use client";
-
+// Shift times per team: Sun–Thu, optional Fri–Sat, break. Both times empty = "time pending".
+// Roster, attendance, labour cost and the Shifts page all read these.
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
-import { getShiftTimes, upsertShiftTime } from "@/lib/queries/shift-times";
+import { getShiftTimes, upsertShiftTime, type ShiftTime } from "@/lib/queries/shift-times";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { TEAMS } from "@/lib/queries/schedule-constants";
 
-type Row = { team: string; shift: string; start: string; end: string; breakMins: number; scope: string };
+type Row = Omit<ShiftTime, "friSatStart" | "friSatEnd"> & { friSatStart: string; friSatEnd: string };
+const pair = (a: string, b: string) => (a === "" && b === "") || (/^\d{2}:\d{2}$/.test(a) && /^\d{2}:\d{2}$/.test(b));
 
 export default function ShiftTimesPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const de = locale === "de";
   const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
+  const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
   async function load() {
-    // A failed request must end the skeleton and say so, not spin forever.
     try {
-    setLoading(true);
-    const res = await getShiftTimes();
-    if (res.ok) setRows((res.items as Row[]).map((r) => ({ ...r })));
-    setLoading(false);
+      setLoading(true);
+      const res = await getShiftTimes();
+      if (res.ok) setRows(res.items.map((r) => ({ ...r, friSatStart: r.friSatStart ?? "", friSatEnd: r.friSatEnd ?? "" })));
     } catch { toast(t("common.loadFailed"), "error"); }
     finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
-  function edit(team: string, shift: string, field: "start" | "end" | "breakMins", val: string) {
-    setRows((cur) => cur.map((r) => (r.team === team && r.shift === shift ? { ...r, [field]: field === "breakMins" ? Number(val) || 0 : val } : r)));
-  }
+  const edit = (r: Row, patch: Partial<Row>) => setRows((cur) => cur.map((x) => (x.team === r.team && x.shift === r.shift ? { ...x, ...patch } : x)));
 
   async function save(row: Row) {
-    if (!/^\d{2}:\d{2}$/.test(row.start) || !/^\d{2}:\d{2}$/.test(row.end)) { toast(t("shiftcfg.invalidTime"), "error"); return; }
+    if (!pair(row.start, row.end) || !pair(row.friSatStart, row.friSatEnd)) { toast(t("shiftcfg.invalidTime"), "error"); return; }
     setBusy(row.team + row.shift);
-    const res = await upsertShiftTime({ team: row.team, shift: row.shift, start: row.start, end: row.end, breakMins: Number(row.breakMins) || 0 });
-    setBusy(null);
-    if (res.ok) { toast(t("shiftcfg.saved"), "success"); load(); }
-    else toast(res.error || t("shiftcfg.saveFailed"), "error");
+    try {
+      const res = await upsertShiftTime({ team: row.team, shift: row.shift, start: row.start, end: row.end, friSatStart: row.friSatStart, friSatEnd: row.friSatEnd, breakMins: Number(row.breakMins) || 0 });
+      if (res.ok) { toast(t("shiftcfg.saved"), "success"); load(); } else toast(res.error || t("shiftcfg.saveFailed"), "error");
+    } finally { setBusy(null); }
   }
 
   const teams = [...new Set(rows.map((r) => r.team))];
+  const time = (r: Row, k: "start" | "end" | "friSatStart" | "friSatEnd", label: string) =>
+    <label><span className="shiftcfg-lbl">{label}</span><input className="form-input" type="time" value={r[k]} onChange={(e) => edit(r, { [k]: e.target.value } as Partial<Row>)} /></label>;
 
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="⏱️" size={22} /> {t("shiftcfg.title")}</h1>
-
-      {loading ? (
-        <CardSkeleton rows={4} />
-      ) : (
-        teams.map((team) => (
-          <div className="mb-5" key={team}>
-            <div className="section-label">{teamLabel(team)}</div>
-            <div className="u-stack">
-              {rows.filter((r) => r.team === team).map((r) => {
-                const crosses = r.start && r.end && r.end <= r.start;
-                const isBranch = r.scope === "branch";
-                const saving = busy === r.team + r.shift;
-                return (
-                  <div key={r.shift} className="card p-3">
-                    <div className="d-flex ai-c gap-2 mb-3">
-                      <div className="u-flex1 t-md fw-6 u-text">{r.shift}</div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: isBranch ? "var(--action)" : "var(--gray)", background: isBranch ? "var(--accent-soft)" : "rgba(128,128,128,0.12)", padding: "3px 8px", borderRadius: 20 }}>
-                        {isBranch ? t("shiftcfg.scopeBranch") : t("shiftcfg.scopeDefault")}
-                      </span>
-                    </div>
-                    <div className="d-flex gap-2 ai-e">
-                      <label className="u-flex1">
-                        <div style={lbl}>{t("shiftcfg.start")}</div>
-                        <input className="form-input" type="time" value={r.start} onChange={(e) => edit(r.team, r.shift, "start", e.target.value)} />
-                      </label>
-                      <label className="u-flex1">
-                        <div style={lbl}>{t("shiftcfg.end")}</div>
-                        <input className="form-input" type="time" value={r.end} onChange={(e) => edit(r.team, r.shift, "end", e.target.value)} />
-                      </label>
-                      <label style={{ width: 78 }}>
-                        <div style={lbl}>{t("shiftcfg.breakLabel")}</div>
-                        <input className="form-input" type="number" min={0} value={r.breakMins} onChange={(e) => edit(r.team, r.shift, "breakMins", e.target.value)} />
-                      </label>
-                      <button onClick={() => save(r)} disabled={saving} style={{ padding: "10px 14px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap" }}>{t("shiftcfg.save")}</button>
-                    </div>
-                    {crosses && <div className="t-xs tone-warn mt-2"><Icon e="🌙" size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} /> {t("shiftcfg.crossMidnight")}</div>}
+      {loading ? <CardSkeleton rows={4} /> : teams.map((team) => (
+        <div className="mb-5" key={team}>
+          <div className="section-label">{teamLabel(team)}</div>
+          <div className="u-stack">
+            {rows.filter((r) => r.team === team).map((r) => {
+              const pending = !r.start && !r.end;
+              return (
+                <div key={r.shift} className="card p-3">
+                  <div className="d-flex ai-c gap-2 mb-3">
+                    <div className="u-flex1 t-md fw-6 u-text">{shiftLabel(r.shift)}</div>
+                    {pending && <span className="shift-badge is-pending">{t("roster.timePending")}</span>}
+                    <span className={`shift-scope${r.scope === "branch" ? " is-branch" : ""}`}>{r.scope === "branch" ? t("shiftcfg.scopeBranch") : t("shiftcfg.scopeDefault")}</span>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="shiftcfg-grid">
+                    {time(r, "start", de ? "So–Do Beginn" : "Sun–Thu start")}
+                    {time(r, "end", de ? "So–Do Ende" : "Sun–Thu end")}
+                    {time(r, "friSatStart", de ? "Fr–Sa Beginn" : "Fri–Sat start")}
+                    {time(r, "friSatEnd", de ? "Fr–Sa Ende" : "Fri–Sat end")}
+                    <label><span className="shiftcfg-lbl">{t("shiftcfg.breakLabel")}</span><input className="form-input" type="number" min={0} value={r.breakMins} onChange={(e) => edit(r, { breakMins: Number(e.target.value) || 0 })} /></label>
+                    <button className="btn-gold" onClick={() => save(r)} disabled={busy === r.team + r.shift}>{t("shiftcfg.save")}</button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))
-      )}
-
-      <Link href="/schedule-hub" style={{ display: "block", textAlign: "center", marginTop: 8, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>← {t("schedhub.title")}</Link>
+        </div>
+      ))}
+      <Link href="/schedule-hub" className="ui-back-link">← {t("schedhub.title")}</Link>
     </div>
   );
 }
-
-const lbl: React.CSSProperties = { fontSize: 12, color: "var(--gray)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 };
-const input: React.CSSProperties = { width: "100%", padding: "9px 10px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, boxSizing: "border-box" };

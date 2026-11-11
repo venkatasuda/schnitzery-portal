@@ -10,8 +10,8 @@ begin
   select b, v.room, v.name, v.kind, v.lo, v.hi, v.sort, true from (values
     ('Preparation', 'Prepared chicken', 'fridge', 0::numeric, 4::numeric, 10),
     ('Preparation', 'Salad fridge', 'fridge', 0, 7, 20),
-    ('Preparation', 'Bread fridge', 'fridge', 0, 7, 30),
-    ('Preparation', 'Cheese fridge', 'fridge', 0, 7, 40),
+    ('Preparation', 'Bread freezer', 'freezer', -25, -18, 30),
+    ('Preparation', 'Cheese freezer', 'freezer', -25, -18, 40),
     ('Kitchen', 'Main topping station', 'fridge', 0, 7, 110),
     ('Kitchen', 'Burger station', 'fridge', 0, 7, 120),
     ('Kitchen', 'Sauce fridge', 'fridge', 0, 7, 130),

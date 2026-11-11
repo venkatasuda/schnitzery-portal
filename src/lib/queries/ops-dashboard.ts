@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { timesOn } from "@/lib/time/roster";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { activeBranchFor } from "@/lib/activeBranch";
@@ -71,11 +72,11 @@ export async function getOpsDashboard(opts: { date?: string; branchId?: string |
   const shift = opts.shift || null;
 
   // resolve shift times for THIS branch (branch row > global > SHIFT_MODEL)
-  const { data: stRows } = await supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true);
-  const timeMap: Record<string, { start: string; end: string }> = {};
+  const { data: stRows } = await supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time, fri_sat_start, fri_sat_end").eq("is_active", true);
+  const timeMap: Record<string, { start: string; end: string; friSatStart?: string | null; friSatEnd?: string | null }> = {};
   for (const tm of Object.keys(SHIFT_MODEL)) for (const s of SHIFT_MODEL[tm]) { const d = parseModel(s.time); timeMap[`${tm}|${s.shift}`] = { start: d.start, end: d.end }; }
-  for (const r of stRows || []) if (r.branch_id == null) timeMap[`${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
-  for (const r of stRows || []) if (r.branch_id === branch) timeMap[`${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
+  for (const r of stRows || []) if (r.branch_id == null) timeMap[`${r.team}|${r.shift}`] = { start: String(r.start_time ?? "").slice(0, 5), end: String(r.end_time ?? "").slice(0, 5), friSatStart: (r as any).fri_sat_start ? String((r as any).fri_sat_start).slice(0, 5) : null, friSatEnd: (r as any).fri_sat_end ? String((r as any).fri_sat_end).slice(0, 5) : null };
+  for (const r of stRows || []) if (r.branch_id === branch) timeMap[`${r.team}|${r.shift}`] = { start: String(r.start_time ?? "").slice(0, 5), end: String(r.end_time ?? "").slice(0, 5), friSatStart: (r as any).fri_sat_start ? String((r as any).fri_sat_start).slice(0, 5) : null, friSatEnd: (r as any).fri_sat_end ? String((r as any).fri_sat_end).slice(0, 5) : null };
 
   // roster for the date
   const { data: roster } = await supabase.from("weekly_roster").select("roster_data").eq("branch_id", branch).eq("week_start", mondayOfDate(date)).maybeSingle();
@@ -102,7 +103,7 @@ export async function getOpsDashboard(opts: { date?: string; branchId?: string |
 
   for (const e of scheduled) {
     seen.add(e.user_id);
-    const tm = timeMap[`${e.team}|${e.shift}`];
+    const tm = timesOn(timeMap[`${e.team}|${e.shift}`], date);
     const S = tm?.start ? zonedToUtcMs(date, tm.start) : null;
     let E = tm?.end ? zonedToUtcMs(date, tm.end) : null;
     if (S != null && E != null && E <= S) E += 24 * 3600 * 1000;

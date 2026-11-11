@@ -35,7 +35,6 @@ export default function LeaveCalendarPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="📆" size={22} /> {t("misc.leaveTitle")}</h1>
-      <p className="ui-lede">{t("misc.leaveSub")}</p>
 
       {loading ? <CardSkeleton rows={3} />
         : failed ? <ErrorState message={t("common.loadFailed")} onRetry={load} retryLabel={t("business.retry")} />

@@ -56,7 +56,6 @@ export default function NotesPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="📝" size={22} /> {t("schedhub.notes")}</h1>
-      <p className="ui-lede">{t("notes.subtitle")}</p>
 
       {msg && <div className="mb-4 t-sm tone-action u-center">{msg}</div>}
 

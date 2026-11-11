@@ -34,7 +34,6 @@ export default function AuditPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
-      <p className="ui-lede">{t("audit.subtitle")}</p>
 
       {loading ? (
         <CardSkeleton rows={3} />

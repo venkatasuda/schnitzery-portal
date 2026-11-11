@@ -65,7 +65,6 @@ export default function IncidentsPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="🚨" size={22} /> {t("incidents.title")}</h1>
-      <p className="ui-lede">{t("incidents.subtitle")}</p>
 
       <button onClick={() => setShowForm(!showForm)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
         {showForm ? t("common.close") : t("incidents.reportBtn")}
