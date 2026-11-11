@@ -13,6 +13,7 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
       work_date date, day text, team text, shift text, reason text, status text, resolved_by text, resolved_at timestamptz, created_at timestamptz default now());
     create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
     create function public.is_manager() returns boolean language sql security definer as $$ select exists(select 1 from public.users where id = auth.uid() and role <> 'staff') $$;
+    create function public.accessible_branch_ids() returns setof uuid language sql security definer as $$ select branch_id from public.users where id = auth.uid() $$;
     insert into public.users values ('${MGR}', 'manager', '${B}', 'Mia'), ('${ANA}', 'staff', '${B}', 'Ana'), ('${BEN}', 'staff', '${B}', 'Ben');
     insert into public.weekly_roster(branch_id, week_start, roster_data) values ('${B}', '2026-11-09', '{
       "Tuesday": [{"user_id": "${ANA}", "name": "Ana", "team": "Kitchen", "shift": "Night"}],
@@ -34,6 +35,11 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   await db.query("update public.cover_requests set status = 'cancelled' where id = $1", [stale]);
 
   await assert.rejects(as(ANA, "select public.decide_cover_atomic($1, 'approved')", [stale]), /Managers only/);
+  // A manager without access to the request's branch cannot decide it.
+  await db.query(`insert into public.users values ('00000000-0000-0000-0000-0000000000f9', 'manager', '00000000-0000-0000-0000-0000000000f8', 'Other')`);
+  const foreign = await add(`'2026-11-12', 'Kitchen', 'Morning'`);
+  await assert.rejects(as("00000000-0000-0000-0000-0000000000f9", "select public.decide_cover_atomic($1, 'approved')", [foreign]), /Request not found/, "Other branch's manager refused");
+  await db.query("update public.cover_requests set status = 'cancelled' where id = $1", [foreign]);
   const swap = await add(`'2026-11-12', 'Kitchen', 'Morning'`);
   assert.equal((await as(MGR, "select public.decide_cover_atomic($1, 'approved') ok", [swap])).rows[0].ok, true);
   assert.equal(await who("Tuesday"), "Ben", "Ben works Ana's Tuesday night");

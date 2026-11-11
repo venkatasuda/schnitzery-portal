@@ -74,7 +74,8 @@ test("saved order, partial receiving, role isolation and mobile German layout",a
   expect(Number((await admin().from("stock_batches").select("remaining_qty").eq("id",batch.data!.id).single()).data!.remaining_qty)).toBe(0.75);
   expect((await admin().from("inventory_supplier_credits").select("id").eq("reference",`${supplier}-CREDIT`)).data).toHaveLength(1);
   const other=await signIn(browser,account("manager","B"));await other.goto(orderURL);await expect(other.getByRole("alert").filter({hasText:"Inventory data could not be loaded"})).toBeVisible();await expect(other.getByText(supplier,{exact:true})).toHaveCount(0);
-  const staff=await signIn(browser,account("staff","A"));await staff.goto(orderURL);await expect(staff.getByRole("alert").filter({hasText:"Active manager access"})).toBeVisible();
+  // Staff opening a manager page are redirected to /no-access by the proxy; the order data must not appear.
+  const staff=await signIn(browser,account("staff","A"));await staff.goto(orderURL);await expect(staff).toHaveURL(/\/no-access/);await expect(staff.getByText(supplier,{exact:true})).toHaveCount(0);
   const owner=await signIn(browser,account("brand_owner","A"));await owner.goto(orderURL);await expect(owner.getByRole("heading",{name:/PO-.*Closed/})).toBeVisible();
   await page.context().addCookies([{name:"lang",value:"de",url:BASE_URL}]);await page.setViewportSize({width:390,height:844});await page.goto("/inventory/purchasing");
   await expect(page.getByRole("heading",{name:"Einkauf",exact:true})).toBeVisible();await expect(page.locator(".inventory-area-nav a")).toHaveCount(6);

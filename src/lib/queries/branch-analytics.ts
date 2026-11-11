@@ -3,6 +3,7 @@ import { readAll } from "@/lib/supabase/readAll";
 
 
 import { createClient } from "@/lib/supabase/server";
+import { timesOn } from "@/lib/time/roster";
 import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 import { shiftMinutes } from "@/lib/pay/calculations";
@@ -109,12 +110,12 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
   const weeks = [...new Set(days.map(mondayOfDate))];
 
   // shift-time resolution (model < global < per-branch)
-  const { data: stRows, error: stRowsError } = await readAll(supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true).order("id"));
+  const { data: stRows, error: stRowsError } = await readAll(supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time, fri_sat_start, fri_sat_end").eq("is_active", true).order("id"));
   if (stRowsError) return { ...blank, ok: false as const, error: stRowsError.message };
-  const tm: Record<string, { start: string; end: string }> = {};
+  const tm: Record<string, { start: string; end: string; friSatStart?: string | null; friSatEnd?: string | null }> = {};
   for (const t of Object.keys(SHIFT_MODEL)) for (const s of (SHIFT_MODEL as any)[t]) { const d = parseModel(s.time); tm[`g|${t}|${s.shift}`] = { start: d.start, end: d.end }; }
-  for (const r of stRows || []) if (r.branch_id == null) tm[`g|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
-  for (const r of stRows || []) if (r.branch_id) tm[`${r.branch_id}|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
+  for (const r of stRows || []) if (r.branch_id == null) tm[`g|${r.team}|${r.shift}`] = { start: String(r.start_time ?? "").slice(0, 5), end: String(r.end_time ?? "").slice(0, 5), friSatStart: (r as any).fri_sat_start ? String((r as any).fri_sat_start).slice(0, 5) : null, friSatEnd: (r as any).fri_sat_end ? String((r as any).fri_sat_end).slice(0, 5) : null };
+  for (const r of stRows || []) if (r.branch_id) tm[`${r.branch_id}|${r.team}|${r.shift}`] = { start: String(r.start_time ?? "").slice(0, 5), end: String(r.end_time ?? "").slice(0, 5), friSatStart: (r as any).fri_sat_start ? String((r as any).fri_sat_start).slice(0, 5) : null, friSatEnd: (r as any).fri_sat_end ? String((r as any).fri_sat_end).slice(0, 5) : null };
   const resolveTimes = (br: string, team: string, shift: string) => tm[`${br}|${team}|${shift}`] || tm[`g|${team}|${shift}`] || null;
 
   // data loads (scoped to target branches + window)
@@ -165,7 +166,7 @@ export async function getBranchAnalytics(opts: { period?: "daily" | "weekly" | "
     const entries = sched[`${br}|${d}`] || [];
     for (const e of entries) {
       scheduled++; perDay[d].sched++;
-      const times = resolveTimes(br, e.team, e.shift);
+      const times = timesOn(resolveTimes(br, e.team, e.shift), d);
       let winMin = 0, startMs: number | null = null, endMs: number | null = null;
       if (times) {
         startMs = zonedToUtcMs(d, times.start); endMs = zonedToUtcMs(d, times.end);
@@ -324,12 +325,12 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
   const weeks = [...new Set(days.map(mondayOfDate))];
 
   // shift-time resolution (model < global < per-branch)
-  const { data: stRows, error: stRowsError } = await readAll(supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time").eq("is_active", true).order("id"));
+  const { data: stRows, error: stRowsError } = await readAll(supabase.from("shift_times").select("branch_id, team, shift, start_time, end_time, fri_sat_start, fri_sat_end").eq("is_active", true).order("id"));
   if (stRowsError) return { ...blank, ok: false as const, error: stRowsError.message };
-  const tm: Record<string, { start: string; end: string }> = {};
+  const tm: Record<string, { start: string; end: string; friSatStart?: string | null; friSatEnd?: string | null }> = {};
   for (const t of Object.keys(SHIFT_MODEL)) for (const s of (SHIFT_MODEL as any)[t]) { const d = parseModel(s.time); tm[`g|${t}|${s.shift}`] = { start: d.start, end: d.end }; }
-  for (const r of stRows || []) if (r.branch_id == null) tm[`g|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
-  for (const r of stRows || []) if (r.branch_id) tm[`${r.branch_id}|${r.team}|${r.shift}`] = { start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5) };
+  for (const r of stRows || []) if (r.branch_id == null) tm[`g|${r.team}|${r.shift}`] = { start: String(r.start_time ?? "").slice(0, 5), end: String(r.end_time ?? "").slice(0, 5), friSatStart: (r as any).fri_sat_start ? String((r as any).fri_sat_start).slice(0, 5) : null, friSatEnd: (r as any).fri_sat_end ? String((r as any).fri_sat_end).slice(0, 5) : null };
+  for (const r of stRows || []) if (r.branch_id) tm[`${r.branch_id}|${r.team}|${r.shift}`] = { start: String(r.start_time ?? "").slice(0, 5), end: String(r.end_time ?? "").slice(0, 5), friSatStart: (r as any).fri_sat_start ? String((r as any).fri_sat_start).slice(0, 5) : null, friSatEnd: (r as any).fri_sat_end ? String((r as any).fri_sat_end).slice(0, 5) : null };
   const resolveTimes = (br: string, team: string, shift: string) => tm[`${br}|${team}|${shift}`] || tm[`g|${team}|${shift}`] || null;
 
   const { data: rosters, error: rostersError } = await readAll(supabase.from("weekly_roster").select("branch_id, week_start, roster_data").in("branch_id", targets).in("week_start", weeks).order("id"));
@@ -367,7 +368,7 @@ export async function getStaffPerformance(opts: { period?: "daily" | "weekly" | 
     for (const e of sched[`${br}|${d}`] || []) {
       const s = stat[e.user_id]; if (!s) continue;
       s.scheduled++;
-      const times = resolveTimes(br, e.team, e.shift);
+      const times = timesOn(resolveTimes(br, e.team, e.shift), d);
       const startMs = times ? zonedToUtcMs(d, times.start) : null;
       const log = logIx[`${br}|${d}|${e.user_id}`];
       if (log && log.clock_in) {

@@ -1,5 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { clockInFlag, rosterEntryTimes, zonedToUtc } from "./roster";
+import { clockInFlag, rosterEntryTimes, timesOn, zonedToUtc, type ShiftTime } from "./roster";
+
+describe("weekday shift times", () => {
+  const evening = { team: "Kitchen", shift: "Night", start: "17:30", end: "23:30", friSatStart: "17:30", friSatEnd: "02:00" };
+  const mid = { team: "Kitchen", shift: "Mid", start: "", end: "" };
+  const m = new Map<string, ShiftTime>([["Kitchen|Night", evening], ["Kitchen|Mid", mid]]);
+  it("uses Fri/Sat times on Friday and Saturday only", () => {
+    expect(timesOn(evening, "2026-11-12")).toEqual({ start: "17:30", end: "23:30" }); // Thursday
+    expect(timesOn(evening, "2026-11-13")).toEqual({ start: "17:30", end: "02:00" }); // Friday
+    expect(timesOn(evening, "2026-11-14")).toEqual({ start: "17:30", end: "02:00" }); // Saturday
+    expect(timesOn(evening, "2026-11-15")).toEqual({ start: "17:30", end: "23:30" }); // Sunday
+    expect(rosterEntryTimes({ team: "Kitchen", shift: "Night" }, m, "2026-11-13")?.end).toBe("02:00");
+  });
+  it("treats empty times as pending (unknown), never as 00:00", () => {
+    expect(timesOn(mid, "2026-11-13")).toBeNull();
+    expect(rosterEntryTimes({ team: "Kitchen", shift: "Mid" }, m, "2026-11-13")).toBeNull();
+  });
+});
 
 const times = new Map([["Kitchen|Early", { team: "Kitchen", shift: "Early", start: "10:00", end: "16:00" }]]);
 const me = "u1";

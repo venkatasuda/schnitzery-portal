@@ -38,6 +38,7 @@ const api = load('src/lib/queries/branch-analytics.ts', {
   '@/lib/pay/calculations': { shiftMinutes: l => ({ paidMin: l.duration_mins }) },
   '@/lib/pay/wages': { wageMapForBranches: async () => ({ manager: 20 }) },
   '@/lib/analytics/coverage': load('src/lib/analytics/coverage.ts'),
+  '@/lib/time/roster': load('src/lib/time/roster.ts'),
 });
 (async () => {
   const r = await api.getBranchAnalytics({ period: 'weekly' });

@@ -45,7 +45,7 @@ export default function SupplierReturns() {
   }
   const selected = form?.kind === "return" ? data?.batches.find(batch => batch.id === form.batch) : null;
   return <Panel title={s("Supplier returns & credits", "Lieferantenretouren und Gutschriften")}>
-    <p>{s("Record goods only after they have actually been sent back. This reduces the linked batch and appears in stock reconciliation. Record the supplier's credit separately: a return is not proof of a refund, and a credit never moves stock.", "Ware erst nach tatsächlicher Rücksendung erfassen. Dies reduziert die verknüpfte Charge und erscheint im Bestandsabgleich. Die Lieferantengutschrift separat erfassen: Eine Retoure ist kein Erstattungsnachweis, eine Gutschrift bewegt keinen Bestand.")}</p>
+
     <button className="btn-gold" disabled={loading || !data || busy} onClick={() => open({ kind: "return", batch: "" })}>{s("Record goods sent back", "Zurückgesendete Ware erfassen")}</button>
     {error && !form && <p role="alert">{error} <button className="btn-secondary" onClick={() => void load()}>{s("Retry", "Erneut versuchen")}</button></p>}
     {loading ? <p role="status">{s("Loading…", "Wird geladen…")}</p> : data && <>
@@ -57,7 +57,7 @@ export default function SupplierReturns() {
           <Link className="btn-secondary" href={`/expiry?search=${encodeURIComponent(returned.product)}`}>{s("Inspect batches", "Chargen prüfen")}</Link>
           <p>{s("Credit evidence", "Gutschriftsnachweise")}: {credits.length || s("Not recorded", "Nicht erfasst")}</p>
           <ul>{credits.map(credit => <li key={credit.id}>{credit.reference} · {fmtDay(credit.credit_date, locale)} · {formatEur(credit.amount, locale, 2)} · {credit.tax_basis === "net" ? s("Net", "Netto") : credit.tax_basis === "gross" ? s("Gross", "Brutto") : s("Tax basis unconfirmed", "Steuerbasis unbestätigt")} · {credit.note}</li>)}</ul>
-          <p className="muted">{s("Recorded credits are evidence, not confirmation of payment or a reconciled supplier balance. Net and gross amounts are not combined. Purchase-spending charts remain original delivery costs.", "Erfasste Gutschriften sind Nachweise, keine Zahlungsbestätigung und kein abgestimmter Lieferantensaldo. Netto- und Bruttobeträge werden nicht addiert. Einkaufsdiagramme zeigen weiterhin ursprüngliche Lieferkosten.")}</p>
+
           <button className="btn-secondary" disabled={busy} onClick={() => open({ kind: "credit", returned })}>{s("Record supplier credit", "Lieferantengutschrift erfassen")}</button>
         </details>;
       })}

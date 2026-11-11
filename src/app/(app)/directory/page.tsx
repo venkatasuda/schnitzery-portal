@@ -34,7 +34,6 @@ export default function DirectoryPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="📇" size={22} /> {t("directory.title")}</h1>
-      <p className="ui-lede">{t("directory.subtitle")}</p>
 
       <input className="form-input u-mb-4" aria-label={t("directory.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}
         />

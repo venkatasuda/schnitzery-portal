@@ -39,8 +39,13 @@ export default function HygieneLogbookPage() {
   const tasksBy = new Map<string, Data["tasks"]>();
   for (const t of data?.temps ?? []) { const k = `${t.work_date}|${t.unit_id}`; tempsBy.set(k, [...(tempsBy.get(k) ?? []), t]); }
   for (const t of data?.tasks ?? []) tasksBy.set(t.work_date, [...(tasksBy.get(t.work_date) ?? []), t]);
-  const cells = data ? dates.length * data.units.length : 0;
-  const covered = data ? dates.reduce((n, d) => n + data.units.filter((u) => tempsBy.has(`${d}|${u.id}`)).length, 0) : 0;
+  // A unit only counts from the day it was added (readings before that, if any, still show).
+  const due = (d: string, u: Data["units"][number]) => d >= u.since || tempsBy.has(`${d}|${u.id}`);
+  const cells = data ? dates.reduce((n, d) => n + data.units.filter((u) => due(d, u)).length, 0) : 0;
+  // Two checks a day: before 15:00 = opening, from 15:00 = closing (same rule as the Temperature log and day close).
+  const closing = (iso: string) => Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Berlin", hour: "2-digit", hour12: false }).format(new Date(iso))) >= 15;
+  const missing = (list: Data["temps"]) => [!list.some((t) => !closing(t.recorded_at)) && s("opening", "Öffnung"), !list.some((t) => closing(t.recorded_at)) && s("closing", "Schluss")].filter(Boolean) as string[];
+  const covered = data ? dates.reduce((n, d) => n + data.units.filter((u) => { const l = tempsBy.get(`${d}|${u.id}`); return l && !missing(l).length; }).length, 0) : 0;
   const outOfRange = data?.temps.filter((t) => !t.in_range) ?? [];
   const doneTasks = data?.tasks.filter((t) => t.done).length ?? 0;
 
@@ -63,7 +68,7 @@ export default function HygieneLogbookPage() {
         <h1>{s("Hygiene logbook (HACCP)", "Hygiene-Protokoll (HACCP)")} · {data.branchName}</h1>
         <p>{fmtDay(data.from, locale)} – {fmtDay(data.to, locale)} · {s("printed", "gedruckt")} {new Date().toLocaleString(de ? "de-DE" : "en-GB", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
         <ul className="logbook-summary">
-          <li>{s("Temperature checks", "Temperaturkontrollen")}: <strong>{covered} / {cells}</strong> {s("unit-days logged", "Geräte-Tage erfasst")}</li>
+          <li>{s("Temperature checks", "Temperaturkontrollen")}: <strong>{covered} / {cells}</strong> {s("unit-days with opening + closing check", "Geräte-Tage mit Öffnungs- und Schlusskontrolle")}</li>
           <li>{s("Out of range", "Außerhalb des Bereichs")}: <strong>{outOfRange.length}</strong>{outOfRange.length ? ` (${outOfRange.filter((t) => t.corrective_action).length} ${s("with corrective action", "mit Korrekturmaßnahme")})` : ""}</li>
           <li>{s("Checklist tasks done", "Erledigte Checklisten-Aufgaben")}: <strong>{doneTasks} / {data.tasks.length}</strong></li>
         </ul>
@@ -75,7 +80,10 @@ export default function HygieneLogbookPage() {
           <thead><tr><th scope="col">{s("Date", "Datum")}</th>{data.units.map((u) => <th scope="col" key={u.id}>{u.name}<div className="t-xs u-muted">{deg(u.min_temp)} … {deg(u.max_temp)}</div></th>)}</tr></thead>
           <tbody>{dates.map((d) => <tr key={d}><th scope="row">{fmtDay(d, locale)}</th>{data.units.map((u) => {
             const list = tempsBy.get(`${d}|${u.id}`);
-            return <td key={u.id} className={!list ? "logbook-missing" : list.some((t) => !t.in_range) ? "logbook-bad" : undefined}>
+            if (!due(d, u)) return <td key={u.id} className="u-muted">—</td>;
+            const gap = list ? missing(list) : [];
+            return <td key={u.id} className={!list || gap.length ? "logbook-missing" : list.some((t) => !t.in_range) ? "logbook-bad" : undefined}>
+              {gap.length > 0 && <div className="t-xs">{s("missing", "fehlt")}: {gap.join(", ")}</div>}
               {!list ? s("not logged", "nicht erfasst") : list.map((t, i) => <div key={i}>{deg(t.temp)} · {time(t.recorded_at)}{t.recorded_by_name ? ` · ${t.recorded_by_name}` : ""}{!t.in_range && <div className="t-xs">{s("Action", "Maßnahme")}: {t.corrective_action || s("none recorded", "keine erfasst")}</div>}</div>)}
             </td>;
           })}</tr>)}</tbody>

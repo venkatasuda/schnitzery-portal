@@ -39,7 +39,7 @@ export default function RosterLabourPanel({ weekStart, roster }: { weekStart: st
     let unknown = 0;
     DAYS.forEach((d, i) => {
       for (const e of roster[d] || []) {
-        const mins = rosterEntryMinutes(e, times);
+        const mins = rosterEntryMinutes(e, times, dates[i]);
         if (mins == null) unknown++; else planned.push({ date: dates[i], user_id: e.user_id, mins });
       }
     });

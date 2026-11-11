@@ -5,6 +5,10 @@ import Link from "next/link";
 import { getMyLeaveBalance } from "@/lib/queries/leave-balance";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
+import AvailabilityForm from "@/components/AvailabilityForm";
+import LeavePage from "../leave/page";
+import HoursPage from "../hours/page";
+import ChecklistPage from "../checklist/page";
 
 // Staff "My Day" hub — groups the three planning features under one nav button
 // using the old app's hub-tab pattern, so the bottom nav stays at 4 tidy items.
@@ -36,16 +40,7 @@ export default function MyDayPage() {
 
       {tab === "avail" && (
         <div className="hub-tab-panel active">
-          <HubLink
-            href="/availability"
-            icon="🗓"
-            grad="linear-gradient(135deg,#8b6914,#d4a847)"
-            title={t("myday.availTitle")}
-            sub={t("myday.availSub")}
-          />
-          <div className="card t-xs u-muted lh-16">
-{t("myday.availNote")}
-          </div>
+          <AvailabilityForm />
         </div>
       )}
 
@@ -63,66 +58,21 @@ export default function MyDayPage() {
               <div className="t-xs u-muted mt-2">{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
             </div>
           )}
-          <HubLink
-            href="/leave"
-            icon="🌴"
-            grad="linear-gradient(135deg,#117a65,#16a085)"
-            title={t("myday.requestTimeOff")}
-            sub={t("myday.requestTimeOffSub")}
-          />
-          <HubLink
-            href="/leave-calendar"
-            icon="📆"
-            grad="linear-gradient(135deg,#1a6b8a,#3498db)"
-            title={t("myday.teamLeaveCal")}
-            sub={t("myday.teamLeaveCalSub")}
-          />
+          {/* The real screens render inside the tab (only the open tab loads); their own page heading is hidden. */}
+          <div className="myday-embed"><LeavePage /></div>
+          <Link className="ui-back-link" href="/leave-calendar">{t("myday.teamLeaveCal")} →</Link>
         </div>
       )}
 
       {tab === "hours" && (
-        <div className="hub-tab-panel active">
-          <HubLink
-            href="/hours"
-            icon="⏱"
-            grad="linear-gradient(135deg,#6b2fa0,#9b59b6)"
-            title={t("myday.hoursSummary")}
-            sub={t("myday.hoursSummarySub")}
-          />
-          {/* "Sign timesheet" removed: staff sign-off is not built yet (it only showed the time-off form). */}
-        </div>
+        <div className="hub-tab-panel active myday-embed"><HoursPage /></div>
       )}
       {tab === "work" && (
         <div className="hub-tab-panel active">
-          <HubLink
-            href="/checklist"
-            icon="✅"
-            grad="linear-gradient(135deg,#1e8449,#27ae60)"
-            title={t("myday.dailyChecklist")}
-            sub={t("myday.dailyChecklistSub")}
-          />
-          <HubLink
-            href="/directory"
-            icon="📇"
-            grad="linear-gradient(135deg,#2c3e50,#34495e)"
-            title={t("myday.teamDirectory")}
-            sub={t("myday.teamDirectorySub")}
-          />
+          <div className="myday-embed"><ChecklistPage /></div>
+          <Link className="ui-back-link" href="/directory">{t("myday.teamDirectory")} →</Link>
         </div>
       )}
     </div>
-  );
-}
-
-function HubLink({ href, icon, grad, title, sub }: { href: string; icon: string; grad: string; title: string; sub: string }) {
-  return (
-    <Link href={href} className="feature-card">
-      <div className="feature-icon" style={{ background: grad }}><Icon e={icon} size={22} color="#fff" /></div>
-      <div className="u-flex1">
-        <div className="feature-title">{title}</div>
-        <div className="feature-sub">{sub}</div>
-      </div>
-      <span className="feature-chev">›</span>
-    </Link>
   );
 }

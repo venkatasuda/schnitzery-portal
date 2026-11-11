@@ -24,7 +24,7 @@ export default function TransferLots({id,onClose,onSaved}:{id:string;onClose:()=
   <h2>{s("Transfer batches","Transferchargen")}</h2>
   {error&&<ErrorState message={s("Transfer could not be saved or loaded. Refresh balances and retry; no partial transfer is posted.","Transfer konnte nicht gespeichert oder geladen werden. Bestände aktualisieren und erneut versuchen; keine Teilbuchung erfolgt.")} onRetry={load} retryLabel={s("Refresh","Aktualisieren")}/>}
   {!data?(error?null:<p role="status">{s("Loading…","Lädt…")}</p>):<><h3>{data.transfer.product} · {data.transfer.qty} {data.transfer.unit}</h3>
-   <p>{s("Dispatch removes the selected source lots. Receipt creates destination lots with the same expiry and lot reference. Record shortages per lot; no purchase or sales revenue is created.","Versand reduziert die ausgewählten Quellchargen. Empfang erstellt Zielchargen mit gleichem Ablaufdatum und Chargenbezug. Fehlmengen je Charge erfassen; kein Einkauf oder Umsatz wird erzeugt.")}</p>
+
    {data.transfer.status==="sent"&&!data.lots.length&&<p role="status">{s("Legacy transfer: lot details were not captured. Use the original receipt details; do not invent expiry dates.","Alter Transfer: Chargendetails wurden nicht erfasst. Ursprüngliche Empfangsdetails verwenden; keine Ablaufdaten erfinden.")}</p>}
    <form onSubmit={e=>{e.preventDefault();void save();}}><fieldset className="inventory-fieldset" disabled={busy}>
     {rows.map((r,i)=><div className="card" key={r.id}><p>{r.lot_number||r.id.slice(0,8)} · {r.expiry_date?fmtDay(r.expiry_date,locale):s("Unknown expiry","Ablauf unbekannt")} · {s("Maximum","Maximum")}: {r.max} {data.transfer.unit}</p>

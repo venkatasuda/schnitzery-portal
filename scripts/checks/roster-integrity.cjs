@@ -9,17 +9,20 @@ const out={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/quer
  if(n.endsWith('/server'))return {createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from:chain})};
  if(n.endsWith('schedule-constants'))return {DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],SHIFT_MODEL:{Kitchen:[{shift:'Morning'}]},TEAMS:['Manager','Preparation','Kitchen','Cashier','Dishwashing']};
  if(n.endsWith('berlinDate'))return {isCalendarDate:d=>/^\d{4}-\d{2}-\d{2}$/.test(d)};
- if(n.endsWith('calculations'))return {};throw Error(n);
+ if(n.endsWith('calculations'))return {};
+ if(n.endsWith('/shift-times'))return {getShiftTimes:async()=>({ok:true,items:[]})};
+ if(n.endsWith('/time/roster'))return {rosterEntryTimes:()=>null};
+ if(n.endsWith('/push/delivery'))return {sendPushToUser:async()=>{}};throw Error(n);
 }});
 (async()=>{
- const roster={Monday:[{user_id:'employee',name:'Forged',team:'Kitchen',shift:'Morning'}]},expected={id:'roster',roster:{Monday:[]}};
+ const roster={Monday:[{user_id:'employee',name:'Forged',team:'Kitchen',shift:'Morning'}]},expected={draft:{Monday:[]}}; // save writes the DRAFT (roster_drafts), compare-and-swap on the loaded draft
  assert.equal((await out.saveRoster('2026-10-19',roster,undefined)).ok,false);assert.equal(writes.length,0);
  role='staff';assert.equal((await out.saveRoster('2026-10-19',roster,expected)).ok,false);assert.equal(writes.length,0);role='manager';
  people=[];assert.equal((await out.saveRoster('2026-10-19',roster,expected)).ok,false);assert.equal(writes.length,0);people=[{id:'employee',full_name:'Real name'}];
  assert.equal((await out.saveRoster('2026-10-20',roster,expected)).ok,false);
  assert.equal((await out.saveRoster('2026-10-19',{Monday:[{...roster.Monday[0],shift:'25:99–26:00'}]},expected)).ok,false);
  assert.equal((await out.saveRoster('2026-10-19',roster,expected)).ok,true);
- assert.equal(writes[0][2].roster_data.Monday[0].name,'Real name');assert(writes.some(x=>x[0]==='eq'&&x[1]==='roster_data'&&x[2]===JSON.stringify(expected.roster)));
+ assert.equal(writes[0][2].roster_data.Monday[0].name,'Real name');assert(writes.some(x=>x[0]==='eq'&&x[1]==='roster_data'&&x[2]===JSON.stringify(expected.draft)));
  changed=null;const result=await out.saveRoster('2026-10-19',roster,expected);assert.equal(result.ok,false);assert.match(result.error,/changed elsewhere/);
  // The UI translates by code; both languages must carry it (German managers saw English before).
  assert.equal(result.code,'errConflict');

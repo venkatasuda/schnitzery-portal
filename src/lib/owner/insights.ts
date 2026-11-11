@@ -3,6 +3,7 @@
 // Honest gaps: a figure that is missing an input is null ("—"), never 0.
 import { mondayOfDate, berlinWeekdayIndex } from "@/lib/time/berlinDate";
 import { isBwHoliday } from "@/lib/time/holidays";
+import { timesOn } from "@/lib/time/roster";
 
 type Sale = { sale_date: string; amount: number | string | null };
 type Worked = { user_id: string; work_date: string; paidMin: number };
@@ -103,13 +104,14 @@ export function setupSteps(x: SetupInput): SetupStep[] {
 
 // Paid minutes of one roster entry: a preset shift (team|shift → times from the branch's
 // shift catalogue, minus its break) or a custom "HH:MM–HH:MM" range. Unknown → null.
-export type ShiftTimeDef = { team: string; shift: string; start: string; end: string; breakMins: number };
+export type ShiftTimeDef = { team: string; shift: string; start: string; end: string; breakMins: number; friSatStart?: string | null; friSatEnd?: string | null };
 const hm = (s: string) => { const m = /^(\d{1,2}):(\d{2})$/.exec(s.trim()); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
-export function rosterEntryMinutes(e: { team?: string; shift?: string }, times: Map<string, ShiftTimeDef>): number | null {
-  const preset = times.get(`${e.team}|${e.shift}`);
+// date (YYYY-MM-DD) picks the Fri/Sat times when the catalogue has them; pending times → null.
+export function rosterEntryMinutes(e: { team?: string; shift?: string }, times: Map<string, ShiftTimeDef>, date?: string): number | null {
+  const preset = times.get(`${e.team}|${e.shift}`), on = timesOn(preset, date);
   const custom = !preset && e.shift ? e.shift.split(/[–\-—]/) : null;
-  const start = preset ? hm(preset.start) : custom?.length === 2 ? hm(custom[0]) : null;
-  const end = preset ? hm(preset.end) : custom?.length === 2 ? hm(custom[1]) : null;
+  const start = preset ? (on ? hm(on.start) : null) : custom?.length === 2 ? hm(custom[0]) : null;
+  const end = preset ? (on ? hm(on.end) : null) : custom?.length === 2 ? hm(custom[1]) : null;
   if (start == null || end == null) return null;
   let mins = end - start;
   if (mins <= 0) mins += 1440; // overnight

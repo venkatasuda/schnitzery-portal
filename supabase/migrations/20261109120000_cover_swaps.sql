@@ -40,13 +40,14 @@ grant execute on function private.move_roster_shift(uuid, date, text, text, uuid
 
 create or replace function public.decide_cover_atomic(p_id uuid, p_decision text)
 returns boolean language plpgsql security invoker set search_path = '' as $$
-declare c public.cover_requests%rowtype; caller_branch uuid; caller_name text;
+declare c public.cover_requests%rowtype; caller_name text;
 begin
   if auth.uid() is null or not public.is_manager() then raise exception 'Managers only'; end if;
   if p_decision not in ('approved', 'rejected') or p_decision is null then raise exception 'Invalid decision'; end if;
-  select branch_id, full_name into caller_branch, caller_name from public.users where id = auth.uid();
+  select full_name into caller_name from public.users where id = auth.uid();
   select * into c from public.cover_requests where id = p_id for update;
-  if not found or c.branch_id is distinct from caller_branch then raise exception 'Request not found'; end if;
+  -- Any branch the manager may access (HQ / multi-branch managers decide the branch they are viewing).
+  if not found or c.branch_id is null or c.branch_id not in (select public.accessible_branch_ids()) then raise exception 'Request not found'; end if;
   if c.status not in ('open', 'claimed') then raise exception 'Already actioned'; end if;
   if p_decision = 'approved' then
     if c.status <> 'claimed' or c.claimer_id is null or c.claimer_id = c.requester_id then raise exception 'No valid claimant'; end if;

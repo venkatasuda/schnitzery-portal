@@ -114,7 +114,7 @@ export default function PrepDay({ initialDay, allowPicker = true, readOnly = fal
         {[today, tomorrow].map((d, i) => <button key={d} type="button" aria-pressed={d === day} onClick={() => setDay(d)}>{i ? s("Tomorrow", "Morgen") : s("Today", "Heute")}</button>)}
         {allowPicker && <input className="prep-date" type="date" aria-label={s("Choose date", "Datum wählen")} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} />}
       </div>}
-      <div className="prep-bar-day"><strong>{fmtDay(day, locale)}</strong><span className={`prep-pill ${status.cls}`}>{status.text}</span></div>
+      <div className="prep-bar-day"><strong>{fmtDay(day, locale)}</strong>{(!readOnly || sent) && <span className={`prep-pill ${status.cls}`}>{status.text}</span>}</div>
     </div>
 
     {!items.length && <EmptyState title={s("No prep items yet", "Noch keine Vorbereitungsartikel")}>{data.isManager ? s("Add them under Setup.", "Unter Einrichtung anlegen.") : null}</EmptyState>}

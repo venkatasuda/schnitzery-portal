@@ -7,6 +7,7 @@ import { getStaffDetail, getStaffHours } from "@/lib/queries/staff-detail";
 import EmployeeDocuments from "@/components/EmployeeDocuments";
 import BranchLinks from "@/components/BranchLinks";
 import OnboardingCard from "@/components/OnboardingCard";
+import StaffTierCard from "@/components/StaffTierCard";
 import { getStaffLeaveBalance, setLeaveAllowance } from "@/lib/queries/leave-balance";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -107,6 +108,8 @@ export default function StaffDetailPage() {
           </div>
         </div>
       )}
+
+      <StaffTierCard userId={id} />
 
       <OnboardingCard userId={id} />
 

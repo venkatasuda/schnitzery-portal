@@ -2,7 +2,7 @@
 
 import { appLocale } from "@/lib/format";
 import { useState, useEffect, useRef } from "react";
-import { getPendingApprovals, decideLeave, decideSwap } from "@/lib/queries/leave";
+import { getPendingApprovals, decideLeave, decideSwap, getSickNoteUrl } from "@/lib/queries/leave";
 import { getAttendanceApprovals, setAttendanceApproval } from "@/lib/queries/live-attendance";
 import { getCorrectionApprovals, decideCorrection } from "@/lib/queries/corrections";
 import { toast } from "@/components/Toast";
@@ -11,7 +11,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
 type Kind = "leave" | "swap" | "attendance" | "correction";
-type Item = { kind: Kind; id: string; icon: string; name: string; detail: string };
+type Item = { kind: Kind; id: string; icon: string; name: string; detail: string; note?: boolean };
 type Filter = "all" | Kind;
 
 const fmtH = (m: number | null | undefined) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
@@ -50,7 +50,9 @@ export default function ApprovalsClient({ initial = null }: { initial?: Raw | nu
 
     const out: Item[] = [];
     for (const l of (pa.ok && pa.leave) || []) {
-      out.push({ kind: "leave", id: l.id, icon: "🌴", name: (l as any).users?.full_name || t("approvals.someone"), detail: `${t("approvals.timeOff")} · ${fmtD(l.from_date)} → ${fmtD(l.to_date)}${l.reason ? ` · ${l.reason}` : ""}` });
+      const lt = (l as any).leave_type ?? "vacation", de = locale === "de";
+      const typeName = ({ vacation: t("approvals.timeOff"), sick: de ? "Krank" : "Sick leave", unpaid: de ? "Unbezahlt" : "Unpaid leave", special: de ? "Sonderurlaub" : "Special leave" } as Record<string, string>)[lt] ?? t("approvals.timeOff");
+      out.push({ kind: "leave", id: l.id, icon: lt === "sick" ? "🤒" : "🌴", name: (l as any).users?.full_name || t("approvals.someone"), detail: `${typeName} · ${fmtD(l.from_date)} → ${fmtD(l.to_date)}${l.reason ? ` · ${l.reason}` : ""}`, note: !!(l as any).sick_note_url });
     }
     for (const s of (pa.ok && pa.swaps) || []) {
       const other = (s as any).other?.full_name;
@@ -134,7 +136,8 @@ export default function ApprovalsClient({ initial = null }: { initial?: Raw | nu
             return (
               <div key={item.kind + item.id} className="approval-row">
                 <Icon e={item.icon} size={20} />
-                <div className="approval-detail"><strong>{item.name}</strong><p>{item.detail}</p></div>
+                <div className="approval-detail"><strong>{item.name}</strong><p>{item.detail}</p>
+                  {item.note && <button type="button" className="ui-link-btn" onClick={async () => { const r = await getSickNoteUrl(item.id); if (r.ok && r.url) window.open(r.url, "_blank", "noopener"); else setError(r.error ?? "—"); }}>{locale === "de" ? "Krankmeldung ansehen" : "View sick note"}</button>}</div>
                 <div className="approval-actions">
                   <button className="workspace-button primary" onClick={() => decide(item, true)} disabled={!!busyId} aria-label={`${t("ahub.approve")} ${item.name}`}>{busy ? "…" : t("ahub.approve")}</button>
                   <button className="workspace-button danger" onClick={() => decide(item, false)} disabled={!!busyId} aria-label={`${t("ahub.reject")} ${item.name}`}>{t("ahub.reject")}</button>

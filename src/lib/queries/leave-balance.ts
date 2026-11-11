@@ -30,7 +30,7 @@ async function computeBalance(supabase: any, userId: string, allowance: number |
   const { data: reqs } = await supabase
     .from("leave_requests")
     .select("from_date, to_date, status")
-    .eq("user_id", userId).eq("status", "approved")
+    .eq("user_id", userId).eq("status", "approved").eq("leave_type", "vacation") // sick / unpaid / special leave never reduce holidays
     .gte("from_date", `${year}-01-01`).lte("from_date", `${year}-12-31`);
   let used = 0;
   for (const r of reqs || []) if (r.from_date && r.to_date) used += werktageBetween(r.from_date, r.to_date, holidays);

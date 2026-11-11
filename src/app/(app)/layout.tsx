@@ -3,14 +3,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
 import ManagementNav, { ManagementLocation } from "@/components/ManagementNav";
-import ThemeToggle from "@/components/ThemeToggle";
 import AgentWidget from "@/components/AgentWidget";
 import NotificationBell from "@/components/NotificationBell";
 import AttendanceSync from "@/components/AttendanceSync";
 import ToastHost from "@/components/Toast";
 import LanguageProvider from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
-import LanguageToggle from "@/components/LanguageToggle";
 import BranchPicker from "@/components/BranchPicker";
 import { activeBranchFor, branchChoices } from "@/lib/activeBranch";
 import { getLocale, getT } from "@/lib/i18n/server";
@@ -73,12 +71,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <span className="header-name">{profile?.full_name || user?.email}</span>
           {isManager && <Link href="/search" aria-label={locale === "de" ? "Suchen" : "Search"} className="header-search"><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
-          <button type="button" className="header-control" popoverTarget="display-preferences" aria-label={locale === "de" ? "Sprache und Darstellung" : "Language and appearance"} title={locale === "de" ? "Sprache und Darstellung" : "Language and appearance"}><Icon e="⚙️" size={20} /></button>
-          <div id="display-preferences" popover="auto" className="header-preferences-panel">
-            <strong>{locale === "de" ? "Sprache und Darstellung" : "Language and appearance"}</strong>
-            <div className="header-preference-row"><span>{t("misc.language")}</span><LanguageToggle /></div>
-            <div className="header-preference-row"><span>{locale === "de" ? "Hell / Dunkel" : "Light / dark"}</span><ThemeToggle /></div>
-          </div>
+          {/* Language and light/dark live in Profile → Preferences (one place, no duplicate gear menu). */}
           <Link href="/profile" className="header-profile" aria-label={locale === "de" ? "Mein Profil" : "My profile"}>
           {profile?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element

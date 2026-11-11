@@ -37,7 +37,6 @@ export default function HoursPage() {
   return (
     <div className="ui-narrow">
       <h1 className="page-title u-row"><Icon e="⏱" size={22} /> {t("hours.title")}</h1>
-      <p className="ui-lede">{t("hours.subtitle")}</p>
 
       <div className="d-flex jc-sb ai-c mb-4">
         <button className="btn-secondary ui-btn-sm" disabled={loading || !month} onClick={() => shiftMonth(-1)}>{t("shifts.prev")}</button>

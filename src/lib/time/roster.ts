@@ -1,6 +1,17 @@
 // Pure roster-time helpers shared by approvals and the planned-vs-actual report.
 
-export type ShiftTime = { team: string; shift: string; start: string; end: string };
+// friSatStart/friSatEnd: optional Friday + Saturday times. Empty start/end = "time pending" (not decided yet).
+export type ShiftTime = { team: string; shift: string; start: string; end: string; friSatStart?: string | null; friSatEnd?: string | null };
+
+// The times that apply on a date (YYYY-MM-DD): Fri/Sat override when set, else the normal times;
+// null when the time is still pending. Without a date the normal times are used.
+export function timesOn(t: Pick<ShiftTime, "start" | "end" | "friSatStart" | "friSatEnd"> | null | undefined, date?: string): { start: string; end: string } | null {
+  if (!t) return null;
+  const wd = date ? new Date(`${date.slice(0, 10)}T12:00:00Z`).getUTCDay() : -1; // 5 = Fri, 6 = Sat
+  const weekend = (wd === 5 || wd === 6) && !!t.friSatStart && !!t.friSatEnd;
+  const start = weekend ? t.friSatStart! : t.start, end = weekend ? t.friSatEnd! : t.end;
+  return start && end ? { start, end } : null;
+}
 export type RosterEntry = { user_id: string; team?: string; shift?: string };
 
 // Berlin wall-clock time on a date → UTC instant (DST-safe).
@@ -17,9 +28,9 @@ export function zonedToUtc(dateStr: string, hhmm: string, tz = "Europe/Berlin"):
 
 const HM = /^(\d{1,2}):(\d{2})$/;
 // A roster entry's start/end: a preset shift from the catalogue, or a custom "HH:MM–HH:MM".
-export function rosterEntryTimes(e: { team?: string; shift?: string }, times: Map<string, ShiftTime>): { start: string; end: string } | null {
-  const preset = times.get(`${e.team}|${e.shift}`);
-  if (preset?.start && preset.end) return { start: preset.start, end: preset.end };
+export function rosterEntryTimes(e: { team?: string; shift?: string }, times: Map<string, ShiftTime>, date?: string): { start: string; end: string } | null {
+  const preset = timesOn(times.get(`${e.team}|${e.shift}`), date);
+  if (preset) return preset;
   const parts = (e.shift || "").split(/[–\-—]/).map((s) => s.trim());
   return parts.length === 2 && HM.test(parts[0]) && HM.test(parts[1]) ? { start: parts[0], end: parts[1] } : null;
 }
@@ -38,7 +49,7 @@ export function clockInFlag(clockIn: string | null, date: string, entries: Roste
   const at = Date.parse(clockIn);
   let best: number | null = null; // minutes before the nearest planned start (negative = after)
   for (const e of entries) {
-    const t = rosterEntryTimes(e, times);
+    const t = rosterEntryTimes(e, times, date);
     if (!t) return null;
     const diff = Math.round((zonedToUtc(date, t.start).getTime() - at) / 60000);
     if (best == null || Math.abs(diff) < Math.abs(best)) best = diff;

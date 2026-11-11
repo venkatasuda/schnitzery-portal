@@ -57,7 +57,6 @@ export default function NoShowPage() {
   return (
     <div className="workspace-page">
       <h1 className="page-title u-row"><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
-      <p className="ui-lede">{t("ns.subtitle")}</p>
 
       <div className="ui-segmented" role="group">
         <TabBtn active={tab === "noshow"} onClick={() => setTab("noshow")}>{t("ns.tabNoShows")}</TabBtn>

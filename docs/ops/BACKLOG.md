@@ -9,6 +9,9 @@ Updated 8 November 2026. One list for everything still open (Claude + Codex + te
 - [x] **E3 — hygiene logbook PDF:** `/compliance/logbook` (managers), print layout → "Save as PDF" (built 9 Nov; staging test + release pending).
 - [x] **E4 — shift swaps** (built 9 Nov): merged into Shift cover — claimer may offer one of their shifts in return; approval moves both roster entries atomically (`20261109120000_cover_swaps.sql`); manager sees overlap / <11 h rest / Minijob-cap warnings. Old day-name swap form removed; old pending swaps can only be declined.
 - [x] **E5 — prep target suggestions** (built 9 Nov): Prep planning → Setup shows "→ 110" per weekday (75th percentile of counted daily use, last 8 weeks, ≥3 days; ↑ = sold out some days) and "Use suggestions" fills the form for review. Staging sample data: `scripts/ops/seed-staging-prep-history.sql` (guarded, staging only).
+- [x] **Built 9–11 Nov (release pending):** unified prep flow (Workplace → Prep list read-only: today's leftovers + amounts; Inventory → Plan prep), prep units in kg (`scripts/ops/fix-prep-units-kg.sql`), day close writes missing sales to `daily_sales`, temperature rooms + opening/closing checks (`20261109150000_temp_rooms.sql`, `seed-stuttgart-temp-units.sql`), My Day tabs show content directly, time-off types + sick-note upload/attach-later (`20261109170000_leave_types.sql`; only vacation reduces holidays), filler subtitles removed app-wide.
+- [ ] **Prod release order:** migrations `day_closes` → `cover_swaps` → `temp_rooms` → `leave_types` (before merge) → merge → scripts `fix-prep-units-kg`, `seed-stuttgart-temp-units`.
+- [ ] Later: sick days in payroll / DATEV export.
 - [ ] **E1 — food cost per dish** (recipe vs. actual) — blocked by missing prices (see Team data).
 - [ ] **D — load test** on a Supabase test branch (50 → 500 → 2,000 simulated users), after more real usage.
 - [ ] **Switch the app to Supabase publishable/secret API keys** — required before the legacy JWT secret can ever be revoked. Do NOT revoke it before.
@@ -24,7 +27,8 @@ Updated 8 November 2026. One list for everything still open (Claude + Codex + te
 - [ ] Prices: chicken, Paniermehl (aro 1 kg, Metro 131243), Schnitzel seasoning, Kerrygold cheddar (~2.5 kg block), flour (aro Type 405, Metro 61224).
 - [ ] Older: Ermin two-branch setup (Munich + Stuttgart), Ekta's wage, DATEV numbers from the tax advisor, real payslip test, shift templates for Cashier/Dishwashing, "Pommes/Fries" category.
 
-## Codex (when access is back)
+## Codex (access back 11 Nov — tasks in docs/ops/CODEX-HANDOFF.md)
+- [ ] T3 — remove help texts in manager inventory forms (moved from Claude).
 - [ ] Migration history repair: `supabase migration repair --status applied` for the 8 hand-applied versions.
 - [ ] Review Claude's inventory changes (Phase 2, prep list, shift leaders). **Note:** migration `20261108150000_shift_leader_inventory.sql` swapped one permission clause in `private.edit_inventory_count`, `private.resolve_stock_batch_expiry` and `private.inventory_operation`. Any future redefinition of these functions must keep the `private.is_shift_leader(...)` part.
 - [ ] Purchasing tab race fix was applied by Claude (no `replaceState` when the URL is unchanged) — confirm with repeated e2e runs.

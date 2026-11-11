@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { sendPushToUser } from "@/lib/push/delivery";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 // Fire a push without ever blocking or breaking the caller. If push isn't set
 // up (no VAPID keys, no subscriptions), sendPushToUser simply sends nothing.
@@ -38,12 +39,16 @@ function isManager(role?: string | null) {
 }
 
 // ── STAFF: submit a leave request ──
-export async function submitLeave(fromDate: string, toDate: string, reason: string) {
+const LEAVE_TYPES = ["vacation", "sick", "unpaid", "special"];
+export async function submitLeave(fromDate: string, toDate: string, reason: string, leaveType = "vacation", sickNotePath: string | null = null) {
   const { supabase, user, homeBranchId: branchId } = await getMe(); // personal action: home branch
   if (!user) return { ok: false, error: "Not logged in." };
   if (!branchId) return { ok: false, error: "No branch assigned." };
   if (!fromDate || !toDate) return { ok: false, error: "Pick both dates." };
   if (toDate < fromDate) return { ok: false, error: "End date can't be before start date." };
+  if (!LEAVE_TYPES.includes(leaveType)) return { ok: false, error: "Choose the type of time off." };
+  // The note was uploaded by the employee into their own private folder; only that folder is accepted.
+  if (sickNotePath && (leaveType !== "sick" || !sickNotePath.startsWith(`${user.id}/`) || sickNotePath.includes(".."))) return { ok: false, error: "Upload the sick note again." };
 
   const { error } = await supabase.from("leave_requests").insert({
     branch_id: branchId,
@@ -52,7 +57,9 @@ export async function submitLeave(fromDate: string, toDate: string, reason: stri
     to_date: toDate,
     reason: reason || null,
     status: "pending",
-  });
+    leave_type: leaveType,
+    sick_note_url: sickNotePath,
+  } as any);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
@@ -68,6 +75,31 @@ export async function getMyLeave() {
     .order("created_at", { ascending: false });
   if (error) return { ok: false, error: error.message, requests: [] };
   return { ok: true, requests: data || [] };
+}
+
+// ── STAFF: attach the sick note after submitting (file already uploaded to the own folder) ──
+export async function attachSickNote(leaveId: string, path: string) {
+  const { supabase, user } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  const { error } = await supabase.rpc("attach_sick_note" as any, { p_id: leaveId, p_path: path } as any);
+  if (error) return { ok: false, error: error.code === "42501" ? "Not found or no access." : "Upload the sick note again." };
+  return { ok: true };
+}
+
+// ── Sick note: short-lived link for the employee or their manager ──
+// The row lookup runs under RLS (own requests / managed branch), so only they get a link; the file
+// itself sits in the private "documents" bucket and is signed server-side for 2 minutes.
+export async function getSickNoteUrl(leaveId: string) {
+  const { supabase, user } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  const { data: row } = await supabase.from("leave_requests").select("sick_note_url").eq("id", leaveId).maybeSingle();
+  const path = (row as any)?.sick_note_url as string | null | undefined;
+  if (!path) return { ok: false, error: "Not found or no access." };
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const storage = url && key ? createAdminClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } }).storage : supabase.storage;
+  const { data, error } = await storage.from("documents").createSignedUrl(path, 120);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, url: data.signedUrl };
 }
 
 // ── MANAGER: all pending items (leave + swaps) for the branch ──

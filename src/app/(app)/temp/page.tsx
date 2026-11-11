@@ -15,7 +15,7 @@ const KINDS = ["fridge", "freezer", "hot_hold", "other"];
 const fmtWhen = (iso: string) => { try { return new Date(iso).toLocaleString(appLocale(), { timeZone: "Europe/Berlin", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return iso; } };
 
 export default function TempPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [tab, setTab] = useState<"check" | "history" | "units">("check");
   const [loading, setLoading] = useState(true);
   const [isMgr, setIsMgr] = useState(false);
@@ -29,7 +29,7 @@ export default function TempPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
   // add-unit form
-  const [nu, setNu] = useState({ name: "", kind: "fridge", min: "", max: "" });
+  const [nu, setNu] = useState({ room: "", name: "", kind: "fridge", min: "", max: "" });
 
   async function loadCore() {
     // A failed request must end the skeleton and say so, not spin forever.
@@ -63,9 +63,9 @@ export default function TempPage() {
   async function doAddUnit() {
     if (!nu.name || nu.min === "" || nu.max === "") { toast(t("temp.unitFields"), "error"); return; }
     setBusy("add");
-    const r = await addTempUnit(nu.name, nu.kind, Number(nu.min), Number(nu.max));
+    const r = await addTempUnit(nu.name, nu.kind, Number(nu.min), Number(nu.max), nu.room);
     setBusy(null);
-    if (r.ok) { toast(t("temp.unitAdded"), "success"); setNu({ name: "", kind: "fridge", min: "", max: "" }); loadCore(); }
+    if (r.ok) { toast(t("temp.unitAdded"), "success"); setNu({ room: nu.room, name: "", kind: "fridge", min: "", max: "" }); loadCore(); }
     else toast(r.error || t("temp.failed"), "error");
   }
   async function doRemoveUnit(u: any) {
@@ -76,20 +76,23 @@ export default function TempPage() {
   }
 
   const rangeStr = (u: any) => `${u.min_temp}°C … ${u.max_temp}°C`;
+  const s = (en: string, de: string) => (locale === "de" ? de : en);
+  const ROOM_DE: Record<string, string> = { Preparation: "Vorbereitung", Kitchen: "Küche", Storage: "Lager" };
+  const roomLabel = (r: string) => (r === "" ? s("Other", "Sonstige") : locale === "de" ? ROOM_DE[r] ?? r : r);
+  // Units grouped by room, in the units' own order (sort, name); units without a room last.
+  const rooms: [string, any[]][] = [];
+  for (const u of units) { const r = u.room ?? ""; const g = rooms.find(([k]) => k === r); if (g) g[1].push(u); else rooms.push([r, [u]]); }
+  rooms.sort(([a], [b]) => (a === "" ? 1 : b === "" ? -1 : 0));
 
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="🌡️" size={22} /> {t("temp.title")}</h1>
 
-      {summary && (
-        <div className="card" style={{ margin: "12px 0", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: summary.breachesToday > 0 ? "rgba(231,76,60,0.4)" : summary.pending > 0 ? "var(--accent-line)" : "rgba(39,174,96,0.3)" }}>
-          <div>
-            <div className="t-sm fw-7 u-text">{t("temp.todayCoverage", { done: summary.loggedUnits, total: summary.totalUnits })}</div>
-            <div className={`t-xs ${summary.breachesToday > 0 ? "tone-danger" : "u-muted"}`.trim()}>
-              {summary.breachesToday > 0 ? t("temp.breachesToday", { n: summary.breachesToday }) : summary.pending > 0 ? t("temp.pendingToday", { n: summary.pending }) : t("temp.allGood")}
-            </div>
-          </div>
-          <div style={{ fontSize: 26 }}>{summary.breachesToday > 0 ? "⚠️" : summary.pending > 0 ? "🕒" : "✅"}</div>
+      {summary && summary.totalUnits > 0 && (
+        <div className={`temp-summary${summary.breachesToday > 0 ? " is-bad" : summary.pending > 0 ? "" : " is-done"}`}>
+          <strong>{s("Today", "Heute")}: {summary.doneChecks} / {summary.totalChecks} {s("checks", "Kontrollen")}</strong>
+          {summary.breachesToday > 0 && <span className="tone-danger">{t("temp.breachesToday", { n: summary.breachesToday })}</span>}
+          <span aria-hidden="true">{summary.breachesToday > 0 ? "⚠️" : summary.pending > 0 ? "🕒" : "✅"}</span>
         </div>
       )}
 
@@ -106,7 +109,9 @@ export default function TempPage() {
             <div>
               {units.length === 0 ? (
                 <div className="card ui-empty-msg">{isMgr ? t("temp.noUnitsMgr") : t("temp.noUnits")}</div>
-              ) : units.map((u) => {
+              ) : rooms.map(([room, list]) => <section key={room} className="temp-room">
+                <h2 className="temp-room-title">{roomLabel(room)} <span>{list.filter((u) => u.opening && u.closing).length} / {list.length}</span></h2>
+                {list.map((u) => {
                 const oor = outOfRange(u, val[u.id] || "");
                 const lt = u.latest;
                 return (
@@ -114,14 +119,12 @@ export default function TempPage() {
                     <div className="d-flex jc-sb ai-s gap-3">
                       <div>
                         <div className="ui-strong">{u.name}</div>
-                        <div className="ui-muted">{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
+                        <div className="ui-muted">{rangeStr(u)}{lt ? <> · <span className={lt.in_range ? "tone-success" : "tone-danger"}>{lt.temp}°C</span></> : null}</div>
                       </div>
-                      {lt ? (
-                        <div className="u-right">
-                          <div className={`t-lg fw-7 ${lt.in_range ? "tone-success" : "tone-danger"}`.trim()}>{lt.temp}°C</div>
-                          <div className="ui-muted">{u.todayCount}× {t("temp.today")}</div>
-                        </div>
-                      ) : <span className="t-xs tone-action">{t("temp.pending")}</span>}
+                      <div className="temp-slots">
+                        <span className={u.opening ? "is-done" : ""}>{u.opening ? "✓ " : ""}{s("Opening", "Öffnung")}</span>
+                        <span className={u.closing ? "is-done" : ""}>{u.closing ? "✓ " : ""}{s("Closing", "Schluss")}</span>
+                      </div>
                     </div>
                     <div className="d-flex gap-2 mt-3 ai-c">
                       <input aria-label={`${u.name} °C`} type="number" inputMode="decimal" value={val[u.id] ?? ""} onChange={(e) => setVal((s) => ({ ...s, [u.id]: e.target.value }))}
@@ -137,7 +140,7 @@ export default function TempPage() {
                     )}
                   </div>
                 );
-              })}
+              })}</section>)}
             </div>
           )}
 
@@ -166,6 +169,8 @@ export default function TempPage() {
             <div>
               <div className="card mb-3 p-4">
                 <div className="card-title">{t("temp.addUnit")}</div>
+                <input className="form-input u-mb-2" aria-label={s("Room", "Raum")} list="temp-rooms" maxLength={40} value={nu.room} onChange={(e) => setNu({ ...nu, room: e.target.value })} placeholder={s("Room", "Raum")} />
+                <datalist id="temp-rooms">{["Preparation", "Kitchen", "Storage", ...rooms.map(([r]) => r)].filter((r, i, a) => r && a.indexOf(r) === i).map((r) => <option key={r} value={r} />)}</datalist>
                 <input className="form-input u-mb-2" aria-label={t("temp.unitName")} value={nu.name} onChange={(e) => setNu({ ...nu, name: e.target.value })} placeholder={t("temp.unitName")} />
                 <select className="form-input u-mb-2" aria-label={t("temp.addUnit")} value={nu.kind} onChange={(e) => setNu({ ...nu, kind: e.target.value })}>
                   {KINDS.map((k) => <option key={k} value={k}>{t("temp.kind_" + k)}</option>)}
@@ -180,7 +185,7 @@ export default function TempPage() {
                 <div key={u.id} className="card ui-item-card ui-item-head">
                   <div>
                     <div className="ui-body">{u.name}</div>
-                    <div className="ui-muted">{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
+                    <div className="ui-muted">{u.room ? `${roomLabel(u.room)} · ` : ""}{t("temp.kind_" + u.kind)} · {rangeStr(u)}</div>
                   </div>
                   <button className="ui-icon-btn" type="button" aria-label={`${t("temp.removeUnit")}: ${u.name}`} onClick={() => doRemoveUnit(u)} disabled={busy === u.id} title={t("temp.removeUnit")}><Icon e="🗑" size={16} /></button>
                 </div>

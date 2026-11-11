@@ -18,6 +18,8 @@ export default function CookieNotice() {
   useEffect(() => {
     try { if (!localStorage.getItem(KEY)) setLang(/(?:^|; )lang=de/.test(document.cookie) ? "de" : "en"); } catch { /* ignore */ }
   }, []);
+  // While the notice shows, reserve space at the bottom so it never covers the last buttons (e.g. Log Out).
+  useEffect(() => { document.body.classList.toggle("has-cookie-notice", !!lang); }, [lang]);
   if (!lang) return null;
   const tx = TEXT[lang];
 
