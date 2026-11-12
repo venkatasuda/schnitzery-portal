@@ -4,6 +4,7 @@ import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { submitLeave, getMyLeave, getSickNoteUrl, attachSickNote } from "@/lib/queries/leave";
 import { createClient } from "@/lib/supabase/client";
+import { getMyLeaveBalance } from "@/lib/queries/leave-balance";
 
 const LEAVE_TYPES = ["vacation", "sick", "unpaid", "special"];
 import { toast } from "@/components/Toast";
@@ -40,6 +41,10 @@ export default function LeavePage() {
   }
 
   useEffect(() => { loadMine(); }, []);
+  // Vacation balance, shown under the leave type while "Vacation" is selected.
+  const [bal, setBal] = useState<{ year: number; remaining: number; used: number; allowance: number } | null>(null);
+  const loadBal = () => getMyLeaveBalance().then((r) => { if (r.ok) setBal(r as never); }).catch(() => undefined);
+  useEffect(() => { void loadBal(); }, []);
 
   async function submit() {
     if (file && file.size > 5 * 1024 * 1024) { toast(s("The file is larger than 5 MB.", "Die Datei ist größer als 5 MB."), "error"); return; }
@@ -49,9 +54,10 @@ export default function LeavePage() {
       const notePath = type === "sick" && file ? await uploadNote(file) : null;
       const res = await submitLeave(fromDate, toDate, reason, type, notePath);
       if (res.ok) {
-        toast(t("leave.submitted"), "success");
+        const n = (res as { covers?: number }).covers ?? 0;
+        toast(n ? s(`Submitted · ${n} shift(s) offered to colleagues`, `Eingereicht · ${n} Schicht(en) Kollegen angeboten`) : t("leave.submitted"), "success");
         setFromDate(""); setToDate(""); setReason(""); setFile(null); setType("vacation"); setFileKey((k) => k + 1);
-        loadMine();
+        loadMine(); void loadBal();
       } else toast(res.error || t("leave.failSubmit"), "error");
     } catch (e: any) { toast(`${t("leave.failSubmit")}${e?.message ? ` (${e.message})` : ""}`, "error"); }
     finally { setWorking(false); }
@@ -94,25 +100,37 @@ export default function LeavePage() {
     <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <h1 className="page-title u-row"><Icon e="🌴" size={22} /> {t("leave.title")}</h1>
 
-      <div className="ui-segmented" role="group">
+      <div className="ui-segmented leave-tabs" role="group">
         <TabBtn active={tab === "request"} onClick={() => setTab("request")}>{t("leave.tabRequest")}</TabBtn>
-        <TabBtn active={tab === "mine"} onClick={() => { setTab("mine"); loadMine(); }}>{t("shifts.tabMine")}</TabBtn>
+        <TabBtn active={tab === "mine"} onClick={() => { setTab("mine"); loadMine(); }}>{t("shifts.tabMine")}{requests.length > 0 ? ` (${requests.length})` : ""}</TabBtn>
       </div>
 
       {tab === "request" && (
         <div className="card">
-          <div className="t-lg fw-7 mb-4">{t("myday.requestTimeOff")}</div>
-          <div className="leave-types" role="group" aria-label={s("Type", "Art")}>
+          <div className="t-xs u-muted mb-2">{s("Leave type", "Art der Abwesenheit")}</div>
+          <div className="leave-types" role="group" aria-label={s("Leave type", "Art der Abwesenheit")}>
             {LEAVE_TYPES.map((k) => <button key={k} type="button" aria-pressed={type === k} className={type === k ? "is-on" : ""} onClick={() => setType(k)}>{typeLabel(k)}</button>)}
           </div>
-          <Field label={t("leave.fromDate")}>
-            <input className="form-input" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-          </Field>
-          <Field label={t("leave.toDate")}>
-            <input className="form-input" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-          </Field>
+          {type === "vacation" && bal && (
+            <div className="leave-balance">
+              <div className="d-flex jc-sb ai-b mb-2">
+                <span className="t-md fw-7 u-text"><Icon className="u-icon-inline" e="🌴" size={13} /> {t("myday.vacationYear", { year: bal.year })}</span>
+                <span className="t-sm tone-action fw-7">{t("myday.daysLeft", { n: bal.remaining })}</span>
+              </div>
+              <div className="ui-bar" role="img" aria-label={t("myday.daysTaken", { used: bal.used, total: bal.allowance })}><span style={{ width: `${bal.allowance > 0 ? Math.min(100, Math.round((bal.used / bal.allowance) * 100)) : 0}%` }} /></div>
+              <div className="t-xs u-muted mt-2">{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
+            </div>
+          )}
+          <div className="leave-dates">
+            <Field label={t("leave.fromDate")}>
+              <input className="form-input" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </Field>
+            <Field label={t("leave.toDate")}>
+              <input className="form-input" type="date" value={toDate} min={fromDate || undefined} onChange={(e) => setToDate(e.target.value)} />
+            </Field>
+          </div>
           <Field label={t("leave.reason")}>
-            <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("leave.reasonPlaceholder")} rows={3} style={{ ...input, resize: "vertical" }} />
+            <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("leave.reasonPlaceholder")} rows={2} style={{ ...input, resize: "vertical" }} />
           </Field>
           {type === "sick" && <Field label={s("Sick note (PDF or photo, optional)", "Krankmeldung / AU (PDF oder Foto, optional)")}>
             <input key={fileKey} className="form-input" type="file" accept="application/pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />

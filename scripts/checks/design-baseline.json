@@ -1,7 +1,8 @@
 {
-  "inlineStyles": 475,
-  "hardcodedColors": 320,
-  "fontSizeLiterals": 253,
+  "inlineStyles": 410,
+  "styledButtons": 6,
+  "hardcodedColors": 248,
+  "fontSizeLiterals": 205,
   "colorMix": 4,
   "localComponents": 6
 }

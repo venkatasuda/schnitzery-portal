@@ -8,6 +8,9 @@ import { rosterEntryTimes } from "@/lib/time/roster";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { sendPushToUser } from "@/lib/push/delivery";
+import { checkRoster, isBlocking, type RosterIssue } from "@/lib/roster/check";
+import { workTeams } from "@/lib/roster/teams";
+import { getRosterPlanning } from "@/lib/queries/owner-insights";
 
 // ============================================================
 // SCHEDULE / ROSTER — weekly_roster stores ONE row per branch
@@ -91,6 +94,8 @@ export async function getRoster(weekStart?: string) {
     (supabase as any).from("roster_drafts").select("roster_data,base_data,updated_at").eq("branch_id", branchId).eq("week_start", ws).maybeSingle(),
     (supabase as any).from("staff_tiers").select("user_id,tier").eq("branch_id", branchId),
   ]);
+  // Last week's published Sunday: the scheduler keeps 11 h rest across the week boundary.
+  const { data: prevWeek } = await supabase.from("weekly_roster").select("roster_data").eq("branch_id", branchId).eq("week_start", mondayOfDate(ws, -1)).maybeSingle();
   if (rosterError || draftError) return { ok:false, error:(rosterError || draftError).message };
   const tiers: Record<string, number> = Object.fromEntries(((tierRows || []) as any[]).map((t) => [t.user_id, t.tier]));
   // The draft started from an older live roster (e.g. a cover was approved since) → publishing will be refused.
@@ -99,7 +104,7 @@ export async function getRoster(weekStart?: string) {
   // staff list for assignment dropdowns (same branch)
   const { data: staff, error: staffError } = await supabase
     .from("users")
-    .select("id, full_name, role, team, contract_hours")
+    .select("id, full_name, role, team, contract_hours, skills")
     .eq("branch_id", branchId)
     .eq("status", "active").neq("role", "kiosk")
     .order("full_name");
@@ -122,6 +127,7 @@ export async function getRoster(weekStart?: string) {
     full_name: s.full_name,
     role: s.role,
     team: s.team ?? null,
+    teams: workTeams(s.team, s.skills),
     contractHours: s.contract_hours ?? null,
     tier: tiers[s.id] ?? null,
     workedH: Math.round(((workedMins[s.id] || 0) / 60) * 10) / 10,
@@ -134,7 +140,10 @@ export async function getRoster(weekStart?: string) {
     .eq("branch_id", branchId)
     .eq("week_start", ws);
   if (availabilityError) return { ok:false, error:availabilityError.message };
+  // Standing pattern first ("never Mondays"), then this week's own entry on top.
+  const { data: stdRows } = await (supabase as any).from("availability_defaults").select("user_id, days").eq("branch_id", branchId);
   const avail: Record<string, any> = {};
+  for (const a of (stdRows || []) as any[]) avail[a.user_id] = a.days || {};
   for (const a of avRows || []) avail[a.user_id] = a.days || {};
 
   return {
@@ -145,6 +154,7 @@ export async function getRoster(weekStart?: string) {
     publishedAt: (data as any)?.published_at ?? null,
     hasDraft: !!draftRow, draftStale,
     expected: { draft: draftRow?.roster_data ?? null },
+    branchId, prevSunday: ((prevWeek?.roster_data as any)?.Sunday ?? []) as any[],
     staff: staffEnriched,
     avail,
   };
@@ -189,12 +199,41 @@ export async function saveRoster(weekStart: string, rosterData: any, expected: {
 }
 
 // ── MANAGER: publish the draft — staff see it and get a notification ──
-export async function publishRoster(weekStart: string) {
+// Working-time issues of the saved draft (11 h rest incl. last week's Sunday, overlaps, contract hours, Minijob cap).
+async function rosterIssues(supabase: any, branchId: string, weekStart: string): Promise<{ issues: RosterIssue[]; draft: unknown } | null> {
+  const [draft, prev, times, plan] = await Promise.all([
+    supabase.from("roster_drafts").select("roster_data").eq("branch_id", branchId).eq("week_start", weekStart).maybeSingle(),
+    supabase.from("weekly_roster").select("roster_data").eq("branch_id", branchId).eq("week_start", mondayOfDate(weekStart, -1)).maybeSingle(),
+    getShiftTimes(), getRosterPlanning(weekStart),
+  ]);
+  // A failed read must not look like "no problems": without wages / worked hours the Minijob check cannot run.
+  if (draft.error || prev.error || !times.ok || !plan.ok) return null;
+  const roster = (draft.data?.roster_data ?? {}) as Record<string, any[]>;
+  const ids = [...new Set(Object.values(roster).flat().map((e: any) => e?.user_id).filter(Boolean))] as string[];
+  const people = ids.length ? await supabase.from("users").select("id, contract_hours").in("id", ids) : { data: [], error: null };
+  if (people.error) return null;
+  return { draft: draft.data?.roster_data ?? null, issues: checkRoster({
+    weekStart, roster, prevSunday: (prev.data?.roster_data as any)?.Sunday ?? [],
+    times: new Map(times.items.map((x: any) => [`${x.team}|${x.shift}`, x])),
+    contractHours: Object.fromEntries((people.data || []).map((p: any) => [p.id, p.contract_hours ?? null])),
+    minijobbers: plan.minijobbers,
+  }) };
+}
+
+// acceptWarnings: the manager has seen the contract-hours / Minijob warnings and publishes anyway.
+// Overlaps and rest under 11 h always block.
+export async function publishRoster(weekStart: string, acceptWarnings = false) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user || !branchId || !["manager", "branch_owner", "brand_owner", "super_admin"].includes(profile?.role || "")) return { ok: false as const, error: "Only managers can edit the roster." };
   if (!isCalendarDate(weekStart)) return { ok: false as const, error: "Invalid roster. Reload before saving." };
-  const { data, error } = await (supabase as any).rpc("publish_roster", { p_branch: branchId, p_week: weekStart });
-  if (error) return { ok: false as const, code: error.code === "40001" ? "errStale" : error.code === "22023" ? "errNoDraft" : undefined, error: error.message };
+  const checked = await rosterIssues(supabase, branchId, weekStart);
+  const issues = checked?.issues;
+  if (!checked || !issues) return { ok: false as const, error: "Could not check the roster. Try again." };
+  if (issues.some(isBlocking)) return { ok: false as const, code: "errRules", issues, error: "Roster breaks working-time rules." };
+  if (issues.length && acceptWarnings !== true) return { ok: false as const, code: "warnRules", issues, error: "Roster has warnings." };
+  // p_expected: the database publishes only if the draft is still exactly the one checked above.
+  const { data, error } = await (supabase as any).rpc("publish_roster", { p_branch: branchId, p_week: weekStart, p_expected: checked.draft });
+  if (error) return { ok: false as const, code: error.code === "40001" ? "errStale" : error.code === "22023" ? "errNoDraft" : error.code === "23514" ? "errStaff" : undefined, error: error.message };
   // Phone push to everyone on the published roster (best effort; the bell notification exists already).
   const live = await supabase.from("weekly_roster").select("roster_data").eq("branch_id", branchId).eq("week_start", weekStart).maybeSingle();
   const ids = [...new Set(Object.values((live.data?.roster_data as any) || {}).flat().map((e: any) => e?.user_id).filter(Boolean))] as string[];
@@ -206,12 +245,17 @@ export async function publishRoster(weekStart: string) {
 }
 
 // ── MANAGER: throw away this week's draft (the published roster stays) ──
-export async function discardRosterDraft(weekStart: string) {
+// expected.draft = the draft as loaded: a newer draft saved by someone else in the meantime is not deleted.
+export async function discardRosterDraft(weekStart: string, expected: { draft: any } | null) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user || !branchId || !["manager", "branch_owner", "brand_owner", "super_admin"].includes(profile?.role || "")) return { ok: false as const, error: "Only managers can edit the roster." };
   if (!isCalendarDate(weekStart)) return { ok: false as const, error: "Invalid roster. Reload before saving." };
-  const { error } = await (supabase as any).from("roster_drafts").delete().eq("branch_id", branchId).eq("week_start", weekStart);
-  return error ? { ok: false as const, error: error.message } : { ok: true as const };
+  if (!expected || expected.draft == null) return { ok: false as const, code: "errReload", error: "Reload before saving." };
+  const { data, error } = await (supabase as any).from("roster_drafts").delete().eq("branch_id", branchId).eq("week_start", weekStart)
+    .eq("roster_data", JSON.stringify(expected.draft)).select("week_start");
+  if (error) return { ok: false as const, error: error.message };
+  if (!data?.length) return { ok: false as const, code: "errConflict", error: "Roster changed elsewhere. Reload before saving; your draft has not been saved." };
+  return { ok: true as const };
 }
 
 // Shift swaps run through the cover flow (src/lib/queries/cover.ts), which updates the roster on approval.

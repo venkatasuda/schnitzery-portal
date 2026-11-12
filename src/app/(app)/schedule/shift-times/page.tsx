@@ -2,7 +2,6 @@
 // Shift times per team: Sun–Thu, optional Fri–Sat, break. Both times empty = "time pending".
 // Roster, attendance, labour cost and the Shifts page all read these.
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getShiftTimes, upsertShiftTime, type ShiftTime } from "@/lib/queries/shift-times";
@@ -79,7 +78,6 @@ export default function ShiftTimesPage() {
         </div>
       ))}
       {!loading && <StaffingTargets />}
-      <Link href="/schedule-hub" className="ui-back-link">← {t("schedhub.title")}</Link>
     </div>
   );
 }

@@ -157,7 +157,7 @@ export default function AttendanceHubPage() {
           </div>
           <div className="workspace-toolbar">
             <input className="form-input u-flex1" aria-label={t("ahub.today")} type="date" value={date} onChange={(e) => changeDate(e.target.value)} />
-            <button onClick={goToday} style={{ ...todayBtn, opacity: isToday ? 0.6 : 1 }}>{t("ahub.today")}</button>
+            <button onClick={goToday} disabled={isToday} className="btn-secondary">{t("ahub.today")}</button>
           </div>
           <input className="form-input" aria-label={t("ahub.filterName")} value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t("ahub.filterName")} />
           {liveLoading ? (
@@ -305,4 +305,3 @@ export default function AttendanceHubPage() {
   );
 }
 
-const todayBtn: React.CSSProperties = { padding: "10px 16px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--white)", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" };

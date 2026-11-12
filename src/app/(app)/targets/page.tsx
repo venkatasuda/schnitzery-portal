@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import { ErrorState, Field } from "@/components/ui";
@@ -62,7 +61,6 @@ export default function TargetsPage() {
               : <p className="ui-note">{t("targets.ownersOnly")}</p>}
           </form>
         )}
-      <Link className="ui-back-link" href="/">{t("approvals.back")}</Link>
     </div>
   );
 }

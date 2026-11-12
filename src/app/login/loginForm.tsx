@@ -134,18 +134,7 @@ export default function LoginForm() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          style={{
-            width: "100%",
-            marginTop: 20,
-            padding: "13px",
-            background: loading ? "#7a5e2a" : "#d4a847",
-            color: "var(--on-action)",
-            border: "none",
-            borderRadius: 10,
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: loading ? "default" : "pointer",
-          }}
+          className="btn-gold btn-block mt-5"
         >
           {loading ? t("login.signingIn") : t("login.signIn")}
         </button>

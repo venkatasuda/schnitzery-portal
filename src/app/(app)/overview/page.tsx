@@ -15,7 +15,7 @@ export default function OverviewPage() {
   const { t } = useLang();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [denied, setDenied] = useState(false);
+  const [denied, setDenied] = useState(false), [failed, setFailed] = useState(false);
   const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
   const [cmp, setCmp] = useState<any>(null);
 
@@ -23,13 +23,18 @@ export default function OverviewPage() {
     getOrgOverview().then((r) => {
       if (r.ok) setData(r);
       else setDenied(true);
-      setLoading(false);
-    });
+    }).catch(() => setFailed(true)).finally(() => setLoading(false)); // a failed request must end the skeleton
   }, []);
 
-  useEffect(() => { getBranchComparison({ period }).then((r) => setCmp(r.ok ? r : null)); }, [period]);
+  // Only the latest period's answer is shown (a slower earlier request must not overwrite it).
+  useEffect(() => {
+    let live = true;
+    getBranchComparison({ period }).then((r) => { if (live) setCmp(r.ok ? r : null); }).catch(() => { if (live) setCmp(null); });
+    return () => { live = false; };
+  }, [period]);
 
   if (denied) return <div className="card ui-denied">{t("org.ownersOnly")}</div>;
+  if (failed) return <div className="card" role="alert">{t("common.loadFailed")} <button className="btn-secondary ui-btn-sm" onClick={() => window.location.reload()}>{t("business.retry")}</button></div>;
 
   return (
     <div className="fade-up">
@@ -113,7 +118,7 @@ export default function OverviewPage() {
                       <td className="ui-strong-inline">{b.name}</td>
                       <td className={`u-center fw-7 tone-${rateTone(b.attendancePct)}`}>{b.attendancePct == null ? "—" : `${b.attendancePct}%`}</td>
                       <td className="u-center u-text">{b.laborHours}h</td>
-                      <td className="u-right tone-action fw-6">{b.laborCost ? `${b.missingWageStaff ? "≥ " : ""}€${b.laborCost.toFixed(0)}` : "—"}</td>
+                      <td className="u-right tone-action fw-6">{b.laborCost == null ? "—" : `${b.missingWageStaff ? "≥ " : ""}€${b.laborCost.toFixed(0)}`}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -123,7 +128,6 @@ export default function OverviewPage() {
         </>
       )}
 
-      <Link href="/" className="ui-back-link">{t("approvals.back")}</Link>
     </div>
   );
 }

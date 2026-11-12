@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { skillTeam } from "@/lib/roster/teams";
 import { activeBranchFor } from "@/lib/activeBranch";
 import { rankOf } from "@/lib/auth/rank";
 
@@ -39,7 +40,13 @@ export async function updateMyProfile(fields: {
   const update: any = {};
   if (fields.full_name !== undefined) update.full_name = fields.full_name;
   if (fields.phone !== undefined) update.phone = fields.phone;
-  if (fields.skills !== undefined) update.skills = fields.skills;
+  if (fields.skills !== undefined) {
+    // Team skills (Skill 2, 3 …) decide where the planner may put someone, so only managers set them (staff page).
+    // Here a person can change their other skills; the team entries stay exactly as they are.
+    const { data: cur } = await supabase.from("users").select("skills").eq("id", user.id).maybeSingle();
+    const isTeam = (s: string) => !!skillTeam(s) || /^all-?rounder$/i.test((s || "").trim());
+    update.skills = [...((cur?.skills || []) as string[]).filter(isTeam), ...fields.skills.filter((s) => typeof s === "string" && !isTeam(s))];
+  }
 
   const { error } = await supabase.from("users").update(update).eq("id", user.id);
   if (error) return { ok: false, error: error.message };
@@ -83,7 +90,9 @@ export async function updateStaff(staffId: string, fields: {
   full_name?: string; employee_code?: string; team?: string;
   contract_type?: string; contract_hours?: number | null;
   phone?: string; role?: string; status?: string; skills?: string[];
-}) {
+}, expected?: Record<string, string | number | null>) {
+  // expected: the values the form loaded for the fields it is changing. The update only applies while the row
+  // still has them, so two managers editing the same person cannot silently overwrite each other.
   const { supabase, user, profile, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
@@ -129,8 +138,16 @@ export async function updateStaff(staffId: string, fields: {
   if (fields.contract_hours !== undefined) update.contract_hours = fields.contract_hours;
   if (Object.keys(update).length === 0) return { ok: false, error: "No changes supplied." };
 
-  const { data, error } = await supabase.from("users").update(update).eq("id", staffId).select("id");
+  let q = supabase.from("users").update(update).eq("id", staffId);
+  let guarded = false;
+  // ponytail: skills (an array) is not guarded; add an updated_at column if list edits ever collide.
+  for (const k of Object.keys(update)) {
+    if (k === "skills" || !expected || !(k in expected)) continue;
+    const v = expected[k]; guarded = true;
+    q = v === null ? q.is(k, null) : q.eq(k, v as never);
+  }
+  const { data, error } = await q.select("id");
   if (error) return { ok: false, error: error.message };
-  if (!data || data.length === 0) return { ok: false, error: "Update didn't apply — check permissions or branch." };
+  if (!data || data.length === 0) return { ok: false, error: guarded ? "Someone else changed this person. Reload and try again." : "Update didn't apply — check permissions or branch." };
   return { ok: true };
 }

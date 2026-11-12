@@ -88,7 +88,7 @@ export default function NotificationsPage() {
         <div className="u-flex1">
           <h1 className="page-title u-row"><Icon e="🔔" size={22} /> {t("notif.center")}</h1>
         </div>
-        {unread > 0 && <button onClick={markRead} style={{ padding: "8px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--gold)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{t("notif.markAllRead")}</button>}
+        {unread > 0 && <button onClick={markRead} className="btn-secondary ui-btn-sm u-nowrap">{t("notif.markAllRead")}</button>}
       </div>
 
       <div className="hub-tabs u-mt-3">

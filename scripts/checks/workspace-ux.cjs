@@ -21,6 +21,7 @@ async function ui(page, result, url, file) {
     if(name==='recharts')return new Proxy({}, {get:()=>()=>null});
     if(name==='@/lib/time/berlinDate')return {...moduleAt('src/lib/time/berlinDate.ts',require),berlinToday:()=> '2026-10-13'};
     if(name==='@/lib/queries/schedule-constants')return moduleAt('src/lib/queries/schedule-constants.ts',require); // plain constants, not server actions
+    if(name.startsWith('@/lib/roster/'))return moduleAt(`src/lib/roster/${name.slice(13)}.ts`,resolve); // pure roster helpers (teams, availability weeks)
     if(name.startsWith('@/lib/queries/'))return new Proxy({}, {get:(_target,key)=>async(...args)=>{if(result instanceof Error)throw result;if(key==='getInventoryContext')return {ok:true,branch:{id:'branch',name:'Test branch'},countDate:'2026-10-13'}; return typeof result==='function'?result(key,args):result;}});
     if(name==='@/lib/inventory/valuation-close')return moduleAt('src/lib/inventory/valuation-close.ts',require);
     if(name==='@/lib/inventory/identity')return moduleAt('src/lib/inventory/identity.ts',require);

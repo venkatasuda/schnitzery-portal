@@ -103,7 +103,6 @@ export default function ActionClient({ initial = null }: { initial?: Initial } =
         </>
       )}
 
-      <Link className="ui-back-link" href="/">{t("approvals.back")}</Link>
     </div>
   );
 }

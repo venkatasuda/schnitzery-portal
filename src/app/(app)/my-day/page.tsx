@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { getMyLeaveBalance } from "@/lib/queries/leave-balance";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import AvailabilityForm from "@/components/AvailabilityForm";
@@ -16,8 +15,6 @@ import ChecklistPage from "../checklist/page";
 export default function MyDayPage() {
   const { t } = useLang();
   const [tab, setTab] = useState<"avail" | "timeoff" | "hours" | "work">("avail");
-  const [bal, setBal] = useState<any>(null);
-  useEffect(() => { getMyLeaveBalance().then((r) => { if (r.ok) setBal(r); }); }, []);
 
   return (
     <div className="fade-up">
@@ -46,18 +43,6 @@ export default function MyDayPage() {
 
       {tab === "timeoff" && (
         <div className="hub-tab-panel active">
-          {bal && (
-            <div className="card mb-1">
-              <div className="d-flex jc-sb ai-b mb-2">
-                <span className="t-md fw-7 u-text"><Icon className="u-icon-inline" e="🌴" size={13} /> {t("myday.vacationYear", { year: bal.year })}</span>
-                <span className="t-sm tone-action fw-7">{t("myday.daysLeft", { n: bal.remaining })}</span>
-              </div>
-              <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
-                <div style={{ width: `${bal.allowance > 0 ? Math.min(100, Math.round((bal.used / bal.allowance) * 100)) : 0}%`, height: "100%", background: "var(--gold)" }} />
-              </div>
-              <div className="t-xs u-muted mt-2">{t("myday.daysTaken", { used: bal.used, total: bal.allowance })}</div>
-            </div>
-          )}
           {/* The real screens render inside the tab (only the open tab loads); their own page heading is hidden. */}
           <div className="myday-embed"><LeavePage /></div>
           <Link className="ui-back-link" href="/leave-calendar">{t("myday.teamLeaveCal")} →</Link>

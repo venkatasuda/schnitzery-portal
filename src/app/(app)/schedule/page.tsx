@@ -34,6 +34,7 @@ export default function SchedulePage() {
   const [shifts, setShifts] = useState<TeamShift[]>([]);
   const [isManager, setIsManager] = useState(false);
   const [loading, setLoading] = useState(true), [failed, setFailed] = useState(false);
+  const [openDay, setOpenDay] = useState<string | null>(null); // phone: the day whose colleagues are shown
 
   useEffect(() => { try { if (localStorage.getItem(KEY) === "month") setView("month"); } catch { /* ignore */ } }, []);
   function pick(v: "week" | "month") { setView(v); try { localStorage.setItem(KEY, v); } catch { /* ignore */ } }
@@ -84,13 +85,14 @@ export default function SchedulePage() {
           {days.map((d) => {
             const byKind = grid.get(d);
             return (
-              <section key={d} className={`shifts-day${d === today ? " is-today" : ""}${d < today ? " is-past" : ""}`} aria-label={fmt(d, { weekday: "long", day: "2-digit", month: "long" })}>
-                <h2 className="shifts-day-head">{fmt(d, { weekday: "short" })} <span>{fmt(d, { day: "2-digit", month: "short" })}</span></h2>
+              <section key={d} className={`shifts-day${d === today ? " is-today" : ""}${d < today ? " is-past" : ""}${openDay === d ? " is-open" : ""}${byKind ? "" : " is-empty"}`} aria-label={fmt(d, { weekday: "long", day: "2-digit", month: "long" })}>
+                {/* Phone: the day is a compact row with your own shift; tap it to see who else is on. */}
+                <h2 className="shifts-day-head"><button type="button" aria-expanded={openDay === d} disabled={!byKind} onClick={() => setOpenDay(openDay === d ? null : d)}>{fmt(d, { weekday: "short" })} <span>{fmt(d, { day: "2-digit", month: "short" })}</span>{byKind && <i aria-hidden="true">{openDay === d ? "▾" : "▸"}</i>}</button></h2>
                 {TYPES.filter((k) => byKind?.get(k)).map((k) => {
                   const list = byKind!.get(k)!, tm = times(list);
                   return (
                     <div key={k} className={`shift-card kind-${k}${list.some((s) => s.mine) ? " is-mine" : ""}`}>
-                      <div className="shift-card-top"><strong>{kindLabel[k]}</strong>{tm ? <span>{tm}</span> : pendingBadge}</div>
+                      <div className="shift-card-top"><strong>{kindLabel[k]}</strong>{tm ? <span>{tm}</span> : pendingBadge}<small className="shift-card-n">{list.some((s) => s.mine) ? (de ? "Du" : "You") + (list.length > 1 ? ` +${list.length - 1}` : "") : list.length}</small></div>
                       <ul>{list.map((s, i) => <li key={i} className={s.mine ? "is-me" : undefined}>{s.mine ? (de ? "Du" : "You") : s.name}{k === "other" || (k !== "prep" && s.team !== "Kitchen") ? <em> · {teamLabel(s.team)}</em> : null}</li>)}</ul>
                     </div>
                   );
@@ -107,8 +109,8 @@ export default function SchedulePage() {
           {days.map((d) => {
             const byKind = grid.get(d);
             return (
-              <div key={d} role="gridcell" className={`shifts-cell${d.slice(0, 7) !== anchor.slice(0, 7) ? " is-out" : ""}${d === today ? " is-today" : ""}`}>
-                <span className="shifts-cell-n">{Number(d.slice(8))}</span>
+              <div key={d} role="gridcell" className={`shifts-cell${d.slice(0, 7) !== anchor.slice(0, 7) ? " is-out" : ""}${d === today ? " is-today" : ""}${shifts.some((s) => s.mine && s.date === d) ? " has-mine" : ""}`}>
+                <button type="button" className="shifts-cell-n" aria-label={fmt(d, { weekday: "long", day: "2-digit", month: "long" })} onClick={() => { setAnchor(d); setOpenDay(d); pick("week"); }}>{Number(d.slice(8))}</button>
                 {TYPES.filter((k) => byKind?.get(k)).map((k) => {
                   const list = byKind!.get(k)!, tm = times(list);
                   return <div key={k} className={`shift-badge kind-${k}${list.some((s) => s.mine) ? " is-mine" : ""}`} title={`${kindLabel[k]}: ${list.map((s) => s.name).join(", ")}`}>
@@ -119,6 +121,12 @@ export default function SchedulePage() {
           })}
         </div>
       )}
+      {/* Phone, month view: the grid only shows dots, so your own shifts are listed underneath. */}
+      {!loading && !failed && view === "month" && <ul className="shifts-mine-list">
+        {shifts.filter((s) => s.mine && visible.includes(s.date)).sort((a, b) => a.date.localeCompare(b.date)).map((s, i) => { const k = kindOf(s); return (
+          <li key={i} className={`shift-card kind-${k}`}><strong>{fmt(s.date, { weekday: "short", day: "2-digit", month: "short" })}</strong><span>{kindLabel[k]}</span>{s.pending ? pendingBadge : <span>{s.start}–{s.end}</span>}</li>); })}
+        {mine === 0 && <li className="shifts-off">{de ? "Keine eigenen Schichten in diesem Monat" : "No shifts of your own this month"}</li>}
+      </ul>}
       {!loading && !failed && <div className="shifts-legend" aria-hidden="true">{TYPES.slice(0, 4).map((k) => <span key={k} className={`shift-badge kind-${k}`}>{kindLabel[k]}</span>)}<span className="shift-badge is-mine">{de ? "Meine Schicht" : "My shift"}</span></div>}
     </div>
   );

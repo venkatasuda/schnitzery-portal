@@ -12,6 +12,7 @@ import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Field, Stat } from "@/components/ui";
+import { skillTeam } from "@/lib/roster/teams";
 
 export default function ProfilePage() {
   const { t } = useLang();
@@ -34,7 +35,7 @@ export default function ProfilePage() {
       setProfile(res.profile);
       setFullName(res.profile.full_name || "");
       setPhone(res.profile.phone || "");
-      setSkillsText((res.profile.skills || []).join(", "));
+      setSkillsText((res.profile.skills || []).filter((s: string) => !skillTeam(s) && !/^all-?rounder$/i.test(s.trim())).join(", ")); // team skills are set by managers
     } else { setLoadError(t("profile.couldNotLoad")); }
     } catch { setLoadError(t("staff.networkErr")); }
     finally { setLoading(false); }
@@ -105,7 +106,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <button onClick={() => setEditing(true)} style={{ ...primaryBtn, marginTop: 20 }}>{t("profile.editProfile")}</button>
+            <button onClick={() => setEditing(true)} className="btn-gold mt-5">{t("profile.editProfile")}</button>
           </>
         ) : (
           <>
@@ -114,8 +115,8 @@ export default function ProfilePage() {
             <Field label={t("profile.skillsLabel")}><input className="form-input" value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder={t("profile.skillsPlaceholder")} /></Field>
             <div className="ui-sub">{t("profile.managerNote")}</div>
             <div className="u-hstack">
-              <button onClick={() => { setEditing(false); load(); }} style={{ ...primaryBtn, background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}>{t("common.cancel")}</button>
-              <button onClick={save} disabled={saving} style={{ ...primaryBtn, opacity: saving ? 0.6 : 1 }}>{saving ? t("common.saving") : t("common.save")}</button>
+              <button onClick={() => { setEditing(false); load(); }} className="btn-secondary u-flex1">{t("common.cancel")}</button>
+              <button onClick={save} disabled={saving} className="btn-gold u-flex1">{saving ? t("common.saving") : t("common.save")}</button>
             </div>
           </>
         )}
@@ -162,7 +163,6 @@ export default function ProfilePage() {
 }
 
 const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark3)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { flex: 1, width: "100%", padding: "13px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer" };
 
 function Row({ label, value }: { label: string; value: string }) {
   return <Stat variant="row" label={label} value={value} />;

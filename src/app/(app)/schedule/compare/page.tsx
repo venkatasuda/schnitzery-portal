@@ -1,6 +1,7 @@
 "use client";
 
 import { appLocale } from "@/lib/format";
+import { berlinToday, mondayOfDate } from "@/lib/time/berlinDate";
 import { toast } from "@/components/Toast";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -10,12 +11,7 @@ import { getScheduleComparison } from "@/lib/queries/schedule-compare";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Stat as UiStat } from "@/components/ui";
 
-function mondayOf(offset: number): string {
-  const d = new Date(); d.setHours(12, 0, 0, 0);
-  const day = d.getDay();
-  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day) + offset * 7);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+const mondayOf = (offset: number) => mondayOfDate(berlinToday(), offset); // Berlin week, not the device's clock
 const fmtMins = (m: number) => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), mm = m % 60; return h ? `${h}h ${mm}m` : `${mm}m`; };
 const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
 const fmtDay = (d: string) => new Date(d + "T12:00:00").toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" });

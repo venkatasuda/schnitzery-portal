@@ -147,7 +147,7 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
             <div style={lbl}>{t("lab.revenue")}</div>
             <input className="form-input" type="number" min="0" step="0.01" aria-label={t("lab.revenue")} inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </div>
-          <button onClick={saveSale} disabled={savingSale || loading} style={{ padding: "11px 16px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: savingSale ? "default" : "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={saveSale} disabled={savingSale || loading} className="btn-gold u-nowrap">
             {savingSale ? "…" : t("common.save")}
           </button>
         </div>
@@ -224,7 +224,6 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
         </div>
       )}
 
-      <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 18, color: "var(--action)", fontSize: 13, textDecoration: "none" }}>{t("approvals.back")}</Link>
     </div>
   );
 }
