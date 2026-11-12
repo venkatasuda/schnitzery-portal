@@ -62,7 +62,6 @@ export default function ConflictsPage() {
         </div>
       )}
 
-      <Link className="ui-back-link" href="/action">{t("approvals.back")}</Link>
     </div>
   );
 }

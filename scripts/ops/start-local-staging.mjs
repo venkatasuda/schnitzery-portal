@@ -22,7 +22,7 @@ if (!process.argv.includes("--check")) {
   // --fast: production build + start. Dev mode compiles every page on first visit
   // (a minute or more each on a busy laptop), which makes UI walkthroughs crawl.
   const next = resolve(root, "node_modules/next/dist/bin/next");
-  const fast = process.argv.includes("--fast");
+  const fast = process.argv.includes("--fast"), ai = process.argv.includes("--ai");
   const args = fast ? ["start", "--hostname", "::1", "--port", "3100"] : ["dev", "--webpack", "--hostname", "::1", "--port", "3100"];
   if (fast) {
     console.log("Building the staging copy (one-off, a few minutes)…");
@@ -32,7 +32,8 @@ if (!process.argv.includes("--check")) {
   const child = spawn(process.execPath, [next, ...args], {
     cwd: app, stdio: "inherit", env: {
       ...process.env, ...config, NODE_ENV: fast ? "production" : "development", AGENT_CHAT_ENABLED: "false",
-      ANTHROPIC_API_KEY: "", SENTRY_DSN: "", NEXT_PUBLIC_SENTRY_DSN: "", SENTRY_AUTH_TOKEN: "",
+      // AI stays off on staging unless started with --ai (then the key and flag from app/.env.local are used).
+      ANTHROPIC_API_KEY: ai ? (config.ANTHROPIC_API_KEY ?? "") : "", DELIVERY_NOTE_AI_ENABLED: ai ? "true" : "false", SENTRY_DSN: "", NEXT_PUBLIC_SENTRY_DSN: "", SENTRY_AUTH_TOKEN: "",
       VAPID_PRIVATE_KEY: "", NEXT_PUBLIC_VAPID_PUBLIC_KEY: "", NEXT_TELEMETRY_DISABLED: "1",
     },
   });

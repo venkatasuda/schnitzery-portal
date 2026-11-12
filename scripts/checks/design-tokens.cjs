@@ -5,6 +5,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const files=[];(function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())walk(p);else if(p.endsWith('.tsx'))files.push(p);}})('src');
 const metrics={
   inlineStyles:/style=\{\{/g,
+  styledButtons:/<button[^>]*style=\{\{/g,   // buttons use .btn-gold / .btn-secondary (+ .ui-btn-sm, .btn-block)
   hardcodedColors:/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b(?=["'\s;,)])|rgba?\(/g,
   fontSizeLiterals:/fontSize: ?["']?\d/g,
   colorMix:/color-mix\(/g,                    // unsupported on iOS < 16.2 (kitchen devices: 15.4+)

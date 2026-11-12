@@ -88,10 +88,7 @@ export default function SyncStatus() {
         {pending > 0 ? t("sync.pending", { n: pending }) : (online ? t("sync.online") : "")}
       </div>
       {pending > 0 && online && (
-        <button onClick={syncNow} disabled={syncing} style={{
-          padding: "6px 12px", background: "var(--action)", color: "var(--on-action)", border: "none",
-          borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: syncing ? 0.6 : 1, flexShrink: 0,
-        }}>
+        <button onClick={syncNow} disabled={syncing} className="btn-gold ui-btn-sm">
           {syncing ? t("sync.syncing") : t("sync.syncNow")}
         </button>
       )}

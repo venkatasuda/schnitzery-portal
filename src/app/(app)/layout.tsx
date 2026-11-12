@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
 import ManagementNav, { ManagementLocation } from "@/components/ManagementNav";
+import EmployeeBack from "@/components/EmployeeBack";
 import AgentWidget from "@/components/AgentWidget";
 import NotificationBell from "@/components/NotificationBell";
 import AttendanceSync from "@/components/AttendanceSync";
@@ -84,7 +85,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       {/* Refresh preserves client state; changing branch must discard the old branch's data and drafts. */}
-      <main key={`${user.id}:${activeBranch ?? profile?.branch_id ?? ""}:${isHQ ? viewMode : "branch"}`} id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{children}</main>
+      <main key={`${user.id}:${activeBranch ?? profile?.branch_id ?? ""}:${isHQ ? viewMode : "branch"}`} id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{!isManager && <EmployeeBack />}{children}</main>
 
       <ToastHost />
       <AttendanceSync userId={user.id} />

@@ -71,7 +71,7 @@ export default function StockAlertsPage() {
           <div className="ui-muted">{t("salert.lowNow")}</div>
         </div>
         <button onClick={alertMe} disabled={notifying}
-          style={{ padding: "10px 16px", borderRadius: 10, border: "none", cursor: notifying ? "default" : "pointer", background: "var(--action)", color: "var(--on-action)", fontSize: 13, fontWeight: 700 }}>
+          className="btn-gold u-nowrap">
           {notifying ? t("salert.sending") : `🔔 ${t("salert.alertMe")}`}
         </button>
       </div>

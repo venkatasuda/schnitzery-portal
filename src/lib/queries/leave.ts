@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { sendPushToUser } from "@/lib/push/delivery";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { availCovers } from "@/lib/roster/smart";
+import { workTeams } from "@/lib/roster/teams";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 // Fire a push without ever blocking or breaking the caller. If push isn't set
@@ -61,7 +63,55 @@ export async function submitLeave(fromDate: string, toDate: string, reason: stri
     sick_note_url: sickNotePath,
   } as any);
   if (error) return { ok: false, error: error.message };
-  return { ok: true };
+  // Sick: offer the rostered shifts to colleagues straight away (never blocks the request).
+  const covers = leaveType === "sick" ? await offerSickCover(supabase, user.id, branchId, fromDate, toDate).catch(() => 0) : 0;
+  return { ok: true, covers };
+}
+
+// ── Sick leave → offer the rostered shifts as cover and tell the colleagues who could take them ──
+// Creates one open cover request per rostered shift in the sick period (today onwards, at most 14 days),
+// then notifies same-team colleagues who are not working that day and have not marked themselves unavailable.
+// Best effort: the leave request itself is already saved; a failure here never blocks it.
+async function offerSickCover(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, branchId: string, from: string, to: string) {
+  const DAY = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const add = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+  const mon = (d: string) => add(d, -((new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7));
+  const today = berlinToday(), start = from > today ? from : today, end = to < add(start, 13) ? to : add(start, 13);
+  if (end < start) return 0;
+  const dates: string[] = []; for (let d = start; d <= end; d = add(d, 1)) dates.push(d);
+  const weeks = [...new Set(dates.map(mon))];
+  const { data: rosters } = await supabase.from("weekly_roster").select("week_start, roster_data").eq("branch_id", branchId).in("week_start", weeks);
+  const rosterOf = new Map((rosters || []).map((r) => [r.week_start as string, (r.roster_data as any) || {}]));
+  const shifts: { date: string; day: string; team: string; shift: string; working: Set<string> }[] = [];
+  for (const date of dates) {
+    const day = DAY[(new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7], entries: any[] = rosterOf.get(mon(date))?.[day] || [];
+    for (const e of entries) if (e?.user_id === userId) shifts.push({ date, day, team: e.team, shift: e.shift, working: new Set(entries.map((x) => x?.user_id).filter(Boolean)) });
+  }
+  // One request per shift, sent together (separate statements so an existing request, 23505, only skips its own shift).
+  const made = await Promise.all(shifts.map((s) => supabase.from("cover_requests").insert({ branch_id: branchId, requester_id: userId, work_date: s.date, day: s.day, team: s.team, shift: s.shift, reason: "Sick leave", status: "open" })));
+  const offered = made.filter((r) => !r.error).length;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!offered || !url || !key) return offered;
+  const admin = createAdminClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } }) as any;
+  const [{ data: team }, { data: weekly }, { data: standing }] = await Promise.all([
+    admin.from("users").select("id, team, skills").eq("branch_id", branchId).eq("status", "active").neq("role", "kiosk").neq("id", userId),
+    admin.from("availability").select("user_id, week_start, days").eq("branch_id", branchId).in("week_start", weeks),
+    admin.from("availability_defaults").select("user_id, days").eq("branch_id", branchId),
+  ]);
+  const key2 = (shift: string) => (shift === "Night" ? "Evening" : shift);
+  const sends: Promise<unknown>[] = []; // all bell + push messages go out together, not one after another
+  for (const s of shifts) {
+    for (const p of (team || []) as { id: string; team: string | null; skills: string[] | null }[]) {
+      if (!workTeams(p.team, p.skills).includes(s.team) || s.working.has(p.id)) continue; // main team or a team in their skills
+      const days = (weekly || []).find((a: any) => a.user_id === p.id && a.week_start === mon(s.date))?.days ?? (standing || []).find((a: any) => a.user_id === p.id)?.days;
+      if (days && !availCovers(days, s.day, s.team, s.shift)) continue; // said they cannot
+      const label = `${s.date.slice(8)}.${s.date.slice(5, 7)}. · ${s.team === "Preparation" ? "Preparation" : key2(s.shift)}`;
+      sends.push(Promise.resolve(admin.rpc("notify", { p_user: p.id, p_branch: branchId, p_type: "cover_open", p_title: `${s.date}:${s.team}:${s.shift}`, p_message: `${label} needs cover`, p_window: "12:00:00" })).catch(() => undefined),
+        pushSafe(p.id, { title: "Shift needs cover", body: `${label} — can you take it?` }, { title: "Schicht zu vergeben", body: `${label} — kannst du übernehmen?` }, "/cover"));
+    }
+  }
+  await Promise.all(sends);
+  return offered;
 }
 
 // ── STAFF: my leave requests ──

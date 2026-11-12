@@ -13,7 +13,7 @@ async function render(result,report=false){
       if(name==='@/lib/queries/payroll')return{getPayrollSummary:async()=>result};
       if(name==='@/components/LanguageProvider')return{useLang:()=>({t:key=>key})};
       if(name==='@/lib/i18n/serverMessages')return{serverText:m=>m};if(name==='@/components/Toast')return{toast(){}};if(name==='@/components/Skeleton')return{CardSkeleton:()=>null};
-      if(name==='@/components/DatevExport'||name==='@/components/PayslipUpload')return{__esModule:true,default:()=>null}; // own cards, not part of this check
+      if(name==='@/components/DatevExport'||name==='@/components/PayslipUpload'||name==='@/components/PayrollPrecheck')return{__esModule:true,default:()=>null}; // own cards, not part of this check
       if(name==='@/lib/format')return fmt;if(name==='@/components/ui')return ui;if(name==='@/components/Icon')return{__esModule:true,default:()=>null};
       if(name==='next/link')return{__esModule:true,default:props=>React.createElement('a',props)};return require(name);}});
   exports.default();for(const effect of effects)effect();await new Promise(resolve=>setImmediate(resolve));initial=false;cursor=0;

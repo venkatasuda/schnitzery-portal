@@ -69,7 +69,7 @@ export default function NoShowPage() {
           <div className="ui-sub">{t("ns.checkSub")}</div>
           <div className="d-flex gap-2 mb-4">
             <input aria-label={t("ns.checkTitle")} type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...input, flex: 1 }} />
-            <button onClick={checkNoShows} disabled={nsLoading} style={{ ...primaryBtn, width: "auto", padding: "0 20px" }}>{nsLoading ? "…" : t("ns.check")}</button>
+            <button onClick={checkNoShows} disabled={nsLoading} className="btn-gold">{nsLoading ? "…" : t("ns.check")}</button>
           </div>
           {nsChecked && (
             rosteredCount === 0 ? (
@@ -128,4 +128,3 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 }
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 };
 const input: React.CSSProperties = { padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };

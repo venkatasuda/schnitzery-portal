@@ -31,6 +31,13 @@ const NOTIF: Record<string, { key: string; icon: string; href: string }> = {
   missing_attendance:  { key: "notif.missingAttendance", icon: "❓", href: "/attendance/corrections" },
   upcoming_shift:      { key: "notif.upcomingShift",     icon: "📅", href: "/schedule" },
   prep_list:           { key: "notif.prepList",          icon: "🥗", href: "/prep" },
+  roster:              { key: "notif.rosterPublished",   icon: "📅", href: "/schedule" },
+  cover_open:          { key: "notif.coverOpen",         icon: "🔁", href: "/cover" },
+  // shift leaders + managers (hourly reminders, migration 20261111160000)
+  temp_reminder:       { key: "notif.tempReminder",      icon: "🌡️", href: "/temp" },
+  checklist_reminder:  { key: "notif.checklistReminder", icon: "✅", href: "/checklist" },
+  prep_reminder:       { key: "notif.prepReminder",      icon: "🥗", href: "/prep/plan" },
+  day_close_reminder:  { key: "notif.dayCloseReminder",  icon: "🔒", href: "/day-close" },
   // manager
   employee_late:       { key: "notif.employeeLate",      icon: "⏰", href: "/ops" },
   mgr_missing:         { key: "notif.mgrMissing",        icon: "🚫", href: "/ops" },

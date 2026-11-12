@@ -14,6 +14,7 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { Field, Stat, StatGrid } from "@/components/ui";
 import DatevExport from "@/components/DatevExport";
 import PayslipUpload from "@/components/PayslipUpload";
+import PayrollPrecheck from "@/components/PayrollPrecheck";
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "");
 const htmlText = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -133,6 +134,7 @@ export default function PayrollExportPage() {
   return (
     <div className="fade-up">
       <h1 className="page-title u-row"><Icon e="💶" size={22} /> {t("pay.title")}</h1>
+      <PayrollPrecheck month={month} />
 
       <div className="card d-flex ai-c gap-3 f-wrap">
         <label className="ui-muted" htmlFor="payroll-month">{t("pay.month")}</label>

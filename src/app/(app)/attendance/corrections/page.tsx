@@ -162,10 +162,7 @@ export default function CorrectionsPage() {
               style={{ ...input, resize: "vertical" }} />
           </label>
 
-          <button onClick={submit} disabled={busy} style={{
-            width: "100%", padding: 13, background: "var(--action)", color: "var(--on-action)", border: "none",
-            borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: busy ? 0.6 : 1,
-          }}>{t("corr.submit")}</button>
+          <button onClick={submit} disabled={busy} className="btn-gold btn-block">{t("corr.submit")}</button>
         </div>
       )}
 

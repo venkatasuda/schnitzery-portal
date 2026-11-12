@@ -10,8 +10,8 @@ function navigationGroups(owner: boolean) {
     { label: "workspace.operations", items: [
       { href: "/", label: "workspace.dashboard", icon: LayoutDashboard, routes: ["/", "/my-branches", "/targets"] },
       ...(owner ? [{ href: "/branches", label: "nav.branches", icon: Building2, routes: ["/branches", "/overview"] }] : []),
-      { href: "/inventory", label: "nav.inventory", icon: Package, routes: ["/inventory", "/stock-alerts", "/waste", "/expiry", "/transfers", "/labels"] },
-      { href: "/ops", label: "home.dailyOps", icon: ClipboardCheck, routes: ["/ops", "/temp", "/checklist-status", "/checklist", "/incidents", "/announcements"] },
+      { href: "/inventory", label: "nav.inventory", icon: Package, routes: ["/inventory", "/stock-alerts", "/waste", "/expiry", "/transfers", "/labels", "/prep", "/shift"] },
+      { href: "/ops", label: "home.dailyOps", icon: ClipboardCheck, routes: ["/ops", "/temp", "/checklist-status", "/checklist", "/incidents", "/announcements", "/day-close"] },
     ] },
     { label: "workspace.workforce", items: [
       { href: "/schedule-hub", label: "nav.schedule", icon: CalendarDays, routes: ["/schedule-hub", "/schedule", "/roster", "/availability", "/leave", "/leave-calendar", "/cover", "/conflicts"] },
@@ -63,5 +63,5 @@ export function ManagementLocation({ role }: { role: string }) {
   const group = groups.find(g => g.items.some(item => item.routes.some(route => route === "/" ? path === "/" : path === route || path.startsWith(route + "/"))));
   const item = group?.items.find(item => item.routes.some(route => route === "/" ? path === "/" : path === route || path.startsWith(route + "/")));
   if (!group || !item) return <div className="workspace-location">Schnitzery</div>;
-  return <div className="workspace-location"><span>{t(group.label)}</span><span aria-hidden="true">/</span>{path === item.href ? <strong>{t(item.label)}</strong> : <Link href={item.href}>{t(item.label)} ↗</Link>}</div>;
+  return <div className="workspace-location"><span>{t(group.label)}</span><span aria-hidden="true">/</span>{path === item.href ? <strong>{t(item.label)}</strong> : <Link href={item.href}><span aria-hidden="true">← </span>{t(item.label)}</Link>}</div>;
 }

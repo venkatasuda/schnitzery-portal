@@ -8,6 +8,7 @@
 // ponytail: copies last week's staffing levels; scale by the sales forecast when owners ask.
 import { rosterEntryTimes, type ShiftTime } from "@/lib/time/roster";
 import { minijobOverCap, type Minijobber } from "@/lib/pay/legal";
+import { availCovers } from "./smart";
 
 export const DRAFT_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 export type DraftEntry = { user_id: string; name: string; team: string; shift: string };
@@ -49,7 +50,7 @@ export function draftRoster(inp: DraftInput) {
         const p = active.get(id);
         if (!p || onDay.has(id)) return false;
         const a = inp.avail[id];
-        if (a && !(a[day] || []).includes(bucket(hm(t.start)))) return false;
+        if (a && !availCovers(a, day, e.team, bucket(hm(t.start)))) return false;
         if (endAt[id] != null && s - endAt[id] < REST_MIN) return false;
         if (p.contractHours != null && p.contractHours > 0 && (plannedMins[id] || 0) + mins > (p.contractHours * 12 / 52) * 60 + 1e-6) return false;
         const m = mj.get(id);

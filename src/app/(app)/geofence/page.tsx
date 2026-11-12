@@ -115,7 +115,7 @@ export default function GeofencePage() {
       {/* LOCATION */}
       <div className="section-label">{t("geo.locationLabel")}</div>
       <div className="card p-4 mb-5">
-        <button onClick={useMyLocation} disabled={locating} style={{ ...input, cursor: "pointer", background: "linear-gradient(135deg,#1e6091,#2980b9)", border: "none", fontWeight: 600, marginBottom: 12 }}>
+        <button onClick={useMyLocation} disabled={locating} className="btn-secondary btn-block mb-3">
           {locating ? t("geo.locating") : t("geo.useMyLocation")}
         </button>
         <div className="d-flex gap-2 mb-3">
@@ -155,7 +155,7 @@ export default function GeofencePage() {
             <div className="t-xs u-muted mb-1">{t("geo.minutes")}</div>
             <input className="form-input" aria-label={t("geo.minutes")} type="number" value={ovMin} onChange={(e) => setOvMin(Math.max(1, Math.min(240, Number(e.target.value) || 15)))} />
           </div>
-          <button onClick={doGrant} disabled={ovBusy} style={{ ...input, flex: 1, cursor: "pointer", background: "linear-gradient(135deg,#b9770e,#e67e22)", border: "none", fontWeight: 600 }}>
+          <button onClick={doGrant} disabled={ovBusy} className="btn-gold u-flex1">
             {ovBusy ? "…" : t("geo.grant")}
           </button>
         </div>

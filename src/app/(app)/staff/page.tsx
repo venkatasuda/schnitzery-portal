@@ -9,6 +9,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { Field } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
+import { skillTeam, workTeams } from "@/lib/roster/teams";
 
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
 const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
@@ -60,21 +61,32 @@ export default function StaffPage() {
       team: p.team || "", contract_type: p.contract_type || "",
       contract_hours: p.contract_hours ?? "", phone: p.phone || "",
       role: p.role || "staff", status: p.status || "active",
-      skills: (p.skills || []).join(", "),
+      // Skill 1 is the Team above; Skill 2 and 3 are the other teams this person can work, in order of preference.
+      skill2: workTeams(p.team, p.skills)[1] || "", skill3: workTeams(p.team, p.skills)[2] || "",
+      skills: (p.skills || []).filter((s: string) => !skillTeam(s)).join(", "),
     });
     setMsg(null);
   }
 
+  // Sends only the fields that were changed, with the values they had when the form opened, so the server
+  // can refuse the save if someone else changed the same field in the meantime.
   async function save() {
     setSaving(true); setMsg(null);
     try {
-    const res = await updateStaff(editId!, {
+    const p = staff.find((x: any) => x.id === editId) || {};
+    const next: Record<string, any> = {
       full_name: form.full_name, employee_code: form.employee_code,
       team: form.team, contract_type: form.contract_type,
       contract_hours: form.contract_hours === "" ? null : Number(form.contract_hours),
       phone: form.phone, role: form.role,
-      skills: form.skills.split(",").map((s: string) => s.trim()).filter(Boolean),
-    });
+      skills: [...new Set([form.skill2, form.skill3].filter((x: string) => x && x !== form.team)), ...form.skills.split(",").map((s: string) => s.trim()).filter((s: string) => s && !skillTeam(s))],
+    };
+    const same = (k: string) => k === "skills" ? JSON.stringify(next.skills) === JSON.stringify(p.skills || [])
+      : k === "contract_hours" ? next[k] === (p[k] ?? null) : next[k] === (k === "role" ? p.role || "staff" : p[k] || "");
+    const changed = Object.keys(next).filter((k) => !same(k));
+    if (!changed.length) { setEditId(null); return; }
+    const res = await updateStaff(editId!, Object.fromEntries(changed.map((k) => [k, next[k]])),
+      Object.fromEntries(changed.filter((k) => k !== "skills").map((k) => [k, p[k] ?? null])));
     if (res.ok) { setMsg(t("staff.saved")); setEditId(null); load(); }
     else setMsg(serverText(res.error ?? "", locale) || t("staff.failed"));
     } catch { setMsg(t("staff.networkErr")); }
@@ -300,7 +312,15 @@ export default function StaffPage() {
                 <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} placeholder="20" /></Field>
                 <Field label={t("profile.phone")}><input className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
               </div>
-              <Field label={t("profile.skillsLabel")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder={t("misc.skillsPh")} /></Field>
+              <div className="inventory-insight-coverage">
+                {(["skill2", "skill3"] as const).map((k, n) => (
+                  <Field key={k} label={t("staff.skillN", { n: n + 2 })}>
+                    <select className="form-input" value={form[k] || ""} onChange={(e) => setForm({ ...form, [k]: e.target.value })}>
+                      <option value="">—</option>{TEAMS.filter((tm) => tm !== form.team && tm !== "Manager").map((tm) => <option key={tm} value={tm}>{teamLabel(tm)}</option>)}
+                    </select>
+                  </Field>))}
+              </div>
+              <Field label={t("staff.otherSkills")}><input className="form-input" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder={t("misc.skillsPh")} /></Field>
               <div className="d-flex gap-2 mt-2">
                 <button onClick={() => setEditId(null)} className="btn-secondary u-flex1">{t("common.cancel")}</button>
                 <button className="btn-gold u-flex1" onClick={save} disabled={saving}>{saving ? t("common.saving") : t("common.save")}</button>

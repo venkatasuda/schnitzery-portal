@@ -12,7 +12,11 @@ const out={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/quer
  if(n.endsWith('calculations'))return {};
  if(n.endsWith('/shift-times'))return {getShiftTimes:async()=>({ok:true,items:[]})};
  if(n.endsWith('/time/roster'))return {rosterEntryTimes:()=>null};
- if(n.endsWith('/push/delivery'))return {sendPushToUser:async()=>{}};throw Error(n);
+ if(n.endsWith('/push/delivery'))return {sendPushToUser:async()=>{}};
+ if(n.endsWith('/roster/check'))return {checkRoster:()=>[],isBlocking:()=>false}; // publish-time rules: covered by check.test.ts
+ if(n.endsWith('/owner-insights'))return {getRosterPlanning:async()=>({ok:true,minijobbers:[]})};
+ if(n.endsWith('/roster/teams'))return {workTeams:(team)=>team?[team]:[]};
+ throw Error(n);
 }});
 (async()=>{
  const roster={Monday:[{user_id:'employee',name:'Forged',team:'Kitchen',shift:'Morning'}]},expected={draft:{Monday:[]}}; // save writes the DRAFT (roster_drafts), compare-and-swap on the loaded draft

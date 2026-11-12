@@ -166,7 +166,6 @@ export default function ExpiringDocsPage() {
         </>
       )}
 
-      <Link className="ui-back-link" href="/">{t("approvals.back")}</Link>
     </div>
   );
 }

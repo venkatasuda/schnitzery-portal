@@ -13,7 +13,9 @@ import RosterLabourPanel from "@/components/RosterLabourPanel";
 import { getRosterPlanning } from "@/lib/queries/owner-insights";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { draftRoster } from "@/lib/roster/draft";
-import { smartSchedule } from "@/lib/roster/smart";
+import { smartSchedule, swapOptions, type SwapOption } from "@/lib/roster/smart";
+import type { RosterIssue } from "@/lib/roster/check";
+import { createClient } from "@/lib/supabase/client";
 import { getStaffingTargets } from "@/lib/queries/staffing";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -43,6 +45,8 @@ export default function RosterPage() {
   const [expected,setExpected] = useState<{draft:any}|null>(null);
   // What is on screen vs. what is saved: saved = the draft if one exists, else the published roster.
   const [savedRoster, setSavedRoster] = useState<Roster>({});
+  const [branchId, setBranchId] = useState(""), [prevSunday, setPrevSunday] = useState<any[]>([]), [remoteChange, setRemoteChange] = useState(false);
+  const live = useRef({ dirty: false, busy: false, offset: 0, own: 0 }); // latest state for the realtime handler
   const [status, setStatus] = useState<{ hasDraft: boolean; draftStale: boolean; publishedAt: string | null; hasPublished: boolean }>({ hasDraft: false, draftStale: false, publishedAt: null, hasPublished: false });
   const [publishing, setPublishing] = useState(false);
   const loadSerial=useRef(0);
@@ -59,6 +63,7 @@ export default function RosterPage() {
   const [customEnd, setCustomEnd] = useState("17:00");
 
   async function load(offset: number) {
+    setIssues([]);
     const serial=++loadSerial.current;
     setLoading(true);
     setLoadError("");
@@ -69,7 +74,8 @@ export default function RosterPage() {
       if (!res.ok) { if (res.error?.includes("managers")) setDenied(true); throw Error(res.error); }
       setWeekStart(res.weekStart || ""); setRoster(res.roster || {}); setSavedRoster(res.roster || {}); setExpected(res.expected || null); setOpenSlots([]);
       setStatus({ hasDraft: !!(res as any).hasDraft, draftStale: !!(res as any).draftStale, publishedAt: (res as any).publishedAt ?? null, hasPublished: (res as any).published != null });
-      setStaff(res.staff || []); setAvail((res as any).avail || {});
+      setStaff(res.staff || []); setAvail((res as any).avail || {}); setSwapAt(null); setSwapCtx(null);
+      setBranchId((res as any).branchId ?? ""); setPrevSunday((res as any).prevSunday || []); setRemoteChange(false);
     } catch { if(serial===loadSerial.current)setLoadError(t("roster.loadFailed")); }
     finally { if(serial===loadSerial.current)setLoading(false); }
   }
@@ -148,8 +154,8 @@ export default function RosterPage() {
       const [tg, st, plan] = await Promise.all([getStaffingTargets(), getShiftTimes(), getRosterPlanning(weekStart)]);
       if (!tg.ok || !tg.targets.some((x) => x.needed > 0)) { toast(t("roster.smartNoTargets"), "error"); return; }
       const res = smartSchedule({
-        weekStart, targets: tg.targets, avail,
-        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0 })),
+        weekStart, targets: tg.targets, avail, prevSunday,
+        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
         times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
         minijobbers: plan.ok ? plan.minijobbers : [],
       });
@@ -159,6 +165,56 @@ export default function RosterPage() {
     } catch { toast(t("roster.loadFailed"), "error"); }
     finally { setDrafting(false); }
   }
+
+  // ── Manual override: tap-to-swap list and desktop drag & drop (same day) ──
+  const [swapAt, setSwapAt] = useState<{ day: string; i: number } | null>(null);
+  const [swapCtx, setSwapCtx] = useState<{ times: Map<string, any>; minijobbers: any[] } | null>(null);
+  const [dragFrom, setDragFrom] = useState<{ day: string; i: number } | null>(null);
+  async function openSwap(day: string, i: number) {
+    if (swapAt?.day === day && swapAt.i === i) { setSwapAt(null); return; }
+    setSwapAt({ day, i });
+    if (!swapCtx && weekStart) {
+      const [st, plan] = await Promise.all([getShiftTimes(), getRosterPlanning(weekStart)]);
+      setSwapCtx({ times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])), minijobbers: plan.ok ? plan.minijobbers : [] });
+    }
+  }
+  const swapList = (day: string, i: number): SwapOption[] => !swapCtx ? [] : swapOptions({
+    weekStart, roster: roster as any, day, index: i, avail, times: swapCtx.times, minijobbers: swapCtx.minijobbers,
+    staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
+  });
+  function assignTo(day: string, i: number, o: SwapOption) {
+    setRoster((rs) => { const arr = [...(rs[day] || [])]; arr[i] = { ...arr[i], user_id: o.id, name: o.name }; return { ...rs, [day]: arr }; });
+    setSwapAt(null);
+  }
+  // Drop entry A on entry B (same day): the two people exchange their shifts.
+  function swapEntries(day: string, a: number, b: number) {
+    if (a === b) return;
+    setRoster((rs) => { const arr = [...(rs[day] || [])], x = arr[a], y = arr[b]; arr[a] = { ...x, user_id: y.user_id, name: y.name }; arr[b] = { ...y, user_id: x.user_id, name: x.name }; return { ...rs, [day]: arr }; });
+  }
+  // Drop a shift on another day's card: the shift moves there (same person, team and shift).
+  function moveEntry(from: { day: string; i: number }, toDay: string) {
+    setRoster((rs) => {
+      const src = [...(rs[from.day] || [])], e = src[from.i];
+      if (!e || (rs[toDay] || []).some((x) => x.user_id === e.user_id && x.team === e.team && x.shift === e.shift)) return rs;
+      src.splice(from.i, 1);
+      return { ...rs, [from.day]: src, [toDay]: [...(rs[toDay] || []), e] };
+    });
+    setSwapAt(null);
+  }
+  // Copy a day's shifts to another day ("*" = every other day). People already on the target day are skipped,
+  // so nobody ends up with two shifts on one day by accident.
+  function copyDay(from: string, to: string) {
+    let added = 0;
+    const next: Roster = { ...roster };
+    for (const d of to === "*" ? DAYS.filter((x) => x !== from) : [to]) {
+      const have = new Set((next[d] || []).map((x) => x.user_id));
+      const extra = (roster[from] || []).filter((e) => !have.has(e.user_id));
+      if (extra.length) { next[d] = [...(next[d] || []), ...extra.map((e) => ({ ...e }))]; added += extra.length; }
+    }
+    if (added) setRoster(next);
+    toast(t("roster.copied", { n: added }), added ? "success" : "error");
+  }
+  const reasonText = (k: string) => t(`roster.why_${k}`);
 
   async function doSave() {
     if(saving || loading || loadError)return;
@@ -171,6 +227,8 @@ export default function RosterPage() {
     finally { setSaving(false); }
   }
 
+  const [issues, setIssues] = useState<RosterIssue[]>([]);
+  const issueText = (i: RosterIssue) => t(i.kind === "rest" ? "roster.issRest" : i.kind === "overlap" ? "roster.issOverlap" : i.kind === "hours" ? "roster.issHours" : "roster.issMinijob", { name: i.name, day: i.day ? dayLabel(i.day) : "", h: i.value });
   // Publish: saves pending edits first, then makes the draft live and notifies the staff on it.
   async function doPublish() {
     if (publishing || saving || loading || loadError || !weekStart) return;
@@ -181,16 +239,21 @@ export default function RosterPage() {
         const saved = await saveRoster(weekStart, roster, expected);
         if (!saved.ok) { const code = (saved as { code?: string }).code; toast(code ? t(`roster.${code}`) : (saved.error || t("roster.saveFailed")), "error"); return; }
       }
-      const res = await publishRoster(weekStart);
-      if (res.ok) { toast(t("roster.published", { n: res.notified }), "success"); await load(weekOffset); }
-      else toast(res.code ? t(`roster.${res.code}`) : (res.error || t("roster.saveFailed")), "error");
+      let res = await publishRoster(weekStart);
+      // Contract-hours / Minijob warnings: the manager may publish anyway. Rest and overlaps always block.
+      if (!res.ok && res.code === "warnRules" && confirm(`${(res.issues || []).map(issueText).join("\n")}\n\n${t("roster.warnRules")}`)) res = await publishRoster(weekStart, true);
+      if (res.ok) toast(t("roster.published", { n: res.notified }), "success");
+      else if (res.code !== "warnRules") toast(res.code ? t(`roster.${res.code}`) : (res.error || t("roster.saveFailed")), "error");
+      await load(weekOffset); // the draft was saved above: pick up its new state either way
+      setIssues(!res.ok && res.code === "errRules" ? res.issues || [] : []);
     } catch { toast(t("roster.saveFailed"), "error"); }
     finally { setPublishing(false); }
   }
   async function doDiscard() {
     if (!status.hasDraft || !confirm(t("roster.discardDraftConfirm"))) return;
-    const res = await discardRosterDraft(weekStart);
-    if (res.ok) { toast(t("roster.draftDiscarded"), "success"); await load(weekOffset); } else toast(res.error || t("roster.saveFailed"), "error");
+    const res = await discardRosterDraft(weekStart, expected);
+    if (res.ok) toast(t("roster.draftDiscarded"), "success"); else toast(res.code ? t(`roster.${res.code}`) : (res.error || t("roster.saveFailed")), "error");
+    await load(weekOffset); // also after a refusal: show the newer draft someone else saved
   }
 
   const weekLabel = (() => {
@@ -203,6 +266,31 @@ export default function RosterPage() {
 
   const totalAssigned = DAYS.reduce((sum, d) => sum + (roster[d]?.length || 0), 0);
   const dirty = JSON.stringify(roster) !== JSON.stringify(savedRoster);
+
+  // Live sync: when this week's draft or published roster changes in the database (another manager, an approved
+  // cover), reload if nothing is unsaved here; otherwise show a notice and let the manager decide.
+  // Needs migration 20261112090000_roster_realtime.sql; without it nothing arrives and the page works as before.
+  live.current = { ...live.current, dirty, busy: saving || publishing || loading || drafting, offset: weekOffset };
+  if (saving || publishing) live.current.own = Date.now(); // our own save echoes back: ignore it for a moment
+  useEffect(() => {
+    if (!branchId || !weekStart) return;
+    const sb = createClient();
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const onChange = (payload: { new?: { week_start?: string }; old?: { week_start?: string } }) => {
+      const s = live.current, week = payload.new?.week_start ?? payload.old?.week_start;
+      if (week && week !== weekStart) return;
+      // Busy, or possibly the echo of our own save: look again shortly instead of dropping the event, so another
+      // manager's change in that moment is not missed. (Reloading after our own save is harmless.)
+      if (s.busy || Date.now() - s.own < 4000) { clearTimeout(retry); retry = setTimeout(() => onChange(payload), 4500); return; }
+      if (s.dirty) setRemoteChange(true); else void load(s.offset);
+    };
+    const ch = (sb.channel(`roster:${branchId}:${weekStart}`) as any)
+      .on("postgres_changes", { event: "*", schema: "public", table: "roster_drafts", filter: `branch_id=eq.${branchId}` }, onChange)
+      .on("postgres_changes", { event: "*", schema: "public", table: "weekly_roster", filter: `branch_id=eq.${branchId}` }, onChange)
+      .subscribe();
+    return () => { clearTimeout(retry); void sb.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branchId, weekStart]);
   const statusText = status.hasDraft || dirty ? (dirty ? t("roster.stUnsaved") : t("roster.stDraft")) : status.hasPublished ? t("roster.stPublished") : t("roster.stEmpty");
 
   // availability helpers for this week
@@ -218,23 +306,27 @@ export default function RosterPage() {
       <h1 className="page-title u-row"><Icon e="📋" size={22} /> {t("roster.title")}</h1>
       <div className="page-sub">{weekLabel || "…"} <span className={`roster-status${status.hasDraft || dirty ? " is-draft" : status.hasPublished ? " is-live" : ""}`}>{statusText}</span></div>
       {status.draftStale && <p role="alert" className="roster-stale">{t("roster.errStale")}</p>}
+      {remoteChange && <p role="alert" className="roster-stale">{t("roster.remoteChange")} <button className="btn-secondary ui-btn-sm" onClick={() => { if (confirm(t("roster.discardChanges"))) void load(weekOffset); }}>{t("roster.reload")}</button></p>}
+      {issues.length > 0 && <div role="alert" className="card roster-stale"><strong>{t("roster.errRules")}</strong><ul>{issues.map((i, k) => <li key={k}>{issueText(i)}</li>)}</ul></div>}
       {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
       {/* week nav + save */}
-      <div className="d-flex jc-sb ai-c mb-4 gap-2 f-wrap">
+      <div className="roster-bar">
         <div className="u-hstack">
-          <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(-1)}>{t("shifts.prev")}</button>
+          <button className="btn-secondary ui-btn-sm" disabled={loading||saving||publishing} onClick={() => changeWeek(-1)}>{t("shifts.prev")}</button>
           <span className="roster-week" aria-live="polite">
             {weekOffset === 0 ? t("roster.thisWeek") : weekOffset > 0 ? t("roster.weeksPlus", { n: weekOffset }) : t("roster.weeksMinus", { n: weekOffset })}
           </span>
-          <button className="btn-secondary ui-btn-sm" disabled={loading||saving} onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
+          <button className="btn-secondary ui-btn-sm" disabled={loading||saving||publishing} onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
         </div>
-        <button className="btn-secondary" onClick={smartAutomate} disabled={drafting||saving||loading||!!loadError}>
+        <div className="roster-bar-actions">
+        <button className="btn-secondary" onClick={smartAutomate} disabled={drafting||saving||publishing||loading||!!loadError}>
           {drafting ? t("common.loading") : t("roster.smart")}
         </button>
-        <button className="btn-secondary" onClick={autoDraft} disabled={drafting||saving||loading||!!loadError} title={t("roster.draftHint")}>
+        <button className="btn-secondary" onClick={autoDraft} disabled={drafting||saving||publishing||loading||!!loadError} title={t("roster.draftHint")}>
           {drafting ? t("common.loading") : t("roster.draft")}
         </button>
+        <span className="roster-bar-sep" aria-hidden="true" />
         {status.hasDraft && <button className="btn-secondary" onClick={doDiscard} disabled={saving||publishing||loading}>{t("roster.discardDraft")}</button>}
         <button className="btn-secondary" onClick={doSave} disabled={saving||publishing||loading||!!loadError||!dirty}>
           {saving ? t("common.saving") : t("roster.saveRoster")}
@@ -242,6 +334,7 @@ export default function RosterPage() {
         <button className="btn-gold" onClick={doPublish} disabled={saving||publishing||loading||!!loadError||status.draftStale||(!dirty&&!status.hasDraft)}>
           {publishing ? t("common.saving") : t("roster.publish")}
         </button>
+        </div>
       </div>
 
       {loadError ? null : loading ? (
@@ -258,7 +351,7 @@ export default function RosterPage() {
           )}
 
           {/* WEEK OVERVIEW STRIP (at-a-glance counts per day) */}
-          <div className="card u-mb-3">
+          <div className="card u-mb-3 roster-glance">
             <div className="card-title">{t("roster.weekGlance", { n: totalAssigned })}</div>
             <div className="roster-strip">
               {DAYS.map((d) => {
@@ -317,11 +410,16 @@ export default function RosterPage() {
               </div>
             )}
           </div>
+          {/* While saving or publishing nothing may be edited: the reload afterwards would silently drop it. */}
+          <div className={`roster-days${saving || publishing ? " is-locked" : ""}`} aria-busy={saving || publishing}>
           {DAYS.map((day) => {
             const entries = roster[day] || [];
             const isActive = activeDay === day;
+            const dropHere = !!dragFrom && dragFrom.day !== day; // a shift dragged from another day can be moved here
             return (
-              <div key={day} className={`card roster-day${isActive ? " active" : ""}`}>
+              <div key={day} className={`card roster-day${isActive ? " active" : ""}${dropHere ? " is-drop-day" : ""}`}
+                onDragOver={(ev) => { if (dropHere) ev.preventDefault(); }}
+                onDrop={(ev) => { if (dropHere && dragFrom) { ev.preventDefault(); moveEntry(dragFrom, day); setDragFrom(null); } }}>
                 <div className="roster-day-head">
                   <div className="t-lg fw-7 u-text">
                     {dayLabel(day)}
@@ -329,24 +427,45 @@ export default function RosterPage() {
                       <span className="t-xs fw-6 tone-action ml-2">{t("roster.assigned", { n: entries.length })}</span>
                     )}
                   </div>
-                  <button className={`${isActive ? "btn-gold" : "btn-secondary"} ui-btn-sm`} onClick={() => setActiveDay(isActive ? null : day)} aria-expanded={isActive}>
-                    {isActive ? t("common.close") : t("roster.add")}
-                  </button>
+                  <div className="u-hstack">
+                    {entries.length > 0 && (
+                      <select className="form-input roster-copy" value="" disabled={saving} aria-label={`${dayLabel(day)}: ${t("roster.copyTo")}`} onChange={(e) => { if (e.target.value) copyDay(day, e.target.value); }}>
+                        <option value="">{t("roster.copyTo")}</option>
+                        {DAYS.filter((d) => d !== day).map((d) => <option key={d} value={d}>{dayLabel(d)}</option>)}
+                        <option value="*">{t("roster.copyAllDays")}</option>
+                      </select>
+                    )}
+                    <button className={`${isActive ? "btn-gold" : "btn-secondary"} ui-btn-sm`} onClick={() => setActiveDay(isActive ? null : day)} aria-expanded={isActive}>
+                      {isActive ? t("common.close") : t("roster.add")}
+                    </button>
+                  </div>
                 </div>
 
                 {/* entries */}
-                {entries.map((e, i) => (
-                  <div key={i} className="roster-entry">
+                {entries.map((e, i) => (<div key={i}>
+                  <div className={`roster-entry${dragFrom?.day === day && dragFrom.i !== i ? " is-drop" : ""}`} draggable={!saving}
+                    onDragStart={() => setDragFrom({ day, i })} onDragEnd={() => setDragFrom(null)}
+                    onDragOver={(ev) => { if (dragFrom?.day === day) ev.preventDefault(); }}
+                    onDrop={(ev) => { ev.preventDefault(); if (dragFrom?.day === day) swapEntries(day, dragFrom.i, i); setDragFrom(null); }}>
                     <span className="clock-dot" style={{ color: TEAM_COLORS[e.team] || "#888" }} aria-hidden="true" />
                     <div className="u-flex1 t-sm u-text">
-                      <b>{e.name}</b> <span className="u-muted">· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
+                      <button type="button" className="roster-swap-btn" aria-expanded={swapAt?.day === day && swapAt.i === i} onClick={() => void openSwap(day, i)}
+                        title={t("roster.swapHint")}><b>{e.name}</b> ⇄</button> <span className="u-muted">· {teamLabel(e.team)} · {shiftLabel(e.shift)}</span>
                     </div>
                     {submitted(e.user_id) && !availableDay(e.user_id, day) && (
                       <span className="ui-tag-warn u-nowrap">⚠ {t("roster.notAvail")}</span>
                     )}
                     <button disabled={saving} aria-label={t("roster.removeShift",{name:e.name})} onClick={() => removeEntry(day, i)} className="ui-remove-btn">×</button>
                   </div>
-                ))}
+                  {swapAt?.day === day && swapAt.i === i && (
+                    <ul className="roster-swap-list" aria-label={t("roster.swapWith", { name: e.name })}>
+                      {!swapCtx ? <li>{t("common.loading")}</li> : swapList(day, i).map((o) => (
+                        <li key={o.id}><button type="button" className={`swap-opt is-${o.status}`} onClick={() => assignTo(day, i, o)}>
+                          <span className="swap-dot" aria-hidden="true" /><b>{o.name}</b>
+                          {o.reasons.map((k) => <span key={k} className="swap-why">{o.status === "ok" ? "" : "⚠ "}{reasonText(k)}</span>)}
+                        </button></li>))}
+                    </ul>)}
+                </div>))}
 
                 {/* add form */}
                 {isActive && (
@@ -391,6 +510,7 @@ export default function RosterPage() {
               </div>
             );
           })}
+          </div>
         </>
       )}
     </div>
