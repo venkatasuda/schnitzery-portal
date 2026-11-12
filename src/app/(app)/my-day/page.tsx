@@ -11,7 +11,6 @@ import Icon from "@/components/Icon";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import LeavePage from "../leave/page";
 import HoursPage from "../hours/page";
-import ChecklistPage from "../checklist/page";
 
 // Staff "My Day" hub — groups the three planning features under one nav button
 // using the old app's hub-tab pattern, so the bottom nav stays at 4 tidy items.
@@ -25,12 +24,12 @@ function MyDayContent() {
   const params = useSearchParams();
   const router = useRouter();
   const requested = params.get("tab");
-  const tab = requested === "timeoff" || requested === "hours" || requested === "work" ? requested : "avail";
-  // ponytail: retain at most four visited views; pause polling here if background polling is added.
+  const tab = requested === "timeoff" || requested === "hours" ? requested : "avail"; // Workplace moved to Profile
+  // ponytail: retain at most three visited views; pause polling here if background polling is added.
   const [visited, setVisited] = useState<string[]>([tab]);
   // Browser Back/Forward can visit a view without going through changeTab.
   if (!visited.includes(tab)) setVisited([...visited, tab]);
-  function changeTab(next: "avail" | "timeoff" | "hours" | "work") {
+  function changeTab(next: "avail" | "timeoff" | "hours") {
     if (next === tab) return;
     setVisited(previous => [...new Set([...previous, tab, next])]);
     const query = new URLSearchParams(params.toString());
@@ -52,9 +51,6 @@ function MyDayContent() {
         <button className={`hub-tab${tab === "hours" ? " active" : ""}`} aria-pressed={tab === "hours"} onClick={() => changeTab("hours")}>
           <Icon className="u-icon-inline" e="⏱" size={14} /> {t("myday.tabHours")}
         </button>
-        <button className={`hub-tab${tab === "work" ? " active" : ""}`} aria-pressed={tab === "work"} onClick={() => changeTab("work")}>
-          <Icon className="u-icon-inline" e="🧰" size={14} /> {t("myday.tabWork")}
-        </button>
       </div>
 
       {(tab === "avail" || visited.includes("avail")) && (
@@ -73,12 +69,6 @@ function MyDayContent() {
 
       {(tab === "hours" || visited.includes("hours")) && (
         <div className={`hub-tab-panel myday-embed${tab === "hours" ? " active" : ""}`} hidden={tab !== "hours"}><HoursPage /></div>
-      )}
-      {(tab === "work" || visited.includes("work")) && (
-        <div className={`hub-tab-panel${tab === "work" ? " active" : ""}`} hidden={tab !== "work"}>
-          <div className="myday-embed"><ChecklistPage /></div>
-          <Link className="ui-back-link" href="/directory">{t("myday.teamDirectory")} →</Link>
-        </div>
       )}
     </div>
   );

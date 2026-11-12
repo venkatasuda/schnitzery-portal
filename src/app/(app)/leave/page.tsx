@@ -6,7 +6,8 @@ import { submitLeave, getMyLeave, getSickNoteUrl, attachSickNote } from "@/lib/q
 import { createClient } from "@/lib/supabase/client";
 import { getMyLeaveBalance } from "@/lib/queries/leave-balance";
 
-const LEAVE_TYPES = ["vacation", "sick", "unpaid", "special"];
+// "special" is no longer offered; older requests of that type still show with their label.
+const LEAVE_TYPES = ["vacation", "sick", "unpaid"];
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";

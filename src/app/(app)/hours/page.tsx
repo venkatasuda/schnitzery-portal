@@ -53,11 +53,11 @@ export default function HoursPage() {
             <div className="clock-timer-value">{data.totalHours}h</div>
             <div className="clock-caption">{t("hours.workedThisMonth")}</div>
           </div>
-          <StatGrid>
+          <div className="hours-stats"><StatGrid>
             <Stat label={t("hours.shifts")} value={String(data.shifts)} />
             <Stat label={t("hours.target")} value={data.targetHours != null ? `${data.targetHours}h` : "—"} />
             <Stat label={owes ? t("hours.remaining") : t("hours.over")} value={data.debt != null ? `${Math.abs(data.debt)}h` : "—"} tone={owes ? "warn" : "success"} />
-          </StatGrid>
+          </StatGrid></div>
           {data.targetHours != null && (
             <div className="card">
               <div className="t-xs u-muted mb-2">{t("hours.progress", { h: data.targetHours })}</div>

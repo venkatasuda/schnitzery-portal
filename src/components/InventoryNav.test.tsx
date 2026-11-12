@@ -111,5 +111,7 @@ describe("inventory navigation", () => {
     expect(EmployeeBack()?.props.href).toBe("/my-day?tab=timeoff");
     context.path = "/hours";
     expect(EmployeeBack()?.props.href).toBe("/my-day?tab=hours");
+    context.path = "/checklist"; // Workplace lives under Profile now
+    expect(EmployeeBack()?.props.href).toBe("/profile");
   });
 });

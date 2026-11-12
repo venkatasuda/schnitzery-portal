@@ -44,8 +44,16 @@ it("keeps visited forms mounted but hides inactive views", () => {
 });
 
 it("remembers a view reached through browser history rather than a tab click", () => {
-  state.query = "tab=work";
+  state.query = "tab=timeoff";
   state.visited = ["hours"];
   renderToStaticMarkup(<MyDayPage />);
-  expect(state.visited).toEqual(["hours", "work"]);
+  expect(state.visited).toEqual(["hours", "timeoff"]);
+});
+
+it("no longer has a Workplace view (moved to Profile): an old ?tab=work link opens Availability", () => {
+  state.query = "tab=work";
+  state.visited = ["avail"];
+  const markup = renderToStaticMarkup(<MyDayPage />);
+  expect(markup).toContain("AVAILABILITY_VIEW");
+  expect(markup).not.toContain("WORK_VIEW");
 });
