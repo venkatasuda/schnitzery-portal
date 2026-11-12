@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -33,7 +35,7 @@ export default function AuditPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="🔒" size={22} /> {t("profile.auditLog")}</h1>
+      <PageHeader title={ <><Icon e="🔒" size={22} /> {t("profile.auditLog")}</> } />
 
       {loading ? (
         <CardSkeleton rows={3} />

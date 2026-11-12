@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getMyHours } from "@/lib/queries/timepay";
-import { Stat, StatGrid, ErrorState } from "@/components/ui";
+import { PageHeader,  Stat, StatGrid, ErrorState } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
 
 export default function HoursPage() {
@@ -36,7 +36,7 @@ export default function HoursPage() {
 
   return (
     <div className="ui-narrow">
-      <h1 className="page-title u-row"><Icon e="⏱" size={22} /> {t("hours.title")}</h1>
+      <PageHeader title={ <><Icon e="⏱" size={22} /> {t("hours.title")}</> } />
 
       <div className="d-flex jc-sb ai-c mb-4">
         <button className="btn-secondary ui-btn-sm" disabled={loading || !month} onClick={() => shiftMonth(-1)}>{t("shifts.prev")}</button>

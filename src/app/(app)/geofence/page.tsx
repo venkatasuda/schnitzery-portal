@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { fmtDay } from "@/lib/time/berlinDate";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -83,11 +85,11 @@ export default function GeofencePage() {
     { key: "required", label: t("geo.modeRequired"), hint: t("geo.modeRequiredHint") },
   ];
 
-  if (loading) return <div className="fade-up"><h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1><CardSkeleton rows={4} /></div>;
+  if (loading) return <div className="fade-up"><PageHeader title={ <><Icon e="📍" size={22} /> {t("geo.title")}</> } /><CardSkeleton rows={4} /></div>;
 
   if (!canEdit) return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1>
+      <PageHeader title={ <><Icon e="📍" size={22} /> {t("geo.title")}</> } />
       <div className="card p-4">{t("geo.managersOnly")}</div>
     </div>
   );
@@ -96,8 +98,7 @@ export default function GeofencePage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📍" size={22} /> {t("geo.title")}</h1>
-      <div className="page-sub">{branchName}</div>
+      <PageHeader title={ <><Icon e="📍" size={22} /> {t("geo.title")}</> } subtitle={branchName} />
 
       {/* MODE */}
       <div className="section-label">{t("geo.modeLabel")}</div>

@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CardSkeleton } from "@/components/Skeleton";
-import { ErrorState } from "@/components/ui";
+import { PageHeader,  ErrorState } from "@/components/ui";
 import { getTeamShiftsRange, type TeamShift } from "@/lib/queries/schedule";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -65,7 +65,7 @@ export default function SchedulePage() {
   return (
     <div className="fade-up shifts-page">
       <div className="shifts-head">
-        <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("shifts.title")}</h1>
+        <PageHeader title={ <><Icon e="📅" size={22} /> {t("shifts.title")}</> } />
         <div className="prep-seg shifts-toggle" role="group" aria-label={de ? "Ansicht" : "View"}>
           <button type="button" aria-pressed={view === "week"} onClick={() => pick("week")}>{de ? "Woche" : "Week"}</button>
           <button type="button" aria-pressed={view === "month"} onClick={() => pick("month")}>{de ? "Monat" : "Month"}</button>

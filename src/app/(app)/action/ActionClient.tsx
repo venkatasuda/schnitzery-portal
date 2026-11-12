@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -48,7 +50,7 @@ export default function ActionClient({ initial = null }: { initial?: Initial } =
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🎯" size={22} /> {t("act.title")}</h1>
+      <PageHeader title={ <><Icon e="🎯" size={22} /> {t("act.title")}</> } />
 
       {!loading && alerts.length > 0 && (
         <div className="card mb-4 p-4">

@@ -7,7 +7,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
-import { Field } from "@/components/ui";
+import { PageHeader,  Field } from "@/components/ui";
 
 const CATEGORIES = ["Safety", "Equipment", "Hygiene", "Customer", "Security", "Other"];
 const SEVERITIES = ["low", "medium", "high"];
@@ -64,7 +64,7 @@ export default function IncidentsPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="🚨" size={22} /> {t("incidents.title")}</h1>
+      <PageHeader title={ <><Icon e="🚨" size={22} /> {t("incidents.title")}</> } />
 
       <button onClick={() => setShowForm(!showForm)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
         {showForm ? t("common.close") : t("incidents.reportBtn")}

@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -104,7 +106,7 @@ export default function CorrectionsPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="✏️" size={22} /> {t("corr.title")}</h1>
+      <PageHeader title={ <><Icon e="✏️" size={22} /> {t("corr.title")}</> } />
 
       {/* REQUEST FORM */}
       <div className="section-label">{t("corr.request")}</div>

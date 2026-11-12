@@ -11,7 +11,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
-import { Field } from "@/components/ui";
+import { PageHeader,  Field } from "@/components/ui";
 
 export default function LeavePage() {
   const { t, locale } = useLang();
@@ -98,7 +98,7 @@ export default function LeavePage() {
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto" }}>
-      <h1 className="page-title u-row"><Icon e="🌴" size={22} /> {t("leave.title")}</h1>
+      <PageHeader title={ <><Icon e="🌴" size={22} /> {t("leave.title")}</> } />
 
       <div className="ui-segmented leave-tabs" role="group">
         <TabBtn active={tab === "request"} onClick={() => setTab("request")}>{t("leave.tabRequest")}</TabBtn>

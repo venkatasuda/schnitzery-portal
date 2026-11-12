@@ -1,4 +1,5 @@
 "use client";
+import ActionsMenu from "@/components/ActionsMenu";
 
 import { appLocale } from "@/lib/format";
 import { useEffect, useRef, useState } from "react";
@@ -8,7 +9,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
-import { Field } from "@/components/ui";
+import { PageHeader,  Field } from "@/components/ui";
 import RosterLabourPanel from "@/components/RosterLabourPanel";
 import { getRosterPlanning } from "@/lib/queries/owner-insights";
 import { getShiftTimes } from "@/lib/queries/shift-times";
@@ -29,7 +30,7 @@ type Entry = { user_id: string; name: string; team: string; shift: string };
 type Roster = Record<string, Entry[]>;
 
 export default function RosterPage() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const dayLabel = (k: string) => (DAYS.includes(k) ? t("days." + k.toLowerCase()) : k);
   const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const shiftLabel = (k: string) => (["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k);
@@ -303,8 +304,7 @@ export default function RosterPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📋" size={22} /> {t("roster.title")}</h1>
-      <div className="page-sub">{weekLabel || "…"} <span className={`roster-status${status.hasDraft || dirty ? " is-draft" : status.hasPublished ? " is-live" : ""}`}>{statusText}</span></div>
+      <PageHeader title={ <><Icon e="📋" size={22} /> {t("roster.title")}</> } subtitle={ <>{weekLabel || "…"} <span className={`roster-status${status.hasDraft || dirty ? " is-draft" : status.hasPublished ? " is-live" : ""}`}>{statusText}</span></> } />
       {status.draftStale && <p role="alert" className="roster-stale">{t("roster.errStale")}</p>}
       {remoteChange && <p role="alert" className="roster-stale">{t("roster.remoteChange")} <button className="btn-secondary ui-btn-sm" onClick={() => { if (confirm(t("roster.discardChanges"))) void load(weekOffset); }}>{t("roster.reload")}</button></p>}
       {issues.length > 0 && <div role="alert" className="card roster-stale"><strong>{t("roster.errRules")}</strong><ul>{issues.map((i, k) => <li key={k}>{issueText(i)}</li>)}</ul></div>}
@@ -320,14 +320,17 @@ export default function RosterPage() {
           <button className="btn-secondary ui-btn-sm" disabled={loading||saving||publishing} onClick={() => changeWeek(1)}>{t("shifts.next")}</button>
         </div>
         <div className="roster-bar-actions">
+          <ActionsMenu label={locale === "de" ? "Planungswerkzeuge" : "Planning tools"}>
+
         <button className="btn-secondary" onClick={smartAutomate} disabled={drafting||saving||publishing||loading||!!loadError}>
           {drafting ? t("common.loading") : t("roster.smart")}
         </button>
         <button className="btn-secondary" onClick={autoDraft} disabled={drafting||saving||publishing||loading||!!loadError} title={t("roster.draftHint")}>
           {drafting ? t("common.loading") : t("roster.draft")}
         </button>
-        <span className="roster-bar-sep" aria-hidden="true" />
+
         {status.hasDraft && <button className="btn-secondary" onClick={doDiscard} disabled={saving||publishing||loading}>{t("roster.discardDraft")}</button>}
+          </ActionsMenu>
         <button className="btn-secondary" onClick={doSave} disabled={saving||publishing||loading||!!loadError||!dirty}>
           {saving ? t("common.saving") : t("roster.saveRoster")}
         </button>

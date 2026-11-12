@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -14,7 +16,7 @@ export default function PeopleHubPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="👥" size={22} /> {t("ph.title")}</h1>
+      <PageHeader title={ <><Icon e="👥" size={22} /> {t("ph.title")}</> } />
 
       <div className="hub-tabs" role="group" aria-label={t("ph.title")}>
         <button aria-pressed={tab === "team"} className={`hub-tab${tab === "team" ? " active" : ""}`} onClick={() => setTab("team")}>

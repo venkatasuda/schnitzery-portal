@@ -44,7 +44,7 @@ async function ui(page, result, url, file) {
   component({}); for(const effect of effects) effect(); await new Promise(r=>setImmediate(r)); initial=false;
   return {render(){cursor=0;return renderToStaticMarkup(component({}));},tree(){cursor=0;return component({});}};
 }
-function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray(tree.props?.children)){const found=find(child,test);if(found)return found;}return null;}
+function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray([tree.props?.children, tree.props?.actions])){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
   // Escape must respect the owner's discard confirmation instead of closing natively.
   const NativeDialog=moduleAt('src/components/NativeDialog.tsx',name=>name==='react'?{...React,useRef:()=>({current:null}),useEffect(){}}:require(name)).default;

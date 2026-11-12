@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { useState, useEffect, useRef } from "react";
 import { getPendingApprovals, decideLeave, decideSwap, getSickNoteUrl } from "@/lib/queries/leave";
@@ -109,7 +111,7 @@ export default function ApprovalsClient({ initial = null }: { initial?: Raw | nu
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("approvals.title")}</h1>
+      <PageHeader title={ <><Icon e="✅" size={22} /> {t("approvals.title")}</> } />
 
       <div className="hub-tabs" role="group" aria-label={t("approvals.title")}>
         <button aria-pressed={filter === "all"} className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>

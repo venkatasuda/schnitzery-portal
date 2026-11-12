@@ -1,4 +1,6 @@
 "use client";
+
+import { PageHeader } from "@/components/ui";
 import InventoryNav from "@/components/InventoryNav";
 
 import { useState, useEffect } from "react";
@@ -63,7 +65,7 @@ export default function StockAlertsPage() {
   return (
     <div className="fade-up">
       <InventoryNav active="purchasing" />
-      <h1 className="page-title u-row"><Icon e="📦" size={22} /> {t("salert.title")}</h1>
+      <PageHeader title={ <><Icon e="📦" size={22} /> {t("salert.title")}</> } />
 
       <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "12px 0", padding: 14 }}>
         <div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
 import { getTeamLeave } from "@/lib/queries/leave";
 import { CardSkeleton } from "@/components/Skeleton";
-import { ErrorState } from "@/components/ui";
+import { PageHeader,  ErrorState } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
 
 export default function LeaveCalendarPage() {
@@ -34,7 +34,7 @@ export default function LeaveCalendarPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="📆" size={22} /> {t("misc.leaveTitle")}</h1>
+      <PageHeader title={ <><Icon e="📆" size={22} /> {t("misc.leaveTitle")}</> } />
 
       {loading ? <CardSkeleton rows={3} />
         : failed ? <ErrorState message={t("common.loadFailed")} onRetry={load} retryLabel={t("business.retry")} />

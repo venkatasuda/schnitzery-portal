@@ -11,7 +11,7 @@ import Link from "next/link";
 import { getPayrollSummary, setPayrollSettings, setPayrollApproval } from "@/lib/queries/payroll";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
-import { Field, Stat, StatGrid } from "@/components/ui";
+import { PageHeader,  Field, Stat, StatGrid } from "@/components/ui";
 import DatevExport from "@/components/DatevExport";
 import PayslipUpload from "@/components/PayslipUpload";
 import PayrollPrecheck from "@/components/PayrollPrecheck";
@@ -133,7 +133,7 @@ export default function PayrollExportPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="💶" size={22} /> {t("pay.title")}</h1>
+      <PageHeader title={ <><Icon e="💶" size={22} /> {t("pay.title")}</> } />
       <PayrollPrecheck month={month} />
 
       <div className="card d-flex ai-c gap-3 f-wrap">

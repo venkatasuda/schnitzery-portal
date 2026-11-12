@@ -11,7 +11,7 @@ import { getBranchAnalytics, getAnalyticsScope, getOvertimeTrend, getStaffPerfor
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 import BusinessOverview from "@/components/BusinessOverview";
 import { berlinToday } from "@/lib/time/berlinDate";
-import { Stat } from "@/components/ui";
+import { PageHeader,  Stat } from "@/components/ui";
 
 const GOLD = "var(--gold-ink)", BLUE = "var(--info)", GREEN = "var(--success)", AMBER = "var(--warn)", RED = "var(--danger)";
 const TEAM_COLORS = ["#c0392b", "#3498db", "#27ae60", "#d4a847", "#9b59b6", "#e67e22"];
@@ -73,9 +73,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="fade-up analytics-workspace">
-      <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("business.performance")}</h1>
-      <Link className="btn-secondary" href="/sales/imports">{locale==="de"?"Umsatzimporte prüfen":"Review sales imports"}</Link>
-      <div className="page-sub">{data?.scope ?? ""}</div>
+      <PageHeader title={ <><Icon e="📊" size={22} /> {t("business.performance")}</> } subtitle={data?.scope ?? ""} actions={<Link className="btn-secondary" href="/sales/imports">{locale==="de"?"Umsatzimporte prüfen":"Review sales imports"}</Link>} />
 
       <div className="hub-tabs" role="group" aria-label={t("business.reportView")}>
         {["business", "workforce"].map(v => <button key={v} aria-pressed={view === v} className={`hub-tab${view === v ? " active" : ""}`} onClick={() => setView(v)}>{t(`business.${v}`)}</button>)}

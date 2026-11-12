@@ -11,7 +11,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
-import { Field, Stat } from "@/components/ui";
+import { PageHeader,  Field, Stat } from "@/components/ui";
 import { skillTeam } from "@/lib/roster/teams";
 
 export default function ProfilePage() {
@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
   if (loading) return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="👤" size={22} /> {t("profile.title")}</h1>
+      <PageHeader title={ <><Icon e="👤" size={22} /> {t("profile.title")}</> } />
       <CardSkeleton rows={5} />
     </div>
   );
@@ -66,7 +66,7 @@ export default function ProfilePage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="👤" size={22} /> {t("profile.title")}</h1>
+      <PageHeader title={ <><Icon e="👤" size={22} /> {t("profile.title")}</> } />
 
       <div className="card p-6">
         {/* avatar + name */}

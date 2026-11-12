@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { useState, useEffect, useRef } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -38,7 +40,7 @@ export default function SearchPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🔍" size={22} /> {t("search.title")}</h1>
+      <PageHeader title={ <><Icon e="🔍" size={22} /> {t("search.title")}</> } />
 
       <div className="card p-2 mb-4">
         <input aria-label={t("search.title")}

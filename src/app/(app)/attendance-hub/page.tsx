@@ -11,7 +11,7 @@ import OfflineReview from "@/components/OfflineReview";
 import {
   getLiveAttendance, getMonthlyOvertime, getAttendanceApprovals, setAttendanceApproval,
 } from "@/lib/queries/live-attendance";
-import { Stat } from "@/components/ui";
+import { PageHeader,  Stat } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
 import CloseShiftForm from "@/components/CloseShiftForm";
 
@@ -122,7 +122,7 @@ export default function AttendanceHubPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🕐" size={22} /> {t("nav.attendance")}</h1>
+      <PageHeader title={ <><Icon e="🕐" size={22} /> {t("nav.attendance")}</> } />
 
       <div className="hub-tabs" role="group" aria-label={t("nav.attendance")}>
         <button aria-pressed={tab === "live"} className={`hub-tab${tab === "live" ? " active" : ""}`} onClick={() => openTab("live")}>{t("ahub.tabLive")}</button>

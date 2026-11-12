@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
-import { ErrorState, Field } from "@/components/ui";
+import { PageHeader,  ErrorState, Field } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { getTargets, setTargets } from "@/lib/queries/targets";
@@ -46,7 +46,7 @@ export default function TargetsPage() {
 
   return (
     <div className="ui-narrow">
-      <h1 className="page-title u-row"><Icon e="🎯" size={22} /> {t("targets.title")}</h1>
+      <PageHeader title={ <><Icon e="🎯" size={22} /> {t("targets.title")}</> } />
       {loading ? <CardSkeleton rows={3} />
         : error ? <ErrorState message={error} onRetry={load} retryLabel={t("business.retry")} />
         : (

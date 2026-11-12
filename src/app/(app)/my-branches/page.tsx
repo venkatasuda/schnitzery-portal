@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
 import { CardSkeleton } from "@/components/Skeleton";
-import { EmptyState, ErrorState, Segmented } from "@/components/ui";
+import { PageHeader,  EmptyState, ErrorState, Segmented } from "@/components/ui";
 import { getBranchComparison } from "@/lib/queries/branch-analytics";
 import { useLang } from "@/components/LanguageProvider";
 import { serverText } from "@/lib/i18n/serverMessages";
@@ -53,7 +53,7 @@ export default function MyBranchesPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🏪" size={22} /> {t("mybr.title")}</h1>
+      <PageHeader title={ <><Icon e="🏪" size={22} /> {t("mybr.title")}</> } />
       {loading ? <CardSkeleton rows={3} />
         : error ? <ErrorState message={error} onRetry={load} retryLabel={t("business.retry")} />
         : rows.length === 0 ? <EmptyState title={t("mybr.none")} />

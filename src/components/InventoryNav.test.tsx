@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Children, isValidElement, type ReactElement } from "react";
 import InventoryNav from "./InventoryNav";
+import EmployeeBack from "./EmployeeBack";
 import { ManagementLocation } from "./ManagementNav";
 
 const context = vi.hoisted(() => ({ path: "/inventory/valuation", locale: "en", nav: null as HTMLElement|null, effects: [] as (()=>void|(()=>void))[] }));
@@ -100,5 +101,15 @@ describe("inventory navigation", () => {
     expect(onNavigate).not.toHaveBeenCalled();
     click({ button: 0, ctrlKey: true, preventDefault });
     expect(canLeave).toHaveBeenCalledOnce();
+  });
+  it("does not duplicate expiry's own role-scoped back link", () => {
+    context.path = "/expiry";
+    expect(EmployeeBack()).toBeNull();
+  });
+  it("returns employees to the relevant My Day view", () => {
+    context.path = "/leave-calendar";
+    expect(EmployeeBack()?.props.href).toBe("/my-day?tab=timeoff");
+    context.path = "/hours";
+    expect(EmployeeBack()?.props.href).toBe("/my-day?tab=hours");
   });
 });

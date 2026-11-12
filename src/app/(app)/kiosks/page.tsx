@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -54,7 +56,7 @@ export default function KiosksPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🖥️" size={22} /> {t("kioskadm.title")}</h1>
+      <PageHeader title={ <><Icon e="🖥️" size={22} /> {t("kioskadm.title")}</> } />
 
       {/* add */}
       <div className="d-flex gap-2 mb-4">

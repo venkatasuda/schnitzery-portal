@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { toast } from "@/components/Toast";
 import { useEffect, useState } from "react";
@@ -82,7 +84,7 @@ export default function ChecklistStatusPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</h1>
+      <PageHeader title={ <><Icon e="✅" size={22} /> {t("checklist.statusTitle")}</> } />
       <p className="u-muted t-sm mb-4">{t("checklist.statusSub")}</p>
 
       <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
