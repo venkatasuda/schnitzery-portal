@@ -174,7 +174,7 @@ export async function getAttendanceApprovals() {
   if (!branchId) return { ok: false, error: "No branch." };
   const { data: logs, error } = await readAll(supabase
     .from("attendance_logs")
-    .select("id, user_id, work_date, clock_in, clock_out, duration_mins, late_mins, approval_status")
+    .select("id, user_id, work_date, clock_in, clock_out, duration_mins, late_mins, approval_status, source")
     .eq("branch_id", branchId)
     .eq("status", "complete")
     .or("approval_status.is.null,approval_status.eq.pending")
@@ -232,6 +232,7 @@ export async function getAttendanceApprovals() {
     duration_mins: l.duration_mins, late_mins: l.late_mins || 0,
     overtime: (l.duration_mins || 0) > LONG_SHIFT_MIN,
     suspect: isImplausibleShift(l), // probable forgotten clock-out: correct before approving
+    autoClosed: (l as { source?: string }).source === "auto_closed", // closed by the system after 16 h with 0 h: enter the real end time
     clockFlag: flagOf(l),
   }));
 
