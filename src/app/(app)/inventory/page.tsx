@@ -22,7 +22,7 @@ import Reconciliation from "./Reconciliation";
 import NativeDialog from "@/components/NativeDialog";
 import InventoryNav, { type InventoryArea } from "@/components/InventoryNav";
 import Products from "@/components/inventory/Products";
-import { PageHeader,  EmptyState, Field, Panel, Segmented, Stat } from "@/components/ui";
+import { PageHeader,  EmptyState, Panel, Segmented, Stat } from "@/components/ui";
 
 const GOLD = "var(--gold-ink)";
 const BLUE = "var(--info)";
