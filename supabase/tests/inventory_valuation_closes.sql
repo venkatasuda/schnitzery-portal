@@ -10,8 +10,8 @@ insert into auth.users(id,email) select m,m::text||'@valuation.invalid' from val
 insert into public.users(id,branch_id,role,status) select m,a,'manager','active' from value_fixture on conflict(id) do update set branch_id=excluded.branch_id,role=excluded.role,status=excluded.status;
 select set_config('request.jwt.claim.sub',m::text,true) from value_fixture;
 insert into public.inventory_master(id,branch_id,product,category,unit,soll,is_active) select p,a,'Value test rice','Test','kg',10,true from value_fixture;
-insert into public.stock_batches(id,branch_id,product,category,unit,qty,received_date,expiry_date,status) select b,a,'Value test rice','Test','kg',10,current_date,current_date+10,'active' from value_fixture;
-insert into public.inventory_counts(branch_id,count_date,category,product,unit,ist,soll) select a,current_date,'Test','Value test rice','kg',10,10 from value_fixture;
+insert into public.stock_batches(id,branch_id,product,category,unit,qty,received_date,expiry_date,status) select b,a,'Value test rice','Test','kg',10,(now() at time zone 'Europe/Berlin')::date,(now() at time zone 'Europe/Berlin')::date+10,'active' from value_fixture;
+insert into public.inventory_counts(branch_id,count_date,category,product,unit,ist,soll) select a,(now() at time zone 'Europe/Berlin')::date,'Test','Value test rice','kg',10,10 from value_fixture;
 select set_config('request.jwt.claim.sub',m::text,true) from value_fixture;
 set local role authenticated;
 do $$declare f record;preview jsonb;begin select * into f from value_fixture;
