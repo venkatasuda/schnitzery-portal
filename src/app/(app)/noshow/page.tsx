@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { berlinToday } from "@/lib/time/berlinDate";
 
 import { useEffect, useState } from "react";
@@ -56,7 +58,7 @@ export default function NoShowPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="⚠️" size={22} /> {t("ns.title")}</h1>
+      <PageHeader title={ <><Icon e="⚠️" size={22} /> {t("ns.title")}</> } />
 
       <div className="ui-segmented" role="group">
         <TabBtn active={tab === "noshow"} onClick={() => setTab("noshow")}>{t("ns.tabNoShows")}</TabBtn>

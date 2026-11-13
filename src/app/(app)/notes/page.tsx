@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getStaffForNotes, addNote, getNotes } from "@/lib/queries/operations";
-import { Field } from "@/components/ui";
+import { PageHeader,  Field } from "@/components/ui";
 
 export default function NotesPage() {
   const { t, locale } = useLang();
@@ -55,7 +55,7 @@ export default function NotesPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="📝" size={22} /> {t("schedhub.notes")}</h1>
+      <PageHeader title={ <><Icon e="📝" size={22} /> {t("schedhub.notes")}</> } />
 
       {msg && <div className="mb-4 t-sm tone-action u-center">{msg}</div>}
 

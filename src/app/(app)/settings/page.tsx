@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -42,7 +44,7 @@ export default function SettingsPage() {
 
   return (
     <div className="workspace-page settings-workspace">
-      <h1 className="page-title u-row"><Icon e="⚙️" size={22} /> {t("profile.branchSettings")}</h1>
+      <PageHeader title={ <><Icon e="⚙️" size={22} /> {t("profile.branchSettings")}</> } />
       <p className="u-muted t-sm mb-5">{t("set.subtitle")}</p>
 
       {loading ? (

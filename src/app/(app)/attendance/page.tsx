@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinToday, mondayOfDate, monthRange } from "@/lib/time/berlinDate";
@@ -296,7 +298,7 @@ export default function AttendancePage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🕐" size={22} /> {t("att.title")}</h1>
+      <PageHeader title={ <><Icon e="🕐" size={22} /> {t("att.title")}</> } />
       <SyncStatus />
       <details><summary>{t("offlineReview.title")}</summary><OfflineReview /></details>
       <Link href="/attendance/corrections" className="clock-link"><Icon e="✏️" size={14} /> {t("corr.request")}</Link>

@@ -109,7 +109,7 @@ export default function AvailabilityForm() {
       <div className="avail-save">
       <div className="prep-seg avail-scope" role="group" aria-label={de ? "Gilt für" : "Applies to"}>
         <button type="button" aria-pressed={scope === "week"} onClick={() => setScope("week")}>{de ? "Diese Woche" : "This week"}</button>
-        <button type="button" aria-pressed={scope === "month"} onClick={() => setScope("month")}>{de ? `Ganzer ${monthName}` : `All of ${monthName}`}</button>
+        <button type="button" aria-pressed={scope === "month"} onClick={() => setScope("month")}>{monthName}</button>
         <button type="button" aria-pressed={scope === "always"} onClick={() => setScope("always")}>{de ? "Jede Woche" : "Every week"}</button>
       </div>
       <button className="btn-gold ui-block" onClick={save} disabled={saving || loading || !weekStart}>

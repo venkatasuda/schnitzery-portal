@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { toast } from "@/components/Toast";
 import { useState, useEffect } from "react";
@@ -86,7 +88,7 @@ export default function NotificationsPage() {
     <div className="fade-up">
       <div className="u-row">
         <div className="u-flex1">
-          <h1 className="page-title u-row"><Icon e="🔔" size={22} /> {t("notif.center")}</h1>
+          <PageHeader title={ <><Icon e="🔔" size={22} /> {t("notif.center")}</> } />
         </div>
         {unread > 0 && <button onClick={markRead} className="btn-secondary ui-btn-sm u-nowrap">{t("notif.markAllRead")}</button>}
       </div>

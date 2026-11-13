@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CardSkeleton } from "@/components/Skeleton";
-import { ErrorState } from "@/components/ui";
+import { PageHeader,  ErrorState } from "@/components/ui";
 import { getTeamShiftsRange, type TeamShift } from "@/lib/queries/schedule";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -65,11 +65,12 @@ export default function SchedulePage() {
   return (
     <div className="fade-up shifts-page">
       <div className="shifts-head">
-        <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("shifts.title")}</h1>
-        <div className="prep-seg shifts-toggle" role="group" aria-label={de ? "Ansicht" : "View"}>
-          <button type="button" aria-pressed={view === "week"} onClick={() => pick("week")}>{de ? "Woche" : "Week"}</button>
-          <button type="button" aria-pressed={view === "month"} onClick={() => pick("month")}>{de ? "Monat" : "Month"}</button>
-        </div>
+        {/* Title left, Week | Month far right, on one line at every width. */}
+        <PageHeader title={ <><Icon e="📅" size={22} /> {t("shifts.title")}</> } actions={
+          <div className="prep-seg shifts-toggle" role="group" aria-label={de ? "Ansicht" : "View"}>
+            <button type="button" aria-pressed={view === "week"} onClick={() => pick("week")}>{de ? "Woche" : "Week"}</button>
+            <button type="button" aria-pressed={view === "month"} onClick={() => pick("month")}>{de ? "Monat" : "Month"}</button>
+          </div>} />
         <div className="shifts-nav">
           <button type="button" className="btn-secondary" aria-label={de ? "Zurück" : "Previous"} onClick={() => step(-1)}>‹</button>
           <strong>{title}</strong>

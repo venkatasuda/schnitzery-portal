@@ -1,4 +1,5 @@
 "use client";
+import ActionsMenu from "@/components/ActionsMenu";
 
 import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +8,7 @@ import { getStaffList, updateStaff } from "@/lib/queries/people";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
-import { Field } from "@/components/ui";
+import { PageHeader,  Field } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
 import { skillTeam, workTeams } from "@/lib/roster/teams";
 
@@ -177,10 +178,7 @@ export default function StaffPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="👥" size={22} /> {t("staff.title")}</h1>
-      <p className="ui-lede">
-        {loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })}
-      </p>
+      <PageHeader title={ <><Icon e="👥" size={22} /> {t("staff.title")}</> } subtitle={loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })} actions={<button className="btn-gold" onClick={() => { setShowAdd(true); setAddMsg(null); }}>{t("staff.addNew")}</button>} />
 
       {msg && <div className="mb-4 t-md u-text" role="status">{msg}</div>}
 
@@ -197,7 +195,6 @@ export default function StaffPage() {
       )}
 
       <div className="workspace-toolbar">
-        <button className="workspace-button primary" onClick={() => { setShowAdd(true); setAddMsg(null); }}>{t("staff.addNew")}</button>
         <Link className="workspace-button" href="/directory">{t("directory.title")}</Link>
         <Link className="workspace-button" href="/notes">{t("schedhub.notes")}</Link>
       </div>
@@ -278,9 +275,11 @@ export default function StaffPage() {
                   {filter === "active" ? (
                     <>
                       <button onClick={() => startEdit(p)} className="workspace-button">{t("common.edit")}</button>
+                      <ActionsMenu label={locale === "de" ? "Weitere Aktionen" : "More actions"}>
                       <button onClick={() => resetPassword(p.id)} className="workspace-button">🔑 {t("staff.resetPw")}</button>
                       {p.login_locked && <button onClick={() => unlock(p.id)} className="workspace-button success">🔓 {t("staff.unlock")}</button>}
                       <button onClick={() => setConfirmRemoveId(p.id)} className="workspace-button danger">{t("staff.remove")}</button>
+                      </ActionsMenu>
                     </>
                   ) : (
                     <button onClick={() => reactivate(p.id)} className="workspace-button success">{t("staff.reactivate")}</button>

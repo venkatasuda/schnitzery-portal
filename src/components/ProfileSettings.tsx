@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/Toast";
 import { useLang } from "@/components/LanguageProvider";
@@ -10,7 +10,8 @@ import { pushSupported, currentPushState, subscribeToPush, unsubscribeFromPush }
 
 // Shared profile footer for every role: Light Mode (reuses the same theme
 // mechanism as the header toggle) + a working Change Password via Supabase auth.
-export default function ProfileSettings() {
+// afterPreferences: an extra section shown between Preferences and Account (Profile puts "Workplace" there).
+export default function ProfileSettings({ afterPreferences }: { afterPreferences?: ReactNode } = {}) {
   const { t } = useLang();
   // ── Light Mode (same source of truth as the header ThemeToggle) ──
   const [light, setLight] = useState(false);
@@ -97,29 +98,31 @@ export default function ProfileSettings() {
         </div>
       </div>
 
-      {/* NOTIFICATIONS — opt-in. Hidden entirely on devices that can't do push. */}
-      {pushState !== "unsupported" && (
+      {/* NOTIFICATIONS — opt-in. Always shown; where the browser cannot do push the switch is off and says why. */}
+      {(
         <div className="card mt-3">
           <div className="u-between">
             <div>
               <div className="t-lg fw-6 u-text">{t("settings.notifications")}</div>
               <div className="ui-muted">
-                {pushState === "denied" ? t("settings.notificationsBlocked") : null}
+                {pushState === "denied" ? t("settings.notificationsBlocked") : pushState === "unsupported" ? t("settings.notificationsUnsupported") : null}
               </div>
             </div>
             <button
               onClick={toggleNotifications}
-              disabled={pushBusy || pushState === "denied" || pushState === "loading"}
+              disabled={pushBusy || pushState === "denied" || pushState === "loading" || pushState === "unsupported"}
               role="switch"
               aria-checked={pushOn}
               aria-label={t("misc.pushToggle")}
-              style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: pushBusy || pushState === "denied" ? "default" : "pointer", padding: 3, background: pushOn ? "var(--action)" : "rgba(128,128,128,0.35)", opacity: pushState === "denied" || pushState === "loading" ? 0.5 : 1, transition: "background .2s", display: "flex", justifyContent: pushOn ? "flex-end" : "flex-start" }}
+              style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: pushBusy || pushState === "denied" || pushState === "unsupported" ? "default" : "pointer", padding: 3, background: pushOn ? "var(--action)" : "rgba(128,128,128,0.35)", opacity: pushState === "denied" || pushState === "loading" || pushState === "unsupported" ? 0.5 : 1, transition: "background .2s", display: "flex", justifyContent: pushOn ? "flex-end" : "flex-start" }}
             >
               <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
             </button>
           </div>
         </div>
       )}
+
+      {afterPreferences}
 
       {/* ACCOUNT */}
       <div className="section-label">{t("settings.account")}</div>

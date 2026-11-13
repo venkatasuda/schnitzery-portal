@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { fmtDay } from "@/lib/time/berlinDate";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -26,7 +28,7 @@ export default function ConflictsPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="⚠️" size={22} /> {t("conf.title")}</h1>
+      <PageHeader title={ <><Icon e="⚠️" size={22} /> {t("conf.title")}</> } />
 
       {loading ? (
         <CardSkeleton rows={3} />

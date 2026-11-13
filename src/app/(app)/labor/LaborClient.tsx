@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { formatPct, formatEur, appLocale } from "@/lib/format";
 import { berlinToday } from "@/lib/time/berlinDate";
 
@@ -113,7 +115,7 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="💶" size={22} /> {t("lab.title")}</h1>
+      <PageHeader title={ <><Icon e="💶" size={22} /> {t("lab.title")}</> } />
       <Link className="btn-secondary" href="/sales/imports">{locale==="de"?"Umsatzimporte prüfen":"Review sales imports"}</Link>
 
       {/* KPI */}

@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { useEffect, useState } from "react";
 import { CardSkeleton } from "@/components/Skeleton";
 import { getDirectory } from "@/lib/queries/people";
@@ -33,7 +35,7 @@ export default function DirectoryPage() {
 
   return (
     <div className="workspace-page">
-      <h1 className="page-title u-row"><Icon e="📇" size={22} /> {t("directory.title")}</h1>
+      <PageHeader title={ <><Icon e="📇" size={22} /> {t("directory.title")}</> } />
 
       <input className="form-input u-mb-4" aria-label={t("directory.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("directory.searchPlaceholder")}
         />

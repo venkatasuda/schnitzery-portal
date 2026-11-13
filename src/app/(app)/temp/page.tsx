@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -86,7 +88,7 @@ export default function TempPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🌡️" size={22} /> {t("temp.title")}</h1>
+      <PageHeader title={ <><Icon e="🌡️" size={22} /> {t("temp.title")}</> } />
 
       {summary && summary.totalUnits > 0 && (
         <div className={`temp-summary${summary.breachesToday > 0 ? " is-bad" : summary.pending > 0 ? "" : " is-done"}`}>

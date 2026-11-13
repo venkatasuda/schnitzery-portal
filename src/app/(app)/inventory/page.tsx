@@ -22,7 +22,7 @@ import Reconciliation from "./Reconciliation";
 import NativeDialog from "@/components/NativeDialog";
 import InventoryNav, { type InventoryArea } from "@/components/InventoryNav";
 import Products from "@/components/inventory/Products";
-import { EmptyState, Field, Panel, Segmented, Stat } from "@/components/ui";
+import { PageHeader,  EmptyState, Panel, Segmented, Stat } from "@/components/ui";
 
 const GOLD = "var(--gold-ink)";
 const BLUE = "var(--info)";
@@ -246,18 +246,12 @@ export default function InventoryPage() {
     <div className="inventory-page">
       <InventoryNav active={area} currentView={tab} onNavigate={navigate} />
       {loadError && <div role="alert" className="workspace-error"><p>{loadError}</p><button className="btn-secondary" onClick={async () => { await load(); await loadActiveTab(); }}>{t("business.retry")}</button></div>}
-      <div className="inventory-heading">
-        <div>
-          <h1 className="page-title u-row"><Icon e="📦" size={22} /> {titles[tab]}</h1>
-          <p className="page-sub">{context ? `${context.branch.name}${tab === "count" || tab === "overview" ? ` · ${t("inventoryWorkspace.countDate", { date: fmtDay(context.countDate, locale) })}` : ""}` : t("common.loading")}</p>
-        </div>
-        <div className="inventory-heading-actions">
+      <PageHeader title={ <><Icon e="📦" size={22} /> {titles[tab]}</> } subtitle={ <>{context ? `${context.branch.name}${tab === "count" || tab === "overview" ? ` · ${t("inventoryWorkspace.countDate", { date: fmtDay(context.countDate, locale) })}` : ""}` : t("common.loading")}</> } actions={ <>
         {tab === "overview" && products.length > 0 && <Link className="btn-gold" href="/inventory/counts">{t("countSession.start")}</Link>}
         {tab === "count" && <><button className="btn-secondary" onClick={() => setShowScan(true)}>{t("scan.scanToCount")}</button></>}
         {tab === "deliveries" && <Link href="/inventory/purchasing?receive=1" className="btn-gold">{locale==="de"?"Lieferung annehmen":"Receive a delivery"}</Link>}
         {tab === "forecast" && <><Link href="/inventory/purchasing?new=1" className="btn-gold">{t("inventoryOps.newOrder")}</Link></>}
-        </div>
-      </div>
+        </> } />
 
       {tab === "count" && <p className="row-actions"><Link href="/inventory/purchasing?receive=1">{locale === "de" ? "Lieferung annehmen" : "Receive goods"} →</Link></p>}
 

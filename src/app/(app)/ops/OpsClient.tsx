@@ -9,7 +9,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getOpsDashboard, getOpsFilters } from "@/lib/queries/ops-dashboard";
 import { CardSkeleton } from "@/components/Skeleton";
-import { Stat } from "@/components/ui";
+import { PageHeader,  Stat } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
 
 const todayStr = () => berlinToday();
@@ -70,8 +70,7 @@ export default function OpsClient({ initial = null }: { initial?: Initial } = {}
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📡" size={22} /> {t("ops.title")}</h1>
-      <div className="page-sub">{data?.asOf ? `${t("ops.asOf")} ${fmtClock(data.asOf)}` : ""}</div>
+      <PageHeader title={ <><Icon e="📡" size={22} /> {t("ops.title")}</> } subtitle={ <>{data?.asOf ? `${t("ops.asOf")} ${fmtClock(data.asOf)}` : ""}</> } />
 
       {/* FILTERS */}
       <div className="workspace-toolbar">

@@ -8,7 +8,7 @@ import Icon from "@/components/Icon";
 import { getMonthlySummary } from "@/lib/queries/labor";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
-import { Stat } from "@/components/ui";
+import { PageHeader,  Stat } from "@/components/ui";
 
 
 // Declared at module scope, NOT inside the page component. A component created
@@ -129,7 +129,7 @@ export default function SummaryClient({ initial }: { initial?: any }) {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("summary.title")}</h1>
+      <PageHeader title={ <><Icon e="📊" size={22} /> {t("summary.title")}</> } />
 
       <Link href="/simulator" className="card" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", margin: "12px 0 0" }}>
         <Icon e="🎛️" size={18} color="var(--gold)" />

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { getOrgOverview } from "@/lib/queries/org-overview";
 import { getBranchComparison } from "@/lib/queries/branch-analytics";
 import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
-import { Stat, StatGrid, type Tone } from "@/components/ui";
+import { PageHeader,  Stat, StatGrid, type Tone } from "@/components/ui";
 
 const rateTone = (r: number | null): Tone => r == null ? "default" : r >= 95 ? "success" : r >= 85 ? "warn" : "danger";
 
@@ -38,7 +38,7 @@ export default function OverviewPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="🏢" size={22} /> {t("org.title")}</h1>
+      <PageHeader title={ <><Icon e="🏢" size={22} /> {t("org.title")}</> } />
 
       {loading || !data ? (
         <><div className="mb-4"><StatsSkeleton count={3} /></div><Skeleton height={220} radius={14} /></>

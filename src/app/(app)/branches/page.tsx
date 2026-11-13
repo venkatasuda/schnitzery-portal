@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -32,7 +34,7 @@ export default function BranchesPage() {
 
   return (
     <div>
-      <h1 className="page-title u-row"><Icon e="🏢" size={22} /> {roleLabel}</h1>
+      <PageHeader title={ <><Icon e="🏢" size={22} /> {roleLabel}</> } />
 
       {loading ? (
         <CardSkeleton rows={3} />

@@ -76,3 +76,8 @@ graphify-out/cache/
 
 # Isolated PostgreSQL test runtime
 .audit-db/
+
+# Agent skills (local tooling installed with `npx skills add`; not part of the app)
+.agents/skills/
+.claude/skills/
+skills-lock.json

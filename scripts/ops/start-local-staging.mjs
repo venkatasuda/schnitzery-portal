@@ -1,13 +1,17 @@
 // Starts the isolated source snapshot, never the production-configured workspace.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, copyFileSync, cpSync, symlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 import { spawn, spawnSync } from "node:child_process";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const app = resolve(root, ".audit-db/local-staging/app");
-const envFile = resolve(app, ".env.local");
+const snapshot = resolve(root, ".audit-db/local-staging/app");
+const reviewCurrent = process.argv.includes("--ui-review");
+// Keep the fresh source mirror on the dependency drive: Windows cannot relativize cross-drive webpack entries.
+// No environment or credential file is copied into this source mirror.
+const app = reviewCurrent ? resolve(root, "..", `schnitzery-ui-review-${Date.now().toString(36)}`) : snapshot;
+const envFile = resolve(snapshot, ".env.local");
 if (!existsSync(envFile)) throw Error("Local staging is not configured: missing isolated app/.env.local.");
 const config = parseEnv(readFileSync(envFile, "utf8"));
 const api = new URL(config.NEXT_PUBLIC_SUPABASE_URL);
@@ -16,7 +20,15 @@ if (api.origin !== "http://127.0.0.1:55321" || api.username || api.password
   throw Error("Refusing staging startup: Supabase must target http://127.0.0.1:55321 only.");
 for (const key of ["NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"])
   if (!config[key]) throw Error(`Missing local ${key}.`);
-if (!existsSync(resolve(app, "package.json"))) throw Error("Missing isolated source snapshot.");
+if (reviewCurrent && !process.argv.includes("--check")) {
+  mkdirSync(app, { recursive: true });
+  for (const name of ["src", "public"]) cpSync(resolve(root, name), resolve(app, name), { recursive: true });
+  for (const name of ["package.json", "package-lock.json", "next.config.ts", "postcss.config.mjs", "tsconfig.json", "next-env.d.ts", "sentry.server.config.ts", "sentry.edge.config.ts"])
+    if (existsSync(resolve(root, name))) copyFileSync(resolve(root, name), resolve(app, name));
+  symlinkSync(resolve(root, "node_modules"), resolve(app, "node_modules"), "junction");
+  console.log(`Current-code UI review mirror: ${app}`);
+}
+if (!reviewCurrent && !existsSync(resolve(app, "package.json"))) throw Error("Missing isolated source snapshot.");
 console.log("Local staging: http://schnitzery.localhost:3100 — database API on port 55321.");
 if (!process.argv.includes("--check")) {
   // --fast: production build + start. Dev mode compiles every page on first visit

@@ -7,7 +7,7 @@ import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getCompliance } from "@/lib/queries/compliance";
 import { Skeleton } from "@/components/Skeleton";
-import { Stat } from "@/components/ui";
+import { PageHeader,  Stat } from "@/components/ui";
 
 const ICON: Record<string, string> = { Break: "☕", Rest: "🌙", "Long shift": "⏱" };
 
@@ -32,7 +32,7 @@ export default function CompliancePage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="⚖️" size={22} /> {t("home.compliance")}</h1>
+      <PageHeader title={ <><Icon e="⚖️" size={22} /> {t("home.compliance")}</> } />
       <div className="row-actions"><Link className="btn-secondary" href="/compliance/logbook">{t("comp.hygieneLogbook")}</Link></div>
 
       {loading ? (

@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -87,7 +89,7 @@ export default function ExpiringDocsPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📑" size={22} /> {t("exp.title")}</h1>
+      <PageHeader title={ <><Icon e="📑" size={22} /> {t("exp.title")}</> } />
 
       {loading ? (
         <CardSkeleton rows={4} />

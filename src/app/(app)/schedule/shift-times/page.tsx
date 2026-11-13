@@ -1,4 +1,6 @@
 "use client";
+
+import { PageHeader } from "@/components/ui";
 // Shift times per team: Sun–Thu, optional Fri–Sat, break. Both times empty = "time pending".
 // Roster, attendance, labour cost and the Shifts page all read these.
 import { useState, useEffect } from "react";
@@ -49,7 +51,7 @@ export default function ShiftTimesPage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="⏱️" size={22} /> {t("shiftcfg.title")}</h1>
+      <PageHeader title={ <><Icon e="⏱️" size={22} /> {t("shiftcfg.title")}</> } />
       {loading ? <CardSkeleton rows={4} /> : teams.map((team) => (
         <div className="mb-5" key={team}>
           <div className="section-label">{teamLabel(team)}</div>

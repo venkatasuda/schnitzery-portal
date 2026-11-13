@@ -9,7 +9,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getScheduleComparison } from "@/lib/queries/schedule-compare";
 import { CardSkeleton } from "@/components/Skeleton";
-import { Stat as UiStat } from "@/components/ui";
+import { PageHeader,  Stat as UiStat } from "@/components/ui";
 
 const mondayOf = (offset: number) => mondayOfDate(berlinToday(), offset); // Berlin week, not the device's clock
 const fmtMins = (m: number) => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), mm = m % 60; return h ? `${h}h ${mm}m` : `${mm}m`; };
@@ -64,7 +64,7 @@ export default function ComparePage() {
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📊" size={22} /> {t("cmp.title")}</h1>
+      <PageHeader title={ <><Icon e="📊" size={22} /> {t("cmp.title")}</> } />
 
       {/* week nav */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 14px" }}>

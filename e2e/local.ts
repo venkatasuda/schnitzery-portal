@@ -50,14 +50,14 @@ export const openContexts: BrowserContext[] = [];
 
 // Presentation tests authenticate through the local API, then exercise real protected pages.
 // Login-form behavior remains covered by the workflow tests using signIn below.
-export async function authenticatedPage(browser: Browser, who: Account): Promise<Page> {
+export async function authenticatedPage(browser: Browser, who: Account, options: Parameters<Browser["newContext"]>[0] = {}): Promise<Page> {
   const env=stagingEnv(),url=env.NEXT_PUBLIC_SUPABASE_URL||"";
   if(!/^http:\/\/(127\.0\.0\.1|localhost):55321\/?$/.test(url))throw new Error("Refusing non-local authentication");
   const cookies=new Map<string,string>();
   const auth=createServerClient(url,env.NEXT_PUBLIC_SUPABASE_ANON_KEY,{cookies:{getAll:()=>[...cookies].map(([name,value])=>({name,value})),setAll:values=>{for(const c of values)cookies.set(c.name,c.value);}}});
   const result=await auth.auth.signInWithPassword({email:who.email,password:who.password});
   if(result.error)throw new Error(`Synthetic ${who.role} authentication failed`);
-  const context=await browser.newContext();openContexts.push(context);
+  const context=await browser.newContext(options);openContexts.push(context);
   await context.addCookies([...cookies].map(([name,value])=>({name,value,url:BASE_URL})));
   await context.addCookies([{name:"lang",value:"en",url:BASE_URL}]);
   await context.addInitScript(()=>localStorage.setItem("sch_cookie_ack","1"));

@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui";
+
 import { appLocale } from "@/lib/format";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { useState, useEffect } from "react";
@@ -75,7 +77,7 @@ export default function ScheduleHubClient({ initial = null }: { initial?: any } 
 
   return (
     <div className="fade-up">
-      <h1 className="page-title u-row"><Icon e="📅" size={22} /> {t("schedhub.title")}</h1>
+      <PageHeader title={ <><Icon e="📅" size={22} /> {t("schedhub.title")}</> } />
 
       {/* quick actions */}
       <div className="workspace-toolbar">
