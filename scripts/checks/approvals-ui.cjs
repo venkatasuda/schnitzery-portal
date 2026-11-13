@@ -4,6 +4,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
+const ui = {}; vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/components/ui.tsx', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText, { exports: ui, require });
 
 async function renderAfterLoad(fail) {
   const states = [];
@@ -34,6 +35,7 @@ async function renderAfterLoad(fail) {
       if (name === '@/components/Toast') return { toast() {} };
       if (name === '@/components/Skeleton') return { CardSkeleton: () => null };
       if (name === '@/components/Icon') return { __esModule: true, default: () => null };
+      if (name === '@/components/ui') return ui; // shared PageHeader etc. (the page uses the shared header)
       return require(name);
     },
   });
