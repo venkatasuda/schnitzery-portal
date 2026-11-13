@@ -81,3 +81,5 @@ graphify-out/cache/
 .agents/skills/
 .claude/skills/
 skills-lock.json
+.github/skills/
+.impeccable/
