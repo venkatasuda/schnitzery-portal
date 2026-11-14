@@ -73,5 +73,26 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   // Next morning: yesterday not closed → managers only; closed → nothing new.
   await db.exec(`select private.ops_reminders(('2026-11-13 08:30'::timestamp at time zone 'Europe/Berlin'))`);
   assert.deepEqual((await got("day_close_reminder")).map((x) => x.user_id), [MGR]);
-  console.log("Ops reminders: sweep patched once, hour windows, working days only, on-duty leaders + managers, no duplicates.");
+
+  // Auto clock-out (migration 20261114090000): open > 16 h → closed with 0 h, pending, flagged; employee + managers told.
+  await db.exec(`alter table public.attendance_logs add column clock_out timestamptz, add column duration_mins int, add column breaks jsonb default '[]',
+    add column approval_status text default 'pending', add column source text not null default 'online';`);
+  const a = fs.readFileSync("supabase/migrations/20261114090000_auto_close_open_shifts.sql", "utf8"); await db.exec(a); await db.exec(a);
+  const def2 = (await db.query("select pg_get_functiondef('public.notification_sweep()'::regprocedure) d")).rows[0].d;
+  assert.equal(def2.split("perform private.close_stale_shifts();").length - 1, 1, "Auto clock-out added to the sweep exactly once");
+  assert.equal(def2.split("perform private.ops_reminders();").length - 1, 1, "Reminders call kept");
+  await db.exec(`delete from public.notifications; delete from public.attendance_logs;
+    insert into public.attendance_logs(id, user_id, branch_id, work_date, clock_in, status, breaks) values
+      ('00000000-0000-0000-0000-0000000000a1', '${ANA}', '${B}', '2026-10-01', now() - interval '1065 hours', 'on-break', '[{"start":"2026-10-01T10:00:00Z"}]'),
+      ('00000000-0000-0000-0000-0000000000a2', '${LEAD}', '${B}', current_date, now() - interval '9 hours', 'active', '[]');`);
+  await db.exec("select public.notification_sweep()");
+  const logs = (await db.query("select id, status, clock_out = clock_in same, duration_mins, approval_status, source, breaks from public.attendance_logs order by id")).rows;
+  assert.deepEqual([logs[0].status, logs[0].same, logs[0].duration_mins, logs[0].approval_status, logs[0].source], ["complete", true, 0, "pending", "auto_closed"], "1,065 h session closed with 0 h");
+  assert.ok(logs[0].breaks[0].end, "Open break ended too");
+  assert.deepEqual([logs[1].status, logs[1].source], ["active", "online"], "A 9 h shift is left running");
+  assert.equal((await db.query("select count(*)::int n from public.notifications where title like 'auto:%' and user_id = $1", [ANA])).rows[0].n, 1, "Employee told");
+  assert.equal((await db.query("select count(*)::int n from public.notifications where title like 'auto:%' and user_id = $1", [MGR])).rows[0].n, 1, "Manager told");
+  await db.exec("select public.notification_sweep()");
+  assert.equal((await db.query("select count(*)::int n from public.notifications where title like 'auto:%'")).rows[0].n, 2, "Not closed or announced twice");
+  console.log("Ops reminders: sweep patched once, hour windows, working days only, on-duty leaders + managers, no duplicates; open shifts auto-closed after 16 h.");
 })().catch((e) => { console.error(e); process.exitCode = 1; });

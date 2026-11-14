@@ -1,13 +1,15 @@
 // Starts the isolated source snapshot, never the production-configured workspace.
-import { existsSync, readFileSync, mkdirSync, copyFileSync, cpSync, symlinkSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, copyFileSync, cpSync, symlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 import { spawn, spawnSync } from "node:child_process";
+import { uiReviewFingerprint } from "./ui-review-source.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const snapshot = resolve(root, ".audit-db/local-staging/app");
 const reviewCurrent = process.argv.includes("--ui-review");
+const port = reviewCurrent ? "3117" : "3100";
 // Keep the fresh source mirror on the dependency drive: Windows cannot relativize cross-drive webpack entries.
 // No environment or credential file is copied into this source mirror.
 const app = reviewCurrent ? resolve(root, "..", `schnitzery-ui-review-${Date.now().toString(36)}`) : snapshot;
@@ -26,16 +28,17 @@ if (reviewCurrent && !process.argv.includes("--check")) {
   for (const name of ["package.json", "package-lock.json", "next.config.ts", "postcss.config.mjs", "tsconfig.json", "next-env.d.ts", "sentry.server.config.ts", "sentry.edge.config.ts"])
     if (existsSync(resolve(root, name))) copyFileSync(resolve(root, name), resolve(app, name));
   symlinkSync(resolve(root, "node_modules"), resolve(app, "node_modules"), "junction");
+  writeFileSync(resolve(app, "public/ui-review-marker.json"), JSON.stringify({ kind: "schnitzery-ui-review", fingerprint: uiReviewFingerprint(root) }));
   console.log(`Current-code UI review mirror: ${app}`);
 }
 if (!reviewCurrent && !existsSync(resolve(app, "package.json"))) throw Error("Missing isolated source snapshot.");
-console.log("Local staging: http://schnitzery.localhost:3100 — database API on port 55321.");
+console.log(`Local staging: http://[::1]:${port} — database API on port 55321.`);
 if (!process.argv.includes("--check")) {
   // --fast: production build + start. Dev mode compiles every page on first visit
   // (a minute or more each on a busy laptop), which makes UI walkthroughs crawl.
   const next = resolve(root, "node_modules/next/dist/bin/next");
   const fast = process.argv.includes("--fast"), ai = process.argv.includes("--ai");
-  const args = fast ? ["start", "--hostname", "::1", "--port", "3100"] : ["dev", "--webpack", "--hostname", "::1", "--port", "3100"];
+  const args = fast ? ["start", "--hostname", "::1", "--port", port] : ["dev", "--webpack", "--hostname", "::1", "--port", port];
   if (fast) {
     console.log("Building the staging copy (one-off, a few minutes)…");
     const build = spawnSync(process.execPath, [next, "build", "--webpack"], { cwd: app, stdio: "inherit", env: { ...process.env, ...config, NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1", SENTRY_DSN: "", NEXT_PUBLIC_SENTRY_DSN: "", SENTRY_AUTH_TOKEN: "" } });
