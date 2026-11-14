@@ -1,4 +1,4 @@
-- **Mandatory UI/UX skill:** Before creating, editing or auditing any frontend file (`src/**/*.tsx`, `src/app/globals.css`), read and follow `.agents/skills/principal-ui-ux/SKILL.md` and finish with its self-check (section 12).
+- **Mandatory skill:** Before creating, editing or auditing any frontend file (`src/**/*.tsx`, `src/app/globals.css`), server action, query or migration, read and follow `.agents/skills/principal-ui-ux/SKILL.md` and finish with its self-check.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know

@@ -1,6 +1,6 @@
 ---
 name: principal-ui-ux
-description: Enforce Principal UI/UX design standards (Linear, Stripe, Vercel tier) across all frontend components, layouts, tables, settings, and CSS in src/. Trigger whenever creating, editing, refactoring, or auditing any UI, page, or stylesheet.
+description: Enforce Principal UI/UX design and production engineering standards (Linear, Stripe, Vercel tier) across all frontend components, layouts, tables, settings, CSS, server actions and queries in src/. Trigger whenever creating, editing, refactoring, or auditing any UI, page, stylesheet, server action or database query.
 ---
 
 # Principal UI/UX Design Standards (Linear / Stripe / Vercel tier)
@@ -67,7 +67,45 @@ Whenever creating, refactoring, or auditing ANY screen, layout shell, table, cha
 - Every preference row (Language, Light mode, Push notifications) has its working control on the right. If the device cannot support it, show the control disabled with a one-line reason, never just the label.
 - Daily work lives in `My Day` (Availability, Time off, My Hours). Account-level things (Workplace links, Preferences, Notifications) live in `Profile`.
 
-### 12. Self-check before finishing any UI change
+## Principal software engineering & anti-vibe-coding standards
+
+Never write fragile, happy-path-only prototype code. Every feature must hold up in real multi-branch restaurant operations in the Europe/Berlin time zone.
+
+### 13. Research first, no filler, role-first dashboards
+- **Research before building:** before writing or changing a component, dashboard or layout, read the sibling pages, `src/components/ui.tsx`, the tokens in `src/app/globals.css` and the related files in `src/lib/queries/`. Plan the grid, data density and workflow up front; never build a one-off layout that clashes with existing patterns.
+- **No AI filler:** no chatty or obvious subtitles under headings or inside cards ("Welcome back! Here you can manage your shifts", "Use this tool to track inventory easily"). Labels, live status and numbers carry the screen.
+- **Role-first dashboards:** a card belongs on a role's first screen only if that role acts on it within the first five seconds:
+  * **Employee:** next shift, clock-in state, pending actions. No management clutter.
+  * **Shift leader:** today's team on the floor, prep and HACCP status (temperatures, checklist), open shift gaps.
+  * **Branch manager:** labour versus sales, uncovered roster slots, approvals waiting for a decision.
+  * **Branch / brand owner:** branch financial health, stock and waste anomalies, branches ranked by outliers.
+- **Every card is actionable or analytical:** if a card shows neither a comparative figure nor leads to an action, remove it.
+
+### 14. Thin UI, logic in `src/lib` and the database
+- No labour maths, time-zone arithmetic, Minijob or pay calculations, or database orchestration inside `.tsx` files. Business rules live in pure, tested functions in `src/lib/`; integrity lives in Postgres (constraints, `SECURITY DEFINER` functions in `private`, RLS).
+- **One source of truth:** search `src/lib/` before writing any helper (dates: `src/lib/time/berlinDate.ts`; shift times: `src/lib/time/roster.ts`; pay: `src/lib/pay/`; roles: `src/lib/auth/rank.ts`; formatting: `src/lib/format.ts`). Never add another copy.
+
+### 15. Failure-first engineering (real restaurant conditions)
+Assume the Wi-Fi drops mid-shift, two managers edit the same roster at once, and night shifts cross midnight (`17:30 → 02:00`) and the clock change.
+- **Network:** critical floor actions either queue (attendance already has an offline queue) or fail with a clear message and keep the user's input. No unhandled promise rejections.
+- **Concurrency:** shared branch state (rosters, stock counts, transfers, approvals) is changed with a version / compare-and-swap check or inside one atomic database function. A refused write tells the user to reload; it never silently overwrites.
+- **No silent catches:** no empty `catch {}`. Show a short, translated message to the user; on the server, return the error or let Sentry capture it. A failed read must never look like "no data" or "no problems".
+- **Time:** use real instants (`zonedToUtc`) for durations and rest; never minutes-since-midnight across days.
+
+### 16. Types and bounded queries
+- **No new `any`:** do not add `any`, `@ts-ignore` or `as unknown as`. The codebase still has older `any` casts (about 280): do not copy them; reduce them when you touch a file. Type new code from `src/lib/database.types.ts` where practical.
+- **Validate inputs at the boundary:** every server action and route checks its input before touching Supabase, with the existing typed guards (e.g. `isAvailDays`, `validOperation`, `isParsedNote`). Do not add a validation library without asking.
+- **Bounded reads:** reads on growing tables (`attendance_logs`, `waste_log`, `audit_logs`, notifications, stock history) are scoped by branch and date range and paginated or limited (`readAll` has a hard ceiling). No unbounded `select('*')`.
+
+### 17. Verify before calling a task done
+Run what applies and report honestly what was and was not run:
+1. `npx tsc --noEmit` (or the staging build `node scripts/ops/start-local-staging.mjs --fast`, which type-checks): zero errors.
+2. `npm test` (Vitest) for the files touched, plus a new or updated test for any new logic.
+3. The `scripts/checks/*.cjs` that cover the area (all run in CI). Always: `design-tokens`, `a11y-static`, `server-messages`; for database changes the matching PGlite check.
+4. For UI: look at the screen at 375px and desktop width (staging or a browser preview).
+5. New migrations: say so explicitly; they must be run in production before merging.
+
+### 12. Self-check — run last, covers sections 1–17
 1. Buttons and inputs in one row share the same height (`--control-h`) and baseline; header switches sit top-right.
 2. Same sequence at 375px and 1920px, no horizontal page overflow, no orphaned metric.
 3. Numbers use `tabular-nums`; surfaces use the existing tokens.
@@ -75,3 +113,5 @@ Whenever creating, refactoring, or auditing ANY screen, layout shell, table, cha
 5. Every nested page has a top-left way back to its parent.
 6. Every setting has a working control; copy is short and in both languages.
 7. If a screen was changed, look at it at 375px and desktop width before calling it done (staging or a browser preview), and say plainly if that was not possible.
+8. Did I research existing codebase patterns first, strip out all generic "vibe-coded" filler, and keep every dashboard card role-relevant and actionable?
+9. Is the logic in `src/lib` or the database (not the component), are failures and concurrent edits handled, are reads bounded, and did the verification in section 17 pass?
