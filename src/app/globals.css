@@ -201,7 +201,7 @@ html.light .btn-gold { color: #fff; }
 .btn-secondary { background: var(--dark2); color: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-weight: 600; cursor: pointer; }
 .btn-secondary:hover { border-color: var(--gold-ink); }
 .form-input, .form-select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--dark2); color: var(--white); font-size: 14px; }
-.table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--dark); }
+.table-scroll { position: relative; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--dark); }
 .table-scroll:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 3px; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .data-table th { background: var(--dark2); color: var(--gray); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap; }
