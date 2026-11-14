@@ -78,8 +78,11 @@ graphify-out/cache/
 .audit-db/
 
 # Agent skills (local tooling installed with `npx skills add`; not part of the app)
-.agents/skills/
-.claude/skills/
+.agents/skills/*
+.claude/skills/*
+# …except our own project skill, which is part of the repo
+!.agents/skills/principal-ui-ux/
+!.claude/skills/principal-ui-ux/
 skills-lock.json
 .github/skills/
 .impeccable/
