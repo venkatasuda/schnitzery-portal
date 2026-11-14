@@ -12,6 +12,7 @@ import { Skeleton, StatsSkeleton } from "@/components/Skeleton";
 import BusinessOverview from "@/components/BusinessOverview";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { PageHeader,  Stat } from "@/components/ui";
+import ReportTabs from "@/components/ReportTabs";
 
 const GOLD = "var(--gold-ink)", BLUE = "var(--info)", GREEN = "var(--success)", AMBER = "var(--warn)", RED = "var(--danger)";
 const TEAM_COLORS = ["#c0392b", "#3498db", "#27ae60", "#d4a847", "#9b59b6", "#e67e22"];
@@ -73,6 +74,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="fade-up analytics-workspace">
+      <ReportTabs group="performance" />
       <PageHeader title={ <><Icon e="📊" size={22} /> {t("business.performance")}</> } subtitle={data?.scope ?? ""} actions={<Link className="btn-secondary" href="/sales/imports">{locale==="de"?"Umsatzimporte prüfen":"Review sales imports"}</Link>} />
 
       <div className="hub-tabs" role="group" aria-label={t("business.reportView")}>

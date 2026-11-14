@@ -67,7 +67,7 @@ export default function ScheduleHubClient({ initial = null }: { initial?: any } 
     if (!ov?.weekStart) return "";
     const start = new Date(ov.weekStart);
     const end = new Date(start); end.setDate(end.getDate() + 6);
-    const f = (d: Date) => d.toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
+    const f = (d: Date) => d.toLocaleDateString(appLocale(locale), { timeZone: "Europe/Berlin", day: "2-digit", month: "short" });
     return `${f(start)} – ${f(end)}`;
   })();
 

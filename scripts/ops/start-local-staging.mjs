@@ -28,7 +28,7 @@ if (reviewCurrent && !process.argv.includes("--check")) {
   for (const name of ["package.json", "package-lock.json", "next.config.ts", "postcss.config.mjs", "tsconfig.json", "next-env.d.ts", "sentry.server.config.ts", "sentry.edge.config.ts"])
     if (existsSync(resolve(root, name))) copyFileSync(resolve(root, name), resolve(app, name));
   symlinkSync(resolve(root, "node_modules"), resolve(app, "node_modules"), "junction");
-  writeFileSync(resolve(app, "public/ui-review-marker.json"), JSON.stringify({ kind: "schnitzery-ui-review", fingerprint: uiReviewFingerprint(root) }));
+  writeFileSync(resolve(app, "public/ui-review-marker.json"), JSON.stringify({ kind: "schnitzery-ui-review", fingerprint: uiReviewFingerprint(app) }));
   console.log(`Current-code UI review mirror: ${app}`);
 }
 if (!reviewCurrent && !existsSync(resolve(app, "package.json"))) throw Error("Missing isolated source snapshot.");

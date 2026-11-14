@@ -2,19 +2,20 @@ import { test, expect } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { fileURLToPath } from "node:url";
 import { uiReviewFingerprint } from "../scripts/ops/ui-review-source.mjs";
 import { account, admin, authenticatedPage, BASE_URL, BRANCH, openContexts } from "./local";
 
 // Read-only page review on the guarded local stack. Only the disposable staff A
 // shift-leader designation may be inserted, and only a designation inserted here is removed.
 const output = join(homedir(), "Documents/Codex/schnitzery-signed-in-review-2026-11-14");
-test.beforeAll(async ({ request }) => {
-  const marker = await request.get("/ui-review-marker.json");
+test.beforeAll(async ({ browser }) => {
+  const page = await authenticatedPage(browser, account("manager", "A"));
+  const marker = await page.request.get("/ui-review-marker.json");
   expect(marker.ok(), "This must be the isolated current-code review server").toBe(true);
   const actual = await marker.json();
   expect(actual.kind).toBe("schnitzery-ui-review");
-  expect(actual.fingerprint, "Review source must match this checkout").toBe(uiReviewFingerprint(fileURLToPath(new URL("../", import.meta.url))));
+  expect(actual.fingerprint, "Review source must match this checkout").toBe(uiReviewFingerprint(join(__dirname, "..")));
+  await page.context().close();
 });
 const plans = [
  { name:"staff", role:"staff", branch:"B", paths:["/","/my-day","/my-day?tab=hours","/my-day?tab=timeoff","/schedule","/profile","/directory","/leave-calendar"] },

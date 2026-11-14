@@ -9,6 +9,7 @@ import { getMonthlySummary } from "@/lib/queries/labor";
 import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { PageHeader,  Stat } from "@/components/ui";
+import ReportTabs from "@/components/ReportTabs";
 
 
 // Declared at module scope, NOT inside the page component. A component created
@@ -129,6 +130,7 @@ export default function SummaryClient({ initial }: { initial?: any }) {
 
   return (
     <div className="fade-up">
+      <ReportTabs group="performance" />
       <PageHeader title={ <><Icon e="📊" size={22} /> {t("summary.title")}</> } />
 
       <Link href="/simulator" className="card" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", margin: "12px 0 0" }}>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatEur } from "./format";
+import { appLocale, formatEur } from "./format";
 
 describe("EUR display", () => {
   it("preserves cents and follows the app language", () => {
@@ -15,4 +15,9 @@ describe("EUR display", () => {
     expect(formatEur(12, "en", 4)).toBe("€12.00");
     expect(formatEur(12, "en")).toBe("€12");
   });
+});
+
+it("uses the supplied page language during server rendering", () => {
+  expect(appLocale("de")).toBe("de-DE");
+  expect(appLocale("en")).toBe("en-GB");
 });

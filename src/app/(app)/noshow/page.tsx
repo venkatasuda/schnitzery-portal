@@ -9,6 +9,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getNoShows, getMissingAvailability, getNextWeekStart } from "@/lib/queries/availability";
 import { TEAMS } from "@/lib/queries/schedule-constants";
+import ReportTabs from "@/components/ReportTabs";
 
 export default function NoShowPage() {
   const { t } = useLang();
@@ -58,6 +59,7 @@ export default function NoShowPage() {
 
   return (
     <div className="workspace-page">
+      <ReportTabs group="problems" />
       <PageHeader title={ <><Icon e="⚠️" size={22} /> {t("ns.title")}</> } />
 
       <div className="ui-segmented" role="group">
