@@ -17,6 +17,7 @@ import { listMyDocuments, getDocumentsDashboard } from "@/lib/queries/documents"
 import { getBranchOnboarding } from "@/lib/queries/onboarding";
 import { getViewMode } from "@/lib/viewMode";
 import Link from "next/link";
+import TeamTodayCard from "@/components/floor/TeamTodayCard";
 import StatusStrip from "@/components/StatusStrip";
 import Icon from "@/components/Icon";
 import { getT, getLocale } from "@/lib/i18n/server";
@@ -138,7 +139,7 @@ export default async function HomePage() {
           <div className={`avatar${isManager ? " mgr" : ""}`}>{(profile?.full_name || "?")[0].toUpperCase()}</div>
         )}
         <div>
-          <div className="profile-name">{greeting}, {firstName}<span className="mgr-badge">{t("roles." + role)}</span></div>
+          <h1 className="profile-name" style={{ margin: 0 }}>{greeting}, {firstName}<span className="mgr-badge">{t("roles." + role)}</span></h1>
           <div className="profile-sub">{profile?.team || t("roles." + role)}</div>
         </div>
       </div>
@@ -189,6 +190,8 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
 
   return (
     <>
+      {/* Shift leaders: who is in today, first thing at the start of service. */}
+      {shiftLeader && <TeamTodayCard />}
       <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "4px 0 14px", padding: 16 }}>
         {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>

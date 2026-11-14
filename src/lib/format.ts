@@ -14,10 +14,10 @@ export function formatPct(n: number | null | undefined, locale: string): string 
   return locale === "de" ? `${n.toLocaleString("de-DE", { maximumFractionDigits: 1 })} %` : `${n.toLocaleString("en-GB", { maximumFractionDigits: 1 })}%`;
 }
 
-// Locale tag for dates/times in client components, from the app's language cookie,
-// so a German-language browser using the English UI still gets English dates and vice versa. Client pages render dates after data loads,
-// so the server-render fallback is never shown.
-export function appLocale(): string {
+// Pass the page language when rendering server-provided data so SSR and hydration agree.
+// Cookie fallback remains for client-only callers.
+export function appLocale(locale?: string): string {
+  if (locale) return locale === "de" ? "de-DE" : "en-GB";
   // Read the language cookie, not <html lang>: Chrome's page translation rewrites <html lang>.
   // No cookie = app default (English), matching getLocale() on the server.
   if (typeof document === "undefined") return "en-GB";

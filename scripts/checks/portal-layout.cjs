@@ -63,6 +63,12 @@ function fixture(role, de) {
      const r=button.getBoundingClientRect();return {className,width:r.width,height:r.height,coarse:matchMedia('(pointer: coarse)').matches};
     });
    });
+   const upload = await touch.evaluate(()=>{
+    const field=document.createElement('label');field.className='ui-field';field.style.width='280px';
+    const input=document.createElement('input');input.type='file';field.append(input);document.querySelector('main').append(field);
+    return {field:field.getBoundingClientRect().width,input:input.getBoundingClientRect().width};
+   });
+   assert(upload.input<=upload.field,'File upload must fit its field on mobile');
    for(const target of targets){assert(target.coarse,'Touch test needs a coarse pointer');assert(target.height>=44&&target.width>=44,`${target.className}: small touch target`);}
   } finally {await touchContext.close();}
   console.log(`Portal shared layout: ${checked} role/viewport/theme/language combinations pass (presentation fixtures, not authenticated workflow tests).`);

@@ -2,26 +2,27 @@ import { test, expect } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { fileURLToPath } from "node:url";
 import { uiReviewFingerprint } from "../scripts/ops/ui-review-source.mjs";
 import { account, admin, authenticatedPage, BASE_URL, BRANCH, openContexts } from "./local";
 
 // Read-only page review on the guarded local stack. Only the disposable staff A
 // shift-leader designation may be inserted, and only a designation inserted here is removed.
-const output = join(homedir(), "Documents/Codex/schnitzery-signed-in-review-2026-11-14");
-test.beforeAll(async ({ request }) => {
-  const marker = await request.get("/ui-review-marker.json");
+const output = join(homedir(), "Documents/Codex/schnitzery-signed-in-review-2026-11-14-verified");
+test.beforeAll(async ({ browser }) => {
+  const page = await authenticatedPage(browser, account("manager", "A"));
+  const marker = await page.request.get("/ui-review-marker.json");
   expect(marker.ok(), "This must be the isolated current-code review server").toBe(true);
   const actual = await marker.json();
   expect(actual.kind).toBe("schnitzery-ui-review");
-  expect(actual.fingerprint, "Review source must match this checkout").toBe(uiReviewFingerprint(fileURLToPath(new URL("../", import.meta.url))));
+  expect(actual.fingerprint, "Review source must match this checkout").toBe(uiReviewFingerprint(join(__dirname, "..")));
+  await page.context().close();
 });
 const plans = [
  { name:"staff", role:"staff", branch:"B", paths:["/","/my-day","/my-day?tab=hours","/my-day?tab=timeoff","/schedule","/profile","/directory","/leave-calendar"] },
- { name:"manager", role:"manager", branch:"A", paths:["/","/inventory","/inventory/counts","/inventory/purchasing","/inventory/production","/inventory/preparation","/inventory/recipes","/inventory/prices","/inventory/consumption","/inventory/insights","/inventory/valuation","/inventory/batch-report","/expiry","/roster","/staff","/attendance-hub","/approvals","/analytics","/labor","/settings","/profile","/ops","/temp","/day-close","/inventory?view=catalog","/inventory?view=deliveries","/inventory?view=forecast","/inventory?view=history","/inventory?view=analytics","/inventory?view=reconcile","/inventory/connections","/schedule-hub","/schedule/compare","/schedule/shift-times","/people-hub","/waste","/transfers","/stock-alerts","/labels","/prep","/checklist","/checklist/templates","/checklist-status","/compliance","/compliance/logbook","/conflicts","/announcements","/audit","/incidents","/export","/summary","/timesheet","/notes","/noshow","/clock-display","/settings-hub","/settings/integrations","/geofence","/kiosks","/notifications","/search","/attendance","/attendance/corrections","/targets","/expiring-docs","/sales/imports","/schedule","/leave","/leave-calendar","/availability","/cover","/hours","/action","/dashboard","/inventory/order","/inventory?view=count"] },
+ { name:"manager", role:"manager", branch:"A", paths:["/","/inventory","/inventory/counts","/inventory/purchasing","/inventory/production","/inventory/preparation","/inventory/recipes","/inventory/prices","/inventory/consumption","/inventory/insights","/inventory/valuation","/inventory/batch-report","/expiry","/roster","/staff","/attendance-hub","/approvals","/analytics","/labor","/settings","/profile","/ops","/temp","/day-close","/inventory?view=catalog","/inventory?view=deliveries","/inventory?view=forecast","/inventory?view=history","/inventory?view=analytics","/inventory?view=reconcile","/inventory/connections","/schedule-hub","/schedule/compare","/schedule/shift-times","/people-hub","/waste","/transfers","/stock-alerts","/labels","/prep","/checklist","/checklist/templates","/checklist-status","/compliance","/compliance/logbook","/conflicts","/announcements","/audit","/incidents","/export","/summary","/timesheet","/notes","/noshow","/clock-display","/settings-hub","/settings/integrations","/team-today","/geofence","/kiosks","/notifications","/search","/attendance","/attendance/corrections","/targets","/expiring-docs","/sales/imports","/schedule","/leave","/leave-calendar","/availability","/cover","/hours","/action","/dashboard","/inventory/order","/inventory?view=count"] },
  { name:"branch_owner", role:"branch_owner", branch:"A", paths:["/","/inventory","/roster","/staff","/analytics"] },
  { name:"brand_owner", role:"brand_owner", branch:"A", paths:["/","/overview","/branches","/analytics","/my-branches","/waste-branches","/simulator"] },
- { name:"shift_leader", role:"staff", branch:"A", paths:["/shift","/inventory/counts","/shift/delivery","/expiry","/prep/plan","/day-close"] },
+ { name:"shift_leader", role:"staff", branch:"A", paths:["/shift","/team-today","/inventory/counts","/shift/delivery","/expiry","/prep/plan","/day-close"] },
 ] as const;
 
 test("signed-in My Day retains unsaved availability through tab history",async({browser})=>{

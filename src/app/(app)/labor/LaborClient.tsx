@@ -15,6 +15,7 @@ import TipPool from "@/components/TipPool";
 import { toast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
 import { wageIssue, minimumWageOn } from "@/lib/pay/legal";
+import ReportTabs from "@/components/ReportTabs";
 
 const today = () => berlinToday();
 
@@ -115,6 +116,7 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
 
   return (
     <div className="fade-up">
+      <ReportTabs group="labour" />
       <PageHeader title={ <><Icon e="💶" size={22} /> {t("lab.title")}</> } />
       <Link className="btn-secondary" href="/sales/imports">{locale==="de"?"Umsatzimporte prüfen":"Review sales imports"}</Link>
 
@@ -161,7 +163,7 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
         <div className="card p-2 mb-2">
           {sales.map((s, i) => (
             <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 6px", borderBottom: i < sales.length - 1 ? "1px solid rgba(128,128,128,0.1)" : "none", fontSize: 13 }}>
-              <span className="u-muted">{new Date(s.sale_date).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" })}</span>
+              <span className="u-muted">{new Date(s.sale_date).toLocaleDateString(appLocale(locale), { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "short" })}</span>
               <span className="ui-strong-inline">{eur(Number(s.amount))}</span>
             </div>
           ))}
@@ -201,7 +203,7 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
                 <div style={{ fontSize: 14, color: "var(--white)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.full_name}</div>
                 <div className="ui-muted">{p.team || "—"}</div>
                 {!p.history?.some((h: any) => h.effective_from) && <div className="tone-warn t-xs">{t("lab.unconfirmedDate")}</div>}
-                {(() => { const w = wageIssue(p.hourly_wage, p.contract_type, today()); return w && <div className={w.kind === "below_now" ? "tone-danger t-xs" : "tone-warn t-xs"}>{w.kind === "below_now" ? t("lab.belowMin", { min: eur(w.min) }) : t("lab.belowSoon", { min: eur(w.min), date: new Date(`${w.from}T12:00:00Z`).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin" }) })}</div>; })()}
+                {(() => { const w = wageIssue(p.hourly_wage, p.contract_type, today()); return w && <div className={w.kind === "below_now" ? "tone-danger t-xs" : "tone-warn t-xs"}>{w.kind === "below_now" ? t("lab.belowMin", { min: eur(w.min) }) : t("lab.belowSoon", { min: eur(w.min), date: new Date(`${w.from}T12:00:00Z`).toLocaleDateString(appLocale(locale), { timeZone: "Europe/Berlin" }) })}</div>; })()}
               </div>
               <input
                 type="number" inputMode="decimal" min="0" step="0.01" disabled={!!savingWage}
@@ -215,7 +217,7 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
               <button onClick={() => saveWage(p.id)} disabled={!wageDates[p.id] || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: !wageDates[p.id] ? "var(--dark3)" : "var(--action)", color: !wageDates[p.id] ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: !wageDates[p.id] ? "default" : "pointer" }}>
                 {savingWage === p.id ? t("common.saving") : t("lab.set")}
               </button>
-              {!!p.history?.length && <details style={{ flexBasis: "100%", fontSize: 14 }}><summary>{t("lab.history")}</summary><ul>{p.history.map((h: any) => <li key={h.id}>{h.effective_from || t("lab.unconfirmedDate")} · {h.hourly_wage == null ? "—" : eur(Number(h.hourly_wage))} · {t("lab.recorded")} {new Date(h.recorded_at).toLocaleDateString(appLocale(), { timeZone: "Europe/Berlin" })}</li>)}</ul></details>}
+              {!!p.history?.length && <details style={{ flexBasis: "100%", fontSize: 14 }}><summary>{t("lab.history")}</summary><ul>{p.history.map((h: any) => <li key={h.id}>{h.effective_from || t("lab.unconfirmedDate")} · {h.hourly_wage == null ? "—" : eur(Number(h.hourly_wage))} · {t("lab.recorded")} {new Date(h.recorded_at).toLocaleDateString(appLocale(locale), { timeZone: "Europe/Berlin" })}</li>)}</ul></details>}
             </div>
           ))}
           {sum && sum.withWage < sum.staffCount && (

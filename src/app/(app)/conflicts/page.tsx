@@ -9,6 +9,7 @@ import Icon from "@/components/Icon";
 import Link from "next/link";
 import { getShiftConflicts } from "@/lib/queries/shift-conflicts";
 import { CardSkeleton } from "@/components/Skeleton";
+import ReportTabs from "@/components/ReportTabs";
 
 export default function ConflictsPage() {
   const { t, locale } = useLang();
@@ -28,6 +29,7 @@ export default function ConflictsPage() {
 
   return (
     <div className="fade-up">
+      <ReportTabs group="problems" />
       <PageHeader title={ <><Icon e="⚠️" size={22} /> {t("conf.title")}</> } />
 
       {loading ? (
