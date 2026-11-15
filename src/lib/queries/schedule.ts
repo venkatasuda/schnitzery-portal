@@ -1,12 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { DAYS, SHIFT_MODEL, TEAMS } from "@/lib/queries/schedule-constants";
 import { berlinMonday, berlinMonth, isCalendarDate, mondayOfDate } from "@/lib/time/berlinDate";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { rosterEntryTimes } from "@/lib/time/roster";
 import { shiftMinutes } from "@/lib/pay/calculations";
-import { activeBranchFor } from "@/lib/activeBranch";
 import { sendPushToUser } from "@/lib/push/delivery";
 import { checkRoster, isBlocking, type RosterIssue } from "@/lib/roster/check";
 import { workTeams } from "@/lib/roster/teams";
@@ -30,17 +29,6 @@ export async function shiftTime(team: string, shift: string): Promise<string> {
 // Uses the Berlin business week (see berlinMonday) so it never lands on the
 // wrong week near midnight.
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, profile: null };
-  const { data: profile } = await supabase
-    .from("users")
-    .select("id, full_name, role, branch_id")
-    .eq("id", user.id)
-    .single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
-}
 
 // Helper for the UI: get this week's Monday (and optionally offset by N weeks).
 export async function getWeekStart(offsetWeeks = 0): Promise<string> {
@@ -104,7 +92,7 @@ export async function getRoster(weekStart?: string) {
   // staff list for assignment dropdowns (same branch)
   const { data: staff, error: staffError } = await supabase
     .from("users")
-    .select("id, full_name, role, team, contract_hours, skills")
+    .select("id, full_name, role, team, contract_hours, contract_end, skills")
     .eq("branch_id", branchId)
     .eq("status", "active").neq("role", "kiosk")
     .order("full_name");
@@ -129,6 +117,7 @@ export async function getRoster(weekStart?: string) {
     team: s.team ?? null,
     teams: workTeams(s.team, s.skills),
     contractHours: s.contract_hours ?? null,
+    contractEnd: (s.contract_end ?? null) as string | null,
     tier: tiers[s.id] ?? null,
     workedH: Math.round(((workedMins[s.id] || 0) / 60) * 10) / 10,
   }));
@@ -210,12 +199,13 @@ async function rosterIssues(supabase: any, branchId: string, weekStart: string):
   if (draft.error || prev.error || !times.ok || !plan.ok) return null;
   const roster = (draft.data?.roster_data ?? {}) as Record<string, any[]>;
   const ids = [...new Set(Object.values(roster).flat().map((e: any) => e?.user_id).filter(Boolean))] as string[];
-  const people = ids.length ? await supabase.from("users").select("id, contract_hours").in("id", ids) : { data: [], error: null };
+  const people = ids.length ? await supabase.from("users").select("id, contract_hours, contract_end").in("id", ids) : { data: [], error: null };
   if (people.error) return null;
   return { draft: draft.data?.roster_data ?? null, issues: checkRoster({
     weekStart, roster, prevSunday: (prev.data?.roster_data as any)?.Sunday ?? [],
     times: new Map(times.items.map((x: any) => [`${x.team}|${x.shift}`, x])),
     contractHours: Object.fromEntries((people.data || []).map((p: any) => [p.id, p.contract_hours ?? null])),
+    contractEnd: Object.fromEntries((people.data || []).map((p: any) => [p.id, p.contract_end ?? null])),
     minijobbers: plan.minijobbers,
   }) };
 }

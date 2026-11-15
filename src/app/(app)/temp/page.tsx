@@ -1,5 +1,6 @@
 "use client";
 
+import { askConfirm } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/ui";
 
 import { appLocale } from "@/lib/format";
@@ -71,7 +72,7 @@ export default function TempPage() {
     else toast(r.error || t("temp.failed"), "error");
   }
   async function doRemoveUnit(u: any) {
-    if (!confirm(t("temp.confirmRemove", { name: u.name }))) return;
+    if (!(await askConfirm({ message: t("temp.confirmRemove", { name: u.name }) }))) return;
     setBusy(u.id);
     const r = await removeTempUnit(u.id); setBusy(null);
     if (r.ok) { toast(t("temp.unitRemoved"), "success"); loadCore(); } else toast(r.error || t("temp.failed"), "error");

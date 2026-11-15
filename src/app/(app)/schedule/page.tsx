@@ -11,13 +11,12 @@ import { getTeamShiftsRange, type TeamShift } from "@/lib/queries/schedule";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { TEAMS } from "@/lib/queries/schedule-constants";
-import { berlinToday, mondayOfDate } from "@/lib/time/berlinDate";
+import { berlinToday, mondayOfDate, addDays } from "@/lib/time/berlinDate";
 
 const KEY = "sch_shift_view";
 const TYPES = ["prep", "morning", "mid", "evening", "other"] as const;
 type Kind = (typeof TYPES)[number];
 const kindOf = (s: TeamShift): Kind => s.team === "Preparation" ? "prep" : s.shift === "Morning" ? "morning" : s.shift === "Mid" ? "mid" : s.shift === "Night" || s.shift === "Evening" ? "evening" : "other";
-const addDays = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 const monthStart = (d: string) => `${d.slice(0, 7)}-01`;
 const addMonths = (d: string, n: number) => { const x = new Date(`${monthStart(d)}T12:00:00Z`); x.setUTCMonth(x.getUTCMonth() + n); return x.toISOString().slice(0, 10); };
 

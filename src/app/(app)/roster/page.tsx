@@ -2,10 +2,11 @@
 import ActionsMenu from "@/components/ActionsMenu";
 
 import { appLocale } from "@/lib/format";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getRoster, saveRoster, getWeekStart, publishRoster, discardRosterDraft } from "@/lib/queries/schedule";
 import { SHIFT_MODEL, TEAMS } from "@/lib/queries/schedule-constants";
 import { toast } from "@/components/Toast";
+import { saveDraft, readDraft, clearDraft } from "@/lib/localDraft";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -15,7 +16,8 @@ import { getRosterPlanning } from "@/lib/queries/owner-insights";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { draftRoster } from "@/lib/roster/draft";
 import { smartSchedule, swapOptions, type SwapOption } from "@/lib/roster/smart";
-import type { RosterIssue } from "@/lib/roster/check";
+import { checkRoster, isBlocking, type RosterIssue } from "@/lib/roster/check";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { createClient } from "@/lib/supabase/client";
 import { getStaffingTargets } from "@/lib/queries/staffing";
 
@@ -77,6 +79,15 @@ export default function RosterPage() {
       setStatus({ hasDraft: !!(res as any).hasDraft, draftStale: !!(res as any).draftStale, publishedAt: (res as any).publishedAt ?? null, hasPublished: (res as any).published != null });
       setStaff(res.staff || []); setAvail((res as any).avail || {}); setSwapAt(null); setSwapCtx(null);
       setBranchId((res as any).branchId ?? ""); setPrevSunday((res as any).prevSunday || []); setRemoteChange(false);
+      // Autosave: unsaved edits from this device are offered back, but only if the roster on the server is still
+      // the one they were made on (otherwise they would silently undo someone else's change).
+      const key = `roster-draft:${(res as any).branchId ?? ""}:${res.weekStart || ""}`, backup = readDraft<{ base: Roster; roster: Roster }>(key);
+      if (backup && JSON.stringify(backup.roster) !== JSON.stringify(res.roster || {})) {
+        if (JSON.stringify(backup.base) !== JSON.stringify(res.roster || {})) { clearDraft(key); toast(t("roster.backupOutdated"), "info"); }
+        else if (await askConfirm({ title: t("roster.backupTitle"), message: t("roster.backupRestore"), confirmLabel: t("roster.backupYes") })) {
+          if (serial === loadSerial.current) setRoster(backup.roster);
+        } else clearDraft(key);
+      }
     } catch { if(serial===loadSerial.current)setLoadError(t("roster.loadFailed")); }
     finally { if(serial===loadSerial.current)setLoading(false); }
   }
@@ -84,9 +95,10 @@ export default function RosterPage() {
   // ?offset=N opens N weeks from now (used by "Edit in roster" on the Shifts page).
   useEffect(() => { const o = Math.max(-52, Math.min(52, Number(new URLSearchParams(window.location.search).get("offset")) || 0)); setWeekOffset(o); load(o); return()=>{loadSerial.current++;}; }, []);
 
-  function changeWeek(delta: number) {
+  async function changeWeek(delta: number) {
     if(saving || loading)return;
-    if(dirty && !confirm(t("roster.discardChanges")))return;
+    if(dirty && !(await askConfirm({ message: t("roster.discardChanges"), confirmLabel: t("roster.discardEdits"), danger: true })))return;
+    if(dirty) clearDraft(`roster-draft:${branchId}:${weekStart}`);
     const next = weekOffset + delta;
     setWeekOffset(next);
     load(next);
@@ -126,7 +138,7 @@ export default function RosterPage() {
   // nothing is saved until the manager presses Save.
   async function autoDraft() {
     if (drafting || saving || loading || loadError || !weekStart) return;
-    if (totalAssigned > 0 && !confirm(t("roster.draftReplace"))) return;
+    if (totalAssigned > 0 && !(await askConfirm({ message: t("roster.draftReplace"), confirmLabel: t("roster.draft") }))) return;
     setDrafting(true);
     try {
       const prev = new Date(`${weekStart}T12:00:00Z`); prev.setUTCDate(prev.getUTCDate() - 7);
@@ -135,7 +147,7 @@ export default function RosterPage() {
       if (!Object.values(template).some((d) => (d as Entry[]).length)) { toast(t("roster.draftNoTemplate"), "error"); return; }
       const d = draftRoster({
         weekStart, template, avail,
-        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null })),
+        staff: onContract.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null })),
         times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
         minijobbers: plan.ok ? plan.minijobbers : [],
       });
@@ -149,14 +161,14 @@ export default function RosterPage() {
   // Minijob caps, Tier 1 weekend bonus, furthest-behind-hours first. Screen only; Save draft / Publish as usual.
   async function smartAutomate() {
     if (drafting || saving || loading || loadError || !weekStart) return;
-    if (totalAssigned > 0 && !confirm(t("roster.smartReplace"))) return;
+    if (totalAssigned > 0 && !(await askConfirm({ message: t("roster.smartReplace"), confirmLabel: t("roster.smart") }))) return;
     setDrafting(true);
     try {
       const [tg, st, plan] = await Promise.all([getStaffingTargets(), getShiftTimes(), getRosterPlanning(weekStart)]);
       if (!tg.ok || !tg.targets.some((x) => x.needed > 0)) { toast(t("roster.smartNoTargets"), "error"); return; }
       const res = smartSchedule({
         weekStart, targets: tg.targets, avail, prevSunday,
-        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
+        staff: onContract.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
         times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
         minijobbers: plan.ok ? plan.minijobbers : [],
       });
@@ -179,9 +191,28 @@ export default function RosterPage() {
       setSwapCtx({ times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])), minijobbers: plan.ok ? plan.minijobbers : [] });
     }
   }
+  // Live rule check (AI Studio review): the same checkRoster the server runs at publish, run on the draft as you edit,
+  // so a blocked shift says why before Publish ("11 h rest", "overlap", "contract hours", "Minijob cap").
+  useEffect(() => {
+    if (!weekStart || swapCtx) return;
+    let live = true;
+    Promise.all([getShiftTimes(), getRosterPlanning(weekStart)]).then(([st, plan]) => {
+      if (live && st.ok && plan.ok) setSwapCtx({ times: new Map(st.items.map((x) => [`${x.team}|${x.shift}`, x])), minijobbers: plan.minijobbers });
+    }, () => { /* no live check without shift times; publish still runs the server check */ });
+    return () => { live = false; };
+  }, [weekStart, swapCtx]);
+  // Auto-fill and swaps skip anyone whose fixed-term contract ended before this week.
+  // ponytail: whole-week filter; a contract ending mid-week is still caught by the "contract" check at publish.
+  const onContract = useMemo(() => staff.filter((p) => !p.contractEnd || p.contractEnd >= weekStart), [staff, weekStart]);
+  const liveIssues = useMemo(() => !swapCtx ? [] : checkRoster({
+    weekStart, roster: roster as Record<string, any[]>, prevSunday, times: swapCtx.times,
+    contractHours: Object.fromEntries(staff.map((p) => [p.id, p.contractHours ?? null])), minijobbers: swapCtx.minijobbers,
+    contractEnd: Object.fromEntries(staff.map((p) => [p.id, p.contractEnd ?? null])),
+  }), [swapCtx, weekStart, roster, prevSunday, staff]);
+  const issuesFor = (day: string, userId?: string) => liveIssues.filter((x) => x.user_id === userId && (x.day === day || x.day == null));
   const swapList = (day: string, i: number): SwapOption[] => !swapCtx ? [] : swapOptions({
     weekStart, roster: roster as any, day, index: i, avail, times: swapCtx.times, minijobbers: swapCtx.minijobbers,
-    staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
+    staff: onContract.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
   });
   function assignTo(day: string, i: number, o: SwapOption) {
     setRoster((rs) => { const arr = [...(rs[day] || [])]; arr[i] = { ...arr[i], user_id: o.id, name: o.name }; return { ...rs, [day]: arr }; });
@@ -229,11 +260,11 @@ export default function RosterPage() {
   }
 
   const [issues, setIssues] = useState<RosterIssue[]>([]);
-  const issueText = (i: RosterIssue) => t(i.kind === "rest" ? "roster.issRest" : i.kind === "overlap" ? "roster.issOverlap" : i.kind === "hours" ? "roster.issHours" : "roster.issMinijob", { name: i.name, day: i.day ? dayLabel(i.day) : "", h: i.value });
+  const issueText = (i: RosterIssue) => t(i.kind === "rest" ? "roster.issRest" : i.kind === "overlap" ? "roster.issOverlap" : i.kind === "hours" ? "roster.issHours" : i.kind === "contract" ? "roster.issContract" : "roster.issMinijob", { name: i.name, day: i.day ? dayLabel(i.day) : "", h: i.value });
   // Publish: saves pending edits first, then makes the draft live and notifies the staff on it.
   async function doPublish() {
     if (publishing || saving || loading || loadError || !weekStart) return;
-    if (!confirm(t("roster.publishConfirm"))) return;
+    if (!(await askConfirm({ message: t("roster.publishConfirm"), confirmLabel: t("roster.publish") }))) return;
     setPublishing(true);
     try {
       if (dirty || !status.hasDraft) {
@@ -242,7 +273,7 @@ export default function RosterPage() {
       }
       let res = await publishRoster(weekStart);
       // Contract-hours / Minijob warnings: the manager may publish anyway. Rest and overlaps always block.
-      if (!res.ok && res.code === "warnRules" && confirm(`${(res.issues || []).map(issueText).join("\n")}\n\n${t("roster.warnRules")}`)) res = await publishRoster(weekStart, true);
+      if (!res.ok && res.code === "warnRules" && await askConfirm({ title: t("roster.warnRules"), message: (res.issues || []).map(issueText).join("\n"), confirmLabel: t("roster.publish") })) res = await publishRoster(weekStart, true);
       if (res.ok) toast(t("roster.published", { n: res.notified }), "success");
       else if (res.code !== "warnRules") toast(res.code ? t(`roster.${res.code}`) : (res.error || t("roster.saveFailed")), "error");
       await load(weekOffset); // the draft was saved above: pick up its new state either way
@@ -251,7 +282,7 @@ export default function RosterPage() {
     finally { setPublishing(false); }
   }
   async function doDiscard() {
-    if (!status.hasDraft || !confirm(t("roster.discardDraftConfirm"))) return;
+    if (!status.hasDraft || !(await askConfirm({ message: t("roster.discardDraftConfirm"), confirmLabel: t("roster.discardDraft"), danger: true }))) return;
     const res = await discardRosterDraft(weekStart, expected);
     if (res.ok) toast(t("roster.draftDiscarded"), "success"); else toast(res.code ? t(`roster.${res.code}`) : (res.error || t("roster.saveFailed")), "error");
     await load(weekOffset); // also after a refusal: show the newer draft someone else saved
@@ -267,6 +298,10 @@ export default function RosterPage() {
 
   const totalAssigned = DAYS.reduce((sum, d) => sum + (roster[d]?.length || 0), 0);
   const dirty = JSON.stringify(roster) !== JSON.stringify(savedRoster);
+  useEffect(() => { // autosave unsaved edits on this device until saved or discarded
+    if (!branchId || !weekStart || loading) return;
+    saveDraft(`roster-draft:${branchId}:${weekStart}`, dirty ? { base: savedRoster, roster } : null);
+  }, [branchId, weekStart, loading, dirty, roster, savedRoster]);
 
   // Live sync: when this week's draft or published roster changes in the database (another manager, an approved
   // cover), reload if nothing is unsaved here; otherwise show a notice and let the manager decide.
@@ -306,7 +341,8 @@ export default function RosterPage() {
     <div className="fade-up">
       <PageHeader title={ <><Icon e="📋" size={22} /> {t("roster.title")}</> } subtitle={ <>{weekLabel || "…"} <span className={`roster-status${status.hasDraft || dirty ? " is-draft" : status.hasPublished ? " is-live" : ""}`}>{statusText}</span></> } />
       {status.draftStale && <p role="alert" className="roster-stale">{t("roster.errStale")}</p>}
-      {remoteChange && <p role="alert" className="roster-stale">{t("roster.remoteChange")} <button className="btn-secondary ui-btn-sm" onClick={() => { if (confirm(t("roster.discardChanges"))) void load(weekOffset); }}>{t("roster.reload")}</button></p>}
+      {remoteChange && <p role="alert" className="roster-stale">{t("roster.remoteChange")} <button className="btn-secondary ui-btn-sm" onClick={async () => { if (await askConfirm({ message: t("roster.discardChanges"), confirmLabel: t("roster.reload"), danger: true })) void load(weekOffset); }}>{t("roster.reload")}</button></p>}
+      {liveIssues.length > 0 && issues.length === 0 && <div className="card roster-check" role="status"><strong>{t("roster.liveCheck")} ({liveIssues.length})</strong><ul>{liveIssues.map((i, k) => <li key={k} className={isBlocking(i) ? "is-blocking" : undefined}>{issueText(i)}</li>)}</ul></div>}
       {issues.length > 0 && <div role="alert" className="card roster-stale"><strong>{t("roster.errRules")}</strong><ul>{issues.map((i, k) => <li key={k}>{issueText(i)}</li>)}</ul></div>}
       {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
@@ -446,7 +482,7 @@ export default function RosterPage() {
 
                 {/* entries */}
                 {entries.map((e, i) => (<div key={i}>
-                  <div className={`roster-entry${dragFrom?.day === day && dragFrom.i !== i ? " is-drop" : ""}`} draggable={!saving}
+                  <div className={`roster-entry${dragFrom?.day === day && dragFrom.i !== i ? " is-drop" : ""}${issuesFor(day, e.user_id).some(isBlocking) ? " is-blocked" : issuesFor(day, e.user_id).length ? " is-warned" : ""}`} draggable={!saving} title={issuesFor(day, e.user_id).map(issueText).join("\n") || undefined}
                     onDragStart={() => setDragFrom({ day, i })} onDragEnd={() => setDragFrom(null)}
                     onDragOver={(ev) => { if (dragFrom?.day === day) ev.preventDefault(); }}
                     onDrop={(ev) => { ev.preventDefault(); if (dragFrom?.day === day) swapEntries(day, dragFrom.i, i); setDragFrom(null); }}>

@@ -26,6 +26,11 @@ describe("smart scheduler", () => {
     expect(r.roster.Sunday).toEqual([]);                               // Sun 10:30 is only 8.5 h later
     expect(r.open).toEqual([{ day: "Sunday", team: "Kitchen", shift: "Morning", missing: 1 }]);
   });
+  it("counts real hours across the clock change (Sat 24 → Sun 25 Oct 2026 is one hour longer)", () => {
+    const targets = [{ weekday: 5, team: "Kitchen", shift: "20:00–04:00", needed: 1 }];
+    expect(smartSchedule({ ...base, weekStart: "2026-10-19", staff: [p("late")], targets }).hours).toEqual({ late: 9 });
+    expect(smartSchedule({ ...base, staff: [p("late")], targets }).hours).toEqual({ late: 8 }); // an ordinary weekend
+  });
   it("keeps 11 h rest after last week's Sunday evening", () => {
     const targets = [{ weekday: 0, team: "Kitchen", shift: "Morning", needed: 1 }];
     const sunday = [{ user_id: "late", name: "late", team: "Kitchen", shift: "18:00–02:00" }]; // ends Monday 02:00

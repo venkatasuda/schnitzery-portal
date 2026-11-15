@@ -14,7 +14,7 @@
 //   +10  submitted availability (we know they can), +2 per better tier, tie → fewer hours this week, name
 // Mid with "time pending" counts as 12:00–18:00 (6 h) for rest and hours until a real time is set.
 // ponytail: greedy, slot by slot in time order — no global optimum; the manager reviews every draft.
-import { rosterEntryTimes, type ShiftTime } from "@/lib/time/roster";
+import { rosterEntryTimes, zonedToUtc, type ShiftTime } from "@/lib/time/roster";
 import { minijobOverCap, type Minijobber } from "@/lib/pay/legal";
 
 export const WEEK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -36,8 +36,13 @@ export type SmartInput = {
 
 const REST_MIN = 11 * 60;
 const MID_DEFAULT = { start: "12:00", end: "18:00" };
-const hm = (s: string) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
 const dateOf = (weekStart: string, i: number) => { const x = new Date(`${weekStart}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + i); return x.toISOString().slice(0, 10); };
+// Real start/end instants (minutes since epoch) of a shift on day i, so rest and hours stay right across the clock change.
+const spanAt = (weekStart: string, i: number, tm: { start: string; end: string }) => {
+  const at = (d: number, t: string) => zonedToUtc(dateOf(weekStart, d), t).getTime() / 60000;
+  const s = at(i, tm.start), e = at(i, tm.end);
+  return [s, e > s ? e : at(i + 1, tm.end)] as const; // ends after midnight
+};
 // Availability is collected as Preparation / Morning / Mid / Evening; the roster's evening key is "Night" (or "Evening").
 const availKey = (shift: string) => (shift === "Night" ? "Evening" : shift);
 // Does a person's submitted availability cover this slot? Preparation and Dishwashing are their own options on
@@ -70,12 +75,11 @@ export type SwapOption = { id: string; name: string; status: "ok" | "warn" | "no
 export function swapOptions(inp: Omit<SmartInput, "targets"> & { roster: Record<string, SmartEntry[]>; day: string; index: number }): SwapOption[] {
   const di = WEEK_DAYS.indexOf(inp.day), slot = inp.roster[inp.day]?.[inp.index];
   if (di < 0 || !slot) return [];
-  // Interval (minutes from week start) of an entry; null when its times are unknown.
+  // Interval (real minutes) of an entry; null when its times are unknown.
   const span = (e: SmartEntry, d: number) => {
     const tm = slotTimes(e.team, e.shift, inp.times, dateOf(inp.weekStart, d));
     if (!tm) return null;
-    const s = d * 1440 + hm(tm.start); let en = d * 1440 + hm(tm.end); if (en <= s) en += 1440;
-    return [s, en] as const;
+    return spanAt(inp.weekStart, d, tm);
   };
   const target = span(slot, di);
   const weekend = di === 4 || di === 5, lateShift = slot.shift === "Mid" || slot.shift === "Night" || slot.shift === "Evening";
@@ -113,12 +117,12 @@ export function smartSchedule(inp: SmartInput) {
   const open: { day: string; team: string; shift: string; missing: number }[] = [];
   const mj = new Map(inp.minijobbers.map((m) => [m.id, m]));
   const plannedMins: Record<string, number> = {};
-  const endAt: Record<string, number> = {};   // end of latest planned shift, minutes from week start
+  const endAt: Record<string, number> = {};   // end of latest planned shift (real minutes)
   const planned: { date: string; user_id: string; mins: number }[] = [];
   for (const pe of inp.prevSunday || []) {
     const tm = slotTimes(pe.team, pe.shift, inp.times, dateOf(inp.weekStart, -1));
     if (!tm || !pe.user_id) continue;
-    let e = -1440 + hm(tm.end); if (e <= -1440 + hm(tm.start)) e += 1440;
+    const e = spanAt(inp.weekStart, -1, tm)[1];
     endAt[pe.user_id] = Math.max(endAt[pe.user_id] ?? -Infinity, e);
   }
 
@@ -130,8 +134,7 @@ export function smartSchedule(inp: SmartInput) {
     for (const slot of slots) {
       const tm = slotTimes(slot.team, slot.shift, inp.times, date);
       if (!tm) { open.push({ day, team: slot.team, shift: slot.shift, missing: slot.needed }); continue; } // custom shift without times
-      const s = di * 1440 + hm(tm.start);
-      let e = di * 1440 + hm(tm.end); if (e <= s) e += 1440;
+      const [s, e] = spanAt(inp.weekStart, di, tm);
       const mins = e - s;
       const blocked = (p: SmartPerson): Block | null => {
         if (teamRank(p, slot.team) < 0) return "team";

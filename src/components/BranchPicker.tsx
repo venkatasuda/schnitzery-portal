@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { setActiveBranch } from "@/lib/queries/branch-switch";
 import { toast } from "@/components/Toast";
+import { Building2 } from "lucide-react";
 
 // Header branch picker (docs/MULTI-BRANCH.md). Shown to managers/owners linked to
 // 2+ branches, and to brand owners (who also get the HQ overview option).
@@ -30,7 +31,7 @@ export default function BranchPicker({ branches, current, hq }: { branches: { id
 
   return (
     <label className="branch-picker" title={t("view.picker")}>
-      <span aria-hidden="true">🏪</span>
+      <Building2 size={16} aria-hidden="true" />
       <select aria-label={t("view.picker")} value={value} disabled={pending} onChange={(e) => choose(e.target.value)}>
         {hq ? <option value="hq">{t("view.allHq")}</option> : <option value="all">{t("view.allMine")}</option>}
         {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}

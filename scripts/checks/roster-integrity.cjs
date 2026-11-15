@@ -6,6 +6,7 @@ const chain=table=>{let mutation=false;const q=new Proxy({}, {get:(_,method)=>{
  return (...args)=>{if(['insert','update'].includes(method)){mutation=true;writes.push([table,method,...args]);}if(mutation&&['eq','is'].includes(method))writes.push([method,...args]);if(method==='single')return Promise.resolve({data:{role,branch_id:'branch'},error:null});return q;};}});return q;};
 const out={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/schedule.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:out,require:n=>{
  if(n.endsWith('/activeBranch'))return AB;
+ if(n.endsWith('/queries/me')){const m={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/me.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m,require:x=>x==='react'?{cache:f=>f}:x.endsWith('/activeBranch')?AB:{createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from:chain})}});return m;} // shared getMe on the same fakes
  if(n.endsWith('/server'))return {createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:'manager'}}})},from:chain})};
  if(n.endsWith('schedule-constants'))return {DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],SHIFT_MODEL:{Kitchen:[{shift:'Morning'}]},TEAMS:['Manager','Preparation','Kitchen','Cashier','Dishwashing']};
  if(n.endsWith('berlinDate'))return {isCalendarDate:d=>/^\d{4}-\d{2}-\d{2}$/.test(d)};

@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect, useRef, useState } from "react";
 import NativeDialog from "@/components/NativeDialog";
 import { Field, ErrorState } from "@/components/ui";
@@ -9,8 +10,8 @@ export default function MovementDetails({kind,id,onClose,onSaved}:{kind:"waste"|
  const {t,locale}=useLang();const [data,setData]=useState<Data|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[qty,setQty]=useState(""),[reason,setReason]=useState("");const command=useRef<{key:string;id:string}|null>(null);
  async function load(){setLoading(true);setError("");try{const r=await getInventoryEntry(id,kind);if(r.ok){setData(r);setQty(kind==="waste"?String(r.row.qty??""):"");}else setError(t(`inventoryOps.error_${r.error}`));}catch{setError(t("inventoryOps.error_load"));}finally{setLoading(false);}}
  useEffect(()=>{load();},[id,kind]);
- const close=()=>{if(!busy&&(!reason&&!qty||window.confirm(t("inventoryOps.discard"))))onClose();};
- async function save(){if(!data||!window.confirm(t(kind==="waste"?"inventoryOps.confirmCorrection":"inventoryOps.confirmTransfer")))return;setBusy(true);setError("");try{
+ const close=async()=>{if(!busy&&(!reason&&!qty||(await askConfirm({ message: t("inventoryOps.discard") }))))onClose();};
+ async function save(){if(!data||!(await askConfirm({ message: t(kind==="waste"?"inventoryOps.confirmCorrection":"inventoryOps.confirmTransfer") })))return;setBusy(true);setError("");try{
   const action=kind==="waste"?"waste_correct":"transfer_receive",body={id,revision:0,qty:qty.trim()===""?NaN:Number(qty),note:reason,...(kind==="waste"?{before:data.row}:{})},key=JSON.stringify(body);
   if(command.current?.key!==key)command.current={key,id:crypto.randomUUID()};
   const r=await inventoryOperation(data.branch,command.current.id,action,body);if(!r.ok){setError(t(`inventoryOps.error_${r.error}`));return;}onSaved();onClose();

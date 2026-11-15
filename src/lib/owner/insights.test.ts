@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { weeklyTrend, forecastWeek, healthPart, healthScore, setupSteps, rosterEntryMinutes } from "./insights";
+import { weeklyTrend, forecastWeek, healthPart, healthScore, setupSteps, rosterEntryMinutes, weeklySpend, primeCost, extraHours } from "./insights";
 
 describe("owner insights", () => {
   it("weekly trend: labour %, SPLH, and gaps stay null", () => {
@@ -62,5 +62,29 @@ describe("owner insights", () => {
     expect(rosterEntryMinutes({ team: "Cashier", shift: "10:00–14:30" }, times)).toBe(270);
     expect(rosterEntryMinutes({ team: "Cashier", shift: "22:00–06:00" }, times)).toBe(480);
     expect(rosterEntryMinutes({ team: "Cashier", shift: "Evening" }, times)).toBeNull();
+  });
+});
+
+describe("profit & leaks", () => {
+  const weeks = ["2026-11-02", "2026-11-09"];
+  it("sums purchases per week; nothing recorded is unknown, a missing cost is incomplete", () => {
+    const r = weeklySpend(weeks, [{ purchase_date: "2026-11-03", cost: 100 }, { purchase_date: "2026-11-08", cost: "50.4" }, { purchase_date: "2026-11-10", cost: null }]);
+    expect(r[0]).toEqual({ weekStart: "2026-11-02", spend: 150, complete: true });
+    expect(r[1]).toEqual({ weekStart: "2026-11-09", spend: 0, complete: false });
+    expect(weeklySpend(["2026-10-26"], [])[0].spend).toBeNull();
+  });
+  it("prime cost needs complete sales, labour and purchases", () => {
+    const week = { weekStart: "2026-11-02", sales: 10000, salesComplete: true, hours: 100, labourCost: 3000, labourPct: 30, splh: 100 };
+    expect(primeCost(week, { weekStart: "2026-11-02", spend: 2800, complete: true })).toEqual({ primePct: 58, foodPct: 28 });
+    expect(primeCost({ ...week, labourCost: null }, { weekStart: "2026-11-02", spend: 2800, complete: true })).toEqual({ primePct: null, foodPct: 28 });
+    expect(primeCost(week, { weekStart: "2026-11-02", spend: 2800, complete: false })).toEqual({ primePct: null, foodPct: null });
+    expect(primeCost({ ...week, salesComplete: false }, { weekStart: "2026-11-02", spend: 2800, complete: true }).primePct).toBeNull();
+  });
+  it("counts only time beyond the roster, an unplanned day in full, and needs every wage", () => {
+    const planned = [{ date: "2026-11-02", user_id: "a", mins: 420 }];
+    const worked = [{ user_id: "a", work_date: "2026-11-02", paidMin: 480 }, { user_id: "b", work_date: "2026-11-03", paidMin: 120 }, { user_id: "a", work_date: "2026-11-04", paidMin: 0 }];
+    expect(extraHours(planned, worked, { a: 15, b: 12 })).toEqual({ mins: 180, cost: 39 }); // 60 min × 15 + 120 min × 12
+    expect(extraHours(planned, worked, { a: 15 }).cost).toBeNull();
+    expect(extraHours(planned, [{ user_id: "a", work_date: "2026-11-02", paidMin: 400 }], {})).toEqual({ mins: 0, cost: 0 });
   });
 });

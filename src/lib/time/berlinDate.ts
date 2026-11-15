@@ -70,3 +70,14 @@ export function berlinWeekdayIndex(dateStr: string): number {
   const wd = new Date(dateStr.slice(0, 10) + "T12:00:00Z").getUTCDay();
   return wd === 0 ? 6 : wd - 1;
 }
+
+/** Calendar date ± n days ("YYYY-MM-DD"); noon UTC so the clock change never shifts the day. */
+export function addDays(dateStr: string, n: number): string {
+  const d = new Date(`${dateStr}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Whole calendar days from a to b (negative when b is earlier). */
+export function daysBetween(a: string, b: string): number {
+  return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 864e5);
+}

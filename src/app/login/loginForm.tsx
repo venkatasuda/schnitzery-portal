@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useLang } from "@/components/LanguageProvider";
 import { signIn } from "@/lib/queries/loginThrottle";
 
 export default function LoginForm() {
   const { t } = useLang();
-  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,10 +27,9 @@ export default function LoginForm() {
         : t("login.invalid"));
       return;
     }
-    setLoading(false);
-    // Session is set; middleware will allow the app routes now.
-    router.push("/");
-    router.refresh();
+    // Session cookie is set. A full page load (a client push + refresh raced and could reuse the cached
+    // "/" → "/login" redirect) opens the dashboard with the new session; the button stays busy until then.
+    window.location.replace("/");
   }
 
   return (

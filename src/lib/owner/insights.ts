@@ -37,6 +37,45 @@ export function weeklyTrend(weeks: string[], sales: Sale[], worked: Worked[], wa
   });
 }
 
+// ── Profit & leaks (owner dashboard) ──
+// Ingredient purchases per week. null = nothing recorded (unknown, not €0); complete=false when a delivery has no cost.
+export type Purchase = { purchase_date: string; cost: number | string | null };
+export type WeekSpend = { weekStart: string; spend: number | null; complete: boolean };
+export function weeklySpend(weeks: string[], purchases: Purchase[]): WeekSpend[] {
+  return weeks.map((weekStart) => {
+    const rows = purchases.filter((p) => mondayOfDate(p.purchase_date) === weekStart);
+    const costs = rows.map((p) => (p.cost == null || p.cost === "" ? NaN : Number(p.cost)));
+    const known = costs.filter((c) => Number.isFinite(c) && c >= 0);
+    return { weekStart, spend: rows.length ? Math.round(known.reduce((a, c) => a + c, 0)) : null, complete: rows.length > 0 && known.length === rows.length };
+  });
+}
+
+// Prime cost = (ingredient purchases + labour) ÷ sales, in %. Only when every part is known and complete.
+export function primeCost(week: WeekRow, spend: WeekSpend) {
+  const ok = week.salesComplete && !!week.sales && week.labourCost != null && spend.spend != null && spend.complete;
+  return {
+    primePct: ok ? r1(((week.labourCost! + spend.spend!) / week.sales!) * 100) : null,
+    foodPct: week.salesComplete && week.sales && spend.spend != null && spend.complete ? r1((spend.spend / week.sales) * 100) : null,
+  };
+}
+
+// Paid minutes beyond the roster, per person and day (a day worked without a planned shift counts in full).
+// Cost is null when a wage is missing for anyone with extra time.
+export function extraHours(planned: PlannedShift[], worked: Worked[], wages: Wages): { mins: number; cost: number | null } {
+  const plan = new Map<string, number>(), done = new Map<string, number>();
+  for (const p of planned) plan.set(`${p.user_id}|${p.date}`, (plan.get(`${p.user_id}|${p.date}`) ?? 0) + p.mins);
+  for (const w of worked) done.set(`${w.user_id}|${w.work_date}`, (done.get(`${w.user_id}|${w.work_date}`) ?? 0) + w.paidMin);
+  let mins = 0, cost: number | null = 0;
+  for (const [key, m] of done) {
+    const extra = Math.max(0, m - (plan.get(key) ?? 0));
+    if (!extra) continue;
+    mins += extra;
+    const wage = wages[key.split("|")[0]];
+    cost = cost == null || wage == null ? null : cost + (extra / 60) * Number(wage);
+  }
+  return { mins: Math.round(mins), cost: cost == null ? null : Math.round(cost) };
+}
+
 export type PlannedShift = { date: string; user_id: string; mins: number };
 export type ForecastDay = { date: string; forecast: number | null; hours: number; cost: number | null; holiday: boolean };
 export type WeekForecast = { days: ForecastDay[]; sales: number | null; hours: number; cost: number | null; labourPct: number | null; missingWages: number };

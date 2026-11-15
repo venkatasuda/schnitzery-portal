@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { PageHeader } from "@/components/ui";
 
 import { appLocale } from "@/lib/format";
@@ -35,6 +36,7 @@ export default function AuditPage() {
 
   return (
     <div className="workspace-page">
+      <ReportTabs group="compliance" />
       <PageHeader title={ <><Icon e="🔒" size={22} /> {t("profile.auditLog")}</> } />
 
       {loading ? (

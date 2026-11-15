@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
@@ -36,7 +37,7 @@ export default function HoursPage() {
 
   return (
     <div className="ui-narrow">
-      <PageHeader title={ <><Icon e="⏱" size={22} /> {t("hours.title")}</> } />
+      <PageHeader title={ <><Icon e="⏱" size={22} /> {t("hours.title")}</> } actions={<Link className="btn-secondary ui-btn-sm" href={`/hours/record${month ? `?month=${month}` : ""}`}>{locale === "de" ? "Nachweis (PDF)" : "Record (PDF)"}</Link>} />
 
       <div className="d-flex jc-sb ai-c mb-4">
         <button className="btn-secondary ui-btn-sm" disabled={loading || !month} onClick={() => shiftMonth(-1)}>{t("shifts.prev")}</button>

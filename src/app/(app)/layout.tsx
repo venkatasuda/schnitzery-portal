@@ -2,12 +2,15 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
+import SyncStatus from "@/components/SyncStatus";
 import ManagementNav, { ManagementLocation } from "@/components/ManagementNav";
+import CommandPalette from "@/components/CommandPalette";
 import EmployeeBack from "@/components/EmployeeBack";
 import AgentWidget from "@/components/AgentWidget";
 import NotificationBell from "@/components/NotificationBell";
 import AttendanceSync from "@/components/AttendanceSync";
 import ToastHost from "@/components/Toast";
+import ConfirmHost from "@/components/ConfirmDialog";
 import LanguageProvider from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import BranchPicker from "@/components/BranchPicker";
@@ -58,6 +61,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className={isManager ? "management-shell" : "employee-shell"} data-view={activeBranch === "hq" ? "hq" : undefined}>
       <a href="#main-content" className="skip-link">{locale === "de" ? "Zum Inhalt" : "Skip to content"}</a>
       {isManager && <ManagementNav role={navRole} />}
+      {isManager && <CommandPalette role={navRole} />}
       <header className="app-header">
         <div className="header-leading">
           {isManager && <ManagementNav role={navRole} mobile />}
@@ -70,7 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {showPicker && <div className="header-branch"><BranchPicker key={activeBranch ?? ""} branches={branches} current={activeBranch ?? ""} hq={isHQ} /></div>}
         <div className="header-right">
           <span className="header-name">{profile?.full_name || user?.email}</span>
-          {isManager && <Link href="/search" aria-label={locale === "de" ? "Suchen" : "Search"} className="header-search"><Icon e="🔍" size={18} /></Link>}
+          {isManager && <Link href="/search" aria-label={locale === "de" ? "Suchen (Strg+K)" : "Search (Ctrl+K)"} title="Ctrl+K" className="header-search"><Icon e="🔍" size={18} /></Link>}
           <NotificationBell />
           {/* Language and light/dark live in Profile → Preferences (one place, no duplicate gear menu). */}
           <Link href="/profile" className="header-profile" aria-label={locale === "de" ? "Mein Profil" : "My profile"}>
@@ -85,9 +89,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       {/* Refresh preserves client state; changing branch must discard the old branch's data and drafts. */}
+      {/* Offline / waiting-to-sync strip on every page (hidden while online with nothing queued). */}
+      <div className="global-sync"><SyncStatus /></div>
       <main key={`${user.id}:${activeBranch ?? profile?.branch_id ?? ""}:${isHQ ? viewMode : "branch"}`} id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{!isManager && <EmployeeBack />}{children}</main>
 
       <ToastHost />
+      <ConfirmHost />
       <AttendanceSync userId={user.id} />
 
       {process.env.AGENT_CHAT_ENABLED === "true" && isManager && <AgentWidget />}

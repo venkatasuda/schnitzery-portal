@@ -3,13 +3,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { readAll } from "@/lib/supabase/readAll";
 import { activeBranchFor, accessibleBranchIds } from "@/lib/activeBranch";
-import { berlinToday, berlinMonday, mondayOfDate, isCalendarDate } from "@/lib/time/berlinDate";
+import { berlinToday, berlinMonday, mondayOfDate, isCalendarDate, addDays } from "@/lib/time/berlinDate";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches } from "@/lib/pay/wages";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { isMinijob, type Minijobber } from "@/lib/pay/legal";
 import { DAYS } from "@/lib/queries/schedule-constants";
-import { weeklyTrend, forecastWeek, healthPart, healthScore, setupSteps, rosterEntryMinutes, type HealthPart, type PlannedShift, type ShiftTimeDef } from "@/lib/owner/insights";
+import { weeklyTrend, forecastWeek, healthPart, healthScore, setupSteps, rosterEntryMinutes, weeklySpend, primeCost, extraHours, type HealthPart, type PlannedShift, type ShiftTimeDef } from "@/lib/owner/insights";
 
 // Owner home, second band (docs/OWNER-COCKPIT.md): 8-week trend, next week's labour
 // forecast from the roster, and the branch health score. Read-only.
@@ -23,7 +23,6 @@ async function ctx() {
   const { data: p } = await db.from("users").select("role, branch_id").eq("id", user.id).single();
   return { db, role: p?.role ?? "", branchId: await activeBranchFor(db, p) };
 }
-const addDays = (d: string, n: number) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 const nextMonthStart = (d: string) => { const x = new Date(`${d.slice(0, 7)}-01T12:00:00Z`); x.setUTCMonth(x.getUTCMonth() + 1); return x.toISOString().slice(0, 10); };
 
 // Last 7 full days (today excluded — it is still running).
@@ -69,36 +68,56 @@ export async function getOwnerInsights() {
 
   const thisMon = berlinMonday(), nextMon = berlinMonday(1);
   const weeks = Array.from({ length: 8 }, (_, i) => mondayOfDate(thisMon, i - 8)); // 8 full weeks
-  const [sales, logs, wages, roster, times, h] = await Promise.all([
+  const lastMon = weeks[weeks.length - 1];
+  const [sales, logs, wages, roster, times, h, purchases, lastRoster] = await Promise.all([
     readAll(c.db.from("daily_sales").select("sale_date, amount").eq("branch_id", b).gte("sale_date", weeks[0]).lt("sale_date", thisMon).order("id")),
     readAll(c.db.from("attendance_logs").select("user_id, work_date, duration_mins, breaks, clock_in, clock_out").eq("branch_id", b).eq("status", "complete").gte("work_date", weeks[0]).lt("work_date", thisMon).order("id")),
     wageMapForBranches(c.db, [b]).catch(() => null),
     c.db.from("weekly_roster").select("roster_data").eq("branch_id", b).eq("week_start", nextMon).maybeSingle(),
     getShiftTimes().catch(() => null),
     health(c.db, b),
+    readAll(c.db.from("inventory_purchases").select("purchase_date, cost").eq("branch_id", b).gte("purchase_date", weeks[0]).lt("purchase_date", thisMon).order("id")),
+    c.db.from("weekly_roster").select("roster_data").eq("branch_id", b).eq("week_start", lastMon).maybeSingle(),
   ]);
-  if (sales.error || logs.error || roster.error) return { ok: false as const, error: (sales.error || logs.error || roster.error)!.message };
+  const failed = sales.error || logs.error || roster.error || purchases.error || lastRoster.error;
+  if (failed) return { ok: false as const, error: failed.message };
   const w = wages ?? {}; // wage lookup failed → every cost shows "—"
   const worked = (logs.data || []).map((l) => ({ user_id: l.user_id, work_date: l.work_date, paidMin: shiftMinutes(l).paidMin }));
   const trend = weeklyTrend(weeks, sales.data || [], worked, w);
 
   // Roster → planned minutes per person per day, using the branch's shift times.
   const tmap = new Map<string, ShiftTimeDef>((times && times.ok ? times.items : []).map((s) => [`${s.team}|${s.shift}`, s]));
-  const data = (roster.data?.roster_data ?? {}) as unknown as Record<string, { user_id?: string; team?: string; shift?: string }[]>;
+  const plan = (rosterData: unknown, monday: string) => {
+    const data = (rosterData ?? {}) as Record<string, { user_id?: string; team?: string; shift?: string }[]>;
+    const planned: PlannedShift[] = [];
+    let unknown = 0;
+    DAYS.forEach((day, i) => {
+      const date = addDays(monday, i);
+      for (const e of data[day] || []) {
+        const mins = rosterEntryMinutes(e, tmap, date); // preset or custom "HH:MM–HH:MM"
+        if (!e.user_id || mins == null) { unknown++; continue; }
+        planned.push({ date, user_id: e.user_id, mins });
+      }
+    });
+    return { planned, unknown };
+  };
   const dates = DAYS.map((_, i) => addDays(nextMon, i));
-  const planned: PlannedShift[] = [];
-  let unknownShifts = 0;
-  DAYS.forEach((day, i) => {
-    for (const e of data[day] || []) {
-      const mins = rosterEntryMinutes(e, tmap, dates[i]); // preset or custom "HH:MM–HH:MM"
-      if (!e.user_id || mins == null) { unknownShifts++; continue; }
-      planned.push({ date: dates[i], user_id: e.user_id, mins });
-    }
-  });
+  const { planned, unknown: unknownShifts } = plan(roster.data?.roster_data, nextMon);
+
+  // Profit & leaks for the last full week: prime cost (purchases + labour ÷ sales) and paid time beyond the roster.
+  // Extra time is only counted when last week had a roster with known shift times; otherwise it is unknown.
+  const spend = weeklySpend(weeks, purchases.data || []);
+  const last = trend[trend.length - 1], prev = trend[trend.length - 2];
+  const lastPlan = plan(lastRoster.data?.roster_data, lastMon);
+  const profit = {
+    weekStart: lastMon, spend: spend.at(-1)!, prevSpend: spend.at(-2)!,
+    ...primeCost(last, spend.at(-1)!), prev: primeCost(prev, spend.at(-2)!), labourPct: last.labourPct,
+    extra: lastPlan.planned.length && !lastPlan.unknown ? extraHours(lastPlan.planned, worked.filter((x) => x.work_date >= lastMon), w) : null,
+  };
   const history = (sales.data || []).filter((s) => s.sale_date >= mondayOfDate(thisMon, -4));
   const forecast = forecastWeek(dates, history, planned, w);
 
-  return { ok: true as const, trend, forecast: { ...forecast, weekStart: nextMon, hasRoster: planned.length > 0, unknownShifts }, health: h };
+  return { ok: true as const, trend, profit, forecast: { ...forecast, weekStart: nextMon, hasRoster: planned.length > 0, unknownShifts }, health: h };
 }
 
 // "Get your branch ready" card: is the data the owner figures depend on in place?
@@ -144,7 +163,7 @@ export async function getRosterPlanning(weekStart: string) {
     readAll(c.db.from("daily_sales").select("sale_date, amount").eq("branch_id", b).gte("sale_date", addDays(until, -28)).lt("sale_date", until).order("id")),
     wageMapForBranches(c.db, [b]).catch(() => null),
     getShiftTimes().catch(() => null),
-    c.db.from("branch_targets").select("labour_pct").eq("branch_id", b).maybeSingle(),
+    c.db.from("branch_targets").select("labour_pct, splh").eq("branch_id", b).maybeSingle(),
   ]);
   if (sales.error) return { ok: false as const, error: sales.error.message };
 
@@ -172,5 +191,6 @@ export async function getRosterPlanning(weekStart: string) {
     wages: wages ?? {}, wagesKnown: wages != null,
     times: (times && times.ok ? times.items : []).map(({ team, shift, start, end, breakMins, friSatStart, friSatEnd }) => ({ team, shift, start, end, breakMins, friSatStart, friSatEnd })),
     labourTarget: target.data?.labour_pct != null ? Number(target.data.labour_pct) : null,
+    splhTarget: target.data?.splh != null ? Number(target.data.splh) : null,
   };
 }

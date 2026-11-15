@@ -1,7 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { activeBranchFor } from "@/lib/activeBranch";
+import { getMe } from "@/lib/queries/me";
 
 // ============================================================
 // GEOFENCE QUERIES — branch location, radius, mode, and the
@@ -12,13 +11,6 @@ import { activeBranchFor } from "@/lib/activeBranch";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, role: null as string | null, branchId: null as string | null };
-  const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
-}
 
 export type GeofenceMode = "off" | "warn" | "required";
 

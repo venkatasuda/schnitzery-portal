@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { activeBranchFor } from "@/lib/activeBranch";
+import { addDays, berlinToday } from "@/lib/time/berlinDate";
 
 // Lists documents across the manager's branch that are expiring within 60 days
 // (or already expired), newest-expiry first, with the owner's name. Manager-only.
@@ -53,4 +54,13 @@ export async function getBranchExpiringDocs() {
   });
 
   return { ok: true, items, count: items.length };
+}
+// Active staff in the branch whose fixed-term contract or probation ends within 30 days (Phase 2).
+export async function getContractsEnding() {
+  const { supabase, user, role, branchId } = await getMgr();
+  if (!user || !isManager(role)) return { ok: false as const, count: 0 };
+  const today = berlinToday(), soon = addDays(today, 30);
+  const { data, error } = await supabase.from("users").select("id").eq("branch_id", branchId).eq("status", "active")
+    .or(`and(contract_end.gte.${today},contract_end.lte.${soon}),and(probation_end.gte.${today},probation_end.lte.${soon})`);
+  return error ? { ok: false as const, count: 0 } : { ok: true as const, count: (data || []).length };
 }

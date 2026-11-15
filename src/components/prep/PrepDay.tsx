@@ -2,6 +2,7 @@
 // One prep day as a single flow: pick the date → count last night's leftovers → "Next day" → adjust and send.
 // Planners (managers + shift leaders) edit; everyone else sees the sent list read-only.
 // Used in Inventory → Kitchen and the employee prep page. No extra tables: leftovers + list lines as before.
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { ErrorState, EmptyState } from "@/components/ui";
@@ -173,7 +174,7 @@ export default function PrepDay({ initialDay, allowPicker = true, readOnly = fal
           {toast && <span className="prep-toast" role="status">{toast}</span>}
           <button className="btn-secondary" disabled={busy || !valid} onClick={() => void saveList(false)}>{s("Save draft", "Entwurf")}</button>
           <button className={shareFirst ? "btn-gold" : "btn-secondary"} disabled={busy || !valid} onClick={() => void share()}>{s("Share", "Teilen")}</button>
-          <button className={shareFirst ? "btn-secondary" : "btn-gold"} disabled={busy || !valid} onClick={() => { if (window.confirm(s("Send to the Preparation team?", "An das Vorbereitungsteam senden?"))) void saveList(true); }}>{sent ? s("Send update", "Update senden") : s("Send", "Senden")}</button>
+          <button className={shareFirst ? "btn-secondary" : "btn-gold"} disabled={busy || !valid} onClick={async () => { if ((await askConfirm({ message: s("Send to the Preparation team?", "An das Vorbereitungsteam senden?") }))) void saveList(true); }}>{sent ? s("Send update", "Update senden") : s("Send", "Senden")}</button>
         </div>
       </> : <div className="prep-actions">{data.list?.note && <p className="prep-note-ro">{data.list.note}</p>}{!readOnly && <button className="btn-secondary" onClick={() => void share()}>{s("Share", "Teilen")}</button>}</div>}
     </div>}

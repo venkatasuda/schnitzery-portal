@@ -1,7 +1,7 @@
 "use server";
 
+import { getMe } from "@/lib/queries/me";
 import { createClient } from "@/lib/supabase/server";
-import { activeBranchFor } from "@/lib/activeBranch";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { rankOf } from "@/lib/auth/rank";
 import { berlinMonth } from "@/lib/time/berlinDate";
@@ -17,13 +17,6 @@ import { berlinMonth } from "@/lib/time/berlinDate";
 const MANAGER_ROLES = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const EXPIRING_DAYS = 60; // an approved doc within this many days reads "expiring soon"
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, role: null, branchId: null };
-  const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
-}
 const isManager = (r?: string | null) => MANAGER_ROLES.includes(r || "");
 
 // ── AVATAR ──────────────────────────────────────────────────────────────────

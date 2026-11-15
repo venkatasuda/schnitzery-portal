@@ -1,5 +1,6 @@
 "use client";
 
+import { addDays } from "@/lib/time/berlinDate";
 import { useEffect, useMemo, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { getRosterPlanning } from "@/lib/queries/owner-insights";
@@ -11,7 +12,6 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 type Entry = { user_id: string; team: string; shift: string };
 type Planning = Extract<Awaited<ReturnType<typeof getRosterPlanning>>, { ok: true }>;
 
-const addDays = (d: string, n: number) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 // Live labour cost while the roster is being built (docs/OWNER-COCKPIT.md): expected sales
 // (same weekday, last 4 weeks), planned hours and cost at current wages, and the expected
@@ -69,6 +69,20 @@ export default function RosterLabourPanel({ weekStart, roster }: { weekStart: st
       {result.overCap.map((o) => (
         <p key={`${o.id}${o.month}`} className="tone-danger t-sm">{t("rosterLabour.minijobOver", { name: o.name, eur: formatEur(o.earnings, locale, "auto"), cap: formatEur(o.cap, locale, 0) })}</p>
       ))}
+      {plan.splhTarget != null && (
+        <div className="table-scroll">
+          <table className="data-table roster-splh">
+            <caption className="ui-sub">{t("rosterLabour.splhCaption", { eur: formatEur(plan.splhTarget, locale, 0) })}</caption>
+            <thead><tr><th scope="col">{t("rosterLabour.day")}</th><th scope="col">{t("insights.plannedHours")}</th><th scope="col">{t("rosterLabour.supported")}</th></tr></thead>
+            <tbody>{result.days.map((d, i) => {
+              const sup = d.forecast == null ? null : Math.round((d.forecast / plan.splhTarget!) * 10) / 10;
+              const over = sup != null && d.hours > sup;
+              return <tr key={d.date}><th scope="row">{t("days." + DAYS[i].toLowerCase())}</th><td className="inv-mono">{d.hours} h</td>
+                <td className={`inv-mono${over ? " tone-danger" : ""}`}>{sup == null ? "—" : `${sup} h`}</td></tr>;
+            })}</tbody>
+          </table>
+        </div>
+      )}
       <p className="ui-sub">{target != null ? t("cockpit.target", { n: target }) : t("cockpit.noTarget")}{notes.length ? ` · ${notes.join(" · ")}` : ""}</p>
     </div>
   );

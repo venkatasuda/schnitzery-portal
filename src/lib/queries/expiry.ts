@@ -1,24 +1,14 @@
 "use server";
 
+import { getMe } from "@/lib/queries/me";
 import { validInventoryItem } from "@/lib/inventory/identity";
-import { createClient } from "@/lib/supabase/server";
-import { berlinToday, isCalendarDate } from "@/lib/time/berlinDate";
-import { activeBranchFor,MULTI_BRANCH_ROLES } from "@/lib/activeBranch";
+import { berlinToday, isCalendarDate, daysBetween } from "@/lib/time/berlinDate";
+import { MULTI_BRANCH_ROLES } from "@/lib/activeBranch";
 import { uuid } from "@/lib/inventory/operations";
 import { readAll } from "@/lib/supabase/readAll";
 import { batchFlag,type StockBatch } from "@/lib/inventory/batches";
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, profile: null };
-  const { data: profile } = await supabase
-    .from("users").select("id, full_name, role, branch_id,status").eq("id", user.id).single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
-}
 
-const daysBetween = (a: string, b: string) =>
-  Math.round((new Date(b + "T12:00:00Z").getTime() - new Date(a + "T12:00:00Z").getTime()) / 86400000);
 
 // products for the picker
 export async function getBatchProducts() {

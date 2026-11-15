@@ -1,5 +1,6 @@
 "use client";
 
+import { askConfirm } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/ui";
 
 import { appLocale } from "@/lib/format";
@@ -71,14 +72,14 @@ export default function CoverPage() {
     else toast(r.error || t("cover.failed"), "error");
   }
   async function doCancel(id: string) {
-    if (!confirm(t("cover.confirmCancel"))) return;
+    if (!(await askConfirm({ message: t("cover.confirmCancel") }))) return;
     setBusy(id);
     const r = await cancelCover(id); setBusy(null);
     if (r.ok) { toast(t("cover.cancelled"), "success"); loadAll(); }
     else toast(r.error || t("cover.failed"), "error");
   }
   async function doDecide(id: string, decision: "approved" | "rejected", warnings: any[] = []) {
-    if (decision === "approved" && warnings.length && !confirm(`${warnings.map(warnText).join("\n")}\n\n${s("Approve anyway?", "Trotzdem genehmigen?")}`)) return;
+    if (decision === "approved" && warnings.length && !(await askConfirm({ message: `${warnings.map(warnText).join("\n")}\n\n${s("Approve anyway?", "Trotzdem genehmigen?")}` }))) return;
     setBusy(id);
     const r = await decideCover(id, decision); setBusy(null);
     if (r.ok) {

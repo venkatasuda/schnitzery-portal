@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { submitLeave, getMyLeave, getSickNoteUrl, attachSickNote } from "@/lib/queries/leave";
@@ -99,6 +100,7 @@ export default function LeavePage() {
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto" }}>
+      <ReportTabs group="leave" />
       <PageHeader title={ <><Icon e="🌴" size={22} /> {t("leave.title")}</> } />
 
       <div className="ui-segmented leave-tabs" role="group">

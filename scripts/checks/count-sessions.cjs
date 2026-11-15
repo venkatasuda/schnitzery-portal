@@ -11,6 +11,7 @@ const exportsBox={};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/count-sessions.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:exportsBox,require(name){
  if(name==='@/lib/inventory/shift-scope')return{shiftScope:async()=>userRole==='staff'?null:{db,branch:active,user:{id:'manager'},manager:true}};
  if(name==='@/lib/supabase/readAll')return{};
+ if(name==='@/lib/inventory/identity')return{inventoryKey:i=>JSON.stringify([i.category||'',i.product,i.unit||''])};
  throw Error(name);
 }});
 const fixture={ok:true,branch:{id:branch,name:'Test branch'},sessions:[{id:session,status:'draft',count_date:'2026-10-24',revision:0}],session:{id:session,status:'draft',count_date:'2026-10-24',revision:0},lines:[{id:line,product:'Rice',category:'Dry',unit:'kg',target:4,quantity:null}]};

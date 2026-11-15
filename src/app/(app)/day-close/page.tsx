@@ -1,6 +1,7 @@
 "use client";
 // End-of-day close (shift leaders + managers): POS report, counted cash, and the day's checks.
 // Open points need a short reason; once closed, the day is read-only.
+import { askConfirm } from "@/components/ConfirmDialog";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -49,7 +50,7 @@ export default function DayClosePage() {
 
   async function submit() {
     if (busy || !data || missingReason) return;
-    if (!window.confirm(s("Close this day? It cannot be changed afterwards.", "Diesen Tag abschließen? Danach ist keine Änderung mehr möglich."))) return;
+    if (!(await askConfirm({ message: s("Close this day? It cannot be changed afterwards.", "Diesen Tag abschließen? Danach ist keine Änderung mehr möglich.") }))) return;
     setBusy(true); setError("");
     try {
       const r = await closeDay(data.branch.id, day, num(posTotal), num(posCash), num(counted), reasons, note);

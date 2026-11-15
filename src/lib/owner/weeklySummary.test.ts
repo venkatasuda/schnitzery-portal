@@ -7,7 +7,7 @@ describe("weekly owner summary", () => {
       { sales: 10000, salesPrev: 9000, hours: 300.25, purchases: 2500, open: 2 },
       { sales: 5000, salesPrev: null, hours: 120, purchases: 1000.5, open: 1 },
     ]);
-    expect(p).toEqual({ week: "2026-10-12", branches: 2, sales: 15000, salesPrev: 9000, hours: 420.3, purchases: 3500.5, open: 3, salesMissing: 0 });
+    expect(p).toEqual({ week: "2026-10-12", branches: 2, sales: 15000, salesPrev: 9000, hours: 420.3, purchases: 3500.5, open: 3, salesMissing: 0, primePct: null, primeTarget: null, waste: 0 });
   });
 
   it("never turns missing sales into zero", () => {
@@ -25,5 +25,14 @@ describe("weekly owner summary", () => {
     expect(de.title).toBe("Deine Woche in Zahlen · 2 Filialen");
     expect(de.body).toMatch(/Umsatz ≥ 11\.000\s€ \(▲10%\)/); // Intl uses a no-break space before €
     expect(de.body).toContain("4 Punkt(e) warten auf dich");
+  });
+
+  it("adds prime cost only when sales and every wage are known, with the target for one branch", () => {
+    const one = summarise("2026-10-12", [{ sales: 10000, salesPrev: null, hours: 100, purchases: 2800, open: 0, labour: 3300, target: 60, waste: 3 }]);
+    expect(one).toMatchObject({ primePct: 61, primeTarget: 60, waste: 3 });
+    expect(pushText(one, "en").body).toContain("Prime cost 61% (target 60%)");
+    expect(pushText(one, "en").body).toContain("3 waste entries");
+    expect(summarise("2026-10-12", [{ sales: 10000, salesPrev: null, hours: 100, purchases: 2800, open: 0, labour: null }]).primePct).toBeNull();
+    expect(summarise("2026-10-12", [{ sales: null, salesPrev: null, hours: 100, purchases: 2800, open: 0, labour: 3300 }]).primePct).toBeNull();
   });
 });

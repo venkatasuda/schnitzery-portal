@@ -9,7 +9,8 @@ function moduleAt(file, resolve, url = 'http://schnitzery.localhost:3100/invento
   const location = new URL(url);
   const window = { location, addEventListener(){}, removeEventListener(){}, history:{replaceState(_state,_title,url){location.href=String(url);},pushState(_state,_title,url){location.href=String(url);}} };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText,
-    { exports, require: resolve, URL, URLSearchParams, window, crypto:require('node:crypto').webcrypto, setTimeout, console });
+    { exports, require: name => name === '@/lib/queries/me' && !file.endsWith('queries/me.ts') // shared getMe, built on this file's fakes
+      ? moduleAt('src/lib/queries/me.ts', n => n === 'react' ? { cache: f => f } : resolve(n)) : resolve(name), URL, URLSearchParams, window, crypto:require('node:crypto').webcrypto, setTimeout, console });
   return exports;
 }
 async function ui(page, result, url, file) {
@@ -29,6 +30,11 @@ async function ui(page, result, url, file) {
     if(name==='@/lib/inventory/batches')return moduleAt('src/lib/inventory/batches.ts',n=>n==='../time/berlinDate'?moduleAt('src/lib/time/berlinDate.ts',require):require(n));
     if(name==='@/lib/pay/legal')return moduleAt('src/lib/pay/legal.ts',require);
     if(name==='@/components/TipPool')return {__esModule:true,default:()=>null};
+    if(name==='@/components/inventory/OverviewBoard')return {__esModule:true,default:({fallback})=>fallback}; // staff view: the manager board falls back to the count tiles
+    if(name==='@/lib/localDraft')return moduleAt('src/lib/localDraft.ts',require); // no localStorage in node: autosave is a no-op
+    if(name==='@/lib/inventory/packCount')return moduleAt('src/lib/inventory/packCount.ts',require);
+    if(name==='@/lib/inventory/receiptCheck')return moduleAt('src/lib/inventory/receiptCheck.ts',require);
+    if(name==='@/lib/inventory/stageOrder')return moduleAt('src/lib/inventory/stageOrder.ts',n=>n==='./identity'?moduleAt('src/lib/inventory/identity.ts',require):require(n));
     if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
     if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
     if(name==='@/lib/inventory/orderDraft')return moduleAt('src/lib/inventory/orderDraft.ts',()=>moduleAt('src/lib/analytics/coverage.ts',require));
@@ -44,7 +50,7 @@ async function ui(page, result, url, file) {
   component({}); for(const effect of effects) effect(); await new Promise(r=>setImmediate(r)); initial=false;
   return {render(){cursor=0;return renderToStaticMarkup(component({}));},tree(){cursor=0;return component({});}};
 }
-function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray([tree.props?.children, tree.props?.actions])){const found=find(child,test);if(found)return found;}return null;}
+function find(tree,test){if(!tree||typeof tree!=='object')return null; if(test(tree))return tree; for(const child of React.Children.toArray([tree.props?.children, tree.props?.actions, tree.props?.fallback])){const found=find(child,test);if(found)return found;}return null;}
 (async()=>{
   // Escape must respect the owner's discard confirmation instead of closing natively.
   const NativeDialog=moduleAt('src/components/NativeDialog.tsx',name=>name==='react'?{...React,useRef:()=>({current:null}),useEffect(){}}:require(name)).default;

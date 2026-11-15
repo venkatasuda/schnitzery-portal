@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, CalendarDays, Clock, Users, Package, ChartNoAxesCombined, Settings, Building2, ClipboardCheck, ShieldCheck, Menu } from "lucide-react";
 import { useLang } from "@/components/LanguageProvider";
 
-function navigationGroups(owner: boolean) {
+export function navigationGroups(owner: boolean) {
   return [
     { label: "workspace.operations", items: [
       { href: "/", label: "workspace.dashboard", icon: LayoutDashboard, routes: ["/", "/my-branches", "/targets"] },
@@ -22,7 +22,7 @@ function navigationGroups(owner: boolean) {
     { label: "workspace.business", items: [
       { href: "/analytics", label: "workspace.reports", icon: ChartNoAxesCombined, routes: ["/analytics", "/labor", "/summary", "/export", "/waste-branches", "/simulator", "/sales"] },
       { href: "/compliance", label: "home.compliance", icon: ShieldCheck, routes: ["/compliance", "/audit"] },
-      { href: "/profile", label: "home.settings", icon: Settings, routes: ["/profile", "/settings", "/settings-hub", "/geofence", "/kiosks", "/notifications"] },
+      { href: "/settings", label: "home.settings", icon: Settings, routes: ["/settings", "/settings-hub", "/geofence", "/kiosks", "/notifications"] },
     ] },
   ];
 }
@@ -37,7 +37,7 @@ export default function ManagementNav({ role, mobile = false }: { role: string; 
       <div className="management-nav-label">{t(group.label)}</div>
       {group.items.map((item) => {
         const active = item.routes.some((route) => route === "/" ? path === "/" : path === route || path.startsWith(route + "/"));
-        return <Link key={item.href} href={item.href} className={`management-nav-link${active ? " active" : ""}`} aria-current={active && path === item.href ? "page" : undefined}>
+        return <Link key={item.href} href={item.href} prefetch={false} className={`management-nav-link${active ? " active" : ""}`} aria-current={active && path === item.href ? "page" : undefined}>
           <item.icon size={18} aria-hidden="true" /><span>{t(item.label)}</span>
         </Link>;
       })}

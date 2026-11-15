@@ -1,19 +1,12 @@
 "use server";
 
+import { getMe } from "@/lib/queries/me";
 import { createClient } from "@/lib/supabase/server";
 import { isCalendarDate } from "@/lib/time/berlinDate";
 import { readAll } from "@/lib/supabase/readAll";
-import { activeBranchFor } from "@/lib/activeBranch";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, role: null, branchId: null };
-  const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
-}
 
 export async function submitCorrection(input: {
   type: string; targetDate: string; attendanceLogId?: string | null;

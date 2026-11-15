@@ -1,8 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { sendPushToUser } from "@/lib/push/delivery";
-import { activeBranchFor } from "@/lib/activeBranch";
 
 // ============================================================
 // ANNOUNCEMENTS — manager posts, everyone reads.
@@ -10,14 +9,6 @@ import { activeBranchFor } from "@/lib/activeBranch";
 //   pinned, created_at
 // ============================================================
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, profile: null };
-  const { data: profile } = await supabase
-    .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
-}
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
