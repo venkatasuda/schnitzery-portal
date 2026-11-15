@@ -14,6 +14,7 @@ function load(file,imports){const exports={};vm.runInNewContext(ts.transpileModu
 const imports={'@/lib/activeBranch':AB,'@/lib/supabase/server':{createClient:async()=>client},'@/lib/supabase/readAll':{readAll:async q=>await q},'@/lib/time/berlinDate':{berlinToday:()=> '2026-10-12',berlinMonth:()=> '2026-10',isCalendarDate:d=>typeof d==='string'&&/^2026-09-\d\d$/.test(d),mondayOfDate:d=>{const x=new Date(d.slice(0,10)+'T12:00:00Z');x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7));return x.toISOString().slice(0,10);}},
   '@/lib/queries/shift-times':{getShiftTimes:async()=>({ok:true,items:[]})},'@/lib/queries/schedule-constants':{DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']}};
 imports['@/lib/time/roster']=load('src/lib/time/roster.ts',{});
+imports['@/lib/queries/me']=load('src/lib/queries/me.ts',{...imports,react:{cache:f=>f}}); // shared getMe on the same fakes
 imports['@/lib/pay/calculations']=load('src/lib/pay/calculations.ts',{});
 const api=load('src/lib/queries/live-attendance.ts',imports),corrections=load('src/lib/queries/corrections.ts',imports);
 (async()=>{

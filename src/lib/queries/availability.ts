@@ -1,9 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { berlinMonday, mondayOfDate, berlinWeekdayIndex, isCalendarDate } from "@/lib/time/berlinDate";
 import { isAvailDays, weeksOfMonth } from "@/lib/roster/avail-weeks";
-import { activeBranchFor } from "@/lib/activeBranch";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { timesOn } from "@/lib/time/roster";
 import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
@@ -17,14 +16,6 @@ import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const AHEAD = 8; // weeks ahead a person can enter availability for
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, profile: null };
-  const { data: profile } = await supabase
-    .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
-}
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");
 }
@@ -82,14 +73,14 @@ export async function saveAvailability(weekStart: string, days: unknown, scope: 
     || !isAvailDays(days) || !["week", "month", "always"].includes(scope)) return { ok: false, error: "Invalid availability." };
 
   const weeks = scope === "month" ? weeksOfMonth(weekStart, minWeek) : [weekStart];
-  const { data: existing, error: readError } = await supabase.from("availability").select("id, week_start").eq("user_id", user.id).in("week_start", weeks);
+  const { data: existing, error: readError } = await supabase.from("availability").select("id, branch_id, week_start").eq("user_id", user.id).in("week_start", weeks);
   if (readError) return { ok: false, error: readError.message };
-  const idOf = new Map((existing || []).map((r) => [r.week_start as string, r.id]));
-  const results = await Promise.all(weeks.map((w) => idOf.has(w)
-    ? supabase.from("availability").update({ days }).eq("id", idOf.get(w)!)
-    : supabase.from("availability").insert({ user_id: user.id, branch_id: branchId, week_start: w, days })));
-  const failed = results.find((r) => r.error);
-  if (failed?.error) return { ok: false, error: failed.error.message };
+  const byWeek = new Map((existing || []).map((r) => [r.week_start as string, r]));
+  // One request = one statement: every week of the month is saved, or none is (no half-saved month).
+  const rows = weeks.map((w) => { const r = byWeek.get(w);
+    return r ? { id: r.id, user_id: user.id, branch_id: r.branch_id, week_start: w, days } : { user_id: user.id, branch_id: branchId, week_start: w, days }; });
+  const { error: saveError } = await supabase.from("availability").upsert(rows, { onConflict: "id", defaultToNull: false });
+  if (saveError) return { ok: false, error: saveError.message };
   if (scope === "always") {
     const { error } = await (supabase as any).from("availability_defaults").upsert({ user_id: user.id, branch_id: branchId, days, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     if (error) return { ok: false, error: error.message };

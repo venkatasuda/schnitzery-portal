@@ -1,17 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { activeBranchFor } from "@/lib/activeBranch";
+import { getMe } from "@/lib/queries/me";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, role: null, branchId: null };
-  const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
-}
 
 export async function listKiosks() {
   const { supabase, user, role, branchId } = await getMe();

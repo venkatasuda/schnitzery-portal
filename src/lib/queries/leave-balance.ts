@@ -1,7 +1,7 @@
 "use server";
 
+import { getMe } from "@/lib/queries/me";
 import { createClient } from "@/lib/supabase/server";
-import { activeBranchFor } from "@/lib/activeBranch";
 import { bwHolidays } from "@/lib/time/holidays";
 
 // Vacation (Urlaub) balance: allowance − Werktage taken (from approved leave
@@ -38,13 +38,6 @@ async function computeBalance(supabase: any, userId: string, allowance: number |
   return { allowance: total, used, remaining: Math.max(0, total - used), year };
 }
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, role: null, branchId: null };
-  const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
-}
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
 }

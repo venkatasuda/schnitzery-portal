@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -16,7 +17,7 @@ export default function Products({onChanged}:{onChanged?:()=>void}){
  async function load(){const seq=++request.current;setLoading(true);setError("");try{const r=await getInventoryOperations("catalog");if(seq!==request.current)return;if(r.ok)setData(r);else setError(t(`inventoryOps.error_${r.error}`));}catch{if(seq===request.current)setError(t("inventoryOps.error_load"));}finally{if(seq===request.current)setLoading(false);}}
  useEffect(()=>{load();return()=>{request.current++;};},[]);
  function open(p?:Product){setError("");setEdit(p?{...p,unit:p.unit??"",soll:String(p.soll),reorder_point:p.reorder_point==null?"":String(p.reorder_point),reorder_qty:p.reorder_qty==null?"":String(p.reorder_qty),supplier_id:p.supplier_id??""}:{...blank});}
- const close=()=>{if(!busy&&window.confirm(t("inventoryOps.discard")))setEdit(null);};
+ const close=async()=>{if(!busy&&(await askConfirm({ message: t("inventoryOps.discard") })))setEdit(null);};
  async function save(){if(!edit||!data)return;setBusy(true);setError("");try{
   const r=await inventoryOperation(data.branch.id,crypto.randomUUID(),"product_save",{...edit,soll:edit.soll.trim()===""?NaN:Number(edit.soll),reorder_point:edit.reorder_point===""?null:Number(edit.reorder_point),reorder_qty:edit.reorder_qty===""?null:Number(edit.reorder_qty),supplier_id:edit.supplier_id||null});
   if(!r.ok){setError(t(`inventoryOps.error_${r.error}`));return;}setEdit(null);await load();onChanged?.();

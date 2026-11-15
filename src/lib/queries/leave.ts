@@ -1,9 +1,9 @@
 "use server";
 
+import { getMe } from "@/lib/queries/me";
 import { createClient } from "@/lib/supabase/server";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { sendPushToUser } from "@/lib/push/delivery";
-import { activeBranchFor } from "@/lib/activeBranch";
 import { availCovers } from "@/lib/roster/smart";
 import { workTeams } from "@/lib/roster/teams";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
@@ -24,17 +24,6 @@ async function pushSafe(userId: string | null | undefined, en: Text, de: Text, u
 //   my_day, their_day, status, created_at
 // ============================================================
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, profile: null };
-  const { data: profile } = await supabase
-    .from("users")
-    .select("id, full_name, role, branch_id")
-    .eq("id", user.id)
-    .single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
-}
 
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");

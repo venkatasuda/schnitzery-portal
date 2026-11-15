@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useRef, useState } from "react";
 import NativeDialog from "@/components/NativeDialog";
 import { Field } from "@/components/ui";
@@ -17,7 +18,7 @@ export default function PurchasePacks({ branch, product, packs, onClose, onSaved
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const command = useRef<{ body: string; id: string } | null>(null);
-  const close = () => { if (!busy && (!label && !quantity || window.confirm(s("Discard unsaved pack?", "Ungespeichertes Gebinde verwerfen?")))) onClose(); };
+  const close = async () => { if (!busy && (!label && !quantity || (await askConfirm({ message: s("Discard unsaved pack?", "Ungespeichertes Gebinde verwerfen?") })))) onClose(); };
   async function save() {
     const qty = Number(quantity);
     if (busy || !reviewed || !label.trim() || !Number.isFinite(qty) || qty <= 0 || qty >= 1e9) return;

@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import NativeDialog from "@/components/NativeDialog";
@@ -13,7 +14,7 @@ export default function Suppliers({branch,suppliers,onSaved}:{branch:string;supp
   const r=await inventoryOperation(branch,crypto.randomUUID(),"supplier_save",{...edit,name:edit.name??"",email:edit.email??"",lead_days:edit.lead_days??0,is_active:edit.is_active??true});
   if(!r.ok){setError(t(`inventoryOps.error_${r.error}`));return;}setEdit(null);onSaved();
  }catch{setError(t("inventoryOps.error_save"));}finally{setBusy(false);}}
- const close=()=>{if(!busy&&window.confirm(t("inventoryOps.discard")))setEdit(null);};
+ const close=async()=>{if(!busy&&(await askConfirm({ message: t("inventoryOps.discard") })))setEdit(null);};
  return <>
   <div className="ui-toolbar"><h2>{t("inventoryOps.suppliers")}</h2><button className="btn-gold" onClick={()=>{setError("");setEdit({name:"",email:"",lead_days:0,is_active:true});}}>{t("inventoryOps.newSupplier")}</button></div>
   <div className="table-scroll" tabIndex={0} role="region" aria-label={t("inventoryOps.suppliers")}><table className="data-table"><thead><tr><th scope="col">{t("inventoryOps.supplier")}</th><th scope="col">{t("inventoryOps.email")}</th><th scope="col">{t("inventoryOps.leadDays")}</th><th scope="col">{t("inventoryOps.actions")}</th></tr></thead><tbody>

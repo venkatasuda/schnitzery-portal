@@ -18,7 +18,7 @@ export async function getInventoryInsights(days: number = 30) {
   if(!branch)return{ok:false as const,error:"branch"};
   const today=berlinToday(),at=(n:number)=>new Date(Date.parse(`${today}T12:00:00Z`)-n*86400000).toISOString().slice(0,10);
   const from=at(days-1),previousFrom=at(2*days-1),historyFrom=at(365);
-  const [name,products,counts,purchases,waste,batches,orders,analytics]=await Promise.all([
+  const [name,products,counts,purchases,waste,batches,orders,production]=await Promise.all([
     db.from("branches").select("id,name").eq("id",branch).single(),
     readAll(db.from("inventory_master").select("id,product,category,unit,soll,reorder_point,reorder_qty").eq("branch_id",branch).eq("is_active",true).order("id")),
     readAll(db.from("inventory_counts").select("product,category,unit,ist,count_date").eq("branch_id",branch).gte("count_date",historyFrom).lte("count_date",today).order("count_date").order("created_at").order("id")),
@@ -26,9 +26,10 @@ export async function getInventoryInsights(days: number = 30) {
     readAll(db.from("waste_log").select("product,category,unit,qty,work_date,reason").eq("branch_id",branch).gte("work_date",previousFrom).lte("work_date",today).order("id")),
     readAll(db.from("stock_batches").select("id,product,category,unit,qty,remaining_qty,expiry_date").eq("branch_id",branch).eq("status","active").order("id")),
     readAll(db.from("inventory_orders").select("id,supplier_id,supplier_name,reference,status,expected_date,created_at").eq("branch_id",branch).or(`status.in.(sent,partial),created_at.gte.${from}`).order("id")),
-    getInventoryAnalytics(days-1),
+    // ponytail: only "has any posted production" is needed here; the heavy consumption analysis is getInventoryConsumption.
+    db.from("inventory_production_runs").select("id").eq("branch_id",branch).eq("status","posted").limit(1),
   ]);
-  if(name.error||products.error||counts.error||purchases.error||waste.error||batches.error||orders.error||!analytics.ok||!("totalUsageEur" in analytics))return{ok:false as const,error:"load"};
+  if(name.error||products.error||counts.error||purchases.error||waste.error||batches.error||orders.error||production.error)return{ok:false as const,error:"load"};
   // Chunk identifiers to stay below Data API URL limits. readAll prevents silent 1,000-row truncation.
   const lines:InsightLine[]=[],receipts:InsightReceipt[]=[],receiptLines:InsightReceiptLine[]=[];
   const ids=(orders.data??[]).map(o=>o.id);
@@ -46,8 +47,23 @@ export async function getInventoryInsights(days: number = 30) {
     if(rows.error)return{ok:false as const,error:"load"};receiptLines.push(...(rows.data??[]));
   }
   return {ok:true as const,branch:name.data!,from,today,previousFrom,days,generatedAt:new Date().toISOString(),
-    report:inventoryInsights({productionCostingIncomplete:analytics.productionCostingIncomplete,today,from,previousFrom,products:products.data??[],counts:counts.data??[],purchases:purchases.data??[],waste:waste.data??[],batches:batches.data??[],orders:orders.data??[],lines,receipts,receiptLines}),
-    productionCostingIncomplete:analytics.productionCostingIncomplete??false,
+    report:inventoryInsights({productionCostingIncomplete:!!production.data?.length,today,from,previousFrom,products:products.data??[],counts:counts.data??[],purchases:purchases.data??[],waste:waste.data??[],batches:batches.data??[],orders:orders.data??[],lines,receipts,receiptLines}),
+    productionCostingIncomplete:!!production.data?.length,
+  };
+}
+
+// Measured consumption and recorded sales for the same period. Kept apart from getInventoryInsights because it
+// runs the full reconciliation (the slow part); the insights page loads it after the main figures are shown.
+export async function getInventoryConsumption(days: number = 30) {
+  if (![7,30,90].includes(days)) return {ok:false as const,error:"period"};
+  const db=await createClient();
+  const {data:{user}}=await db.auth.getUser();
+  if(!user)return{ok:false as const,error:"access"};
+  const {data:me,error:profileError}=await db.from("users").select("role,status").eq("id",user.id).single();
+  if(profileError||!me||me.status!=="active"||!MULTI_BRANCH_ROLES.includes(me.role))return{ok:false as const,error:"access"};
+  const analytics=await getInventoryAnalytics(days-1);
+  if(!analytics.ok||!("totalUsageEur" in analytics))return{ok:false as const,error:"load"};
+  return {ok:true as const,
     consumption:{value:analytics.totalUsageEur??null,complete:analytics.usageComplete??false,pct:analytics.cogsPct??null,span:analytics.usageSpan},
     sales:{value:analytics.totalSales??0,missingDays:analytics.missingSalesDays??0,enteredDays:analytics.salesDays},
   };

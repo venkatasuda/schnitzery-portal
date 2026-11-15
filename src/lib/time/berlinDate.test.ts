@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { berlinToday, berlinMonth, monthRange, isCalendarDate, mondayOfDate, berlinMonday, berlinWeekdayIndex } from "./berlinDate";
+import { berlinToday, berlinMonth, monthRange, isCalendarDate, mondayOfDate, berlinMonday, berlinWeekdayIndex, addDays, daysBetween } from "./berlinDate";
 
 it("keeps month boundaries as date-only UTC calendar dates", () => {
   expect(monthRange("2026-10")).toEqual({ ym: "2026-10", from: "2026-10-01", to: "2026-10-31", next: "2026-11-01" });
@@ -68,5 +68,20 @@ describe("berlinMonth & berlinMonday", () => {
   });
   it("berlinMonday returns a Monday", () => {
     expect(berlinWeekdayIndex(berlinMonday())).toBe(0);
+  });
+});
+
+describe("addDays / daysBetween", () => {
+  it("moves whole calendar days across month, year and both clock changes", () => {
+    expect(addDays("2026-10-24", 1)).toBe("2026-10-25"); // clock goes back that night
+    expect(addDays("2026-10-25", 1)).toBe("2026-10-26");
+    expect(addDays("2027-03-28", -1)).toBe("2027-03-27"); // spring forward
+    expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
+    expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
+  });
+  it("counts days between dates, negative when going back", () => {
+    expect(daysBetween("2026-10-24", "2026-10-26")).toBe(2);
+    expect(daysBetween("2027-03-29", "2027-03-27")).toBe(-2);
+    expect(daysBetween("2026-11-14", "2026-11-14")).toBe(0);
   });
 });

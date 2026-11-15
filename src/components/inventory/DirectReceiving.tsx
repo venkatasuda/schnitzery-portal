@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useRef,useState } from "react";
 import NativeDialog from "@/components/NativeDialog";
 import { Field } from "@/components/ui";
@@ -38,7 +39,7 @@ export default function DirectReceiving({branch,products,suppliers,onSaved,onClo
   setLines(next.length?next:[blank()]);setReviewed(false);setError("");
   setScan({lines:n.lines.length,matched,totalOk:checkNote(n).totalOk,open});
  }
- const close=()=>{if(!busy&&window.confirm(s("Discard this unsaved delivery?","Ungespeicherte Lieferung verwerfen?")))onClose();};
+ const close=async()=>{if(!busy&&(await askConfirm({ message: s("Discard this unsaved delivery?","Ungespeicherte Lieferung verwerfen?") })))onClose();};
  async function save(){if(busy||!reviewed)return;setError("");
   const body={supplier,invoice,received_date:date,note,lines:lines.map(l=>({product_id:l.product_id,accepted:Number(l.accepted),rejected:Number(l.rejected),cost:costHidden?null:Number(l.accepted)===0?0:l.cost.trim()===""?null:Number(l.cost),note:l.note,batches:Number(l.accepted)>0?l.batches.map(b=>({qty:Number(b.qty),lot:b.lot,expiry:b.expiry||null,expiry_note:b.expiry_note})):[]}))};
   const off=lines.map(l=>({l,sum:l.batches.reduce((n,b)=>n+(Number(b.qty)||0),0)})).find(({l,sum})=>Number(l.accepted)>0&&Math.abs(sum-Number(l.accepted))>1e-9);

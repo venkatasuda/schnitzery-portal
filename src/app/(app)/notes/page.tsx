@@ -8,6 +8,7 @@ import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 import { getStaffForNotes, addNote, getNotes } from "@/lib/queries/operations";
 import { PageHeader,  Field } from "@/components/ui";
+import ReportTabs from "@/components/ReportTabs";
 
 export default function NotesPage() {
   const { t, locale } = useLang();
@@ -55,6 +56,7 @@ export default function NotesPage() {
 
   return (
     <div className="workspace-page">
+      <ReportTabs group="team" />
       <PageHeader title={ <><Icon e="📝" size={22} /> {t("schedhub.notes")}</> } />
 
       {msg && <div className="mb-4 t-sm tone-action u-center">{msg}</div>}

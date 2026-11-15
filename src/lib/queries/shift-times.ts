@@ -1,18 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { SHIFT_MODEL } from "@/lib/queries/schedule-constants";
-import { activeBranchFor } from "@/lib/activeBranch";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, role: null, branchId: null, name: null };
-  const { data: p } = await supabase.from("users").select("role, branch_id, full_name").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null, name: p?.full_name ?? null };
-}
 
 const hhmm = (t?: string | null) => (t || "").slice(0, 5);                 // "08:00:00" → "08:00"
 function parseModel(t: string): { start: string; end: string } | null {     // "08:00–16:00" → parts

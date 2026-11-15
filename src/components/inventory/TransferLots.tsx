@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import {useEffect,useRef,useState} from "react";
 import NativeDialog from "@/components/NativeDialog";
 import {Field,ErrorState} from "@/components/ui";
@@ -19,7 +20,7 @@ export default function TransferLots({id,onClose,onSaved}:{id:string;onClose:()=
   const lines=rows.filter(r=>!sending||qty[r.id]?.trim()).map(r=>({id:r.id,qty:qty[r.id]?.trim()?Number(qty[r.id]):NaN})),key=JSON.stringify({lines,note});
   if(!command.current||command.current.key!==key)command.current={key,id:crypto.randomUUID()};
   setBusy(true);setError(false);try{const r=await postLotTransfer(id,command.current.id,sending?"send":"receive",lines,note);if(!r.ok){setError(true);return;}onSaved();onClose();}catch{setError(true);}finally{setBusy(false);}}
- const dirty=!!note||Object.values(qty).some(Boolean),close=()=>{if(!busy&&(!dirty||window.confirm(s("Discard unsaved lot selections?","Ungespeicherte Chargenauswahl verwerfen?"))))onClose();};
+ const dirty=!!note||Object.values(qty).some(Boolean),close=async()=>{if(!busy&&(!dirty||(await askConfirm({ message: s("Discard unsaved lot selections?","Ungespeicherte Chargenauswahl verwerfen?") }))))onClose();};
  return <NativeDialog title={s("Transfer batches","Transferchargen")} busy={busy} unsaved={dirty} onClose={close}>
   <h2>{s("Transfer batches","Transferchargen")}</h2>
   {error&&<ErrorState message={s("Transfer could not be saved or loaded. Refresh balances and retry; no partial transfer is posted.","Transfer konnte nicht gespeichert oder geladen werden. Bestände aktualisieren und erneut versuchen; keine Teilbuchung erfolgt.")} onRetry={load} retryLabel={s("Refresh","Aktualisieren")}/>}

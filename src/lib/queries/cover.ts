@@ -1,9 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
-import { berlinToday, berlinMonday, mondayOfDate } from "@/lib/time/berlinDate";
-import { activeBranchFor } from "@/lib/activeBranch";
+import { berlinToday, berlinMonday, mondayOfDate, addDays } from "@/lib/time/berlinDate";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { wageMapForBranches } from "@/lib/pay/wages";
 import { shiftMinutes } from "@/lib/pay/calculations";
@@ -11,21 +10,9 @@ import { isMinijob, minijobOverCap } from "@/lib/pay/legal";
 import { rosterEntryTimes } from "@/lib/time/roster";
 import { interval, restIssues, type Slot } from "@/lib/roster/cover-check";
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, profile: null };
-  const { data: profile } = await supabase
-    .from("users").select("id, full_name, role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
-}
 function isManager(r?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(r || "");
 }
-const addDays = (dateStr: string, n: number) => {
-  const d = new Date(dateStr + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-};
 const shiftTime = (team: string, shift: string) => SHIFT_MODEL[team]?.find((s) => s.shift === shift)?.time || "";
 
 // ── STAFF: my upcoming shifts (this week + next), with any active cover request marked ──

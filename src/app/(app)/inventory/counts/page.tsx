@@ -1,5 +1,8 @@
 "use client";
 
+import { toast } from "@/components/Toast";
+import { saveDraft, readDraft, clearDraft } from "@/lib/localDraft";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import InventoryNav from "@/components/InventoryNav";
@@ -22,7 +25,15 @@ export default function CountSessionsPage() {
   const request = useRef(0);
   const mounted = useRef(true);
   const dirty = Object.keys(entries).length > 0;
-  const canLeave = () => !dirty || window.confirm(t("countSession.discard"));
+  // Autosave: unsaved quantities of an open draft are kept on this device until saved or discarded.
+  const draftKey = data?.session?.status === "draft" ? `count-draft:${data.session.id}` : null;
+  useEffect(() => { if (draftKey) saveDraft(draftKey, dirty ? entries : null); }, [draftKey, entries, dirty]);
+  const canLeave = async () => {
+    if (!dirty) return true;
+    const ok = await askConfirm({ message: t("countSession.discard") });
+    if (ok && draftKey) clearDraft(draftKey);
+    return ok;
+  };
 
   async function load(id?: string) {
     if (!mounted.current) return;
@@ -32,7 +43,11 @@ export default function CountSessionsPage() {
       const result = await getCountSessions(id);
       if (current !== request.current) return;
       if (!result.ok) { setError(t(`countSession.error_${result.error}`)); return; }
-      setData(result); setEntries({}); setReviewed(false);
+      // Restore unsaved quantities from this device (only lines that still exist in the draft).
+      const backup = result.session?.status === "draft" ? readDraft<Record<string, string>>(`count-draft:${result.session.id}`) : null;
+      const restored = backup ? Object.fromEntries(Object.entries(backup).filter(([id, v]) => typeof v === "string" && result.lines.some(line => line.id === id))) : {};
+      setData(result); setEntries(restored); setReviewed(false);
+      if (Object.keys(restored).length) toast(locale === "de" ? "Ungespeicherte Zählungen wiederhergestellt" : "Unsaved counts restored", "info");
       const url = new URL(window.location.href);
       if (result.session) url.searchParams.set("session", result.session.id); else url.searchParams.delete("session");
       window.history.replaceState(null, "", url);
@@ -54,14 +69,15 @@ export default function CountSessionsPage() {
   const recentSessions = data?.session && !data.sessions.some(s => s.id === data.session!.id) ? [data.session, ...data.sessions] : data?.sessions ?? [];
   async function mutate(action: "start" | "save" | "complete" | "cancel") {
     if (!data || busy || (action !== "start" && !data.session)) return;
-    if (action === "cancel" && !window.confirm(t("countSession.cancelConfirm"))) return;
-    if (action === "complete" && !window.confirm(t("countSession.completeConfirm"))) return;
+    if (action === "cancel" && !(await askConfirm({ message: t("countSession.cancelConfirm") }))) return;
+    if (action === "complete" && !(await askConfirm({ message: t("countSession.completeConfirm") }))) return;
     setBusy(true); setError("");
     try {
       const lines = Object.entries(entries).map(([id, quantity]) => ({ id, quantity: quantity.trim() === "" ? null : Number(quantity) }));
       const result = await editCountSession(data.branch.id, action === "start" ? crypto.randomUUID() : data.session!.id, action, data.session?.revision ?? 0, action === "save" ? lines : []);
       if (!mounted.current) return;
       if (!result.ok) { setError(t(`countSession.error_${result.error}`)); return; }
+      if (data.session) clearDraft(`count-draft:${data.session.id}`);
       await load(result.id);
     } catch { if (mounted.current) setError(t("countSession.error_save")); }
     finally { if (mounted.current) setBusy(false); }
@@ -69,12 +85,12 @@ export default function CountSessionsPage() {
 
   return <div className="inventory-page">
     {data?.canPublish !== false ? <InventoryNav active="stock" canLeave={canLeave} /> : <Link className="inventory-back" href="/shift">← {locale==="de"?"Zurück zu Inventar":"Back to Inventory"}</Link>}
-    <PageHeader title={t("countSession.title")} subtitle={data?.branch.name ?? t("common.loading")} actions={data?.canPublish === false ? undefined : <Link className="btn-secondary" href="/inventory?view=count" aria-disabled={busy} onClick={event=>{if(busy||!canLeave())event.preventDefault();}}>{locale==="de"?"Einzelnen Artikel zählen":"Count one item"}</Link>} />
-    {error && <ErrorState message={error} onRetry={() => { if (canLeave()) load(data?.session?.id); }} retryLabel={t("countSession.reload")} />}
+    <PageHeader title={t("countSession.title")} subtitle={data?.branch.name ?? t("common.loading")} actions={data?.canPublish === false ? undefined : <Link className="btn-secondary" href="/inventory?view=count" aria-disabled={busy} onClick={async event=>{if(!busy&&!dirty)return;event.preventDefault();if(!busy&&await canLeave())window.location.assign("/inventory?view=count");}}>{locale==="de"?"Einzelnen Artikel zählen":"Count one item"}</Link>} />
+    {error && <ErrorState message={error} onRetry={async () => { if (await canLeave()) load(data?.session?.id); }} retryLabel={t("countSession.reload")} />}
     {loading ? <p role="status">{t("common.loading")}</p> : data && <>
       <div className="row-actions">
         <button className="btn-gold" disabled={busy || dirty} onClick={() => mutate("start")}>{t("countSession.start")}</button>
-        <label>{t("countSession.recent")} <select className="form-select" value={data.session?.id ?? ""} disabled={busy} onChange={event => { if (canLeave()) load(event.target.value); }}>
+        <label>{t("countSession.recent")} <select className="form-select" value={data.session?.id ?? ""} disabled={busy} onChange={async event => { const v = event.target.value; if (await canLeave()) load(v); }}>
           {!data.session && <option value="">—</option>}
           {recentSessions.map(s => <option key={s.id} value={s.id}>{fmtDay(s.count_date, locale)} · {t(`countSession.${s.status}`)} · {s.id.slice(0, 8)}</option>)}
         </select></label>

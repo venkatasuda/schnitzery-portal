@@ -1,9 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { readAll } from "@/lib/supabase/readAll";
 import { berlinToday, berlinMonth, mondayOfDate } from "@/lib/time/berlinDate";
-import { activeBranchFor } from "@/lib/activeBranch";
 import { IMPLAUSIBLE_SHIFT_MIN, isImplausibleShift } from "@/lib/pay/calculations";
 import { clockInFlag, type RosterEntry, type ShiftTime } from "@/lib/time/roster";
 import { getShiftTimes } from "@/lib/queries/shift-times";
@@ -14,14 +13,6 @@ import { DAYS } from "@/lib/queries/schedule-constants";
 // RLS keeps everything scoped to accessible branches.
 // ============================================================
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, role: null };
-  const { data: profile } = await supabase
-    .from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, role: profile?.role ?? null };
-}
 
 function isManager(role?: string | null) {
   return ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role || "");

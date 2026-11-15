@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
@@ -73,12 +74,12 @@ export default function OrderPage() {
     win.document.close();
   }
   return <div className="inventory-page">
-    <InventoryNav active="purchasing" canLeave={() => !dirty || confirm(t("orderDraft.discard"))} />
+    <InventoryNav active="purchasing" canLeave={async () => !dirty || (await askConfirm({ message: t("orderDraft.discard") }))} />
     <PageHeader title={locale==="de"?"Nachbestell-Arbeitsblatt":"Reorder worksheet"} subtitle={branchName || t("common.loading")} />
     <p className="ui-note">{t("orderDraft.notice")}</p>
-    <Link className="btn-gold" href="/inventory/purchasing?new=1" onClick={event=>{if(dirty&&!confirm(t("orderDraft.discard")))event.preventDefault();}}>{t("inventoryOps.createSavedOrder")}</Link>
+    <Link className="btn-gold" href="/inventory/purchasing?new=1" onClick={async event=>{if(!dirty)return;event.preventDefault();if(await askConfirm({ message: t("orderDraft.discard") }))window.location.assign("/inventory/purchasing?new=1");}}>{t("inventoryOps.createSavedOrder")}</Link>
     <div className="ui-toolbar">
-      <Segmented label={t("po.coverFor")} value={String(coverDays)} onChange={value => { if (!dirty || confirm(t("orderDraft.discard"))) setCoverDays(Number(value)); }} options={[7, 14, 30].map(n => ({ value: String(n), label: t("orderDraft.days", { n }) }))} />
+      <Segmented label={t("po.coverFor")} value={String(coverDays)} onChange={async value => { if (!dirty || (await askConfirm({ message: t("orderDraft.discard") }))) setCoverDays(Number(value)); }} options={[7, 14, 30].map(n => ({ value: String(n), label: t("orderDraft.days", { n }) }))} />
       <button type="button" className="btn-secondary u-push" onClick={print} disabled={!exportable}>{t("po.printPdf")}</button>
     </div>
     {loading ? <CardSkeleton rows={4} /> : error ? <ErrorState message={t("orderDraft.loadFailed")} onRetry={() => load(coverDays)} retryLabel={t("business.retry")} />

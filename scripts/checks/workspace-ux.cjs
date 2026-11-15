@@ -9,7 +9,8 @@ function moduleAt(file, resolve, url = 'http://schnitzery.localhost:3100/invento
   const location = new URL(url);
   const window = { location, addEventListener(){}, removeEventListener(){}, history:{replaceState(_state,_title,url){location.href=String(url);},pushState(_state,_title,url){location.href=String(url);}} };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText,
-    { exports, require: resolve, URL, URLSearchParams, window, crypto:require('node:crypto').webcrypto, setTimeout, console });
+    { exports, require: name => name === '@/lib/queries/me' && !file.endsWith('queries/me.ts') // shared getMe, built on this file's fakes
+      ? moduleAt('src/lib/queries/me.ts', n => n === 'react' ? { cache: f => f } : resolve(n)) : resolve(name), URL, URLSearchParams, window, crypto:require('node:crypto').webcrypto, setTimeout, console });
   return exports;
 }
 async function ui(page, result, url, file) {
@@ -29,6 +30,7 @@ async function ui(page, result, url, file) {
     if(name==='@/lib/inventory/batches')return moduleAt('src/lib/inventory/batches.ts',n=>n==='../time/berlinDate'?moduleAt('src/lib/time/berlinDate.ts',require):require(n));
     if(name==='@/lib/pay/legal')return moduleAt('src/lib/pay/legal.ts',require);
     if(name==='@/components/TipPool')return {__esModule:true,default:()=>null};
+    if(name==='@/lib/localDraft')return moduleAt('src/lib/localDraft.ts',require); // no localStorage in node: autosave is a no-op
     if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
     if(name==='@/lib/format')return moduleAt('src/lib/format.ts',require);
     if(name==='@/lib/inventory/orderDraft')return moduleAt('src/lib/inventory/orderDraft.ts',()=>moduleAt('src/lib/analytics/coverage.ts',require));

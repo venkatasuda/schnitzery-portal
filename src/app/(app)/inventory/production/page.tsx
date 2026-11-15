@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import InventoryNav from "@/components/InventoryNav";
@@ -23,7 +24,7 @@ export default function ProductionPage() {
   const [reason,setReason]=useState(""),[reverseReviewed,setReverseReviewed]=useState(false);
   const [loading,setLoading] = useState(true), [busy,setBusy] = useState(false), [dirty,setDirty] = useState(false), [reviewed,setReviewed] = useState(false), [error,setError] = useState("");
   const request=useRef(0), command=useRef<{key:string;id:string}|null>(null);
-  const canLeave = () => !dirty || window.confirm(s("Discard unsaved production changes?", "Ungespeicherte Produktionsänderungen verwerfen?"));
+  const canLeave = async () => !dirty || (await askConfirm({ message: s("Discard unsaved production changes?", "Ungespeicherte Produktionsänderungen verwerfen?") }));
   const number=(n:number)=>n.toLocaleString(locale==="de"?"de-DE":"en-GB",{maximumFractionDigits:6});
   async function load(id?:string) {
     const seq=++request.current;setLoading(true);setError("");
@@ -38,13 +39,13 @@ export default function ProductionPage() {
   useEffect(()=>{void load(new URLSearchParams(window.location.search).get("run")||undefined);return()=>{request.current++;};},[]);
   useEffect(()=>{const prevent=(event:BeforeUnloadEvent)=>{if(dirty){event.preventDefault();event.returnValue="";}};window.addEventListener("beforeunload",prevent);return()=>window.removeEventListener("beforeunload",prevent);},[dirty]);
   function change(update:Partial<Form>){setForm(old=>old?{...old,...update}:old);setDirty(true);setReviewed(false);}
-  function start(){if(!data||!canLeave())return;setData({...data,run:null,inputs:[]});setForm(blank());setDirty(true);setReviewed(false);setError("");command.current=null;const url=new URL(window.location.href);url.searchParams.delete("run");window.history.replaceState(null,"",url);}
+  async function start(){if(!data||!(await canLeave()))return;setData({...data,run:null,inputs:[]});setForm(blank());setDirty(true);setReviewed(false);setError("");command.current=null;const url=new URL(window.location.href);url.searchParams.delete("run");window.history.replaceState(null,"",url);}
   async function mutate(action:"production_save"|"production_post"|"production_cancel") {
     if(!data||busy)return;
     if(action==="production_save"&&(!form||!validProductionDraft(toDraft(form)))){setError(s("Check quantities, dates and duplicate ingredient batches. Blank fields can remain in a draft.","Mengen, Daten und doppelte Zutatenchargen prüfen. Leere Felder dürfen im Entwurf bleiben."));return;}
     if(action!=="production_save"&&(!data.run||data.run.status!=="draft"))return;
     if(action==="production_post"&&(dirty||!reviewed))return;
-    if(action==="production_cancel"&&!window.confirm(s("Cancel this saved draft? No stock will move.","Diesen gespeicherten Entwurf stornieren? Es wird kein Bestand bewegt.")))return;
+    if(action==="production_cancel"&&!(await askConfirm({ message: s("Cancel this saved draft? No stock will move.","Diesen gespeicherten Entwurf stornieren? Es wird kein Bestand bewegt.") })))return;
     const body={...(data.run?{id:data.run.id,revision:data.run.revision}:{}),...(action==="production_save"?{draft:toDraft(form!)}:{}),...(action==="production_post"?{reviewed:true}:{})};
     const key=JSON.stringify({action,body});if(command.current?.key!==key)command.current={key,id:crypto.randomUUID()};setBusy(true);setError("");
     try {
@@ -66,7 +67,7 @@ export default function ProductionPage() {
   return <div className="inventory-page"><InventoryNav active="kitchen" canLeave={canLeave}/>
     <PageHeader title={s("Kitchen production","Küchenproduktion")} subtitle={data?.branch.name} actions={<button className="btn-gold" disabled={!data||loading||busy} onClick={start}>{s("New production draft","Neuer Produktionsentwurf")}</button>}/>
     <details className="inventory-help"><summary>{s("Related stock records","Zugehörige Bestandsdaten")}</summary><nav className="inventory-insight-links" aria-label={s("Related stock records","Zugehörige Bestandsdaten")}><Link href="/inventory/batch-report">{s("Costs & traceability","Kosten und Rückverfolgung")}</Link><Link href="/inventory?view=catalog">{s("Product catalogue","Produktkatalog")}</Link><Link href="/expiry">{s("Ingredient batches & expiry","Zutatenchargen und Ablauf")}</Link></nav></details>
-    {error&&<p role="alert">{error} <button className="btn-secondary" disabled={busy} onClick={()=>{if(canLeave())void load(run?.id);}}>{s("Reload saved record","Gespeicherten Beleg neu laden")}</button></p>}
+    {error&&<p role="alert">{error} <button className="btn-secondary" disabled={busy} onClick={async()=>{if(await canLeave())void load(run?.id);}}>{s("Reload saved record","Gespeicherten Beleg neu laden")}</button></p>}
     {loading?<p role="status">{s("Loading production…","Produktion wird geladen…")}</p>:data&&<>
       {form&&<Panel title={run?s("Saved production draft","Gespeicherter Produktionsentwurf"):s("New production draft","Neuer Produktionsentwurf")}>
         <form onSubmit={event=>{event.preventDefault();void mutate("production_save");}}><fieldset disabled={busy} className="inventory-fieldset">
@@ -92,7 +93,7 @@ export default function ProductionPage() {
         <p>{run.draft.note}</p><details><summary>{s("Production record ID","Produktionsbeleg-ID")}</summary>{run.id}</details>
       </Panel>}
       <Panel title={s("Recent production records · latest 40","Letzte Produktionsbelege · letzte 40")}>
-        {!data.runs.length?<p>{s("No production records yet. Start a draft and add real data when ready.","Noch keine Produktionsbelege. Einen Entwurf beginnen und reale Daten später ergänzen.")}</p>:<ul>{data.runs.map(r=><li key={r.id}><button type="button" className="btn-secondary" disabled={busy} onClick={()=>{if(canLeave())void load(r.id);}}>{name(r)} · {r.reversed_at?s("Reversed","Storniert"):r.status==="draft"?s("Draft","Entwurf"):r.status==="posted"?s("Posted","Gebucht"):s("Cancelled","Storniert")} · {new Date(r.created_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})}</button></li>)}</ul>}
+        {!data.runs.length?<p>{s("No production records yet. Start a draft and add real data when ready.","Noch keine Produktionsbelege. Einen Entwurf beginnen und reale Daten später ergänzen.")}</p>:<ul>{data.runs.map(r=><li key={r.id}><button type="button" className="btn-secondary" disabled={busy} onClick={async()=>{if(await canLeave())void load(r.id);}}>{name(r)} · {r.reversed_at?s("Reversed","Storniert"):r.status==="draft"?s("Draft","Entwurf"):r.status==="posted"?s("Posted","Gebucht"):s("Cancelled","Storniert")} · {new Date(r.created_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})}</button></li>)}</ul>}
       </Panel>
     </>}
   </div>;

@@ -7,7 +7,7 @@ import { useLang } from "@/components/LanguageProvider";
 
 export type InventoryArea = "overview" | "stock" | "purchasing" | "kitchen" | "movements" | "reports";
 
-export default function InventoryNav({ active, currentView, purchasingTab, onNavigate, canLeave }: { active: InventoryArea; currentView?: string; purchasingTab?: string; onNavigate?: (view: string) => void; canLeave?: () => boolean }) {
+export default function InventoryNav({ active, currentView, purchasingTab, onNavigate, canLeave }: { active: InventoryArea; currentView?: string; purchasingTab?: string; onNavigate?: (view: string) => void; canLeave?: () => boolean | Promise<boolean> }) {
   const { t, locale } = useLang();
   const pathname = usePathname();
   const taskNav = useRef<HTMLElement>(null);
@@ -48,8 +48,11 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
   };
   function navigate(event: MouseEvent<HTMLAnchorElement>, href: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-    if (canLeave && !canLeave()) { event.preventDefault(); return; }
     const targetView = href.startsWith("/inventory?view=") ? href.split("=")[1] : null;
+    const go = () => { if (onNavigate && targetView) onNavigate(targetView); else window.location.assign(href); };
+    const ok = canLeave ? canLeave() : true;
+    if (ok === false) { event.preventDefault(); return; }
+    if (ok instanceof Promise) { event.preventDefault(); void ok.then((yes) => { if (yes) go(); }); return; }
     if (onNavigate && targetView) { event.preventDefault(); onNavigate(targetView); }
   }
   const parent = areas.find(area => area.id === active)!;
@@ -64,7 +67,8 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
       : pathname === href;
   return <div className="inventory-navigation">
     {/* Shown only inside the HQ view (CSS: [data-view="hq"] .inventory-hq-note). */}<p role="note" className="business-note inventory-hq-note">{s("Inventory is kept per branch. You are in “All branches (HQ)”, so this shows your home branch — choose a branch at the top to switch.", "Inventar wird je Filiale geführt. Du bist in „Alle Filialen (HQ)“, daher siehst du deine Stammfiliale — oben eine Filiale wählen, um zu wechseln.")}</p>
-    {(pathname !== "/inventory" || active !== "overview") && <Link className="inventory-back" href={back.href} onClick={event => navigate(event, back.href)}><span aria-hidden="true">←</span> {s("Back to", "Zurück zu")} {back.label}</Link>}
+    {/* One escape path: the tabs cover every listed page; a back link only for tools that are not a tab (quick count, labels). */}
+    {!(areas.some(area => isCurrent(area.href)) || sections[active].some(([, href]) => isCurrent(href))) && <Link className="inventory-back" href={back.href} onClick={event => navigate(event, back.href)}><span aria-hidden="true">←</span> {s("Back to", "Zurück zu")} {back.label}</Link>}
     <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>
       {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? (isCurrent(area.href) ? "page" : "location") : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
     </nav>

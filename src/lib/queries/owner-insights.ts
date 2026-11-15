@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { readAll } from "@/lib/supabase/readAll";
 import { activeBranchFor, accessibleBranchIds } from "@/lib/activeBranch";
-import { berlinToday, berlinMonday, mondayOfDate, isCalendarDate } from "@/lib/time/berlinDate";
+import { berlinToday, berlinMonday, mondayOfDate, isCalendarDate, addDays } from "@/lib/time/berlinDate";
 import { shiftMinutes } from "@/lib/pay/calculations";
 import { wageMapForBranches } from "@/lib/pay/wages";
 import { getShiftTimes } from "@/lib/queries/shift-times";
@@ -23,7 +23,6 @@ async function ctx() {
   const { data: p } = await db.from("users").select("role, branch_id").eq("id", user.id).single();
   return { db, role: p?.role ?? "", branchId: await activeBranchFor(db, p) };
 }
-const addDays = (d: string, n: number) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 const nextMonthStart = (d: string) => { const x = new Date(`${d.slice(0, 7)}-01T12:00:00Z`); x.setUTCMonth(x.getUTCMonth() + 1); return x.toISOString().slice(0, 10); };
 
 // Last 7 full days (today excluded — it is still running).

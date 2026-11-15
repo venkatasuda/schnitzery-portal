@@ -1,6 +1,7 @@
 "use client";
 // Availability: pick a week (‹ ›), tap what you can work, choose where it applies (this week / the whole month /
 // every week), save. Used on My Day → Availability and /availability.
+import { askConfirm } from "@/components/ConfirmDialog";
 import { appLocale } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { getMyAvailability, saveAvailability } from "@/lib/queries/availability";
@@ -75,10 +76,10 @@ export default function AvailabilityForm() {
   })();
 
   const monthName = weekStart ? new Date(`${weekMonth(weekStart)}-15T12:00:00Z`).toLocaleDateString(appLocale(), { timeZone: "UTC", month: "long" }) : "";
-  const step = (n: number) => {
+  const step = async (n: number) => {
     const w = addWeeks(weekStart, n);
     if (w < range.min || w > range.max) return;
-    if (dirty && !confirm(de ? "Ungespeicherte Änderungen für diese Woche verwerfen?" : "Discard the unsaved changes for this week?")) return;
+    if (dirty && !(await askConfirm({ message: de ? "Ungespeicherte Änderungen für diese Woche verwerfen?" : "Discard the unsaved changes for this week?" }))) return;
     void load(w);
   };
   if (loading && !weekStart) return <CardSkeleton rows={4} />;

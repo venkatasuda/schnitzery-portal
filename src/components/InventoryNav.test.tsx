@@ -50,11 +50,10 @@ describe("inventory navigation", () => {
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
     expect(html).not.toContain('aria-current="location"');
   });
-  it("keeps report siblings and a deterministic back link on a deep page", () => {
+  it("keeps report siblings and no extra back link when the page is already a tab", () => {
     context.path = "/inventory/valuation";
     const html = renderToStaticMarkup(<InventoryNav active="reports" />);
-    expect(html).toContain('class="inventory-back"');
-    expect(html).toContain("Back to");
+    expect(html).not.toContain('class="inventory-back"');
     expect(link(InventoryNav({ active: "reports" }), "/inventory/valuation")?.props["aria-current"]).toBe("page");
     expect(html).not.toContain('/inventory/connections');
   });

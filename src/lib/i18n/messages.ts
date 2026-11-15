@@ -60,7 +60,7 @@ export const messages = {
       forecastHelp: "Review estimated stock coverage and suggested quantities, then build a purchase order draft.",
       analyticsHelp: "Review purchase spending, estimated usage and cost trends. Use Stock movements to record waste, expiry and transfers.",
     },
-    homeDashboard: { lowStock: "Below target", reviewAll: "Review all", details: "Details", unavailable: "Some data is unavailable. Try refreshing.", rosterReady: "Next week · roster built", rosterOpen: "Next week · roster open", noWasteTrend: "No recorded waste trend to display.", workflows: "Quick actions", offlineKiosks: "Offline kiosks" },
+    homeDashboard: { planning: "Planning & trends", lowStock: "Below target", reviewAll: "Review all", details: "Details", unavailable: "Some data is unavailable. Try refreshing.", rosterReady: "Next week · roster built", rosterOpen: "Next week · roster open", noWasteTrend: "No recorded waste trend to display.", workflows: "Quick actions", offlineKiosks: "Offline kiosks" },
     workspace: { dashboard: "Dashboard", operations: "Operations", workforce: "Workforce", business: "Business", reports: "Reports & costs", management: "Management workspace", navigation: "Navigation", table: "Report records" },
     nav: {
       home: "Home", myDay: "My Day", shifts: "Shifts", schedule: "Schedule",
@@ -94,7 +94,7 @@ export const messages = {
       empty: "Ask a question to get started.",
       error: "Something went wrong. Try again.",
     },
-    home: {
+    home: { lateToday: "{n} late today",
       updateInProfile: "Update in Profile",
       docsNeedAttention: "Documents need attention",
       docExpired: "{doc} expired {days} days ago — please renew.",
@@ -142,6 +142,7 @@ export const messages = {
     teams: { Manager: "Manager", Preparation: "Preparation", Kitchen: "Kitchen", Cashier: "Cashier", Dishwashing: "Dishwashing" },
     mybr: { title: "All my branches", subtitle: "Today at a glance. Open a branch to work in it.", none: "No branches linked to your account.", scheduled: "Scheduled", absent: "No-show", hours: "Hours today", toApprove: "To approve", open: "Open" },
     links: { title: "Branches", hint: "Extra branches this person may work in. They switch between them with the branch picker at the top.", home: "home branch" },
+    perf: { title: "How we are doing", lastWeek: "Last week", vsWeekBefore: "vs week before", points: "pts", same: "no change", hours: "Hours worked", routine: "Routine checks", waste: "Waste", setup: "Setup", setupDone: "{a} of {b} done" },
     cockpit: {
       title: "This month vs. target", sales: "Sales", labour: "Labour % of sales", purchase: "Purchases % of sales", prime: "Prime cost %",
       monthToDate: "Month to date", salesMissing: "{n} day(s) without sales", incomplete: "Inputs incomplete", noTarget: "No target set", target: "Target {n}%",
@@ -160,7 +161,7 @@ export const messages = {
       holiday: "public holiday (forecast from past Sundays)", expectedSales: "Expected sales", plannedHours: "Planned hours", plannedCost: "Planned labour cost", projectedLabour: "Expected labour %", day: "Day", labourShort: "Labour %",
       unknownShifts: "{n} rostered shift(s) without times", forecastNote: "Sales = average of the same weekday over the last 4 weeks",
       trend: "Last 8 weeks", splh: "Sales per labour hour", splhVsAvg: "Last week · 4-week average {avg}", trendNote: "Last full week. Faded bars: sales not entered for every day.",
-      health: "Branch health", healthNote: "Routine work done in the last 7 days",
+      health: "Branch health", healthNote: "Routine work done in the last 7 days", last7: "last 7 days",
       h_temps: "Temperature checks", h_checklists: "Checklists", h_sales: "Sales entered", h_approvals: "Shifts reviewed", score: "Health",
     },
     targets: {
@@ -461,7 +462,7 @@ export const messages = {
       st_requested: "Requested", st_sent: "Sent", st_received: "Received", st_rejected: "Rejected", st_cancelled: "Cancelled",
     },
     roster: {
-      remoteChange: "This week was changed elsewhere.", reload: "Reload",
+      remoteChange: "This week was changed elsewhere.", reload: "Reload", backupTitle: "Unsaved changes found", backupRestore: "This week has roster changes from this device that were not saved. Restore them?", backupYes: "Restore", backupOutdated: "Unsaved roster changes from this device were dropped: the roster was changed in the meantime.", discardEdits: "Discard changes",
       copyTo: "Copy to…", copyAllDays: "All other days", copied: "{n} shifts copied",
       errRules: "Not published: fix the working-time problems below.", warnRules: "Publish anyway?", issRest: "{name} · {day}: only {h} h rest before this shift (11 h required)", issOverlap: "{name} · {day}: two shifts overlap", issHours: "{name}: {h} h planned, above the weekly contract", issMinijob: "{name}: above the Minijob limit this month",
       timePending: "time pending", smart: "Smart automate", swapHint: "Tap to choose someone else · drag onto another shift of the day to swap", swapWith: "Replace {name}", why_unavailable: "not available", why_sameDay: "already working that day", why_rest: "breaks the 11 h rest rule", why_hours: "over weekly contract hours", why_minijob: "over the Minijob limit", why_team: "other team", why_tier: "lower tier for the weekend", why_noAvail: "no availability submitted", smartReplace: "Replace this week's shifts with an automatic plan from the staffing targets?", smartNoTargets: "Set staffing targets first (Settings → Shift times).", smartDone: "Planned {n} shifts · {o} still open — check, then save or publish", publish: "Publish roster", publishConfirm: "Publish this week? Everyone on the roster gets a notification.", published: "Roster published · {n} notified", discardDraft: "Discard draft", discardDraftConfirm: "Discard this draft? The published roster stays as it is.", draftDiscarded: "Draft discarded", stUnsaved: "Unsaved changes", stDraft: "Draft · not visible to staff", stPublished: "Published", stEmpty: "Not planned", errStale: "The live roster changed since this draft (e.g. a cover was approved). Discard the draft and plan again.", errNoDraft: "Nothing to publish.", title: "Weekly Roster", subtitle: "Assign staff to shifts · {week}", managersOnly: "Only managers can edit the roster.",
@@ -967,7 +968,7 @@ export const messages = {
       forecastHelp: "Geschätzte Bestandsreichweite und vorgeschlagene Mengen prüfen und einen Bestellentwurf erstellen.",
       analyticsHelp: "Einkaufsausgaben, geschätzten Verbrauch und Kostentrends prüfen. Abfall, Ablaufdaten und Transfers unter Bestandsbewegungen erfassen.",
     },
-    homeDashboard: { lowStock: "Unter Zielbestand", reviewAll: "Alle prüfen", details: "Details", unavailable: "Einige Daten sind nicht verfügbar. Bitte neu laden.", rosterReady: "Nächste Woche · Dienstplan erstellt", rosterOpen: "Nächste Woche · Dienstplan offen", noWasteTrend: "Kein erfasster Abfallverlauf vorhanden.", workflows: "Schnellaktionen", offlineKiosks: "Offline-Kiosks" },
+    homeDashboard: { planning: "Planung & Trends", lowStock: "Unter Zielbestand", reviewAll: "Alle prüfen", details: "Details", unavailable: "Einige Daten sind nicht verfügbar. Bitte neu laden.", rosterReady: "Nächste Woche · Dienstplan erstellt", rosterOpen: "Nächste Woche · Dienstplan offen", noWasteTrend: "Kein erfasster Abfallverlauf vorhanden.", workflows: "Schnellaktionen", offlineKiosks: "Offline-Kiosks" },
     workspace: { dashboard: "Übersicht", operations: "Betrieb", workforce: "Personal", business: "Unternehmen", reports: "Berichte & Kosten", management: "Verwaltungsportal", navigation: "Navigation", table: "Berichtsdaten" },
     nav: {
       home: "Start", myDay: "Mein Tag", shifts: "Schichten", schedule: "Dienstplan",
@@ -1001,7 +1002,7 @@ export const messages = {
       empty: "Stell eine Frage, um zu starten.",
       error: "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
     },
-    home: {
+    home: { lateToday: "{n} heute zu spät",
       updateInProfile: "Im Profil aktualisieren",
       docsNeedAttention: "Dokumente beachten",
       docExpired: "{doc} ist vor {days} Tagen abgelaufen — bitte erneuern.",
@@ -1049,6 +1050,7 @@ export const messages = {
     teams: { Manager: "Manager", Preparation: "Vorbereitung", Kitchen: "Küche", Cashier: "Kasse", Dishwashing: "Spülküche" },
     mybr: { title: "Alle meine Filialen", subtitle: "Heute auf einen Blick. Filiale öffnen, um darin zu arbeiten.", none: "Deinem Konto sind keine Filialen zugeordnet.", scheduled: "Eingeplant", absent: "Nicht erschienen", hours: "Stunden heute", toApprove: "Zu genehmigen", open: "Öffnen" },
     links: { title: "Filialen", hint: "Weitere Filialen, in denen diese Person arbeiten darf. Gewechselt wird über die Filialauswahl oben.", home: "Stammfiliale" },
+    perf: { title: "Wie läuft es", lastWeek: "Letzte Woche", vsWeekBefore: "zur Vorwoche", points: "Pkt.", same: "unverändert", hours: "Gearbeitete Stunden", routine: "Routinearbeit", waste: "Ausschuss", setup: "Einrichtung", setupDone: "{a} von {b} erledigt" },
     cockpit: {
       title: "Dieser Monat vs. Ziel", sales: "Umsatz", labour: "Personal in % vom Umsatz", purchase: "Einkauf in % vom Umsatz", prime: "Prime Cost %",
       monthToDate: "Monat bis heute", salesMissing: "{n} Tag(e) ohne Umsatz", incomplete: "Angaben unvollständig", noTarget: "Kein Ziel gesetzt", target: "Ziel {n} %",
@@ -1067,7 +1069,7 @@ export const messages = {
       holiday: "Feiertag (Prognose aus vergangenen Sonntagen)", expectedSales: "Erwarteter Umsatz", plannedHours: "Geplante Stunden", plannedCost: "Geplante Personalkosten", projectedLabour: "Erwartete Personal-%", day: "Tag", labourShort: "Personal %",
       unknownShifts: "{n} geplante Schicht(en) ohne Uhrzeiten", forecastNote: "Umsatz = Durchschnitt des gleichen Wochentags der letzten 4 Wochen",
       trend: "Letzte 8 Wochen", splh: "Umsatz pro Arbeitsstunde", splhVsAvg: "Letzte Woche · 4-Wochen-Schnitt {avg}", trendNote: "Letzte volle Woche. Blasse Balken: Umsatz nicht für jeden Tag eingetragen.",
-      health: "Filial-Gesundheit", healthNote: "Routinearbeit der letzten 7 Tage erledigt",
+      health: "Filial-Gesundheit", healthNote: "Routinearbeit der letzten 7 Tage erledigt", last7: "letzte 7 Tage",
       h_temps: "Temperaturkontrollen", h_checklists: "Checklisten", h_sales: "Umsatz eingetragen", h_approvals: "Schichten geprüft", score: "Gesundheit",
     },
     targets: {
@@ -1368,7 +1370,7 @@ export const messages = {
       st_requested: "Angefragt", st_sent: "Gesendet", st_received: "Erhalten", st_rejected: "Abgelehnt", st_cancelled: "Abgebrochen",
     },
     roster: {
-      remoteChange: "Diese Woche wurde woanders geändert.", reload: "Neu laden",
+      remoteChange: "Diese Woche wurde woanders geändert.", reload: "Neu laden", backupTitle: "Ungespeicherte Änderungen gefunden", backupRestore: "Für diese Woche gibt es nicht gespeicherte Änderungen von diesem Gerät. Wiederherstellen?", backupYes: "Wiederherstellen", backupOutdated: "Ungespeicherte Planänderungen von diesem Gerät wurden verworfen: Der Plan wurde inzwischen geändert.", discardEdits: "Änderungen verwerfen",
       copyTo: "Kopieren nach…", copyAllDays: "Alle anderen Tage", copied: "{n} Schichten kopiert",
       errRules: "Nicht veröffentlicht: Arbeitszeitprobleme unten beheben.", warnRules: "Trotzdem veröffentlichen?", issRest: "{name} · {day}: nur {h} Std. Ruhezeit vor dieser Schicht (11 Std. nötig)", issOverlap: "{name} · {day}: zwei Schichten überschneiden sich", issHours: "{name}: {h} Std. geplant, über dem Wochenvertrag", issMinijob: "{name}: über der Minijob-Grenze in diesem Monat",
       timePending: "Zeit offen", smart: "Automatisch planen", swapHint: "Tippen, um jemand anderen zu wählen · auf eine andere Schicht des Tages ziehen zum Tauschen", swapWith: "{name} ersetzen", why_unavailable: "nicht verfügbar", why_sameDay: "arbeitet an dem Tag schon", why_rest: "verletzt die 11-Std.-Ruhezeit", why_hours: "über Wochen-Vertragsstunden", why_minijob: "über der Minijob-Grenze", why_team: "anderes Team", why_tier: "niedrigere Stufe fürs Wochenende", why_noAvail: "keine Verfügbarkeit angegeben", smartReplace: "Schichten dieser Woche durch einen automatischen Plan aus der Besetzung ersetzen?", smartNoTargets: "Zuerst die Besetzung je Schicht festlegen (Einstellungen → Schichtzeiten).", smartDone: "{n} Schichten geplant · {o} noch offen — prüfen, dann speichern oder veröffentlichen", publish: "Dienstplan veröffentlichen", publishConfirm: "Diese Woche veröffentlichen? Alle im Plan werden benachrichtigt.", published: "Dienstplan veröffentlicht · {n} benachrichtigt", discardDraft: "Entwurf verwerfen", discardDraftConfirm: "Entwurf verwerfen? Der veröffentlichte Plan bleibt unverändert.", draftDiscarded: "Entwurf verworfen", stUnsaved: "Nicht gespeichert", stDraft: "Entwurf · für Mitarbeitende unsichtbar", stPublished: "Veröffentlicht", stEmpty: "Nicht geplant", errStale: "Der aktuelle Plan hat sich seit diesem Entwurf geändert (z. B. genehmigte Schichtübernahme). Entwurf verwerfen und neu planen.", errNoDraft: "Nichts zu veröffentlichen.", title: "Wochendienstplan", subtitle: "Mitarbeiter Schichten zuweisen · {week}", managersOnly: "Nur Manager können den Dienstplan bearbeiten.",

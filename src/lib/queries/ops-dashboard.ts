@@ -1,10 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { timesOn } from "@/lib/time/roster";
 import { berlinToday } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
-import { activeBranchFor } from "@/lib/activeBranch";
 
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const TZ = "Europe/Berlin";
@@ -33,13 +32,6 @@ function dayNameOf(dateStr: string): string {
 function parseModel(s: string) { const p = String(s).split(/[–—-]/).map((x) => x.trim()); return { start: p[0] || "", end: p[1] || "" }; }
 const todayStr = () => berlinToday();
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, role: null, branchId: null };
-  const { data: p } = await supabase.from("users").select("role, branch_id").eq("id", user.id).single();
-  return { supabase, user, role: p?.role ?? null, branchId: await activeBranchFor(supabase, p), homeBranchId: p?.branch_id ?? null };
-}
 
 // Filter options for the dashboard controls.
 export async function getOpsFilters() {

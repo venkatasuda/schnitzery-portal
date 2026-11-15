@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { timesOn } from "@/lib/time/roster";
-import { berlinToday } from "@/lib/time/berlinDate";
+import { berlinToday, addDays } from "@/lib/time/berlinDate";
 import { DAYS, SHIFT_MODEL } from "@/lib/queries/schedule-constants";
 
 // ============================================================================
@@ -29,10 +29,6 @@ function mondayOfDate(s: string): string {
   const [Y, M, D] = s.split("-").map(Number);
   const d = new Date(Date.UTC(Y, M - 1, D)); const js = d.getUTCDay();
   d.setUTCDate(d.getUTCDate() + (js === 0 ? -6 : 1 - js));
-  return d.toISOString().slice(0, 10);
-}
-function addDays(s: string, n: number): string {
-  const d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
 function parseModel(s: string) { const p = String(s).split(/[–—-]/).map((x) => x.trim()); return { start: p[0] || "", end: p[1] || "" }; }

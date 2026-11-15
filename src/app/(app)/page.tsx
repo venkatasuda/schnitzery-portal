@@ -9,7 +9,9 @@ import { getLaborSummary } from "@/lib/queries/labor";
 import { getTargets, getDailyFlash, type Targets } from "@/lib/queries/targets";
 import { formatPct, formatEur } from "@/lib/format";
 import OwnerCockpit from "@/components/dash/OwnerCockpit";
-import OwnerInsights, { type Insights } from "@/components/dash/OwnerInsights";
+import DashSection from "@/components/dash/DashSection";
+import { ForecastPanel, HealthPanel, type Insights } from "@/components/dash/OwnerInsights";
+import PerformanceBand from "@/components/dash/PerformanceBand";
 import { getOwnerInsights, getSetupProgress } from "@/lib/queries/owner-insights";
 import SetupCard from "@/components/dash/SetupCard";
 import type { SetupStep } from "@/lib/owner/insights";
@@ -47,6 +49,8 @@ export default async function HomePage() {
       .from("users").select("full_name, role, team, avatar_url, branch_id").eq("id", user.id).single();
     profile = data;
   }
+  // A failed profile read must not show a manager or owner the employee home: say so and offer a reload.
+  if (user && !profile) return <div className="card" role="alert">{t("common.loadFailed")} <a className="btn-secondary ui-btn-sm" href="/">{t("business.retry")}</a></div>;
   const role = profile?.role || "staff";
   const isManager = ["manager", "branch_owner", "brand_owner", "super_admin"].includes(role);
   const isHQrole = ["brand_owner", "super_admin"].includes(role); // brand owner / super admin
@@ -89,7 +93,7 @@ export default async function HomePage() {
     const ownerView = isBranchOwner || hqBranchMode;
     const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes, sRes, obRes, docRes] = await Promise.all([
       getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6).catch(() => ({ ok: false })),
-      ownerView ? getTargets().catch(() => null) : null, ownerView ? getDailyFlash().catch(() => null) : null, ownerView ? getOwnerInsights().catch(() => null) : null, ownerView ? getSetupProgress().catch(() => null) : null,
+      getTargets().catch(() => null), getDailyFlash().catch(() => null), getOwnerInsights().catch(() => null), ownerView ? getSetupProgress().catch(() => null) : null,
       getBranchOnboarding().catch(() => null),
       getDocumentsDashboard().catch(() => null),
     ]);
@@ -166,10 +170,14 @@ export default async function HomePage() {
         <OwnerDash t={t} data={org} waste={hqWaste} />
       ) : isManager ? (
         <>
-          {mSetup && <SetupCard steps={mSetup} t={t} />}
-          {(isBranchOwner || hqBranchMode) && <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={mFlash} t={t} locale={locale} />}
-          {mInsights && <OwnerInsights data={mInsights} labourTarget={mTargets?.labourPct ?? null} t={t} locale={locale} />}
-          <ManagerDash ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
+          {/* A branch manager's day in one screen, in the order of their questions:
+              1 what needs me now · 2 how are we doing (last week + 8-week trend) · 3 this month vs target ·
+              4 what is planned next week · 5 folded: routine checks, waste, setup, quick actions. */}
+          <ManagerDash part="now" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
+          {mInsights && <PerformanceBand trend={mInsights.trend} labourTarget={mTargets?.labourPct ?? null} flash={mFlash} t={t} locale={locale} />}
+          <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={null} t={t} locale={locale} />
+          {mInsights && <ForecastPanel data={mInsights} labourTarget={mTargets?.labourPct ?? null} t={t} locale={locale} />}
+          <ManagerDash part="details" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} insights={mInsights} setup={mSetup} />
         </>
       ) : (
         <StaffDash hours={staffHours} clockedIn={staffClockedIn} onBreak={staffOnBreak} shiftLeader={staffShiftLeader} t={t} locale={locale} />
@@ -227,7 +235,8 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
 }
 
 // ─────────── MANAGER DASHBOARD ───────────
-function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, newHires = 0, docs, t, locale }: {
+function ManagerDash({ part, ops, live, ot, sched, clockedIn, onBreak, owner = false, cost, waste, newHires = 0, docs, insights = null, setup = null, t, locale }: {
+  part: "now" | "details"; insights?: Insights | null; setup?: SetupStep[] | null;
   locale: string; newHires?: number; docs?: { missing: number; expired: number; pending: number };
   ops: { staffCount: number; pendingApprovals: number; openIncidents: number; lowStock: number; checklistDone: number; checklistTotal: number } | null;
   live: { workingNow: number; completed: number; late: number; totalMins: number; forgotten?: number; suspect?: number } | null;
@@ -245,12 +254,42 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
     ...(docs?.missing ? [{ href: "/expiring-docs?bucket=missing", icon: "📄", text: t("home.docsMissing", { n: docs.missing }), tone: "warn" }] : []),
     ...(docs?.pending ? [{ href: "/expiring-docs?bucket=pending", icon: "📄", text: t("home.docsPending", { n: docs.pending }), tone: "warn" }] : []),
     ...(missing ? [{ href: "/noshow", icon: "📋", text: t("home.notSubmitted", { n: missing }), tone: "warn" }] : []),
+    ...(live?.late ? [{ href: "/attendance-hub", icon: "⏱", text: t("home.lateToday", { n: live.late }), tone: "warn" }] : []),
     ...(live?.forgotten ? [{ href: "/attendance-hub", icon: "⏰", text: t("cockpit.forgotten", { n: live.forgotten }), tone: "danger" }] : []),
     ...(live?.suspect ? [{ href: "/approvals", icon: "⚠", text: t("cockpit.suspect", { n: live.suspect }), tone: "danger" }] : []),
     ...(cost?.belowMinNow ? [{ href: "/labor", icon: "⚖", text: t("home.belowMinNow", { n: cost.belowMinNow }), tone: "danger" }] : []),
     ...(cost?.belowMinSoon && cost.nextMin ? [{ href: "/labor", icon: "⚖", text: t("home.belowMinSoon", { n: cost.belowMinSoon, min: formatEur(cost.nextMin.eur, locale, "auto"), date: new Date(`${cost.nextMin.from}T12:00:00Z`).toLocaleDateString(locale, { timeZone: "Europe/Berlin" }) }), tone: "warn" }] : []),
     ...(cost?.coverage?.sales.missing.salesDays ? [{ href: "/labor", icon: "💶", text: t("cockpit.salesMissingAlert", { n: cost.coverage.sales.missing.salesDays }), tone: "warn" }] : []),
   ];
+  const WASTE_PANEL = (
+      <section className="dashboard-panel">
+        <div className="dashboard-panel-heading"><h2>{t("home.wasteTrend")}</h2><Link href="/waste">{t("homeDashboard.details")} ›</Link></div>
+        {waste && waste.some((w) => w.value > 0) ? <MiniBars data={waste} tone="blue" unit="€" /> : <div className="dashboard-empty"><Icon e="📊" size={24} /><p>{t("homeDashboard.noWasteTrend")}</p></div>}
+        <div className="dashboard-section-footer"><span>{t("home.today")}</span><span>{t("home.statDone")}: {live?.completed ?? "—"} · {t("home.statLate")}: {live?.late ?? "—"}</span></div>
+      </section>
+  );
+  if (part === "details") {
+    const h = insights?.health;
+    const wasteTotal = (waste || []).reduce((n, w) => n + (w.value || 0), 0);
+    const setupDone = setup ? setup.filter((x) => x.done).length : 0;
+    return <>
+      <DashSection id="routine" title={t("perf.routine")} hint={h?.score != null ? `${h.score}% · ${t("insights.last7")}` : undefined}>
+        {insights ? <HealthPanel data={insights} t={t} locale={locale} /> : <p className="dashboard-muted">{t("homeDashboard.unavailable")}</p>}
+        <div className="dashboard-section-footer"><span>{t("home.dailyChecklist")}</span><Link href={owner ? "/checklist-status" : "/checklist"}>{ops && ops.checklistTotal > 0 ? `${ops.checklistDone} / ${ops.checklistTotal}` : "—"} ›</Link></div>
+      </DashSection>
+      <DashSection id="waste" title={t("perf.waste")} hint={wasteTotal > 0 ? fmtEur(wasteTotal, locale) : undefined}>{WASTE_PANEL}</DashSection>
+      {setup && setupDone < setup.length && <DashSection id="setup" title={t("perf.setup")} hint={t("perf.setupDone", { a: setupDone, b: setup.length })}><SetupCard steps={setup} t={t} /></DashSection>}
+      <DashSection id="tools" title={t("homeDashboard.workflows")}>
+        <div className="dashboard-tools">
+          <Shortcut href="/day-close" icon="🔒" title={t("home.dayClose")} />
+          <Shortcut href="/summary" icon="📄" title={t("home.monthlySummary")} />
+          <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} />
+          <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
+          <Shortcut href="/announcements" icon="📣" title={t("home.postAnnouncement")} />
+        </div>
+      </DashSection>
+    </>;
+  }
   return <div className="dashboard-layout">
     <div className="dashboard-kpis">
       <DashboardStat label={t("home.workingNow")} value={live?.workingNow ?? "—"} href="/attendance-hub" icon="👥" />
@@ -264,7 +303,6 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
         {!ops || !sched ? <p className="dashboard-muted">{t("homeDashboard.unavailable")}</p> : null}
         {alerts.map((a) => <Link href={a.href} key={a.href} className="dashboard-attention-row"><span className={`dashboard-status-icon ${a.tone}`}><Icon e={a.icon} size={18} /></span><span>{a.text}</span><Icon e="›" size={18} /></Link>)}
         {ops && sched && alerts.length === 0 && <div className="dashboard-empty"><Icon e="✅" size={24} color="var(--success)" /><div><strong>{t("home.allClear")}</strong><p>{t("home.allClearSub")}</p></div></div>}
-        <div className="dashboard-section-footer"><span>{t("home.dailyChecklist")}</span><Link href={owner ? "/checklist-status" : "/checklist"}>{ops && ops.checklistTotal > 0 ? `${ops.checklistDone} / ${ops.checklistTotal}` : "—"} ›</Link></div>
       </section>
       <section className="dashboard-panel">
         <div className="dashboard-panel-heading"><h2>{t("nav.schedule")}</h2><Icon e="📅" size={20} color="var(--gold-ink)" /></div>
@@ -274,35 +312,6 @@ function ManagerDash({ ops, live, ot, sched, clockedIn, onBreak, owner = false, 
         {!owner && <Link href="/attendance" className="dashboard-clock"><Icon e="🕐" size={18} /><span>{onBreak ? t("home.clockOnBreak") : clockedIn ? t("home.clockWorking") : t("home.clockInOut")}</span><Icon e="›" size={16} /></Link>}
       </section>
     </div>
-    <div className="dashboard-detail-grid">
-      <section className="dashboard-panel">
-        <div className="dashboard-panel-heading"><h2>{t("business.overview")}</h2><Link href="/analytics">{t("homeDashboard.details")} ›</Link></div>
-        <div className="dashboard-costs">
-          <div><span>{t("business.sales")}</span><strong>{cost?.monthSales == null || (cost.coverage?.sales.complete === false && !cost.monthSales) ? "—" : `${cost.coverage?.sales.complete === false ? "≥ " : ""}${fmtEur(cost.monthSales, locale)}`}</strong></div>
-          <div><span>{t("business.purchases")}</span><strong>{cost?.invSpend == null || (cost.coverage?.spend.complete === false && !cost.invSpend) ? "—" : `${cost.coverage?.spend.complete === false ? "≥ " : ""}${fmtEur(cost.invSpend, locale)}`}</strong></div>
-        </div>
-        <div className="dashboard-facts">
-          <div><span>{t("home.laborPct")}</span><strong>{formatPct(cost?.laborPct, locale)}</strong></div>
-          <div><span>{t("home.foodCostPct")}</span><strong>{formatPct(cost?.foodCostPct, locale)}</strong></div>
-        </div>
-        <p className="dashboard-muted">{[cost?.missingWageStaff ? t("business.missingWages", { n: cost.missingWageStaff }) : "", cost?.coverage?.sales.missing.salesDays ? t("business.missingSalesDays", { n: cost.coverage.sales.missing.salesDays }) : "", cost?.coverage?.spend.missing.costs ? t("business.missingCosts", { n: cost.coverage.spend.missing.costs }) : ""].filter(Boolean).join(" · ") || t("business.purchaseNote")}</p>
-      </section>
-      <section className="dashboard-panel">
-        <div className="dashboard-panel-heading"><h2>{t("home.wasteTrend")}</h2><Link href="/waste">{t("homeDashboard.details")} ›</Link></div>
-        {waste && waste.some((w) => w.value > 0) ? <MiniBars data={waste} tone="blue" unit="€" /> : <div className="dashboard-empty"><Icon e="📊" size={24} /><p>{t("homeDashboard.noWasteTrend")}</p></div>}
-        <div className="dashboard-section-footer"><span>{t("home.today")}</span><span>{t("home.statDone")}: {live?.completed ?? "—"} · {t("home.statLate")}: {live?.late ?? "—"}</span></div>
-      </section>
-    </div>
-    <section className="dashboard-workflows">
-      <h2>{t("homeDashboard.workflows")}</h2>
-      <div className="dashboard-tools">
-        <Shortcut href="/day-close" icon="🔒" title={t("home.dayClose")} />
-        <Shortcut href="/summary" icon="📄" title={t("home.monthlySummary")} />
-        <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} />
-        <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
-        <Shortcut href="/announcements" icon="📣" title={t("home.postAnnouncement")} />
-      </div>
-    </section>
   </div>;
 }
 
@@ -320,7 +329,7 @@ function OwnerDash({ t, data, waste }: { t: Tf; data: OrgOverview | null; waste?
   return <div className="dashboard-layout">
     <div className="dashboard-kpis">
       <DashboardStat label={t("org.branches")} value={data?.totals.branches ?? "—"} href="/branches" icon="🏢" />
-      <DashboardStat label={t("org.employees")} value={data?.totals.employees ?? "—"} href="/people-hub" icon="👥" />
+      <DashboardStat label={t("org.employees")} value={data?.totals.employees ?? "—"} href="/staff" icon="👥" />
       <DashboardStat label={t("org.workingNow")} value={data?.totals.workingNow ?? "—"} href="/overview" icon="🕐" />
       <DashboardStat label={t("org.issues")} value={data?.totals.issues ?? "—"} href="/overview" icon="⚠" />
     </div>

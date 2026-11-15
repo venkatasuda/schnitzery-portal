@@ -11,6 +11,7 @@ import Icon from "@/components/Icon";
 import { PageHeader,  Field } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
 import { skillTeam, workTeams } from "@/lib/roster/teams";
+import ReportTabs from "@/components/ReportTabs";
 
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
 const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
@@ -178,6 +179,7 @@ export default function StaffPage() {
 
   return (
     <div className="workspace-page">
+      <ReportTabs group="team" />
       <PageHeader title={ <><Icon e="👥" size={22} /> {t("staff.title")}</> } subtitle={loading ? t("common.loading") : t("staff.memberCount", { n: activeStaff.length })} actions={<button className="btn-gold" onClick={() => { setShowAdd(true); setAddMsg(null); }}>{t("staff.addNew")}</button>} />
 
       {msg && <div className="mb-4 t-md u-text" role="status">{msg}</div>}
@@ -194,10 +196,6 @@ export default function StaffPage() {
         </div>
       )}
 
-      <div className="workspace-toolbar">
-        <Link className="workspace-button" href="/directory">{t("directory.title")}</Link>
-        <Link className="workspace-button" href="/notes">{t("schedhub.notes")}</Link>
-      </div>
 
       {showAdd && (
         <dialog ref={addDialog} className="workspace-dialog" aria-labelledby="add-staff-title" onCancel={(e) => { if (adding) e.preventDefault(); else setShowAdd(false); }} onClose={() => setShowAdd(false)}>

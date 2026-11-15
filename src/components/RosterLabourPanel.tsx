@@ -1,5 +1,6 @@
 "use client";
 
+import { addDays } from "@/lib/time/berlinDate";
 import { useEffect, useMemo, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { getRosterPlanning } from "@/lib/queries/owner-insights";
@@ -11,7 +12,6 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 type Entry = { user_id: string; team: string; shift: string };
 type Planning = Extract<Awaited<ReturnType<typeof getRosterPlanning>>, { ok: true }>;
 
-const addDays = (d: string, n: number) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 // Live labour cost while the roster is being built (docs/OWNER-COCKPIT.md): expected sales
 // (same weekday, last 4 weeks), planned hours and cost at current wages, and the expected

@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect,useRef,useState } from "react";
 import Link from "next/link";
 import InventoryNav from "@/components/InventoryNav";
@@ -28,7 +29,7 @@ export default function InventoryRecipesPage(){
   const body=JSON.stringify({name,portions,price,lines,netConfirmed});if(command.current?.body!==body)command.current={body,id:crypto.randomUUID()};
   try{const r=await saveInventoryRecipe(data.branch.id,command.current.id,name,Number(portions),price.trim()===""?null:Number(price),lines.map(l=>({...l,qty:Number(l.qty)})),netConfirmed);if(!r.ok){setError(r.error);return;}command.current=null;await load();setSaved(true);}catch{setError("save");}finally{setBusy(false);}
  }
- function copy(r:RecipeVersion){if((name||lines.some(l=>l.product_id))&&!window.confirm(s("Replace the unsaved recipe draft?","Ungespeicherten Rezeptentwurf ersetzen?")))return;setName(r.name);setPortions(String(r.portions));setPrice(r.net_price==null?"":String(r.net_price));setLines(r.ingredients.map(i=>({product_id:i.product_id,qty:String(i.entered_qty),unit:i.entered_unit})));setNetConfirmed(false);setSaved(false);}
+ async function copy(r:RecipeVersion){if((name||lines.some(l=>l.product_id))&&!(await askConfirm({ message: s("Replace the unsaved recipe draft?","Ungespeicherten Rezeptentwurf ersetzen?") })))return;setName(r.name);setPortions(String(r.portions));setPrice(r.net_price==null?"":String(r.net_price));setLines(r.ingredients.map(i=>({product_id:i.product_id,qty:String(i.entered_qty),unit:i.entered_unit})));setNetConfirmed(false);setSaved(false);}
  return <div className="inventory-page"><InventoryNav active="kitchen"/><PageHeader title={s("Recipe costing","Rezeptkalkulation")} subtitle={data?.branch.name}/>
 
   <details className="inventory-help"><summary>{s("Costing basis and reference prices","Kalkulationsgrundlage und Referenzpreise")}</summary>  <Link href="/inventory/prices">{s("Review ingredient prices","Zutatenpreise prüfen")}</Link></details>

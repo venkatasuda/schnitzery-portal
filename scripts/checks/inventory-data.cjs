@@ -90,6 +90,7 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/queries/inventory
   if (name === '@/lib/analytics/coverage') return coverage;
   if (name === '@/lib/inventory/orderDraft') return orderDraft;
   if (name === '@/lib/queries/reconciliation') return reconQuery;
+  if (name === '@/lib/queries/me') return mod('src/lib/queries/me.ts', n => ({ react: { cache: f => f }, '@/lib/activeBranch': AB, '@/lib/supabase/server': { createClient: async () => sb } })[n]); // shared getMe on the same fakes
   throw new Error(`Unexpected import ${name}`);
 } });
 (async () => {

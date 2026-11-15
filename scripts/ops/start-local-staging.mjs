@@ -1,5 +1,5 @@
 // Starts the isolated source snapshot, never the production-configured workspace.
-import { existsSync, readFileSync, mkdirSync, copyFileSync, cpSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, copyFileSync, cpSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
@@ -27,6 +27,7 @@ if (reviewCurrent && !process.argv.includes("--check")) {
   for (const name of ["src", "public"]) cpSync(resolve(root, name), resolve(app, name), { recursive: true });
   for (const name of ["package.json", "package-lock.json", "next.config.ts", "postcss.config.mjs", "tsconfig.json", "next-env.d.ts", "sentry.server.config.ts", "sentry.edge.config.ts"])
     if (existsSync(resolve(root, name))) copyFileSync(resolve(root, name), resolve(app, name));
+    else rmSync(resolve(app, name), { force: true }); // removed from the project → remove the stale copy too
   symlinkSync(resolve(root, "node_modules"), resolve(app, "node_modules"), "junction");
   writeFileSync(resolve(app, "public/ui-review-marker.json"), JSON.stringify({ kind: "schnitzery-ui-review", fingerprint: uiReviewFingerprint(app) }));
   console.log(`Current-code UI review mirror: ${app}`);

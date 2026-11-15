@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect, useRef, useState } from "react";
 import NativeDialog from "@/components/NativeDialog";
 import { Field } from "@/components/ui";
@@ -19,7 +20,7 @@ export default function InvoiceCost({ purchase, onClose }: { purchase: string; o
     finally { if (seq === request.current) setLoading(false); }
   }
   useEffect(() => { void load(); return () => { request.current++; }; }, [purchase]);
-  function close() { if (!busy && (!cost && !reference && !note || window.confirm(s("Discard unsaved invoice cost?", "Ungespeicherte Rechnungskosten verwerfen?")))) onClose(); }
+  async function close() { if (!busy && (!cost && !reference && !note || (await askConfirm({ message: s("Discard unsaved invoice cost?", "Ungespeicherte Rechnungskosten verwerfen?") })))) onClose(); }
   async function save() {
     if (!data || busy || !reviewed || cost.trim() === "") return;
     const body = { purchase_id: purchase, expected_cost: data.purchase.cost, cost: Number(cost), reference, note };

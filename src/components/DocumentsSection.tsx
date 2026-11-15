@@ -1,5 +1,6 @@
 "use client";
 
+import { askConfirm } from "@/components/ConfirmDialog";
 import { appLocale } from "@/lib/format";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -101,7 +102,7 @@ export default function DocumentsSection() {
   }
 
   async function archive(id: string) {
-    if (!confirm(t("docw.archiveConfirm"))) return;
+    if (!(await askConfirm({ message: t("docw.archiveConfirm") }))) return;
     const res = await archiveDocument(id);
     if (res.ok) { toast(t("docw.archived"), "success"); await load(); }
     else toast(res.error || t("documents.deleteFailed"), "error");

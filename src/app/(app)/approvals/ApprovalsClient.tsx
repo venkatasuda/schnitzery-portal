@@ -8,12 +8,13 @@ import { getPendingApprovals, decideLeave, decideSwap, getSickNoteUrl } from "@/
 import { getAttendanceApprovals, setAttendanceApproval } from "@/lib/queries/live-attendance";
 import { getCorrectionApprovals, decideCorrection } from "@/lib/queries/corrections";
 import { toast } from "@/components/Toast";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
 type Kind = "leave" | "swap" | "attendance" | "correction";
-type Item = { kind: Kind; id: string; icon: string; name: string; detail: string; note?: boolean };
+type Item = { kind: Kind; id: string; icon: string; name: string; detail: string; note?: boolean; single?: boolean }; // single: never in "Approve all"
 type Filter = "all" | Kind;
 
 const fmtH = (m: number | null | undefined) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
@@ -61,7 +62,7 @@ export default function ApprovalsClient({ initial = null }: { initial?: Raw | nu
       out.push({ kind: "swap", id: s.id, icon: "🔄", name: (s as any).requester?.full_name || t("approvals.someone"), detail: `${t("approvals.swap")} · ${dayLabel(s.my_day)} ↔ ${dayLabel(s.their_day)}${other ? ` ${t("approvals.with")} ${other}` : ""}` });
     }
     for (const r of (att.ok && att.rows) || []) {
-      out.push({ kind: "attendance", id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${(r.late_mins || 0) > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.autoClosed ? ` · ⚠ ${t("approvals.autoClosed")}` : r.suspect ? ` · ⚠ ${t("approvals.suspect")}` : r.overtime ? ` · ${t("approvals.overtime")}` : ""}${r.clockFlag?.kind === "early" ? ` · ⏰ ${t("approvals.early", { n: r.clockFlag.mins })}` : r.clockFlag?.kind === "unrostered" ? ` · ⏰ ${t("approvals.unrostered")}` : ""}` });
+      out.push({ kind: "attendance", single: !!r.autoClosed, id: r.id, icon: "🕐", name: r.name, detail: `${fmtD(r.work_date)} · ${fmtH(r.duration_mins)}${(r.late_mins || 0) > 0 ? ` · ${r.late_mins}${t("approvals.mLate")}` : ""}${r.autoClosed ? ` · ⚠ ${t("approvals.autoClosed")}` : r.suspect ? ` · ⚠ ${t("approvals.suspect")}` : r.overtime ? ` · ${t("approvals.overtime")}` : ""}${r.clockFlag?.kind === "early" ? ` · ⏰ ${t("approvals.early", { n: r.clockFlag.mins })}` : r.clockFlag?.kind === "unrostered" ? ` · ⏰ ${t("approvals.unrostered")}` : ""}` });
     }
     for (const c of (corr.ok && (corr as any).items) || []) {
       const req = `${fmtT(c.requested_clock_in)} → ${fmtT(c.requested_clock_out)}`;
@@ -104,14 +105,34 @@ export default function ApprovalsClient({ initial = null }: { initial?: Raw | nu
     else toast(res.error || t("approvals.actionFailed"), "error");
   }
 
+  // Approve every request in the current tab, one at a time on the server (never optimistic: hours are paid).
+  // Shifts closed automatically with 0 h are left out; they need a real end time first.
+  async function approveAll(list: Item[]) {
+    const de = locale === "de";
+    if (!list.length || !(await askConfirm({ title: de ? "Alle genehmigen" : "Approve all", confirmLabel: de ? `${list.length} genehmigen` : `Approve ${list.length}`,
+      message: de ? `${list.length} Anfragen genehmigen?` : `Approve ${list.length} requests?` }))) return;
+    setBusyId("bulk");
+    let failed = 0;
+    for (const item of list) {
+      const res = await (item.kind === "leave" ? decideLeave(item.id, "approved") : item.kind === "swap" ? decideSwap(item.id, "approved")
+        : item.kind === "correction" ? decideCorrection(item.id, true) : setAttendanceApproval(item.id, "approved")).catch(() => ({ ok: false }));
+      if (res.ok) remove(item); else failed++;
+    }
+    setBusyId(null);
+    if (failed) toast(de ? `${list.length - failed} genehmigt, ${failed} fehlgeschlagen` : `${list.length - failed} approved, ${failed} failed`, "error");
+    else toast(t("approvals.approved"), "success");
+  }
+
   if (denied) return <div className="card ui-denied">{t("common.managersOnly")}</div>;
 
   const shown = items.filter((i) => filter === "all" || i.kind === filter);
   const count = (k: Kind) => items.filter((i) => i.kind === k).length;
+  const bulk = shown.filter((i) => !i.single);
 
   return (
     <div className="fade-up">
-      <PageHeader title={ <><Icon e="✅" size={22} /> {t("approvals.title")}</> } />
+      <PageHeader title={ <><Icon e="✅" size={22} /> {t("approvals.title")}</> } actions={bulk.length > 1 && !loading && !error
+        ? <button className="btn-gold" disabled={!!busyId} onClick={() => approveAll(bulk)}>{busyId === "bulk" ? "…" : `${locale === "de" ? "Alle genehmigen" : "Approve all"} · ${bulk.length}`}</button> : undefined} />
 
       <div className="hub-tabs" role="group" aria-label={t("approvals.title")}>
         <button aria-pressed={filter === "all"} className={`hub-tab${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>{t("approvals.tabAll")} {items.length > 0 ? `· ${items.length}` : ""}</button>

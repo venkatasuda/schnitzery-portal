@@ -1,4 +1,5 @@
 "use client";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import NativeDialog from "@/components/NativeDialog";
@@ -28,7 +29,7 @@ export default function SupplierReturns() {
   }
   useEffect(() => { void load(); return () => { request.current++; }; }, []);
   function open(next: Form) { setForm(next); setQty(""); setReference(""); setNote(""); setDate(berlinToday()); setBasis(""); setReviewed(false); setError(""); }
-  function close() { if (!busy && window.confirm(s("Discard unsaved return or credit?", "Ungespeicherte Retoure oder Gutschrift verwerfen?"))) { setForm(null); setError(""); } }
+  async function close() { if (!busy && (await askConfirm({ message: s("Discard unsaved return or credit?", "Ungespeicherte Retoure oder Gutschrift verwerfen?") }))) { setForm(null); setError(""); } }
   async function save() {
     if (!data || !form || busy || !reviewed) return;
     const action = form.kind === "return" ? "supplier_return" : "supplier_credit";

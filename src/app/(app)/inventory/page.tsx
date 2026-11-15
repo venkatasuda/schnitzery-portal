@@ -1,5 +1,7 @@
 "use client";
 
+import InventoryPulse from "@/components/inventory/InsightBlocks";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { formatEur } from "@/lib/format";
 import { berlinToday, fmtDay, fmtMonthDay } from "@/lib/time/berlinDate";
@@ -111,9 +113,9 @@ export default function InventoryPage() {
     }
     window.history.replaceState(null, "", url);
   }, [locationReady, tab, search, activeCat, statusFilter]);
-  function navigate(view: string, status?: string) {
+  async function navigate(view: string, status?: string) {
     if (!(["overview", "count", "deliveries", "analytics", "forecast", "catalog", "history", "reconcile", "movements"] as string[]).includes(view)) return;
-    if (Object.values(entry).some(value => value !== "") && !confirm(t("inventoryWorkspace.unsaved"))) return;
+    if (Object.values(entry).some(value => value !== "") && !(await askConfirm({ message: t("inventoryWorkspace.unsaved") }))) return;
     const url = new URL(window.location.href);
     url.searchParams.set("view", view);
     if (status) {
@@ -262,24 +264,24 @@ export default function InventoryPage() {
             {products.length === 0 ? <EmptyState title={locale === "de" ? "Produktkatalog für diese Filiale einrichten" : "Set up this branch’s product catalogue"}
               action={<button className="btn-gold" onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</button>}>
               {locale === "de" ? "Zuerst Produkte und Bestandseinheiten hinzufügen. Danach Lieferungen mit Ablaufdaten erfassen und den physischen Bestand zählen." : "Add products and stock units first. Then receive deliveries with expiry dates and count the stock physically on the shelf."}
-            </EmptyState> : <div className="inventory-work-summary">
-              <button onClick={() => navigate("count")}><span>{t("inventoryWorkspace.countProgress")}</span><strong>{countedProducts} / {products.length}</strong><small>{t("inventoryWorkspace.physicalCounts")}</small><progress className="inventory-coverage-bar" value={countedProducts} max={products.length} aria-label={t("inventoryWorkspace.countProgress")}>{countedProducts} / {products.length}</progress></button>
-              <button onClick={() => navigate("count", "uncounted")}><span>{t("inventoryWorkspace.needsCount")}</span><strong>{products.length - countedProducts}</strong><small>{t("inventoryWorkspace.noZero")}</small></button>
-              <button onClick={() => navigate("count", "low")}><span>{t("inventoryWorkspace.belowTarget")}</span><strong>{belowTarget}</strong><small>{t("inventoryWorkspace.snapshotNote")}</small></button>
-            </div>}
+            </EmptyState> : <><InventoryPulse locale={locale} /><div className="inventory-work-summary">
+              <button onClick={() => navigate("count")}><span>{t("inventoryWorkspace.countProgress")}</span><strong>{countedProducts} / {products.length}</strong><progress className="inventory-coverage-bar" value={countedProducts} max={products.length} aria-label={t("inventoryWorkspace.countProgress")}>{countedProducts} / {products.length}</progress></button>
+              <button onClick={() => navigate("count", "uncounted")}><span>{t("inventoryWorkspace.needsCount")}</span><strong>{products.length - countedProducts}</strong></button>
+              <button onClick={() => navigate("count", "low")}><span>{t("inventoryWorkspace.belowTarget")}</span><strong>{belowTarget}</strong></button>
+            </div></>}
             <Panel title={t("inventoryWorkspace.dailyWork")}>
               <div className="inventory-task-grid">
-                <Link className="inventory-task" href="/inventory/counts"><strong>{t("countSession.title")}</strong><span>{t("countSession.help")}</span></Link>
-                <Link className="inventory-task" href="/inventory/purchasing?receive=1"><strong>{t("inventoryOps.receive")}</strong><span>{t("inventoryWorkspace.receivingHelp")}</span></Link>
-                <button className="inventory-task" onClick={() => navigate("forecast")}><strong>{t("inventoryWorkflow.reorder")}</strong><span>{t("inventoryWorkspace.reorderHelp")}</span></button>
-                <Link className="inventory-task" href="/expiry"><strong>{locale==="de"?"Chargen und Ablauf":"Batches & expiry"}</strong><span>{t("inventoryWorkspace.expiryHelp")}</span></Link>
+                <Link className="inventory-task" href="/inventory/counts"><strong>{t("countSession.title")}</strong></Link>
+                <Link className="inventory-task" href="/inventory/purchasing?receive=1"><strong>{t("inventoryOps.receive")}</strong></Link>
+                <button className="inventory-task" onClick={() => navigate("forecast")}><strong>{t("inventoryWorkflow.reorder")}</strong></button>
+                <Link className="inventory-task" href="/expiry"><strong>{locale==="de"?"Chargen und Ablauf":"Batches & expiry"}</strong></Link>
               </div>
             </Panel>
           </>}
           {tab === "movements" && <Panel title={t("inventoryWorkspace.movements")}><div className="inventory-task-grid">
-            <Link className="inventory-task" href="/transfers"><strong>{t("home.transfers")}</strong><span>{t("inventoryWorkspace.transferHelp")}</span></Link>
-            <Link className="inventory-task" href="/waste"><strong>{t("home.wasteLog")}</strong><span>{t("inventoryWorkspace.wasteHelp")}</span></Link>
-            <button className="inventory-task" onClick={() => navigate("history")}><strong>{t("stockHistory.title")}</strong><span>{t("inventoryWorkspace.historyHelp")}</span></button>
+            <Link className="inventory-task" href="/transfers"><strong>{t("home.transfers")}</strong></Link>
+            <Link className="inventory-task" href="/waste"><strong>{t("home.wasteLog")}</strong></Link>
+            <button className="inventory-task" onClick={() => navigate("history")}><strong>{t("stockHistory.title")}</strong></button>
           </div></Panel>}
           {tab === "history" && <StockHistory />}
           {tab === "reconcile" && <Reconciliation />}

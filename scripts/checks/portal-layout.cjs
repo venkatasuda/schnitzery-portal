@@ -69,6 +69,13 @@ function fixture(role, de) {
     return {field:field.getBoundingClientRect().width,input:input.getBoundingClientRect().width};
    });
    assert(upload.input<=upload.field,'File upload must fit its field on mobile');
+   const contained = await touch.evaluate(()=>{
+    const host=document.createElement('div');host.className='table-scroll';host.style.width='280px';
+    host.innerHTML='<table style="min-width:900px"><tr><th>Branch</th><th><span class="sr-only">Open</span></th></tr></table>';
+    document.querySelector('main').append(host);
+    return document.documentElement.scrollWidth<=innerWidth+1;
+   });
+   assert(contained,'Offscreen accessible table labels must not widen the page');
    for(const target of targets){assert(target.coarse,'Touch test needs a coarse pointer');assert(target.height>=44&&target.width>=44,`${target.className}: small touch target`);}
   } finally {await touchContext.close();}
   console.log(`Portal shared layout: ${checked} role/viewport/theme/language combinations pass (presentation fixtures, not authenticated workflow tests).`);

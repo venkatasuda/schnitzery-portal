@@ -33,6 +33,7 @@ async function renderAfterLoad(fail) {
       if (name.startsWith('@/lib/queries/')) return new Proxy({}, { get: () => async () => result });
       if (name === '@/components/LanguageProvider') return { useLang: () => ({ locale: 'en', t: key => key }) };
       if (name === '@/components/Toast') return { toast() {} };
+      if (name === '@/components/ConfirmDialog') return { askConfirm: async () => false };
       if (name === '@/components/Skeleton') return { CardSkeleton: () => null };
       if (name === '@/components/Icon') return { __esModule: true, default: () => null };
       if (name === '@/components/ui') return ui; // shared PageHeader etc. (the page uses the shared header)

@@ -14,6 +14,7 @@ import {
 import { PageHeader,  Stat } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
 import CloseShiftForm from "@/components/CloseShiftForm";
+import { CardSkeleton } from "@/components/Skeleton";
 
 type Tab = "live" | "approval" | "overtime" | "noshow" | "offline";
 
@@ -128,7 +129,8 @@ export default function AttendanceHubPage() {
         <button aria-pressed={tab === "live"} className={`hub-tab${tab === "live" ? " active" : ""}`} onClick={() => openTab("live")}>{t("ahub.tabLive")}</button>
         <button aria-pressed={tab === "approval"} className={`hub-tab${tab === "approval" ? " active" : ""}`} onClick={() => openTab("approval")}>{t("ahub.tabApproval")}</button>
         <button aria-pressed={tab === "overtime"} className={`hub-tab${tab === "overtime" ? " active" : ""}`} onClick={() => openTab("overtime")}>{t("ahub.tabOvertime")}</button>
-        <button aria-pressed={tab === "noshow"} className={`hub-tab${tab === "noshow" ? " active" : ""}`} onClick={() => openTab("noshow")}>{t("ahub.tabNoshow")}</button>
+        {/* No-shows is its own page (with roster conflicts): a link, not an empty tab */}
+        <Link href="/noshow" className="hub-tab">{t("ahub.tabNoshow")}</Link>
         <button aria-pressed={tab === "offline"} className={`hub-tab${tab === "offline" ? " active" : ""}`} onClick={() => openTab("offline")}>{t("offlineReview.title")}</button>
       </div>
       {tab === "offline" && <OfflineReview manager />}
@@ -161,7 +163,7 @@ export default function AttendanceHubPage() {
           </div>
           <input className="form-input" aria-label={t("ahub.filterName")} value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t("ahub.filterName")} />
           {liveLoading ? (
-            <div className="ui-empty-msg"><div className="spinner spinner-center" />{t("common.loading")}</div>
+            <CardSkeleton rows={4} />
           ) : filtered.length === 0 ? (
             <div className="card ui-empty-msg">
               {rows.length === 0 ? (isToday ? t("ahub.noClockedIn") : t("ahub.noAttendance")) : t("ahub.noMatch")}
@@ -197,7 +199,7 @@ export default function AttendanceHubPage() {
         <div className="hub-tab-panel active">
           <div className="page-sub u-mb-3">{t("ahub.signOff")}</div>
           {appLoading ? (
-            <div className="ui-empty-msg"><div className="spinner spinner-center" />{t("common.loading")}</div>
+            <CardSkeleton rows={4} />
           ) : appRows.length === 0 ? (
             <div className="card ui-empty-msg">
               <div className="u-mb-2"><Icon e="✅" size={28} color="var(--success)" /></div>{t("ahub.allCaughtUp")}
@@ -235,7 +237,7 @@ export default function AttendanceHubPage() {
           </div>
 
           {otLoading ? (
-            <div className="ui-empty-msg"><div className="spinner spinner-center" />{t("common.loading")}</div>
+            <CardSkeleton rows={4} />
           ) : (
             <>
               {/* summary */}
@@ -289,18 +291,6 @@ export default function AttendanceHubPage() {
       )}
 
       {/* ───────── NO-SHOWS ───────── */}
-      {tab === "noshow" && (
-        <div className="hub-tab-panel active">
-          <Link href="/noshow" className="feature-card">
-            <div className="feature-icon" style={{ background: "linear-gradient(135deg,#b9770e,#e67e22)" }}><Icon e="🚫" size={22} color="#fff" /></div>
-            <div className="u-flex1"><div className="feature-title">{t("ahub.noShowTracking")}</div><div className="feature-sub">{t("ahub.noShowTrackingSub")}</div></div>
-            <span className="feature-chev">›</span>
-          </Link>
-          <div className="card t-xs u-muted lh-16">
-            {t("ahub.noShowHint")}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

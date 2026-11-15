@@ -1,12 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getMe } from "@/lib/queries/me";
 import { DAYS, SHIFT_MODEL, TEAMS } from "@/lib/queries/schedule-constants";
 import { berlinMonday, berlinMonth, isCalendarDate, mondayOfDate } from "@/lib/time/berlinDate";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { rosterEntryTimes } from "@/lib/time/roster";
 import { shiftMinutes } from "@/lib/pay/calculations";
-import { activeBranchFor } from "@/lib/activeBranch";
 import { sendPushToUser } from "@/lib/push/delivery";
 import { checkRoster, isBlocking, type RosterIssue } from "@/lib/roster/check";
 import { workTeams } from "@/lib/roster/teams";
@@ -30,17 +29,6 @@ export async function shiftTime(team: string, shift: string): Promise<string> {
 // Uses the Berlin business week (see berlinMonday) so it never lands on the
 // wrong week near midnight.
 
-async function getMe() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, branchId: null, profile: null };
-  const { data: profile } = await supabase
-    .from("users")
-    .select("id, full_name, role, branch_id")
-    .eq("id", user.id)
-    .single();
-  return { supabase, user, branchId: await activeBranchFor(supabase, profile), homeBranchId: profile?.branch_id ?? null, profile };
-}
 
 // Helper for the UI: get this week's Monday (and optionally offset by N weeks).
 export async function getWeekStart(offsetWeeks = 0): Promise<string> {
