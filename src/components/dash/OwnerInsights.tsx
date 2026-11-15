@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatEur, formatPct } from "@/lib/format";
+import type { Profit } from "@/components/dash/ProfitBand";
 import { healthTone, type HealthPart, type WeekRow, type WeekForecast } from "@/lib/owner/insights";
 
 type Tf = (k: string, v?: Record<string, string | number>) => string;
@@ -7,6 +8,7 @@ export type Insights = {
   trend: WeekRow[];
   forecast: WeekForecast & { weekStart: string; hasRoster: boolean; unknownShifts: number };
   health: { score: number | null; parts: HealthPart[] } | null;
+  profit?: Profit;
 };
 
 const HEALTH_HREF: Record<HealthPart["key"], string> = { temps: "/temp", checklists: "/checklist-status", sales: "/labor", approvals: "/approvals" };

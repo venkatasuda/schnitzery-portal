@@ -142,6 +142,7 @@ export const messages = {
     teams: { Manager: "Manager", Preparation: "Preparation", Kitchen: "Kitchen", Cashier: "Cashier", Dishwashing: "Dishwashing" },
     mybr: { title: "All my branches", subtitle: "Today at a glance. Open a branch to work in it.", none: "No branches linked to your account.", scheduled: "Scheduled", absent: "No-show", hours: "Hours today", toApprove: "To approve", open: "Open" },
     links: { title: "Branches", hint: "Extra branches this person may work in. They switch between them with the branch picker at the top.", home: "home branch" },
+    profit: { title: "Profit & leaks", prime: "Prime cost", food: "Ingredients", labour: "Labour", purchases: "Ingredient purchases", ofSales: "of sales", leaks: "Money leaking", waste: "Waste", priceRises: "Supplier price rises", extraHours: "Hours beyond the roster", entries: "entries", items: "items", noRoster: "no roster last week" },
     perf: { title: "How we are doing", lastWeek: "Last week", vsWeekBefore: "vs week before", points: "pts", same: "no change", hours: "Hours worked", routine: "Routine checks", waste: "Waste", setup: "Setup", setupDone: "{a} of {b} done" },
     cockpit: {
       title: "This month vs. target", sales: "Sales", labour: "Labour % of sales", purchase: "Purchases % of sales", prime: "Prime cost %",
@@ -149,7 +150,7 @@ export const messages = {
       setTargets: "Set targets", editTargets: "Edit targets", flash: "Yesterday", flashSales: "Sales", flashHours: "Hours worked", vsLastWeek: "vs. same day last week", enterSales: "Enter sales",
       forgotten: "{n} shift(s) still open — forgotten clock-out?", suspect: "{n} shift(s) over 16 h — correct the clock-out before approving", salesMissingAlert: "Sales missing for {n} day(s) this month",
     },
-    rosterLabour: { minijobOver: "{name} (Minijob): {eur} this month with this roster — above the {cap} limit", title: "Labour cost of this roster", noHistory: "No sales in the last 4 weeks to forecast from" },
+    rosterLabour: { minijobOver: "{name} (Minijob): {eur} this month with this roster — above the {cap} limit", title: "Labour cost of this roster", noHistory: "No sales in the last 4 weeks to forecast from", day: "Day", supported: "Hours the forecast supports", splhCaption: "At {eur} sales per labour hour" },
     setup: {
       title: "Get your branch ready", progress: "{done} of {total} done", hint: "Your figures on this page are only as good as this data.",
       wages: "Add an hourly wage for everyone who works", targets: "Set your targets", fridges: "Add your fridges and freezers",
@@ -167,7 +168,7 @@ export const messages = {
     targets: {
       title: "Targets", subtitle: "Your goals for this branch. The home screen colours each figure green, amber or red against them.",
       labourPct: "Labour % of sales", labourPctHint: "Typical: 25–35%", purchasePct: "Purchases % of sales", purchasePctHint: "Typical: 25–35%",
-      primePct: "Prime cost % (labour + purchases)", primePctHint: "Typical: around 60%", ownersOnly: "Only owners can change targets.",
+      primePct: "Prime cost % (labour + purchases)", primePctHint: "Typical: around 60%", splh: "Sales per labour hour (€)", splhHint: "Sales one paid hour should carry. The roster shows the hours your forecast supports.", ownersOnly: "Only owners can change targets.",
     },
     salesImport: { title: "Import from till", hint: "Upload the daily sales export (CSV) from your till system.", choose: "Choose CSV file", tooBig: "File is too large (max 2 MB).", nothing: "No sales lines found. Check that the file has a date and an amount column.", preview: "{n} day(s) from {from} to {to}, total {total}.", skipped: "Unreadable lines skipped: {lines}", overwrite: "Days that already have sales are replaced by the file's amount.", import: "Import {n} day(s)", done: "{n} day(s) imported" },
     myday: {
@@ -462,9 +463,9 @@ export const messages = {
       st_requested: "Requested", st_sent: "Sent", st_received: "Received", st_rejected: "Rejected", st_cancelled: "Cancelled",
     },
     roster: {
-      remoteChange: "This week was changed elsewhere.", reload: "Reload", backupTitle: "Unsaved changes found", backupRestore: "This week has roster changes from this device that were not saved. Restore them?", backupYes: "Restore", backupOutdated: "Unsaved roster changes from this device were dropped: the roster was changed in the meantime.", discardEdits: "Discard changes",
+      remoteChange: "This week was changed elsewhere.", reload: "Reload", backupTitle: "Unsaved changes found", backupRestore: "This week has roster changes from this device that were not saved. Restore them?", backupYes: "Restore", backupOutdated: "Unsaved roster changes from this device were dropped: the roster was changed in the meantime.", liveCheck: "Check before publishing", discardEdits: "Discard changes",
       copyTo: "Copy to…", copyAllDays: "All other days", copied: "{n} shifts copied",
-      errRules: "Not published: fix the working-time problems below.", warnRules: "Publish anyway?", issRest: "{name} · {day}: only {h} h rest before this shift (11 h required)", issOverlap: "{name} · {day}: two shifts overlap", issHours: "{name}: {h} h planned, above the weekly contract", issMinijob: "{name}: above the Minijob limit this month",
+      errRules: "Not published: fix the working-time problems below.", warnRules: "Publish anyway?", issRest: "{name} · {day}: only {h} h rest before this shift (11 h required)", issOverlap: "{name} · {day}: two shifts overlap", issHours: "{name}: {h} h planned, above the weekly contract", issMinijob: "{name}: above the Minijob limit this month", issContract: "{name} · {day}: after the fixed-term contract ends",
       timePending: "time pending", smart: "Smart automate", swapHint: "Tap to choose someone else · drag onto another shift of the day to swap", swapWith: "Replace {name}", why_unavailable: "not available", why_sameDay: "already working that day", why_rest: "breaks the 11 h rest rule", why_hours: "over weekly contract hours", why_minijob: "over the Minijob limit", why_team: "other team", why_tier: "lower tier for the weekend", why_noAvail: "no availability submitted", smartReplace: "Replace this week's shifts with an automatic plan from the staffing targets?", smartNoTargets: "Set staffing targets first (Settings → Shift times).", smartDone: "Planned {n} shifts · {o} still open — check, then save or publish", publish: "Publish roster", publishConfirm: "Publish this week? Everyone on the roster gets a notification.", published: "Roster published · {n} notified", discardDraft: "Discard draft", discardDraftConfirm: "Discard this draft? The published roster stays as it is.", draftDiscarded: "Draft discarded", stUnsaved: "Unsaved changes", stDraft: "Draft · not visible to staff", stPublished: "Published", stEmpty: "Not planned", errStale: "The live roster changed since this draft (e.g. a cover was approved). Discard the draft and plan again.", errNoDraft: "Nothing to publish.", title: "Weekly Roster", subtitle: "Assign staff to shifts · {week}", managersOnly: "Only managers can edit the roster.",
       thisWeek: "This week", weeksPlus: "+{n}w", weeksMinus: "{n}w", saveRoster: "Save draft", draft: "Draft from last week", draftHint: "Copies last week and swaps in available colleagues where needed (availability, 11 h rest, contract hours, Minijob limit). Nothing is saved until you press Save.", draftReplace: "Replace this week's shifts with a draft?", draftNoTemplate: "Last week has no roster to start from.", draftDone: "Draft: {n} shifts, {r} reassigned, {o} open — check and save", draftOpen: "{n} shift(s) nobody can take", draftOpenHint: "Nobody from that team is available within rest-time, contract and Minijob limits. Assign someone by hand or leave it open.", loadFailed: "Roster could not be loaded. Your existing plan has not been changed.", discardChanges: "Leave this week and discard your unsaved changes?", removeShift: "Remove shift for {name}",
       weekGlance: "Week at a Glance · {n} shifts", assigned: "{n} assigned", add: "+ Add",
@@ -788,7 +789,7 @@ export const messages = {
       docPending: "Document to review", docApproved: "Document approved", docRejected: "Document rejected",
       approvalsWaiting: "{n} approvals waiting", openIncidents: "{n} open incidents",
       lowStock: "{n} low-stock items", notSubmitted: "{n} haven't submitted availability",
-      docsExpiring: "{n} documents expiring soon",
+      docsExpiring: "{n} documents expiring soon", contractsEnding: "{n} contract or probation ends within 30 days",
       correctionPending: "Correction to review", correctionApproved: "Correction approved", correctionRejected: "Correction rejected",
       forgotCheckout: "Forgot to clock out", missingAttendance: "Missing attendance", upcomingShift: "Upcoming shift",
       employeeLate: "Employee late", mgrMissing: "Employee missing", staffingShortage: "Staffing shortage",
@@ -888,7 +889,7 @@ export const messages = {
       type_id_card: "ID Card / Passport", type_visa: "Visa / Residence Permit",
       type_work_permit: "Work Permit", type_contract: "Contract",
       type_certificate: "Certificate", type_other: "Other", type_payslip: "Payslips",
-      type_tax_id: "Tax ID", type_health_certificate: "Health Certificate", type_training_certificate: "Training Certificate",
+      type_tax_id: "Tax ID", type_health_certificate: "Hygiene instruction (§ 43 IfSG)", type_training_certificate: "Training Certificate",
       tooBig: "File must be under 5 MB.", uploaded: "Document uploaded.",
       uploadFailed: "Upload failed: ", couldNotOpen: "Could not open document.", loadFailed: "Documents could not be loaded. Try again.",
       deleted: "Document deleted.", deleteFailed: "Delete failed.",
@@ -1050,6 +1051,7 @@ export const messages = {
     teams: { Manager: "Manager", Preparation: "Vorbereitung", Kitchen: "Küche", Cashier: "Kasse", Dishwashing: "Spülküche" },
     mybr: { title: "Alle meine Filialen", subtitle: "Heute auf einen Blick. Filiale öffnen, um darin zu arbeiten.", none: "Deinem Konto sind keine Filialen zugeordnet.", scheduled: "Eingeplant", absent: "Nicht erschienen", hours: "Stunden heute", toApprove: "Zu genehmigen", open: "Öffnen" },
     links: { title: "Filialen", hint: "Weitere Filialen, in denen diese Person arbeiten darf. Gewechselt wird über die Filialauswahl oben.", home: "Stammfiliale" },
+    profit: { title: "Gewinn & Verluste", prime: "Prime Cost", food: "Wareneinsatz", labour: "Personal", purchases: "Wareneinkauf", ofSales: "vom Umsatz", leaks: "Geldverluste", waste: "Ausschuss", priceRises: "Preiserhöhungen der Lieferanten", extraHours: "Stunden über Plan", entries: "Einträge", items: "Artikel", noRoster: "kein Plan letzte Woche" },
     perf: { title: "Wie läuft es", lastWeek: "Letzte Woche", vsWeekBefore: "zur Vorwoche", points: "Pkt.", same: "unverändert", hours: "Gearbeitete Stunden", routine: "Routinearbeit", waste: "Ausschuss", setup: "Einrichtung", setupDone: "{a} von {b} erledigt" },
     cockpit: {
       title: "Dieser Monat vs. Ziel", sales: "Umsatz", labour: "Personal in % vom Umsatz", purchase: "Einkauf in % vom Umsatz", prime: "Prime Cost %",
@@ -1057,7 +1059,7 @@ export const messages = {
       setTargets: "Ziele festlegen", editTargets: "Ziele ändern", flash: "Gestern", flashSales: "Umsatz", flashHours: "Gearbeitete Stunden", vsLastWeek: "ggü. gleichem Tag letzte Woche", enterSales: "Umsatz eintragen",
       forgotten: "{n} Schicht(en) noch offen – Ausstempeln vergessen?", suspect: "{n} Schicht(en) über 16 Std. – Ausstempelzeit vor dem Genehmigen korrigieren", salesMissingAlert: "Umsatz fehlt für {n} Tag(e) in diesem Monat",
     },
-    rosterLabour: { minijobOver: "{name} (Minijob): {eur} in diesem Monat mit diesem Plan — über der Grenze von {cap}", title: "Personalkosten dieses Dienstplans", noHistory: "Keine Umsätze der letzten 4 Wochen für eine Prognose" },
+    rosterLabour: { minijobOver: "{name} (Minijob): {eur} in diesem Monat mit diesem Plan — über der Grenze von {cap}", title: "Personalkosten dieses Dienstplans", noHistory: "Keine Umsätze der letzten 4 Wochen für eine Prognose", day: "Tag", supported: "Stunden laut Prognose", splhCaption: "Bei {eur} Umsatz pro Arbeitsstunde" },
     setup: {
       title: "Filiale startklar machen", progress: "{done} von {total} erledigt", hint: "Die Zahlen auf dieser Seite sind nur so gut wie diese Angaben.",
       wages: "Stundenlohn für alle Mitarbeitenden eintragen", targets: "Ziele festlegen", fridges: "Kühlschränke und Tiefkühler anlegen",
@@ -1075,7 +1077,7 @@ export const messages = {
     targets: {
       title: "Ziele", subtitle: "Deine Ziele für diese Filiale. Die Startseite färbt jeden Wert danach grün, gelb oder rot.",
       labourPct: "Personal in % vom Umsatz", labourPctHint: "Üblich: 25–35 %", purchasePct: "Einkauf in % vom Umsatz", purchasePctHint: "Üblich: 25–35 %",
-      primePct: "Prime Cost % (Personal + Einkauf)", primePctHint: "Üblich: etwa 60 %", ownersOnly: "Nur Inhaber können Ziele ändern.",
+      primePct: "Prime Cost % (Personal + Einkauf)", primePctHint: "Üblich: etwa 60 %", splh: "Umsatz pro Arbeitsstunde (€)", splhHint: "Umsatz, den eine bezahlte Stunde tragen soll. Der Dienstplan zeigt die Stunden, die die Prognose trägt.", ownersOnly: "Nur Inhaber können Ziele ändern.",
     },
     salesImport: { title: "Aus Kasse importieren", hint: "Lade den Tagesumsatz-Export (CSV) deines Kassensystems hoch.", choose: "CSV-Datei wählen", tooBig: "Datei ist zu groß (max. 2 MB).", nothing: "Keine Umsatzzeilen gefunden. Die Datei braucht eine Datums- und eine Betragsspalte.", preview: "{n} Tag(e) vom {from} bis {to}, gesamt {total}.", skipped: "Nicht lesbare Zeilen übersprungen: {lines}", overwrite: "Tage mit vorhandenem Umsatz werden durch den Betrag aus der Datei ersetzt.", import: "{n} Tag(e) importieren", done: "{n} Tag(e) importiert" },
     myday: {
@@ -1370,9 +1372,9 @@ export const messages = {
       st_requested: "Angefragt", st_sent: "Gesendet", st_received: "Erhalten", st_rejected: "Abgelehnt", st_cancelled: "Abgebrochen",
     },
     roster: {
-      remoteChange: "Diese Woche wurde woanders geändert.", reload: "Neu laden", backupTitle: "Ungespeicherte Änderungen gefunden", backupRestore: "Für diese Woche gibt es nicht gespeicherte Änderungen von diesem Gerät. Wiederherstellen?", backupYes: "Wiederherstellen", backupOutdated: "Ungespeicherte Planänderungen von diesem Gerät wurden verworfen: Der Plan wurde inzwischen geändert.", discardEdits: "Änderungen verwerfen",
+      remoteChange: "Diese Woche wurde woanders geändert.", reload: "Neu laden", backupTitle: "Ungespeicherte Änderungen gefunden", backupRestore: "Für diese Woche gibt es nicht gespeicherte Änderungen von diesem Gerät. Wiederherstellen?", backupYes: "Wiederherstellen", backupOutdated: "Ungespeicherte Planänderungen von diesem Gerät wurden verworfen: Der Plan wurde inzwischen geändert.", liveCheck: "Vor dem Veröffentlichen prüfen", discardEdits: "Änderungen verwerfen",
       copyTo: "Kopieren nach…", copyAllDays: "Alle anderen Tage", copied: "{n} Schichten kopiert",
-      errRules: "Nicht veröffentlicht: Arbeitszeitprobleme unten beheben.", warnRules: "Trotzdem veröffentlichen?", issRest: "{name} · {day}: nur {h} Std. Ruhezeit vor dieser Schicht (11 Std. nötig)", issOverlap: "{name} · {day}: zwei Schichten überschneiden sich", issHours: "{name}: {h} Std. geplant, über dem Wochenvertrag", issMinijob: "{name}: über der Minijob-Grenze in diesem Monat",
+      errRules: "Nicht veröffentlicht: Arbeitszeitprobleme unten beheben.", warnRules: "Trotzdem veröffentlichen?", issRest: "{name} · {day}: nur {h} Std. Ruhezeit vor dieser Schicht (11 Std. nötig)", issOverlap: "{name} · {day}: zwei Schichten überschneiden sich", issHours: "{name}: {h} Std. geplant, über dem Wochenvertrag", issMinijob: "{name}: über der Minijob-Grenze in diesem Monat", issContract: "{name} · {day}: nach Ende des befristeten Vertrags",
       timePending: "Zeit offen", smart: "Automatisch planen", swapHint: "Tippen, um jemand anderen zu wählen · auf eine andere Schicht des Tages ziehen zum Tauschen", swapWith: "{name} ersetzen", why_unavailable: "nicht verfügbar", why_sameDay: "arbeitet an dem Tag schon", why_rest: "verletzt die 11-Std.-Ruhezeit", why_hours: "über Wochen-Vertragsstunden", why_minijob: "über der Minijob-Grenze", why_team: "anderes Team", why_tier: "niedrigere Stufe fürs Wochenende", why_noAvail: "keine Verfügbarkeit angegeben", smartReplace: "Schichten dieser Woche durch einen automatischen Plan aus der Besetzung ersetzen?", smartNoTargets: "Zuerst die Besetzung je Schicht festlegen (Einstellungen → Schichtzeiten).", smartDone: "{n} Schichten geplant · {o} noch offen — prüfen, dann speichern oder veröffentlichen", publish: "Dienstplan veröffentlichen", publishConfirm: "Diese Woche veröffentlichen? Alle im Plan werden benachrichtigt.", published: "Dienstplan veröffentlicht · {n} benachrichtigt", discardDraft: "Entwurf verwerfen", discardDraftConfirm: "Entwurf verwerfen? Der veröffentlichte Plan bleibt unverändert.", draftDiscarded: "Entwurf verworfen", stUnsaved: "Nicht gespeichert", stDraft: "Entwurf · für Mitarbeitende unsichtbar", stPublished: "Veröffentlicht", stEmpty: "Nicht geplant", errStale: "Der aktuelle Plan hat sich seit diesem Entwurf geändert (z. B. genehmigte Schichtübernahme). Entwurf verwerfen und neu planen.", errNoDraft: "Nichts zu veröffentlichen.", title: "Wochendienstplan", subtitle: "Mitarbeiter Schichten zuweisen · {week}", managersOnly: "Nur Manager können den Dienstplan bearbeiten.",
       thisWeek: "Diese Woche", weeksPlus: "+{n}W", weeksMinus: "{n}W", saveRoster: "Entwurf speichern", draft: "Entwurf aus letzter Woche", draftHint: "Übernimmt die letzte Woche und setzt bei Bedarf verfügbare Mitarbeiter ein (Verfügbarkeit, 11 Std. Ruhezeit, Vertragsstunden, Minijob-Grenze). Gespeichert wird erst mit Speichern.", draftReplace: "Schichten dieser Woche durch einen Entwurf ersetzen?", draftNoTemplate: "Letzte Woche hat keinen Dienstplan als Vorlage.", draftDone: "Entwurf: {n} Schichten, {r} neu besetzt, {o} offen — prüfen und speichern", draftOpen: "{n} Schicht(en) kann niemand übernehmen", draftOpenHint: "Niemand aus dem Team ist innerhalb von Ruhezeit, Vertrag und Minijob-Grenze verfügbar. Von Hand besetzen oder offen lassen.", loadFailed: "Dienstplan konnte nicht geladen werden. Der bestehende Plan wurde nicht verändert.", discardChanges: "Diese Woche verlassen und ungespeicherte Änderungen verwerfen?", removeShift: "Schicht für {name} entfernen",
       weekGlance: "Wochenüberblick · {n} Schichten", assigned: "{n} zugewiesen", add: "+ Hinzufügen",
@@ -1696,7 +1698,7 @@ export const messages = {
       docPending: "Dokument prüfen", docApproved: "Dokument genehmigt", docRejected: "Dokument abgelehnt",
       approvalsWaiting: "{n} Genehmigungen ausstehend", openIncidents: "{n} offene Vorfälle",
       lowStock: "{n} Artikel mit geringem Bestand", notSubmitted: "{n} ohne Verfügbarkeit",
-      docsExpiring: "{n} bald ablaufende Dokumente",
+      docsExpiring: "{n} bald ablaufende Dokumente", contractsEnding: "{n} Vertrags- oder Probezeitenden in 30 Tagen",
       correctionPending: "Korrektur prüfen", correctionApproved: "Korrektur genehmigt", correctionRejected: "Korrektur abgelehnt",
       forgotCheckout: "Ausstempeln vergessen", missingAttendance: "Fehlende Anwesenheit", upcomingShift: "Bevorstehende Schicht",
       employeeLate: "Mitarbeiter verspätet", mgrMissing: "Mitarbeiter fehlt", staffingShortage: "Personalengpass",
@@ -1796,7 +1798,7 @@ export const messages = {
       type_id_card: "Ausweis / Reisepass", type_visa: "Visum / Aufenthaltstitel",
       type_work_permit: "Arbeitserlaubnis", type_contract: "Vertrag",
       type_certificate: "Zertifikat", type_other: "Sonstiges", type_payslip: "Lohnabrechnungen",
-      type_tax_id: "Steuer-ID", type_health_certificate: "Gesundheitszeugnis", type_training_certificate: "Schulungsnachweis",
+      type_tax_id: "Steuer-ID", type_health_certificate: "Belehrung § 43 IfSG", type_training_certificate: "Schulungsnachweis",
       tooBig: "Datei muss kleiner als 5 MB sein.", uploaded: "Dokument hochgeladen.",
       uploadFailed: "Upload fehlgeschlagen: ", couldNotOpen: "Dokument konnte nicht geöffnet werden.", loadFailed: "Dokumente konnten nicht geladen werden. Bitte erneut versuchen.",
       deleted: "Dokument gelöscht.", deleteFailed: "Löschen fehlgeschlagen.",

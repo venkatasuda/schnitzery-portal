@@ -14,12 +14,13 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import { Stat } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
+import { fmtDay } from "@/lib/time/berlinDate";
 
 const fmtH = (m: number) => `${Math.floor((m || 0) / 60)}h ${String((m || 0) % 60).padStart(2, "0")}m`;
 export default function StaffDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id as string;
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
   const roleLabel = (k: string) => (["staff", "manager", "branch_owner", "brand_owner", "super_admin"].includes(k) ? t("roles." + k) : k);
   const contractLabel = (k: string) => (["Working Student", "Part Time", "Full Time", "Mini Job"].includes(k) ? t("contracts." + k) : k);
@@ -94,6 +95,8 @@ export default function StaffDetailPage() {
         <Row label={t("staff.role")} value={staff.role ? roleLabel(staff.role) : null} />
         <Row label={t("profile.contract")} value={staff.contract_type ? contractLabel(staff.contract_type) : null} />
         <Row label={t("profile.contractHours")} value={staff.contract_hours != null ? t("staffd.hPerMonth", { h: staff.contract_hours }) : null} />
+        <Row label={locale === "de" ? "Vertragsende" : "Contract ends"} value={staff.contract_end ? fmtDay(staff.contract_end, locale) : null} />
+        <Row label={locale === "de" ? "Probezeit bis" : "Probation until"} value={staff.probation_end ? fmtDay(staff.probation_end, locale) : null} />
         <Row label={t("profile.email")} value={staff.email} />
         <Row label={t("staffd.mobile")} value={staff.phone} last />
       </div>
@@ -144,6 +147,7 @@ export default function StaffDetailPage() {
       )}
 
       {/* documents — required-doc checklist + approve/reject (manager) */}
+      {staff && <p className="row-actions"><Link className="btn-secondary ui-btn-sm" href={`/hours/record?user=${id}`}>{locale === "de" ? "Arbeitszeitnachweis (PDF)" : "Working-time record (PDF)"}</Link></p>}
       {staff && <BranchLinks key={`links-${id}`} userId={id} />}
       {staff && <EmployeeDocuments key={id} userId={id} />}
     </div>

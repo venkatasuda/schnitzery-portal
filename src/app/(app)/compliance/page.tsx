@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { fmtDay } from "@/lib/time/berlinDate";
 import { useState, useEffect } from "react";
 import { useLang } from "@/components/LanguageProvider";
@@ -32,6 +33,7 @@ export default function CompliancePage() {
 
   return (
     <div className="fade-up">
+      <ReportTabs group="compliance" />
       <PageHeader title={ <><Icon e="⚖️" size={22} /> {t("home.compliance")}</> } />
       <div className="row-actions"><Link className="btn-secondary" href="/compliance/logbook">{t("comp.hygieneLogbook")}</Link></div>
 

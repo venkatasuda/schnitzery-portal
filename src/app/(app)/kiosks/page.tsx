@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { PageHeader } from "@/components/ui";
 
 import { useState, useEffect } from "react";
@@ -56,6 +57,7 @@ export default function KiosksPage() {
 
   return (
     <div className="fade-up">
+      <ReportTabs group="settings" />
       <PageHeader title={ <><Icon e="🖥️" size={22} /> {t("kioskadm.title")}</> } />
 
       {/* add */}

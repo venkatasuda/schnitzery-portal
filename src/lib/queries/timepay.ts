@@ -99,3 +99,25 @@ export async function getPayrollExport(month?: string) {
 
   return { ok: true, month: ym, rows };
 }
+
+// ── Working-time record (§ 16 ArbZG) for one person and month: yourself, or (managers) someone in your branches.
+// Branch scope comes from RLS: a manager simply cannot read people or attendance outside their branches.
+export async function getWorkingTimeRecord(month?: string, userId?: string) {
+  const { supabase, user, profile } = await getMe();
+  if (!user) return { ok: false as const, error: "Not logged in." };
+  if (month !== undefined && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return { ok: false as const, error: "Invalid month." };
+  const target = userId ?? user.id;
+  if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(target)) return { ok: false as const, error: "Invalid person." };
+  if (target !== user.id && !isManager(profile?.role)) return { ok: false as const, error: "Managers only." };
+  const { ym, from, to } = monthRange(month);
+  const [person, logs] = await Promise.all([
+    supabase.from("users").select("id, full_name, employee_code, branch_id").eq("id", target).maybeSingle(),
+    readAll(supabase.from("attendance_logs").select("work_date, clock_in, clock_out, breaks, duration_mins, status, approval_status, source")
+      .eq("user_id", target).gte("work_date", from).lte("work_date", to).order("work_date").order("id")),
+  ]);
+  if (person.error || logs.error) return { ok: false as const, error: "Could not load the record." };
+  if (!person.data) return { ok: false as const, error: "Managers only." }; // not visible = not in your branches
+  const branch = person.data.branch_id ? await supabase.from("branches").select("name").eq("id", person.data.branch_id).maybeSingle() : null;
+  return { ok: true as const, month: ym, person: { name: person.data.full_name as string, code: (person.data.employee_code as string | null) ?? "" },
+    branch: (branch?.data?.name as string | undefined) ?? "", logs: logs.data ?? [] };
+}

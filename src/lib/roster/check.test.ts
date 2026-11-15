@@ -42,6 +42,11 @@ describe("checkRoster", () => {
     expect(r[0].value).toBe(24);
     expect(r.some(isBlocking)).toBe(false);
   });
+  it("blocks shifts after a fixed-term contract ends", () => {
+    const r = checkRoster({ ...base, contractEnd: { a: "2026-11-17", b: null }, roster: { Tuesday: [e("a", "Morning")], Wednesday: [e("a", "Morning"), e("b", "Morning")] } });
+    expect(r).toEqual([{ kind: "contract", user_id: "a", name: "A", day: "Wednesday", value: 0 }]);
+    expect(r.every(isBlocking)).toBe(true);
+  });
   it("skips shifts whose time is unknown", () => {
     expect(checkRoster({ ...base, roster: { Monday: [e("a", "Night")], Tuesday: [{ ...e("a", "Morning"), team: "Service" }] } })).toEqual([]);
   });

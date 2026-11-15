@@ -12,6 +12,10 @@ import { PageHeader,  Field } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
 import { skillTeam, workTeams } from "@/lib/roster/teams";
 import ReportTabs from "@/components/ReportTabs";
+import { addDays, berlinToday, fmtDay } from "@/lib/time/berlinDate";
+
+// Fixed-term contract / probation ending within the next 30 days (same window as the bell alert).
+const endsSoon = (d?: string | null) => !!d && d >= berlinToday() && d <= addDays(berlinToday(), 30);
 
 const CONTRACTS = ["Working Student", "Part Time", "Full Time", "Mini Job"];
 const ROLES = ["staff", "manager", "branch_owner", "brand_owner"];
@@ -62,6 +66,7 @@ export default function StaffPage() {
       full_name: p.full_name || "", employee_code: p.employee_code || "",
       team: p.team || "", contract_type: p.contract_type || "",
       contract_hours: p.contract_hours ?? "", phone: p.phone || "",
+      contract_end: p.contract_end || "", probation_end: p.probation_end || "",
       role: p.role || "staff", status: p.status || "active",
       // Skill 1 is the Team above; Skill 2 and 3 are the other teams this person can work, in order of preference.
       skill2: workTeams(p.team, p.skills)[1] || "", skill3: workTeams(p.team, p.skills)[2] || "",
@@ -81,10 +86,11 @@ export default function StaffPage() {
       team: form.team, contract_type: form.contract_type,
       contract_hours: form.contract_hours === "" ? null : Number(form.contract_hours),
       phone: form.phone, role: form.role,
+      contract_end: form.contract_end || null, probation_end: form.probation_end || null,
       skills: [...new Set([form.skill2, form.skill3].filter((x: string) => x && x !== form.team)), ...form.skills.split(",").map((s: string) => s.trim()).filter((s: string) => s && !skillTeam(s))],
     };
     const same = (k: string) => k === "skills" ? JSON.stringify(next.skills) === JSON.stringify(p.skills || [])
-      : k === "contract_hours" ? next[k] === (p[k] ?? null) : next[k] === (k === "role" ? p.role || "staff" : p[k] || "");
+      : k === "contract_hours" || k === "contract_end" || k === "probation_end" ? next[k] === (p[k] ?? null) : next[k] === (k === "role" ? p.role || "staff" : p[k] || "");
     const changed = Object.keys(next).filter((k) => !same(k));
     if (!changed.length) { setEditId(null); return; }
     const res = await updateStaff(editId!, Object.fromEntries(changed.map((k) => [k, next[k]])),
@@ -254,7 +260,7 @@ export default function StaffPage() {
                   {(p.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div className="u-flex1">
-                  <div className="t-lg fw-6">{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span className="ui-tag-danger">🔒 {t("staff.locked")}</span>}</div>
+                  <div className="t-lg fw-6">{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span className="ui-tag-danger">🔒 {t("staff.locked")}</span>}{endsSoon(p.contract_end) && <span className="ui-tag-warn">{locale === "de" ? `Vertrag endet ${fmtDay(p.contract_end, locale)}` : `Contract ends ${fmtDay(p.contract_end, locale)}`}</span>}{endsSoon(p.probation_end) && <span className="ui-tag-warn">{locale === "de" ? `Probezeit endet ${fmtDay(p.probation_end, locale)}` : `Probation ends ${fmtDay(p.probation_end, locale)}`}</span>}</div>
                   <div className="ui-muted">{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
@@ -308,6 +314,8 @@ export default function StaffPage() {
                 </Field>
                 <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} placeholder="20" /></Field>
                 <Field label={t("profile.phone")}><input className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+                <Field label={locale === "de" ? "Befristet bis (leer = unbefristet)" : "Fixed-term until (empty = open-ended)"}><input className="form-input" type="date" value={form.contract_end} onChange={(e) => setForm({ ...form, contract_end: e.target.value })} /></Field>
+                <Field label={locale === "de" ? "Probezeit bis" : "Probation until"}><input className="form-input" type="date" value={form.probation_end} onChange={(e) => setForm({ ...form, probation_end: e.target.value })} /></Field>
               </div>
               <div className="inventory-insight-coverage">
                 {(["skill2", "skill3"] as const).map((k, n) => (

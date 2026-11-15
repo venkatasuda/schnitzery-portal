@@ -1,10 +1,12 @@
 "use server";
 
+import { inventoryKey } from "@/lib/inventory/identity";
 import { shiftScope } from "@/lib/inventory/shift-scope";
 import { readAll } from "@/lib/supabase/readAll";
 
 export type CountSession = { id: string; branch_id: string; count_date: string; status: "draft" | "completed" | "cancelled"; revision: number; created_at: string; completed_at: string | null };
 export type CountLine = { id: string; product: string; category: string; unit: string | null; target: number; quantity: number | null };
+export type CountPack = { label: string; qty: number };
 const uuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
 
 // Managers, or active shift leaders (they may start/save/cancel; the database refuses "complete").
@@ -31,7 +33,26 @@ export async function getCountSessions(selected?: string) {
   }
   const lines = session ? await readAll(ctx.db.from("inventory_count_lines").select("id,product,category,unit,target,quantity").eq("session_id", session.id).order("category").order("product").order("id")) : { data: [], error: null };
   if (lines.error) return { ok: false as const, error: "load" };
-  return { ok: true as const, canPublish: ctx.manager, branch: branch.data!, sessions: recent.data as CountSession[], session, lines: lines.data as CountLine[] };
+  // Pack sizes per line (e.g. "5 kg crate" = 5) for counting in packs. Only for an open draft.
+  const packs: Record<string, CountPack[]> = {};
+  if (session?.status === "draft" && lines.data?.length) {
+    const [products, packRows] = await Promise.all([
+      readAll(ctx.db.from("inventory_master").select("id,product,category,unit").eq("branch_id", ctx.branch).order("id")),
+      readAll(ctx.db.from("inventory_purchase_packs").select("product_id,label,base_qty").eq("branch_id", ctx.branch).order("created_at", { ascending: false }).order("id")),
+    ]);
+    if (products.error || packRows.error) return { ok: false as const, error: "load" };
+    const byProduct = new Map<string, CountPack[]>();
+    for (const p of packRows.data ?? []) {
+      const qty = Number(p.base_qty), list = byProduct.get(p.product_id) ?? [];
+      if (qty > 0 && !list.some((x) => x.label === p.label)) byProduct.set(p.product_id, [...list, { label: p.label, qty }]);
+    }
+    const idOf = new Map((products.data ?? []).map((p) => [inventoryKey(p), p.id as string]));
+    for (const line of lines.data as CountLine[]) {
+      const list = byProduct.get(idOf.get(inventoryKey(line)) ?? "");
+      if (list) packs[line.id] = list.slice(0, 3);
+    }
+  }
+  return { ok: true as const, canPublish: ctx.manager, branch: branch.data!, sessions: recent.data as CountSession[], session, lines: lines.data as CountLine[], packs };
 }
 
 export async function editCountSession(branch: string, id: string, action: "start" | "save" | "complete" | "cancel", revision: number, lines: { id: string; quantity: number | null }[] = []) {

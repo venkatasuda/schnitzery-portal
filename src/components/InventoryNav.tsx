@@ -70,10 +70,10 @@ export default function InventoryNav({ active, currentView, purchasingTab, onNav
     {/* One escape path: the tabs cover every listed page; a back link only for tools that are not a tab (quick count, labels). */}
     {!(areas.some(area => isCurrent(area.href)) || sections[active].some(([, href]) => isCurrent(href))) && <Link className="inventory-back" href={back.href} onClick={event => navigate(event, back.href)}><span aria-hidden="true">←</span> {s("Back to", "Zurück zu")} {back.label}</Link>}
     <nav className="inventory-area-nav" aria-label={t("inventoryWorkspace.navigation")}>
-      {areas.map(area => <Link key={area.id} href={area.href} aria-current={active === area.id ? (isCurrent(area.href) ? "page" : "location") : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
+      {areas.map(area => <Link key={area.id} href={area.href} prefetch={false} aria-current={active === area.id ? (isCurrent(area.href) ? "page" : "location") : undefined} onClick={event => navigate(event, area.href)}>{area.label}</Link>)}
     </nav>
     {!!sections[active].length && <nav ref={taskNav} className="inventory-section-nav" aria-label={s("Tasks in this area", "Aufgaben in diesem Bereich")}>
-      {sections[active].map(([label, href]) => <Link key={href} href={href} aria-current={isCurrent(href) ? "page" : (href===view("catalog")&&pathname==="/labels")||(href==="/inventory/counts"&&pathname==="/inventory"&&currentView==="count") ? "location" : undefined} onClick={event => navigate(event, href)}>{label}</Link>)}
+      {sections[active].map(([label, href]) => <Link key={href} href={href} prefetch={false} aria-current={isCurrent(href) ? "page" : (href===view("catalog")&&pathname==="/labels")||(href==="/inventory/counts"&&pathname==="/inventory"&&currentView==="count") ? "location" : undefined} onClick={event => navigate(event, href)}>{label}</Link>)}
     </nav>}
   </div>;
 }

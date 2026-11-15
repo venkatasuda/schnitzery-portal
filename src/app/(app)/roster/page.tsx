@@ -2,7 +2,7 @@
 import ActionsMenu from "@/components/ActionsMenu";
 
 import { appLocale } from "@/lib/format";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getRoster, saveRoster, getWeekStart, publishRoster, discardRosterDraft } from "@/lib/queries/schedule";
 import { SHIFT_MODEL, TEAMS } from "@/lib/queries/schedule-constants";
 import { toast } from "@/components/Toast";
@@ -16,7 +16,7 @@ import { getRosterPlanning } from "@/lib/queries/owner-insights";
 import { getShiftTimes } from "@/lib/queries/shift-times";
 import { draftRoster } from "@/lib/roster/draft";
 import { smartSchedule, swapOptions, type SwapOption } from "@/lib/roster/smart";
-import type { RosterIssue } from "@/lib/roster/check";
+import { checkRoster, isBlocking, type RosterIssue } from "@/lib/roster/check";
 import { askConfirm } from "@/components/ConfirmDialog";
 import { createClient } from "@/lib/supabase/client";
 import { getStaffingTargets } from "@/lib/queries/staffing";
@@ -147,7 +147,7 @@ export default function RosterPage() {
       if (!Object.values(template).some((d) => (d as Entry[]).length)) { toast(t("roster.draftNoTemplate"), "error"); return; }
       const d = draftRoster({
         weekStart, template, avail,
-        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null })),
+        staff: onContract.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null })),
         times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
         minijobbers: plan.ok ? plan.minijobbers : [],
       });
@@ -168,7 +168,7 @@ export default function RosterPage() {
       if (!tg.ok || !tg.targets.some((x) => x.needed > 0)) { toast(t("roster.smartNoTargets"), "error"); return; }
       const res = smartSchedule({
         weekStart, targets: tg.targets, avail, prevSunday,
-        staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
+        staff: onContract.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
         times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
         minijobbers: plan.ok ? plan.minijobbers : [],
       });
@@ -191,9 +191,28 @@ export default function RosterPage() {
       setSwapCtx({ times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])), minijobbers: plan.ok ? plan.minijobbers : [] });
     }
   }
+  // Live rule check (AI Studio review): the same checkRoster the server runs at publish, run on the draft as you edit,
+  // so a blocked shift says why before Publish ("11 h rest", "overlap", "contract hours", "Minijob cap").
+  useEffect(() => {
+    if (!weekStart || swapCtx) return;
+    let live = true;
+    Promise.all([getShiftTimes(), getRosterPlanning(weekStart)]).then(([st, plan]) => {
+      if (live && st.ok && plan.ok) setSwapCtx({ times: new Map(st.items.map((x) => [`${x.team}|${x.shift}`, x])), minijobbers: plan.minijobbers });
+    }, () => { /* no live check without shift times; publish still runs the server check */ });
+    return () => { live = false; };
+  }, [weekStart, swapCtx]);
+  // Auto-fill and swaps skip anyone whose fixed-term contract ended before this week.
+  // ponytail: whole-week filter; a contract ending mid-week is still caught by the "contract" check at publish.
+  const onContract = useMemo(() => staff.filter((p) => !p.contractEnd || p.contractEnd >= weekStart), [staff, weekStart]);
+  const liveIssues = useMemo(() => !swapCtx ? [] : checkRoster({
+    weekStart, roster: roster as Record<string, any[]>, prevSunday, times: swapCtx.times,
+    contractHours: Object.fromEntries(staff.map((p) => [p.id, p.contractHours ?? null])), minijobbers: swapCtx.minijobbers,
+    contractEnd: Object.fromEntries(staff.map((p) => [p.id, p.contractEnd ?? null])),
+  }), [swapCtx, weekStart, roster, prevSunday, staff]);
+  const issuesFor = (day: string, userId?: string) => liveIssues.filter((x) => x.user_id === userId && (x.day === day || x.day == null));
   const swapList = (day: string, i: number): SwapOption[] => !swapCtx ? [] : swapOptions({
     weekStart, roster: roster as any, day, index: i, avail, times: swapCtx.times, minijobbers: swapCtx.minijobbers,
-    staff: staff.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
+    staff: onContract.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
   });
   function assignTo(day: string, i: number, o: SwapOption) {
     setRoster((rs) => { const arr = [...(rs[day] || [])]; arr[i] = { ...arr[i], user_id: o.id, name: o.name }; return { ...rs, [day]: arr }; });
@@ -241,7 +260,7 @@ export default function RosterPage() {
   }
 
   const [issues, setIssues] = useState<RosterIssue[]>([]);
-  const issueText = (i: RosterIssue) => t(i.kind === "rest" ? "roster.issRest" : i.kind === "overlap" ? "roster.issOverlap" : i.kind === "hours" ? "roster.issHours" : "roster.issMinijob", { name: i.name, day: i.day ? dayLabel(i.day) : "", h: i.value });
+  const issueText = (i: RosterIssue) => t(i.kind === "rest" ? "roster.issRest" : i.kind === "overlap" ? "roster.issOverlap" : i.kind === "hours" ? "roster.issHours" : i.kind === "contract" ? "roster.issContract" : "roster.issMinijob", { name: i.name, day: i.day ? dayLabel(i.day) : "", h: i.value });
   // Publish: saves pending edits first, then makes the draft live and notifies the staff on it.
   async function doPublish() {
     if (publishing || saving || loading || loadError || !weekStart) return;
@@ -323,6 +342,7 @@ export default function RosterPage() {
       <PageHeader title={ <><Icon e="📋" size={22} /> {t("roster.title")}</> } subtitle={ <>{weekLabel || "…"} <span className={`roster-status${status.hasDraft || dirty ? " is-draft" : status.hasPublished ? " is-live" : ""}`}>{statusText}</span></> } />
       {status.draftStale && <p role="alert" className="roster-stale">{t("roster.errStale")}</p>}
       {remoteChange && <p role="alert" className="roster-stale">{t("roster.remoteChange")} <button className="btn-secondary ui-btn-sm" onClick={async () => { if (await askConfirm({ message: t("roster.discardChanges"), confirmLabel: t("roster.reload"), danger: true })) void load(weekOffset); }}>{t("roster.reload")}</button></p>}
+      {liveIssues.length > 0 && issues.length === 0 && <div className="card roster-check" role="status"><strong>{t("roster.liveCheck")} ({liveIssues.length})</strong><ul>{liveIssues.map((i, k) => <li key={k} className={isBlocking(i) ? "is-blocking" : undefined}>{issueText(i)}</li>)}</ul></div>}
       {issues.length > 0 && <div role="alert" className="card roster-stale"><strong>{t("roster.errRules")}</strong><ul>{issues.map((i, k) => <li key={k}>{issueText(i)}</li>)}</ul></div>}
       {loadError && <div role="alert" className="card"><p>{loadError}</p><button className="btn-secondary" onClick={()=>load(weekOffset)}>{t("business.retry")}</button></div>}
 
@@ -462,7 +482,7 @@ export default function RosterPage() {
 
                 {/* entries */}
                 {entries.map((e, i) => (<div key={i}>
-                  <div className={`roster-entry${dragFrom?.day === day && dragFrom.i !== i ? " is-drop" : ""}`} draggable={!saving}
+                  <div className={`roster-entry${dragFrom?.day === day && dragFrom.i !== i ? " is-drop" : ""}${issuesFor(day, e.user_id).some(isBlocking) ? " is-blocked" : issuesFor(day, e.user_id).length ? " is-warned" : ""}`} draggable={!saving} title={issuesFor(day, e.user_id).map(issueText).join("\n") || undefined}
                     onDragStart={() => setDragFrom({ day, i })} onDragEnd={() => setDragFrom(null)}
                     onDragOver={(ev) => { if (dragFrom?.day === day) ev.preventDefault(); }}
                     onDrop={(ev) => { ev.preventDefault(); if (dragFrom?.day === day) swapEntries(day, dragFrom.i, i); setDragFrom(null); }}>

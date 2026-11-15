@@ -1,6 +1,6 @@
 "use client";
 
-import InventoryPulse from "@/components/inventory/InsightBlocks";
+import OverviewBoard from "@/components/inventory/OverviewBoard";
 import { askConfirm } from "@/components/ConfirmDialog";
 import { serverText } from "@/lib/i18n/serverMessages";
 import { formatEur } from "@/lib/format";
@@ -264,11 +264,11 @@ export default function InventoryPage() {
             {products.length === 0 ? <EmptyState title={locale === "de" ? "Produktkatalog für diese Filiale einrichten" : "Set up this branch’s product catalogue"}
               action={<button className="btn-gold" onClick={() => navigate("catalog")}>{t("inventoryWorkflow.catalogTab")}</button>}>
               {locale === "de" ? "Zuerst Produkte und Bestandseinheiten hinzufügen. Danach Lieferungen mit Ablaufdaten erfassen und den physischen Bestand zählen." : "Add products and stock units first. Then receive deliveries with expiry dates and count the stock physically on the shelf."}
-            </EmptyState> : <><InventoryPulse locale={locale} /><div className="inventory-work-summary">
+            </EmptyState> : <OverviewBoard locale={locale} fallback={<><div className="inventory-work-summary">
               <button onClick={() => navigate("count")}><span>{t("inventoryWorkspace.countProgress")}</span><strong>{countedProducts} / {products.length}</strong><progress className="inventory-coverage-bar" value={countedProducts} max={products.length} aria-label={t("inventoryWorkspace.countProgress")}>{countedProducts} / {products.length}</progress></button>
               <button onClick={() => navigate("count", "uncounted")}><span>{t("inventoryWorkspace.needsCount")}</span><strong>{products.length - countedProducts}</strong></button>
               <button onClick={() => navigate("count", "low")}><span>{t("inventoryWorkspace.belowTarget")}</span><strong>{belowTarget}</strong></button>
-            </div></>}
+            </div>
             <Panel title={t("inventoryWorkspace.dailyWork")}>
               <div className="inventory-task-grid">
                 <Link className="inventory-task" href="/inventory/counts"><strong>{t("countSession.title")}</strong></Link>
@@ -276,7 +276,7 @@ export default function InventoryPage() {
                 <button className="inventory-task" onClick={() => navigate("forecast")}><strong>{t("inventoryWorkflow.reorder")}</strong></button>
                 <Link className="inventory-task" href="/expiry"><strong>{locale==="de"?"Chargen und Ablauf":"Batches & expiry"}</strong></Link>
               </div>
-            </Panel>
+            </Panel></>} />}
           </>}
           {tab === "movements" && <Panel title={t("inventoryWorkspace.movements")}><div className="inventory-task-grid">
             <Link className="inventory-task" href="/transfers"><strong>{t("home.transfers")}</strong></Link>

@@ -40,17 +40,33 @@ export async function GET(req: Request) {
   const allIds = (branches.data || []).map((b) => b.id as string);
   if (!allIds.length) return NextResponse.json({ ok: true, sent: 0 });
 
-  const [sales, logs, purch, pending, corr] = await Promise.all([
+  const [sales, logs, purch, pending, corr, pay, targets, waste] = await Promise.all([
     // readAll: Supabase returns at most 1,000 rows per request; page through all of them.
     readAll(db.from("daily_sales").select("branch_id, sale_date, amount").in("branch_id", allIds).gte("sale_date", prev).lte("sale_date", weekEnd).order("id")),
-    readAll(db.from("attendance_logs").select("branch_id, duration_mins").in("branch_id", allIds).eq("status", "complete").gte("work_date", week).lte("work_date", weekEnd).order("id")),
+    readAll(db.from("attendance_logs").select("branch_id, user_id, duration_mins").in("branch_id", allIds).eq("status", "complete").gte("work_date", week).lte("work_date", weekEnd).order("id")),
     readAll(db.from("inventory_purchases").select("branch_id, cost").in("branch_id", allIds).gte("purchase_date", week).lte("purchase_date", weekEnd).order("id")),
     readAll(db.from("attendance_logs").select("branch_id").in("branch_id", allIds).eq("status", "complete").or("approval_status.is.null,approval_status.eq.pending").order("id")),
     readAll(db.from("attendance_corrections").select("branch_id").in("branch_id", allIds).eq("status", "pending").order("id")),
+    // For prime cost (labour = hours × wage) and the waste line. A failed read only drops these figures, never zeroes them.
+    readAll(db.from("user_pay").select("user_id, hourly_wage").in("branch_id", allIds).order("user_id")),
+    db.from("branch_targets").select("branch_id, prime_pct").in("branch_id", allIds),
+    readAll(db.from("waste_log").select("branch_id").in("branch_id", allIds).gte("work_date", week).lte("work_date", weekEnd).order("id")),
   ]);
   if (sales.error || logs.error || purch.error || pending.error || corr.error) return NextResponse.json({ ok: false, error: "Read failed." }, { status: 500 });
   // ponytail: one read per table for all branches (fine for tens of branches); move to a SQL rollup if it grows.
 
+  const wage = new Map<string, number>();
+  if (!pay.error) for (const p of pay.data || []) if (p.hourly_wage != null && Number(p.hourly_wage) > 0) wage.set(p.user_id as string, Number(p.hourly_wage));
+  const labourOf = (id: string): number | null => {
+    if (pay.error) return null;
+    let cost = 0;
+    for (const r of (logs.data || []).filter((l) => l.branch_id === id)) {
+      const w = wage.get(r.user_id as string);
+      if (w == null) return null; // a missing wage makes labour unknown, not cheaper
+      cost += ((Number(r.duration_mins) || 0) / 60) * w;
+    }
+    return Math.round(cost);
+  };
   const perBranch = new Map<string, BranchWeek>();
   for (const id of allIds) {
     const s = (sales.data || []).filter((r) => r.branch_id === id);
@@ -60,6 +76,10 @@ export async function GET(req: Request) {
       hours: (logs.data || []).filter((r) => r.branch_id === id).reduce((a, r) => a + (Number(r.duration_mins) || 0), 0) / 60,
       purchases: (purch.data || []).filter((r) => r.branch_id === id).reduce((a, r) => a + (Number(r.cost) || 0), 0),
       open: (pending.data || []).filter((r) => r.branch_id === id).length + (corr.data || []).filter((r) => r.branch_id === id).length,
+      // A delivery without a cost would make prime cost look too low: then prime cost stays unknown.
+      labour: (purch.data || []).some((r) => r.branch_id === id && r.cost == null) ? null : labourOf(id),
+      target: targets.error ? null : (() => { const v = (targets.data || []).find((t) => t.branch_id === id)?.prime_pct; return v == null ? null : Number(v); })(),
+      waste: waste.error ? 0 : (waste.data || []).filter((r) => r.branch_id === id).length,
     });
   }
 

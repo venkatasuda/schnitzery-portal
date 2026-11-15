@@ -1,6 +1,7 @@
 "use client";
 // Hygiene logbook for food inspection: temperatures per day and unit, cleaning/checklist tasks per day.
 // "Print / save as PDF" uses the browser's print dialog with a print layout (no PDF library needed).
+import ReportTabs from "@/components/ReportTabs";
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
 import { PageHeader, Panel, Field, ErrorState } from "@/components/ui";
@@ -50,6 +51,7 @@ export default function HygieneLogbookPage() {
 
   return <div className="logbook">
     <div className="no-print">
+      <ReportTabs group="compliance" />
       <PageHeader title={s("Hygiene logbook", "Hygiene-Protokoll")}
         actions={<button className="btn-gold" disabled={!data} onClick={() => window.print()}>{s("Print / save as PDF", "Drucken / als PDF speichern")}</button>} />
       <div className="row-actions" role="group" aria-label={s("Period", "Zeitraum")}>

@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { PageHeader } from "@/components/ui";
 
 import { appLocale } from "@/lib/format";
@@ -89,6 +90,7 @@ export default function ExpiringDocsPage() {
 
   return (
     <div className="fade-up">
+      <ReportTabs group="compliance" />
       <PageHeader title={ <><Icon e="📑" size={22} /> {t("exp.title")}</> } />
 
       {loading ? (

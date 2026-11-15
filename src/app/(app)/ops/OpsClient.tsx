@@ -11,6 +11,7 @@ import { getOpsDashboard, getOpsFilters } from "@/lib/queries/ops-dashboard";
 import { CardSkeleton } from "@/components/Skeleton";
 import { PageHeader,  Stat } from "@/components/ui";
 import { TEAMS } from "@/lib/queries/schedule-constants";
+import FloorBoard from "@/components/FloorBoard";
 
 const todayStr = () => berlinToday();
 const fmtClock = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—");
@@ -33,6 +34,7 @@ export default function OpsClient({ initial = null }: { initial?: Initial } = {}
   const [loading, setLoading] = useState(!initial?.data);
   const skipFirst = useRef(!!initial?.data);
   const [denied, setDenied] = useState(false);
+  const [tick, setTick] = useState(0); // refreshes the floor board with the figures
 
   useEffect(() => { if (initial?.filters) return; (async () => {
     const f = await getOpsFilters();
@@ -43,7 +45,7 @@ export default function OpsClient({ initial = null }: { initial?: Initial } = {}
     if (!silent) setLoading(true);
     const res = await getOpsDashboard({ date, branchId: branch || null, team: team || null, shift: shift || null });
     if (!res.ok && res.error?.includes("Managers")) { setDenied(true); setLoading(false); return; }
-    if (res.ok) setData(res);
+    if (res.ok) { setData(res); setTick((n) => n + 1); }
     setLoading(false);
   }, [date, branch, team, shift]);
 
@@ -118,6 +120,8 @@ export default function OpsClient({ initial = null }: { initial?: Initial } = {}
             </div>
             <div className="ui-note">{t("ops.scheduled")}: {m.scheduledTotal} · {t("ops.completed")}: {m.completed}</div>
           </div>
+
+          {date === todayStr() && <FloorBoard tick={tick} />}
 
           {/* WHO'S ON */}
           <div className="section-label">{t("ops.roster")}</div>

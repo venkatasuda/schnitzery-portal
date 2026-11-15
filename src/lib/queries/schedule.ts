@@ -92,7 +92,7 @@ export async function getRoster(weekStart?: string) {
   // staff list for assignment dropdowns (same branch)
   const { data: staff, error: staffError } = await supabase
     .from("users")
-    .select("id, full_name, role, team, contract_hours, skills")
+    .select("id, full_name, role, team, contract_hours, contract_end, skills")
     .eq("branch_id", branchId)
     .eq("status", "active").neq("role", "kiosk")
     .order("full_name");
@@ -117,6 +117,7 @@ export async function getRoster(weekStart?: string) {
     team: s.team ?? null,
     teams: workTeams(s.team, s.skills),
     contractHours: s.contract_hours ?? null,
+    contractEnd: (s.contract_end ?? null) as string | null,
     tier: tiers[s.id] ?? null,
     workedH: Math.round(((workedMins[s.id] || 0) / 60) * 10) / 10,
   }));
@@ -198,12 +199,13 @@ async function rosterIssues(supabase: any, branchId: string, weekStart: string):
   if (draft.error || prev.error || !times.ok || !plan.ok) return null;
   const roster = (draft.data?.roster_data ?? {}) as Record<string, any[]>;
   const ids = [...new Set(Object.values(roster).flat().map((e: any) => e?.user_id).filter(Boolean))] as string[];
-  const people = ids.length ? await supabase.from("users").select("id, contract_hours").in("id", ids) : { data: [], error: null };
+  const people = ids.length ? await supabase.from("users").select("id, contract_hours, contract_end").in("id", ids) : { data: [], error: null };
   if (people.error) return null;
   return { draft: draft.data?.roster_data ?? null, issues: checkRoster({
     weekStart, roster, prevSunday: (prev.data?.roster_data as any)?.Sunday ?? [],
     times: new Map(times.items.map((x: any) => [`${x.team}|${x.shift}`, x])),
     contractHours: Object.fromEntries((people.data || []).map((p: any) => [p.id, p.contract_hours ?? null])),
+    contractEnd: Object.fromEntries((people.data || []).map((p: any) => [p.id, p.contract_end ?? null])),
     minijobbers: plan.minijobbers,
   }) };
 }

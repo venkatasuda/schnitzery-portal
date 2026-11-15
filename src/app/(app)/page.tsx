@@ -12,6 +12,9 @@ import OwnerCockpit from "@/components/dash/OwnerCockpit";
 import DashSection from "@/components/dash/DashSection";
 import { ForecastPanel, HealthPanel, type Insights } from "@/components/dash/OwnerInsights";
 import PerformanceBand from "@/components/dash/PerformanceBand";
+import ProfitBand, { type Leaks } from "@/components/dash/ProfitBand";
+import { getInventoryInsights } from "@/lib/queries/inventory-insights";
+import { berlinMonday, addDays } from "@/lib/time/berlinDate";
 import { getOwnerInsights, getSetupProgress } from "@/lib/queries/owner-insights";
 import SetupCard from "@/components/dash/SetupCard";
 import type { SetupStep } from "@/lib/owner/insights";
@@ -19,7 +22,9 @@ import { listMyDocuments, getDocumentsDashboard } from "@/lib/queries/documents"
 import { getBranchOnboarding } from "@/lib/queries/onboarding";
 import { getViewMode } from "@/lib/viewMode";
 import Link from "next/link";
-import TeamTodayCard from "@/components/floor/TeamTodayCard";
+import TeamTodayCard from "@/components/floor/TeamTodayCard";
+import ShiftHero from "@/components/attendance/ShiftHero";
+import QuickLog from "@/components/QuickLog";
 import StatusStrip from "@/components/StatusStrip";
 import Icon from "@/components/Icon";
 import { getT, getLocale } from "@/lib/i18n/server";
@@ -74,6 +79,7 @@ export default async function HomePage() {
   let mTargets: Targets | null = null, mCanEditTargets = false;
   let mFlash: { yesterday: { date: string; sales: number | null; hours: number }; lastWeek: { date: string; sales: number | null; hours: number } } | null = null;
   let mInsights: Insights | null = null;
+  let mLeaks: Leaks = null;
   let mNewHires = 0, mDocsMissing = 0, mDocsExpired = 0, mDocsPending = 0;
   let mSetup: SetupStep[] | null = null;
   let mOt: { totalWorkedMins: number; totalOvertimeMins: number; peopleOver: number } | null = null;
@@ -91,12 +97,17 @@ export default async function HomePage() {
     if ((wRes as any).ok) hqWaste = ((wRes as any).rows || []).filter((r: any) => r.value > 0).map((r: any) => ({ label: r.name, value: r.value })).slice(0, 8);
   } else if (isManager) {
     const ownerView = isBranchOwner || hqBranchMode;
-    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes, sRes, obRes, docRes] = await Promise.all([
+    const [dRes, liveRes, otRes, schedRes, stRes, cRes, wRes, tRes, fRes, iRes, sRes, obRes, docRes, kRes] = await Promise.all([
       getDashboardStats(), getLiveAttendance(), getMonthlyOvertime(), getScheduleOverview(), getMyStatus(), getLaborSummary(), getWasteTrends(6).catch(() => ({ ok: false })),
       getTargets().catch(() => null), getDailyFlash().catch(() => null), getOwnerInsights().catch(() => null), ownerView ? getSetupProgress().catch(() => null) : null,
       getBranchOnboarding().catch(() => null),
       getDocumentsDashboard().catch(() => null),
+      getInventoryInsights(7, addDays(berlinMonday(), -1)).catch(() => null), // last full week (Mon–Sun) for the leaks
     ]);
+    if (kRes && kRes.ok) {
+      const price = kRes.report.actions.filter((a) => a.kind === "price");
+      mLeaks = { waste: kRes.report.waste.figure, wasteEntries: kRes.report.waste.entries, price: price.reduce((n, a) => n + (a.value ?? 0), 0), priceItems: price.length, priceUnknown: price.filter((a) => a.value == null).length };
+    }
     if (docRes && docRes.ok) { mDocsMissing = docRes.counts?.missing ?? 0; mDocsExpired = docRes.counts?.expired ?? 0; mDocsPending = docRes.counts?.pending ?? 0; }
     if (obRes && obRes.ok) mNewHires = obRes.people.filter((x) => x.open > 0).length;
     if (tRes && tRes.ok) { mTargets = tRes.targets; mCanEditTargets = tRes.canEdit; }
@@ -173,9 +184,18 @@ export default async function HomePage() {
           {/* A branch manager's day in one screen, in the order of their questions:
               1 what needs me now · 2 how are we doing (last week + 8-week trend) · 3 this month vs target ·
               4 what is planned next week · 5 folded: routine checks, waste, setup, quick actions. */}
-          <ManagerDash part="now" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
-          {mInsights && <PerformanceBand trend={mInsights.trend} labourTarget={mTargets?.labourPct ?? null} flash={mFlash} t={t} locale={locale} />}
-          <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={null} t={t} locale={locale} />
+          {/* Order by role (AI Studio review): owners read the money first, managers what needs them now. */}
+          {isBranchOwner || hqBranchMode ? <>
+            {mInsights?.profit && <ProfitBand profit={mInsights.profit} leaks={mLeaks} primeTarget={mTargets?.primePct ?? null} purchaseTarget={mTargets?.purchasePct ?? null} t={t} locale={locale} />}
+            <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={null} t={t} locale={locale} />
+            <ManagerDash part="now" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
+            {mInsights && <PerformanceBand trend={mInsights.trend} labourTarget={mTargets?.labourPct ?? null} flash={mFlash} t={t} locale={locale} />}
+          </> : <>
+            <ManagerDash part="now" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
+            {mInsights && <PerformanceBand trend={mInsights.trend} labourTarget={mTargets?.labourPct ?? null} flash={mFlash} t={t} locale={locale} />}
+            {mInsights?.profit && <ProfitBand profit={mInsights.profit} leaks={mLeaks} primeTarget={mTargets?.primePct ?? null} purchaseTarget={mTargets?.purchasePct ?? null} t={t} locale={locale} />}
+            <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={null} t={t} locale={locale} />
+          </>}
           {mInsights && <ForecastPanel data={mInsights} labourTarget={mTargets?.labourPct ?? null} t={t} locale={locale} />}
           <ManagerDash part="details" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} insights={mInsights} setup={mSetup} />
         </>
@@ -192,15 +212,30 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
   hours: { totalHours: number; shifts: number; targetHours: number | null } | null;
   clockedIn: boolean; onBreak: boolean; t: Tf;
 }) {
-  const clockTitle = onBreak ? t("home.clockOnBreak") : clockedIn ? t("home.clockWorking") : t("home.clockInOut");
   const target = hours?.targetHours ?? null;
   const pct = target && target > 0 ? Math.min(100, Math.round(((hours?.totalHours || 0) / target) * 100)) : 0;
 
   return (
     <>
+      {/* First: today's shift and the clock button (AI Studio review: no detour via /attendance). */}
+      <ShiftHero />
+      <QuickLog />
       {/* Shift leaders: who is in today, first thing at the start of service. */}
       {shiftLeader && <TeamTodayCard />}
-      <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "4px 0 14px", padding: 16 }}>
+
+      {/* One Workplace list: clock first (highlighted while working), then the daily tools. Shift leaders get
+          Inventory, which already contains waste and expiry; everyone else keeps those two tiles. */}
+      <div className="section-label">{t("home.workplace")}</div>
+
+      <Shortcut href="/announcements" icon="📣" title={t("home.announcements")} />
+      <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
+      <Shortcut href="/prep" icon="🥗" title={t("home.prepList")} />
+      {shiftLeader
+        ? <Shortcut href="/shift" icon="📦" title={t("home.shiftInventory")} />
+        : <>
+          <Shortcut href="/expiry" icon="📅" title={t("home.expiry")} />
+        </>}
+      <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "14px 0 4px", padding: 16 }}>
         {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
           <Stat value={`${(hours?.totalHours ?? 0).toLocaleString(locale === "de" ? "de-DE" : "en-GB")} h`} label={t("home.thisMonthStat")} color="var(--gold-ink)" />
@@ -208,28 +243,6 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
           {target == null && <Stat value="—" label={t("home.ofTarget")} />}
         </div>
       </div>
-
-      {/* One Workplace list: clock first (highlighted while working), then the daily tools. Shift leaders get
-          Inventory, which already contains waste and expiry; everyone else keeps those two tiles. */}
-      <div className="section-label">{t("home.workplace")}</div>
-      <Link href="/attendance" className="feature-card" style={{ background: clockedIn ? "var(--success-soft)" : "var(--dark)" }}>
-        <div className="feature-icon" style={{ background: "var(--accent-soft)" }}><Icon e="🕐" size={22} color="var(--gold-ink)" /></div>
-        <div className="u-flex1">
-          <div className="feature-title">{clockTitle}</div>
-        </div>
-        <span className="feature-chev">›</span>
-      </Link>
-
-      <Shortcut href="/announcements" icon="📣" title={t("home.announcements")} />
-      <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
-      <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} />
-      <Shortcut href="/prep" icon="🥗" title={t("home.prepList")} />
-      {shiftLeader
-        ? <Shortcut href="/shift" icon="📦" title={t("home.shiftInventory")} />
-        : <>
-          <Shortcut href="/waste" icon="🗑️" title={t("home.wasteLog")} />
-          <Shortcut href="/expiry" icon="📅" title={t("home.expiry")} />
-        </>}
     </>
   );
 }

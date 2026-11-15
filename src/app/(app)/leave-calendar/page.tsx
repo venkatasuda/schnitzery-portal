@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
 import { getTeamLeave } from "@/lib/queries/leave";
@@ -34,6 +35,7 @@ export default function LeaveCalendarPage() {
 
   return (
     <div className="workspace-page">
+      <ReportTabs group="leave" />
       <PageHeader title={ <><Icon e="📆" size={22} /> {t("misc.leaveTitle")}</> } />
 
       {loading ? <CardSkeleton rows={3} />

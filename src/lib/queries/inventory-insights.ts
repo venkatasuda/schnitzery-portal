@@ -3,12 +3,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { activeBranchFor, MULTI_BRANCH_ROLES } from "@/lib/activeBranch";
 import { readAll } from "@/lib/supabase/readAll";
-import { berlinToday } from "@/lib/time/berlinDate";
+import { berlinToday, isCalendarDate, addDays } from "@/lib/time/berlinDate";
 import { inventoryInsights, type InsightLine, type InsightReceipt, type InsightReceiptLine } from "@/lib/inventory/insights";
 import { getInventoryAnalytics } from "@/lib/queries/inventory";
 
-export async function getInventoryInsights(days: number = 30) {
+// until: end the period on an earlier day (e.g. last Sunday for "last week"); default today.
+export async function getInventoryInsights(days: number = 30, until?: string) {
   if (![7,30,90].includes(days)) return {ok:false as const,error:"period"};
+  if (until !== undefined && (!isCalendarDate(until) || until > berlinToday() || until < addDays(berlinToday(), -90))) return {ok:false as const,error:"period"};
   const db=await createClient();
   const {data:{user}}=await db.auth.getUser();
   if(!user)return{ok:false as const,error:"access"};
@@ -16,7 +18,7 @@ export async function getInventoryInsights(days: number = 30) {
   if(profileError||!me||me.status!=="active"||!MULTI_BRANCH_ROLES.includes(me.role))return{ok:false as const,error:"access"};
   const branch=await activeBranchFor(db,me);
   if(!branch)return{ok:false as const,error:"branch"};
-  const today=berlinToday(),at=(n:number)=>new Date(Date.parse(`${today}T12:00:00Z`)-n*86400000).toISOString().slice(0,10);
+  const today=until??berlinToday(),at=(n:number)=>new Date(Date.parse(`${today}T12:00:00Z`)-n*86400000).toISOString().slice(0,10);
   const from=at(days-1),previousFrom=at(2*days-1),historyFrom=at(365);
   const [name,products,counts,purchases,waste,batches,orders,production]=await Promise.all([
     db.from("branches").select("id,name").eq("id",branch).single(),

@@ -8,8 +8,8 @@ import { slotTimes, WEEK_DAYS, type SmartEntry } from "./smart";
 import { minijobOverCap, type Minijobber } from "@/lib/pay/legal";
 import { zonedToUtc, type ShiftTime } from "@/lib/time/roster";
 
-export type RosterIssue = { kind: "overlap" | "rest" | "hours" | "minijob"; user_id: string; name: string; day: string | null; value: number };
-export const isBlocking = (i: RosterIssue) => i.kind === "overlap" || i.kind === "rest";
+export type RosterIssue = { kind: "overlap" | "rest" | "hours" | "minijob" | "contract"; user_id: string; name: string; day: string | null; value: number };
+export const isBlocking = (i: RosterIssue) => i.kind === "overlap" || i.kind === "rest" || i.kind === "contract";
 
 // Times are real instants (Europe/Berlin → UTC), in minutes, so a night with a clock change is measured as the
 // hours that actually pass: 22:00 → 09:00 over the spring change is 10 h, not 11.
@@ -23,6 +23,7 @@ export function checkRoster(inp: {
   times: Map<string, ShiftTime>;
   contractHours: Record<string, number | null>;   // monthly contract hours per person
   minijobbers: Minijobber[];
+  contractEnd?: Record<string, string | null>;    // last day of a fixed-term contract (users.contract_end)
 }): RosterIssue[] {
   type Span = { d: number; s: number; e: number };
   const byPerson = new Map<string, { name: string; spans: Span[] }>();
@@ -57,5 +58,13 @@ export function checkRoster(inp: {
     for (const x of week) planned.push({ date: dateOf(inp.weekStart, x.d), user_id, mins: x.e - x.s });
   }
   for (const m of minijobOverCap(inp.minijobbers, planned)) out.push({ kind: "minijob", user_id: m.id, name: m.name, day: null, value: m.earnings });
+  // A shift after a fixed-term contract has ended blocks publishing (§ 15 TzBfG: working on can make the contract permanent).
+  if (inp.contractEnd) WEEK_DAYS.forEach((day, d) => {
+    const date = dateOf(inp.weekStart, d);
+    for (const e of inp.roster[day] || []) {
+      const end = e?.user_id ? inp.contractEnd![e.user_id] : null;
+      if (end && date > end) out.push({ kind: "contract", user_id: e.user_id!, name: e.name, day, value: 0 });
+    }
+  });
   return out;
 }

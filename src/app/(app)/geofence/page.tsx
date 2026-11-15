@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { PageHeader } from "@/components/ui";
 
 import { fmtDay } from "@/lib/time/berlinDate";
@@ -89,6 +90,7 @@ export default function GeofencePage() {
 
   if (!canEdit) return (
     <div className="fade-up">
+      <ReportTabs group="settings" />
       <PageHeader title={ <><Icon e="📍" size={22} /> {t("geo.title")}</> } />
       <div className="card p-4">{t("geo.managersOnly")}</div>
     </div>

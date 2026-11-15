@@ -37,7 +37,7 @@ export default function ManagementNav({ role, mobile = false }: { role: string; 
       <div className="management-nav-label">{t(group.label)}</div>
       {group.items.map((item) => {
         const active = item.routes.some((route) => route === "/" ? path === "/" : path === route || path.startsWith(route + "/"));
-        return <Link key={item.href} href={item.href} className={`management-nav-link${active ? " active" : ""}`} aria-current={active && path === item.href ? "page" : undefined}>
+        return <Link key={item.href} href={item.href} prefetch={false} className={`management-nav-link${active ? " active" : ""}`} aria-current={active && path === item.href ? "page" : undefined}>
           <item.icon size={18} aria-hidden="true" /><span>{t(item.label)}</span>
         </Link>;
       })}

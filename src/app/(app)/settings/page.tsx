@@ -1,5 +1,6 @@
 "use client";
 
+import ReportTabs from "@/components/ReportTabs";
 import { PageHeader } from "@/components/ui";
 
 import { serverText } from "@/lib/i18n/serverMessages";
@@ -44,6 +45,7 @@ export default function SettingsPage() {
 
   return (
     <div className="workspace-page settings-workspace">
+      <ReportTabs group="settings" />
       <PageHeader title={ <><Icon e="⚙️" size={22} /> {t("profile.branchSettings")}</> } />
       <p className="u-muted t-sm mb-5">{t("set.subtitle")}</p>
 

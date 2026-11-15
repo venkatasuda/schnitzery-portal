@@ -1,4 +1,5 @@
 "use client";
+import RecipeScale from "@/components/inventory/RecipeScale";
 import { askConfirm } from "@/components/ConfirmDialog";
 import { useEffect,useRef,useState } from "react";
 import Link from "next/link";
@@ -22,6 +23,7 @@ export default function InventoryRecipesPage(){
  const ingredients=lines.flatMap(l=>{const p=data?.products.find(p=>p.id===l.product_id);const qty=p?.unit?convertIngredient(Number(l.qty),l.unit,p.unit):null;return p&&qty!=null?[{product_id:p.id,product:p.product,category:p.category??"",unit:p.unit!,qty,entered_qty:Number(l.qty),entered_unit:l.unit}]:[];});
  const valid=!!name.trim()&&ingredients.length===lines.length&&Number(portions)>0&&(price.trim()===""||Number(price)>=0);
  const draft:RecipeVersion={id:"preview",name,portions:Number(portions),net_price:price.trim()===""?null:Number(price),ingredients,created_at:"",prices_net_confirmed:netConfirmed};
+ const [scaled,setScaled]=useState<string|null>(null); // recipe shown in the batch-costing card
  const cost=recipeCost(draft,data?.products??[]);
  const money=(v:number|null)=>formatEur(v,locale,2);
  function editLine(index:number,update:Partial<Line>){setSaved(false);setNetConfirmed(false);setLines(prev=>prev.map((l,i)=>i===index?{...l,...update}:l));}
@@ -53,7 +55,8 @@ export default function InventoryRecipesPage(){
     {!cost.total.complete&&<p>{s("Some dated ingredient prices are missing. Contribution is withheld.","Einige datierte Zutatenpreise fehlen. Der Beitrag wird nicht ausgewiesen.")}</p>}
     <button className="btn-gold" disabled={!valid||busy} type="submit">{busy?s("Saving…","Wird gespeichert…"):s("Save new version","Neue Version speichern")}</button>
    </fieldset></form></Panel>
-   <Panel title={s("Saved versions · latest 80","Gespeicherte Versionen · letzte 80")}><div className="table-scroll" role="region" aria-label={s("Recipe versions","Rezeptversionen")} tabIndex={0}><table className="data-table"><thead><tr>{[s("Dish / version","Gericht / Version"),s("Portions","Portionen"),s("Current ingredient cost / portion","Aktuelle Zutatenkosten / Portion"),s("Contribution review","Beitragsprüfung"),s("Action","Aktion")].map(h=><th key={h} scope="col">{h}</th>)}</tr></thead><tbody>{data.recipes.map(r=>{const c=recipeCost({...r,prices_net_confirmed:false},data.products);return <tr key={r.id}><th scope="row">{r.name}<div className="muted">{new Date(r.created_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})} · {r.id.slice(0,8)}</div></th><td>{r.portions}</td><td>{money(c.perPortion)}</td><td>{s("Copy and review current price basis","Kopieren und aktuelle Preisbasis prüfen")}</td><td><button className="btn-secondary" disabled={busy} onClick={()=>copy(r)}>{s("Copy as new version","Als neue Version kopieren")}</button></td></tr>;})}{!data.recipes.length&&<tr><td colSpan={5}>{s("No saved recipes yet.","Noch keine gespeicherten Rezepte.")}</td></tr>}</tbody></table></div></Panel>
+   <Panel title={s("Saved versions · latest 80","Gespeicherte Versionen · letzte 80")}><div className="table-scroll" role="region" aria-label={s("Recipe versions","Rezeptversionen")} tabIndex={0}><table className="data-table"><thead><tr>{[s("Dish / version","Gericht / Version"),s("Portions","Portionen"),s("Current ingredient cost / portion","Aktuelle Zutatenkosten / Portion"),s("Contribution review","Beitragsprüfung"),s("Action","Aktion")].map(h=><th key={h} scope="col">{h}</th>)}</tr></thead><tbody>{data.recipes.map(r=>{const c=recipeCost({...r,prices_net_confirmed:false},data.products);return <tr key={r.id}><th scope="row">{r.name}<div className="muted">{new Date(r.created_at).toLocaleString(locale==="de"?"de-DE":"en-GB",{timeZone:"Europe/Berlin"})} · {r.id.slice(0,8)}</div></th><td>{r.portions}</td><td>{money(c.perPortion)}</td><td>{s("Copy and review current price basis","Kopieren und aktuelle Preisbasis prüfen")}</td><td className="row-actions"><button className="btn-secondary ui-btn-sm" aria-pressed={scaled===r.id} onClick={()=>setScaled(scaled===r.id?null:r.id)}>{s("Scale","Skalieren")}</button><button className="btn-secondary ui-btn-sm" disabled={busy} onClick={()=>copy(r)}>{s("Copy as new version","Als neue Version kopieren")}</button></td></tr>;})}{!data.recipes.length&&<tr><td colSpan={5}>{s("No saved recipes yet.","Noch keine gespeicherten Rezepte.")}</td></tr>}</tbody></table></div></Panel>
+   {(()=>{const r=data.recipes.find(x=>x.id===scaled);return r?<RecipeScale recipe={r} prices={data.products} locale={locale} onClose={()=>setScaled(null)}/>:null;})()}
   </>}
  </div>;
 }

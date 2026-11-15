@@ -2,13 +2,10 @@
 // Inventory figures for managers and owners: one KPI strip and one "needs action" list, shared by the
 // Inventory overview (last 7 days) and Reports → Business insights (7/30/90 days). Data comes from
 // getInventoryInsights; nothing is computed here except the comparison arrow.
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatEur } from "@/lib/format";
 import type { Figure } from "@/lib/analytics/coverage";
-import { getInventoryInsights } from "@/lib/queries/inventory-insights";
-import { CardSkeleton } from "@/components/Skeleton";
-import { ErrorState } from "@/components/ui";
+import type { getInventoryInsights } from "@/lib/queries/inventory-insights";
 
 type Ok = Extract<Awaited<ReturnType<typeof getInventoryInsights>>, { ok: true }>;
 export type InsightReport = Ok["report"];
@@ -40,7 +37,7 @@ export function InsightKpis({ report, locale }: { report: InsightReport; locale:
     { key: "stock", label: c.stock, value: cov.products ? known(report.stockValue) : "—", href: "/inventory/counts",
       tone: cov.products && cov.fresh < cov.products ? " warn" : "", ch: null, sub: `${cov.fresh}/${cov.products} ${c.counted}` },
     { key: "waste", label: c.waste, value: known(report.waste.figure), href: "/waste", tone: "",
-      ch: delta(report.waste.figure, report.previousWaste.figure, true), sub: `${report.waste.entries} ${c.entries}` },
+      ch: report.waste.entries ? delta(report.waste.figure, report.previousWaste.figure, true) : null /* nothing logged ≠ a 100% drop */, sub: `${report.waste.entries} ${c.entries}` },
     { key: "spend", label: c.spend, value: known(report.spend), href: "/inventory/purchasing", tone: "", ch: delta(report.spend, report.previousSpend, null), sub: "" },
     { key: "expiry", label: c.expiry, value: known(report.expiryValue), href: "/expiry", tone: expired ? " bad" : report.expiry.length ? " warn" : " good",
       ch: null, sub: `${report.expiry.length} ${c.batches}${expired ? ` · ${expired} ${c.expired}` : ""}` },
@@ -86,37 +83,5 @@ export function InsightActions({ actions, locale, limit }: { actions: InsightRep
         );
       })}
     </ul>
-  );
-}
-
-// Inventory overview for managers and owners. Staff and shift leaders get "access" and see nothing extra.
-export default function InventoryPulse({ locale }: { locale: string }) {
-  const c = copyFor(locale);
-  const [data, setData] = useState<Ok | null>(null), [state, setState] = useState<"loading" | "ok" | "hidden" | "failed">("loading");
-  const seq = useRef(0);
-  async function load() {
-    const n = ++seq.current; setState("loading");
-    try {
-      const r = await getInventoryInsights(7);
-      if (n !== seq.current) return;
-      if (r.ok) { setData(r); setState("ok"); } else setState(r.error === "access" || r.error === "branch" ? "hidden" : "failed");
-    } catch { if (n === seq.current) setState("failed"); }
-  }
-  useEffect(() => { void load(); return () => { seq.current++; }; }, []);
-  if (state === "hidden") return null;
-  if (state === "loading") return <CardSkeleton rows={3} />;
-  if (state === "failed" || !data) return <ErrorState message={c.failed} onRetry={() => void load()} retryLabel={c.retry} />;
-  return (
-    <section className="inv-pulse" aria-labelledby="inv-pulse-title">
-      <div className="dashboard-panel-heading">
-        <h2 id="inv-pulse-title">{c.title}</h2>
-        <Link href="/inventory/insights">{c.report} ›</Link>
-      </div>
-      <InsightKpis report={data.report} locale={locale} />
-      <section className="card inv-pulse-actions" aria-label={c.actions}>
-        <div className="ui-panel-head"><h2>{c.actions}</h2></div>
-        <InsightActions actions={data.report.actions} locale={locale} limit={6} />
-      </section>
-    </section>
   );
 }

@@ -7,7 +7,7 @@ import { berlinToday } from "@/lib/time/berlinDate";
 // Owner cockpit: targets for the active branch + yesterday's flash numbers.
 const MGR = ["manager", "branch_owner", "brand_owner", "super_admin"];
 const OWNER = ["branch_owner", "brand_owner", "super_admin"];
-export type Targets = { labourPct: number | null; purchasePct: number | null; primePct: number | null };
+export type Targets = { labourPct: number | null; purchasePct: number | null; primePct: number | null; splh?: number | null };  // splh: € sales one paid hour should carry
 
 async function ctx() {
   const supabase = await createClient();
@@ -22,10 +22,10 @@ export async function getTargets() {
   if (!c) return { ok: false as const, error: "Not logged in." };
   if (!MGR.includes(c.role)) return { ok: false as const, error: "Managers only." };
   if (!c.branchId) return { ok: false as const, error: "No branch." };
-  const { data, error } = await c.supabase.from("branch_targets").select("labour_pct, purchase_pct, prime_pct").eq("branch_id", c.branchId).maybeSingle();
+  const { data, error } = await c.supabase.from("branch_targets").select("labour_pct, purchase_pct, prime_pct, splh").eq("branch_id", c.branchId).maybeSingle();
   if (error) return { ok: false as const, error: error.message };
   const n = (v: unknown) => (v == null ? null : Number(v));
-  return { ok: true as const, canEdit: OWNER.includes(c.role), targets: { labourPct: n(data?.labour_pct), purchasePct: n(data?.purchase_pct), primePct: n(data?.prime_pct) } as Targets };
+  return { ok: true as const, canEdit: OWNER.includes(c.role), targets: { labourPct: n(data?.labour_pct), purchasePct: n(data?.purchase_pct), primePct: n(data?.prime_pct), splh: n(data?.splh) } as Targets };
 }
 
 export async function setTargets(t: Targets) {
@@ -34,9 +34,9 @@ export async function setTargets(t: Targets) {
   if (!OWNER.includes(c.role)) return { ok: false as const, error: "Owners only." };
   if (!c.branchId) return { ok: false as const, error: "No branch." };
   const ok = (v: unknown, max: number) => v === null || (typeof v === "number" && Number.isFinite(v) && v > 0 && v <= max);
-  if (!t || !ok(t.labourPct, 100) || !ok(t.purchasePct, 100) || !ok(t.primePct, 200)) return { ok: false as const, error: "Enter a valid target." };
+  if (!t || !ok(t.labourPct, 100) || !ok(t.purchasePct, 100) || !ok(t.primePct, 200) || !ok(t.splh ?? null, 9999)) return { ok: false as const, error: "Enter a valid target." };
   const { error } = await c.supabase.from("branch_targets").upsert({
-    branch_id: c.branchId, labour_pct: t.labourPct, purchase_pct: t.purchasePct, prime_pct: t.primePct,
+    branch_id: c.branchId, labour_pct: t.labourPct, purchase_pct: t.purchasePct, prime_pct: t.primePct, splh: t.splh ?? null,
     updated_by: c.user.id, updated_at: new Date().toISOString(),
   }, { onConflict: "branch_id" });
   if (error) return { ok: false as const, error: error.message };

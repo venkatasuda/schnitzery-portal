@@ -86,3 +86,6 @@ graphify-out/cache/
 skills-lock.json
 .github/skills/
 .impeccable/
+
+# AI Studio design reference (local only, not part of the app)
+design/

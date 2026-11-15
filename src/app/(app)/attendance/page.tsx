@@ -7,16 +7,14 @@ import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinToday, mondayOfDate, monthRange } from "@/lib/time/berlinDate";
 
 import { useEffect, useState, useRef } from "react";
-import {
-  getMyStatus, clockIn, clockOut, getMyHistory, startBreak, endBreak,
-} from "@/lib/queries/attendance";
+import { getMyHistory } from "@/lib/queries/attendance";
 import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
-import { isOnline, captureOffline, codeFromQR, readQueueMine, getQueueOwner, type ClockAction } from "@/lib/offline/attendanceQueue";
+import { isOnline, codeFromQR, type ClockAction } from "@/lib/offline/attendanceQueue";
+import { useClock, getGeo } from "@/components/attendance/useClock";
 import NativeDialog from "@/components/NativeDialog";
 import OfflineReview from "@/components/OfflineReview";
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
 import QrScanner from "./QrScanner";
-import SyncStatus from "@/components/SyncStatus";
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -24,12 +22,9 @@ import Icon from "@/components/Icon";
 export default function AttendancePage() {
   const { t, locale } = useLang();
   const dateLocale = locale === "de" ? "de-DE" : "en-US";
-  const [loading, setLoading] = useState(true);
-  const [working, setWorking] = useState(false);
-  const [clockedIn, setClockedIn] = useState(false);
-  const [onBreak, setOnBreak] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  // Clock status and actions: one shared implementation (also used by the Home hero card).
+  const { loading, working, setWorking, clockedIn, onBreak, session, message, setMessage, statusError, elapsed, refresh, saveForSync,
+    clockIn: clockInAction, clockOut: clockOutAction, startBreak: breakStartAction, endBreak: breakEndAction } = useClock();
 
   // code entry
   const [showCode, setShowCode] = useState(false);
@@ -40,138 +35,19 @@ export default function AttendancePage() {
   // qr scanner
   const [showScan, setShowScan] = useState(false);
 
-  const [elapsed, setElapsed] = useState(0); // total seconds since clock-in (counts everything)
   const [todayLabel, setTodayLabel] = useState(""); // set client-side to avoid hydration mismatch
-  const timerRef = useRef<any>(null);
 
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [statusError,setStatusError]=useState(false);
   const [histLoading, setHistLoading] = useState(false);
   const [historyError,setHistoryError]=useState(false);
   const historyRequest=useRef(0);
   const [histTab, setHistTab] = useState<"week" | "month">("week");
 
-  async function refresh() {
-    try {
-      const res = await getMyStatus();
-      if (!res.ok)throw Error();
-      setClockedIn(res.clockedIn || false);
-      setOnBreak(res.onBreak || false);
-      setSession(res.session);
-      setStatusError(false);
-    } catch {setStatusError(true);setMessage(t("att.couldNotLoad"));}
-    finally {setLoading(false);}
-  }
-
-  useEffect(() => {
-    refresh();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
-
   // Follow the app's EN/DE choice, not the browser's language.
   useEffect(() => {
     setTodayLabel(new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "2-digit", month: "short", year: "numeric" }));
   }, [dateLocale]);
-
-  // Once queued offline records have synced, drop the "saved offline" note and
-  // reload the server's status so the screen shows what was actually recorded.
-  const messageRef = useRef(message);
-  messageRef.current = message;
-  useEffect(() => {
-    const onQueue = () => {
-      if (messageRef.current !== t("att.savedOffline") || readQueueMine(getQueueOwner()).length) return;
-      setMessage(null);
-      refresh();
-    };
-    window.addEventListener("sz-queue-changed", onQueue);
-    return () => window.removeEventListener("sz-queue-changed", onQueue);
-  }, [t]);
-
-  // Live timer: counts TOTAL time since clock-in (break time included).
-  useEffect(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (clockedIn && session?.clock_in) {
-      const compute = () => {
-        const start = new Date(session.clock_in).getTime();
-        setElapsed(Math.max(0, Math.floor((Date.now() - start) / 1000)));
-      };
-      compute();
-      timerRef.current = setInterval(compute, 1000);
-    } else setElapsed(0);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [clockedIn, session]);
-
-  // Optimistically reflect an offline-captured action (the real state syncs later).
-  function applyOptimistic(action: ClockAction) {
-    if (action === "clock_in") { setClockedIn(true); setOnBreak(false); setSession({ clock_in: new Date().toISOString() }); }
-    else if (action === "clock_out") { setClockedIn(false); setOnBreak(false); setSession(null); }
-    else if (action === "break_start") setOnBreak(true);
-    else if (action === "break_end") setOnBreak(false);
-  }
-
-  async function saveForSync(action: ClockAction, code?: string) {
-    try {
-      await captureOffline(action, code);
-      applyOptimistic(action);
-      setMessage(t("att.savedOffline"));
-      return true;
-    } catch {
-      setMessage(t("att.offlineNotSaved"));
-      return false;
-    }
-  }
-
-  // Best-effort device location. Resolves null if unavailable/denied/slow —
-  // the DB decides whether that's acceptable based on the branch's gps_mode.
-  function getGeo(): Promise<{ lat: number; lng: number } | null> {
-    return new Promise((resolve) => {
-      if (typeof navigator === "undefined" || !navigator.geolocation) return resolve(null);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => resolve(null),
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-      );
-    });
-  }
-
-  async function clockInAction() {
-    setMessage(t("att.locating"));
-    const g = isOnline() ? await getGeo() : null;
-    await doAction(() => clockIn(undefined, g?.lat, g?.lng), t("att.clockedIn"), "clock_in");
-  }
-  async function clockOutAction() {
-    setMessage(t("att.locating"));
-    const g = isOnline() ? await getGeo() : null;
-    await doAction(() => clockOut(undefined, g?.lat, g?.lng), t("att.clockedOut"), "clock_out");
-  }
-  async function breakStartAction() {
-    const g = isOnline() ? await getGeo() : null;
-    await doAction(() => startBreak(g?.lat, g?.lng), t("att.breakStarted"), "break_start");
-  }
-  async function breakEndAction() {
-    const g = isOnline() ? await getGeo() : null;
-    await doAction(() => endBreak(g?.lat, g?.lng), t("att.breakEnded"), "break_end");
-  }
-
-  async function doAction(fn: () => Promise<any>, okMsg: string, offlineAction?: ClockAction) {
-    setWorking(true);
-    setMessage(null);
-    if (offlineAction && !isOnline()) {
-      await saveForSync(offlineAction);
-      setWorking(false);
-      return;
-    }
-    try {
-      const res = await fn();
-      setMessage(res.ok ? okMsg : res.error || t("att.failed"));
-      await refresh().catch(() => setMessage(t("att.couldNotLoad")));
-    } catch {
-      if (offlineAction) await saveForSync(offlineAction);
-      else setMessage(t("att.failed"));
-    }
-    setWorking(false);
-  }
 
   async function loadHistory(tab: "week" | "month") {
     const serial=++historyRequest.current;
@@ -265,7 +141,7 @@ export default function AttendancePage() {
     s: secs % 60,
   });
   const tt = hms(elapsed);
-  const fmtTime = (iso: string | null) =>
+  const fmtTime = (iso: string | null | undefined) =>
     iso ? new Date(iso).toLocaleTimeString(appLocale(), { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }) : "—";
   const fmtDate = (d: string) =>
     d ? new Date(d).toLocaleDateString(dateLocale, { weekday: "short", day: "2-digit", month: "short" }) : "—";
@@ -299,7 +175,6 @@ export default function AttendancePage() {
   return (
     <div className="fade-up">
       <PageHeader title={ <><Icon e="🕐" size={22} /> {t("att.title")}</> } />
-      <SyncStatus />
       <details><summary>{t("offlineReview.title")}</summary><OfflineReview /></details>
       <Link href="/attendance/corrections" className="clock-link"><Icon e="✏️" size={14} /> {t("corr.request")}</Link>
       <div className="page-sub">{todayLabel}</div>

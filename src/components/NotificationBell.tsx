@@ -17,6 +17,7 @@ const OPS: Record<string, { key: string; icon: string; href: string }> = {
   stock:        { key: "notif.lowStock",         icon: "📦", href: "/inventory" },
   availability: { key: "notif.notSubmitted",     icon: "📋", href: "/noshow" },
   docs:         { key: "notif.docsExpiring",     icon: "📑", href: "/expiring-docs" },
+  contracts:    { key: "notif.contractsEnding",  icon: "📝", href: "/staff" },
 };
 // Persisted doc notifications by type → label key + icon + link.
 const NOTIF: Record<string, { key: string; icon: string; href: string }> = {

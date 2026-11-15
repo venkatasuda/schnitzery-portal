@@ -2,8 +2,9 @@
 // numbers, this turns them into the stored notification payload and the push text.
 // Missing sales are never shown as €0 — the line says "not entered" instead.
 
-export type BranchWeek = { sales: number | null; salesPrev: number | null; hours: number; purchases: number; open: number };
-export type WeeklyPayload = { week: string; branches: number; sales: number | null; salesPrev: number | null; hours: number; purchases: number; open: number; salesMissing: number };
+// labour: wage cost of the hours (null when a wage is missing); target: the branch prime-cost target %; waste: entries logged.
+export type BranchWeek = { sales: number | null; salesPrev: number | null; hours: number; purchases: number; open: number; labour?: number | null; target?: number | null; waste?: number };
+export type WeeklyPayload = { week: string; branches: number; sales: number | null; salesPrev: number | null; hours: number; purchases: number; open: number; salesMissing: number; primePct?: number | null; primeTarget?: number | null; waste?: number };
 
 export function summarise(week: string, rows: BranchWeek[]): WeeklyPayload {
   const known = rows.filter((r) => r.sales != null);
@@ -18,12 +19,17 @@ export function summarise(week: string, rows: BranchWeek[]): WeeklyPayload {
     purchases: sum(rows.map((r) => r.purchases)),
     open: rows.reduce((a, r) => a + r.open, 0),
     salesMissing: rows.length - known.length,
+    // Prime cost only when every branch has sales and every wage is known — never a partial figure.
+    primePct: known.length === rows.length && rows.every((r) => r.labour != null) && sum(known.map((r) => r.sales!)) > 0
+      ? Math.round(((sum(rows.map((r) => r.labour!)) + sum(rows.map((r) => r.purchases))) / sum(known.map((r) => r.sales!))) * 1000) / 10 : null,
+    primeTarget: rows.length === 1 ? rows[0].target ?? null : null,
+    waste: rows.reduce((a, r) => a + (r.waste ?? 0), 0),
   };
 }
 
 const TEXT = {
-  en: { title: "Your week in numbers", sales: "Sales", missing: "sales not entered", hours: "h worked", purchases: "purchases", open: "{n} item(s) need you", none: "nothing waiting", branches: "{n} branches" },
-  de: { title: "Deine Woche in Zahlen", sales: "Umsatz", missing: "Umsatz nicht eingetragen", hours: "Std. gearbeitet", purchases: "Einkauf", open: "{n} Punkt(e) warten auf dich", none: "nichts offen", branches: "{n} Filialen" },
+  en: { prime: "Prime cost", target: "target", waste: "{n} waste entries", title: "Your week in numbers", sales: "Sales", missing: "sales not entered", hours: "h worked", purchases: "purchases", open: "{n} item(s) need you", none: "nothing waiting", branches: "{n} branches" },
+  de: { prime: "Prime Cost", target: "Ziel", waste: "{n} Ausschuss-Einträge", title: "Deine Woche in Zahlen", sales: "Umsatz", missing: "Umsatz nicht eingetragen", hours: "Std. gearbeitet", purchases: "Einkauf", open: "{n} Punkt(e) warten auf dich", none: "nichts offen", branches: "{n} Filialen" },
 };
 
 export function pushText(p: WeeklyPayload, lang: "en" | "de") {
@@ -32,6 +38,8 @@ export function pushText(p: WeeklyPayload, lang: "en" | "de") {
   const change = p.sales != null && p.salesPrev ? Math.round(((p.sales - p.salesPrev) / p.salesPrev) * 100) : null;
   const sales = p.sales == null ? x.missing
     : `${x.sales} ${p.salesMissing ? "≥ " : ""}${eur(p.sales)}${change != null ? ` (${change >= 0 ? "▲" : "▼"}${Math.abs(change)}%)` : ""}`;
-  const parts = [sales, `${p.hours} ${x.hours}`, `${eur(p.purchases)} ${x.purchases}`, p.open ? x.open.replace("{n}", String(p.open)) : x.none];
+  const pct = (v: number) => `${v.toLocaleString(lang === "de" ? "de-DE" : "en-GB")}${lang === "de" ? " %" : "%"}`;
+  const prime = p.primePct != null ? `${x.prime} ${pct(p.primePct)}${p.primeTarget != null ? ` (${x.target} ${pct(p.primeTarget)})` : ""}` : null;
+  const parts = [sales, ...(prime ? [prime] : []), `${p.hours} ${x.hours}`, `${eur(p.purchases)} ${x.purchases}`, ...(p.waste ? [x.waste.replace("{n}", String(p.waste))] : []), p.open ? x.open.replace("{n}", String(p.open)) : x.none];
   return { title: p.branches > 1 ? `${x.title} · ${x.branches.replace("{n}", String(p.branches))}` : x.title, body: parts.join(" · ") };
 }

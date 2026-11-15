@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
+import SyncStatus from "@/components/SyncStatus";
 import ManagementNav, { ManagementLocation } from "@/components/ManagementNav";
 import CommandPalette from "@/components/CommandPalette";
 import EmployeeBack from "@/components/EmployeeBack";
@@ -88,6 +89,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       {/* Refresh preserves client state; changing branch must discard the old branch's data and drafts. */}
+      {/* Offline / waiting-to-sync strip on every page (hidden while online with nothing queued). */}
+      <div className="global-sync"><SyncStatus /></div>
       <main key={`${user.id}:${activeBranch ?? profile?.branch_id ?? ""}:${isHQ ? viewMode : "branch"}`} id="main-content" className="screen-wrap fade-up" tabIndex={-1}>{!isManager && <EmployeeBack />}{children}</main>
 
       <ToastHost />

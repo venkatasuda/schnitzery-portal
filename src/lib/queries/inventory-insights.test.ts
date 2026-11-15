@@ -33,3 +33,7 @@ it("loads consumption separately, with the same period and access rules",async()
  const u=await getInventoryConsumption();expect(u.ok).toBe(true);if(u.ok){expect(u.consumption.value).toBeNull();expect(u.sales.enteredDays).toBe(0);}
 });
 it("fails instead of guessing when the production check fails",async()=>{state.fail="inventory_production_runs";expect(await getInventoryInsights()).toEqual({ok:false,error:"load"});});
+it("accepts an earlier end day only within the last 90 days",async()=>{
+ for(const until of ["2026-13-01","2999-01-01","2000-01-01"])expect(await getInventoryInsights(7,until)).toEqual({ok:false,error:"period"});
+ expect(state.calls).toHaveLength(0);
+});
