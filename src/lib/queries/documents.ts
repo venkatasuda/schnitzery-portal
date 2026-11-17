@@ -127,6 +127,21 @@ export async function listMyDocuments() {
   return { ok: true, docs };
 }
 
+// ── MY PAYSLIPS (download only) ─────────────────────────────────────────────
+// The tax adviser's PDFs, uploaded by the manager per employee and month (uploadPayslip). Newest month first;
+// several uploads for one month (corrections) are all listed, latest first.
+export async function listMyPayslips() {
+  const { supabase, user } = await getMe();
+  if (!user) return { ok: false as const, error: "Not logged in.", payslips: [] };
+  const { data, error } = await supabase.from("user_documents").select("id, file_path, file_name, created_at")
+    .eq("user_id", user.id).eq("doc_type", "payslip").order("created_at", { ascending: false }).limit(60);
+  if (error) return { ok: false as const, error: error.message, payslips: [] };
+  const payslips = (data || []).map((d) => ({ id: d.id as string, path: d.file_path as string, uploaded: d.created_at as string,
+    month: (/payslip_(\d{4}-\d{2})_/.exec(d.file_path)?.[1] ?? String(d.created_at).slice(0, 7)) }))
+    .sort((a, b) => b.month.localeCompare(a.month) || b.uploaded.localeCompare(a.uploaded));
+  return { ok: true as const, payslips };
+}
+
 // ── LIST (manager: one employee) ────────────────────────────────────────────
 export async function listEmployeeDocuments(userId: string) {
   const { supabase, user, role } = await getMe();

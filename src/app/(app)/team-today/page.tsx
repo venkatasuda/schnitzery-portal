@@ -26,7 +26,7 @@ export default function TeamTodayPage() {
   const shiftLabel = (k: string | null) => (k && ["Morning", "Mid", "Evening", "Night"].includes(k) ? t("shiftNames." + k) : k || "");
   const label: Record<FloorState, (p: FloorPerson) => string> = {
     late: (p) => s(`Late · ${p.lateBy} min`, `Zu spät · ${p.lateBy} Min.`),
-    in: (p) => s(`In since ${clock(p.clock_in)}`, `Da seit ${clock(p.clock_in)}`) + (p.late_mins > 0 ? s(` · ${p.late_mins} min late`, ` · ${p.late_mins} Min. zu spät`) : ""),
+    in: (p) => (p.clock_in ? s(`In since ${clock(p.clock_in)}`, `Da seit ${clock(p.clock_in)}`) : s("In", "Da")) + (p.late_mins > 0 ? s(` · ${p.late_mins} min late`, ` · ${p.late_mins} Min. zu spät`) : ""),
     break: () => s("On break", "In Pause"),
     not_in: (p) => (p.start ? s(`Starts ${p.start}`, `Beginnt ${p.start}`) : s("Not in yet", "Noch nicht da")),
     done: () => s("Finished", "Fertig"),

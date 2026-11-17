@@ -74,7 +74,7 @@ export default function ComparePage() {
         <button className="btn-secondary ui-btn-sm" onClick={() => setOffset((o) => o - 1)}>{t("cmp.prevWeek")}</button>
         <div className="u-flex1 u-center">
           <div className="t-sm fw-7 u-text">{weekLabel}</div>
-          {offset !== 0 && <button onClick={() => setOffset(0)} style={{ background: "none", border: "none", color: "var(--gold)", fontSize: 12, cursor: "pointer", marginTop: 2 }}>{t("cmp.thisWeek")}</button>}
+          {offset !== 0 && <button className="ui-link-btn" onClick={() => setOffset(0)}>{t("cmp.thisWeek")}</button>}
         </div>
         <button className="btn-secondary ui-btn-sm" onClick={() => setOffset((o) => o + 1)}>{t("cmp.nextWeek")}</button>
       </div>

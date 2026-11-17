@@ -4,12 +4,26 @@
 // action goes to the device queue and is shown as "saved offline" until it syncs — never as server-confirmed.
 import { useEffect, useRef, useState } from "react";
 import { getMyStatus, clockIn, clockOut, startBreak, endBreak } from "@/lib/queries/attendance";
-import { isOnline, captureOffline, readQueueMine, getQueueOwner, type ClockAction } from "@/lib/offline/attendanceQueue";
+import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
+import { serverText } from "@/lib/i18n/serverMessages";
+import { isOnline, captureOffline, readQueueMine, getQueueOwner, codeFromQR, type ClockAction } from "@/lib/offline/attendanceQueue";
 import { useLang } from "@/components/LanguageProvider";
 
 // A session always has a clock-in; no session = not clocked in today.
 type Session = { clock_in: string; clock_out: string | null; breaks: unknown; duration_mins: number | null } | null;
 type Result = { ok: boolean; error?: string };
+
+// Break math shared by the Attendance page and the Home clock card.
+export function parseBreaks(raw: unknown): Array<{ start: string; end: string | null }> {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  try { return JSON.parse(String(raw)); } catch { return []; }
+}
+export function computeBreakMs(raw: unknown): number {
+  let ms = 0;
+  for (const b of parseBreaks(raw)) if (b.start && b.end) ms += Math.max(0, new Date(b.end).getTime() - new Date(b.start).getTime());
+  return ms;
+}
 
 // Best-effort device location; null when unavailable, denied or slow.
 export function getGeo(): Promise<{ lat: number; lng: number } | null> {
@@ -24,7 +38,7 @@ export function getGeo(): Promise<{ lat: number; lng: number } | null> {
 }
 
 export function useClock() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [loading, setLoading] = useState(true), [working, setWorking] = useState(false);
   const [clockedIn, setClockedIn] = useState(false), [onBreak, setOnBreak] = useState(false);
   const [session, setSession] = useState<Session>(null), [message, setMessage] = useState<string | null>(null);
@@ -35,6 +49,7 @@ export function useClock() {
       const res = await getMyStatus();
       if (!res.ok) throw Error();
       setClockedIn(res.clockedIn || false); setOnBreak(res.onBreak || false); setSession(res.session as Session); setStatusError(false);
+      window.dispatchEvent(new Event("sz-clock-changed")); // e.g. Today's team reloads right away
     } catch { setStatusError(true); setMessage(t("att.couldNotLoad")); }
     finally { setLoading(false); }
   }
@@ -84,5 +99,36 @@ export function useClock() {
     startBreak: async () => { const g = await located(false); await run(() => startBreak(g?.lat, g?.lng), t("att.breakStarted"), "break_start"); },
     endBreak: async () => { const g = await located(false); await run(() => endBreak(g?.lat, g?.lng), t("att.breakEnded"), "break_end"); },
   };
-  return { loading, working, setWorking, clockedIn, onBreak, session, message, setMessage, statusError, elapsed, refresh, saveForSync, ...actions };
+  // Kiosk code (6 digits) or kiosk QR — the same rules on every screen. Returns an error text, or null when done
+  // (clocked, or saved offline to sync later).
+  async function byCode(mode: "in" | "out", code: string): Promise<string | null> {
+    const clean = code.replace(/\D/g, "");
+    if (clean.length !== 6) return t("att.enter6");
+    const action: ClockAction = mode === "out" ? "clock_out" : "clock_in";
+    setWorking(true);
+    try {
+      if (!isOnline()) return (await saveForSync(action, clean)) ? null : t("att.offlineNotSaved");
+      const g = await getGeo();
+      const res = await (mode === "out" ? clockOutWithCode : clockInWithCode)(clean, g?.lat, g?.lng);
+      if (!res.ok) return res.error || t("att.failedShort");
+      setMessage(mode === "out" ? t("att.outCode") : t("att.inCode"));
+      await refresh().catch(() => setMessage(t("att.couldNotLoad")));
+      return null;
+    } catch { return (await saveForSync(action, clean)) ? null : t("att.offlineNotSaved"); }
+    finally { setWorking(false); }
+  }
+  async function byQR(mode: "in" | "out", payload: string) {
+    const action: ClockAction = mode === "out" ? "clock_out" : "clock_in";
+    setWorking(true);
+    try {
+      if (!isOnline()) { await saveForSync(action, codeFromQR(payload)); return; }
+      setMessage(t("att.readingQR"));
+      const g = await getGeo();
+      const res = await clockWithQR(payload, mode, g?.lat, g?.lng);
+      if (res.ok) { setMessage(mode === "out" ? t("att.outQR") : t("att.inQR")); await refresh().catch(() => setMessage(t("att.couldNotLoad"))); }
+      else setMessage(serverText(res.error ?? "", locale) || t("att.qrFailed"));
+    } catch { await saveForSync(action, codeFromQR(payload)); }
+    finally { setWorking(false); }
+  }
+  return { loading, working, setWorking, clockedIn, onBreak, session, message, setMessage, statusError, elapsed, refresh, saveForSync, byCode, byQR, ...actions };
 }

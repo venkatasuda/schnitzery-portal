@@ -9,6 +9,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { inventoryKey } from "@/lib/inventory/identity";
 import { berlinToday } from "@/lib/time/berlinDate";
 
+
 function isOwner(r?: string | null) {
   return ["brand_owner", "super_admin"].includes(r || "");
 }

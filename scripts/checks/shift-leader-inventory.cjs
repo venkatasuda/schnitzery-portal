@@ -62,6 +62,22 @@ check(async db => {
     await login(staff);
     await assert.rejects(db.query('select public.resolve_stock_batch_expiry($1,$2,$3,$4,$5)', [a, undated, id(101), '2026-12-25', 'Another date']), /Manager batch access required/, 'Plain staff cannot set expiry');
   }
+  // Inventory is locked for plain staff (migration 20261116140000): no batches even via the API; waste logging stays open.
+  await db.exec(`reset role;
+    create or replace function private.can_plan_prep(p_branch uuid) returns boolean language sql stable security definer set search_path='' as $$
+      select auth.uid() is not null and p_branch in (select public.accessible_branch_ids()) and (public.is_manager() or private.is_shift_leader(p_branch)) $$;
+    grant execute on function private.can_plan_prep(uuid) to authenticated;
+    alter table waste_log enable row level security;`);
+  await db.exec(fs.readFileSync('supabase/migrations/20261116140000_inventory_staff_lock.sql', 'utf8'));
+  const waste = who => db.query("insert into waste_log(branch_id,product,qty,logged_by,work_date) values ($1,'Chicken',1,$2,current_date)", [a, who]);
+  await login(staff);
+  assert.equal((await db.query('select count(*)::int n from stock_batches')).rows[0].n, 0, 'Plain staff cannot read batches');
+  await waste(staff); // waste logging is a floor task for everyone
+  await login(lead);
+  assert.ok((await db.query('select count(*)::int n from stock_batches')).rows[0].n > 0, 'Shift leader reads batches');
+  await waste(lead);
+  await login(manager);
+  assert.ok((await db.query('select count(*)::int n from waste_log')).rows[0].n >= 1, 'Manager reads waste');
   await db.exec('reset role');
-  console.log('Shift leader inventory: counts saved not published, cost-free direct deliveries only, expiry dates, supplier names; plain staff refused.');
+  console.log('Shift leader inventory: counts saved not published, cost-free direct deliveries only, expiry dates, supplier names; plain staff refused, batches locked for plain staff, waste logging open to all.');
 }).catch(error => { console.error(error); process.exitCode = 1; });

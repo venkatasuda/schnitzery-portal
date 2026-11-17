@@ -27,6 +27,7 @@ const MGR = "00000000-0000-0000-0000-000000000001", LEAD = "00000000-0000-0000-0
     grant execute on all functions in schema public, auth to authenticated;`);
   await db.exec(fs.readFileSync("supabase/migrations/20261108120000_prep_lists.sql", "utf8"));
   const m = fs.readFileSync("supabase/migrations/20261114120000_team_today.sql", "utf8"); await db.exec(m); await db.exec(m);
+  const m2 = fs.readFileSync("supabase/migrations/20261117120000_team_today_all_staff.sql", "utf8"); await db.exec(m2); await db.exec(m2);
   await db.query("insert into public.shift_leaders(branch_id, user_id) values ($1, $2)", [B, LEAD]);
   const as = async (uid, sql, p) => { await db.exec(`set role authenticated; set test.uid = '${uid}';`); try { return await db.query(sql, p); } finally { await db.exec("reset role;"); } };
 
@@ -39,9 +40,11 @@ const MGR = "00000000-0000-0000-0000-000000000001", LEAD = "00000000-0000-0000-0
     ($1, $4, $5, now() - interval '3 hours', 'on-break', 12), ($2, $4, $5, now() - interval '8 hours', 'complete', 0),
     ($3, $4, $5::date - 3, now() - interval '3 days', 'complete', 0)`, [ANA, LEAD, CEM, B, d]);
 
-  // Staff without the role, and a manager of another branch, are refused.
-  await assert.rejects(as(ANA, "select * from public.team_today($1)", [B]), /Shift leaders only/);
-  await assert.rejects(as(OTTO, "select * from public.team_today($1)", [B]), /Shift leaders only/);
+  // Plain staff see who works today, but no clock-in times or lateness (20261117120000); other branches are refused.
+  const plain = (await as(ANA, "select name, status, clock_in, late_mins from public.team_today($1) order by name", [B])).rows;
+  assert.deepEqual(plain.map((r) => [r.name, r.status]), [["Ana", "break"], ["Ben", "not_in"], ["Cem", "not_in"], ["Lea", "done"]], "Plain staff see the team");
+  assert.ok(plain.every((r) => r.clock_in === null && r.late_mins === 0), "Plain staff get no clock-in times or lateness");
+  await assert.rejects(as(OTTO, "select * from public.team_today($1)", [B]), /Branch access required/);
   // Ana can still not read colleagues' attendance directly (no new table rights were added).
   for (const uid of [LEAD, MGR]) {
     const rows = (await as(uid, "select name, team, shift, status, late_mins from public.team_today($1) order by name", [B])).rows;
@@ -54,6 +57,6 @@ const MGR = "00000000-0000-0000-0000-000000000001", LEAD = "00000000-0000-0000-0
   }
   // A deactivated shift leader loses access.
   await db.query("update public.users set status = 'inactive' where id = $1", [LEAD]);
-  await assert.rejects(as(LEAD, "select * from public.team_today($1)", [B]), /Shift leaders only/);
-  console.log("Today's team: branch shift leaders and managers only; today's roster + clock state; no other branches, days or rights.");
+  await assert.rejects(as(LEAD, "select * from public.team_today($1)", [B]), /Branch access required/);
+  console.log("Today's team: every active employee of the branch; clock-in times and lateness for shift leaders and managers only; no other branches, days or rights.");
 })().catch((e) => { console.error(e); process.exitCode = 1; });

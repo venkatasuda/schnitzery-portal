@@ -110,7 +110,9 @@ describe("inventory navigation", () => {
     expect(EmployeeBack()?.props.href).toBe("/my-day?tab=timeoff");
     context.path = "/hours";
     expect(EmployeeBack()?.props.href).toBe("/my-day?tab=hours");
-    context.path = "/checklist"; // Workplace lives under Profile now
+    context.path = "/directory"; // team directory lives under Profile
     expect(EmployeeBack()?.props.href).toBe("/profile");
+    context.path = "/checklist"; // on Home since 17 Nov 2026
+    expect(EmployeeBack()?.props.href).toBe("/");
   });
 });

@@ -91,7 +91,7 @@ export default function QrScanner({
 
         <button
           onClick={onClose}
-          style={{ width: "100%", marginTop: 16, padding: 12, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "#fff", fontSize: 14, cursor: "pointer" }}
+          className="btn-secondary btn-block mt-4"
         >
           {t("common.cancel")}
         </button>

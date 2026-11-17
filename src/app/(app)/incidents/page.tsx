@@ -66,7 +66,7 @@ export default function IncidentsPage() {
     <div className="workspace-page">
       <PageHeader title={ <><Icon e="🚨" size={22} /> {t("incidents.title")}</> } />
 
-      <button onClick={() => setShowForm(!showForm)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
+      <button className="btn-gold btn-block u-mb-3" onClick={() => setShowForm(!showForm)}>
         {showForm ? t("common.close") : t("incidents.reportBtn")}
       </button>
 
@@ -105,11 +105,11 @@ export default function IncidentsPage() {
               resolveId === inc.id ? (
                 <div className="mt-3 d-flex gap-2">
                   <input aria-label={t("incidents.resolveNotePlaceholder")} value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} placeholder={t("incidents.resolveNotePlaceholder")} style={{ ...input, flex: 1 }} />
-                  <button onClick={() => doResolve(inc.id)} style={{ ...primaryBtn, width: "auto", padding: "0 16px" }}>{t("incidents.resolve")}</button>
-                  <button type="button" aria-label={t("common.cancel")} onClick={() => setResolveId(null)} style={{ ...primaryBtn, width: "auto", padding: "0 12px", background: "transparent", border: "1px solid var(--border)", color: "var(--white)" }}><Icon e="✕" size={15} /></button>
+                  <button className="btn-gold" onClick={() => doResolve(inc.id)}>{t("incidents.resolve")}</button>
+                  <button type="button" aria-label={t("common.cancel")} onClick={() => setResolveId(null)} className="btn-secondary"><Icon e="✕" size={15} /></button>
                 </div>
               ) : (
-                <button onClick={() => { setResolveId(inc.id); setResolveNote(""); }} style={{ ...primaryBtn, width: "auto", padding: "8px 16px", marginTop: 10 }}>{t("incidents.markResolved")}</button>
+                <button className="btn-secondary ui-btn-sm mt-2" onClick={() => { setResolveId(inc.id); setResolveNote(""); }}>{t("incidents.markResolved")}</button>
               )
             )}
           </div>
@@ -120,5 +120,4 @@ export default function IncidentsPage() {
 }
 
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
-const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "12px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };

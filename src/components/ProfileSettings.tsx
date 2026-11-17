@@ -29,6 +29,9 @@ export default function ProfileSettings({ afterPreferences }: { afterPreferences
   useEffect(() => { currentPushState().then(setPushState).catch(() => setPushState("unsupported")); }, []);
 
   async function toggleNotifications() {
+    // Blocked or unsupported: the browser decides, so say what to do instead of a dead switch.
+    if (pushState === "denied") { toast(t("settings.notificationsBlocked"), "error"); return; }
+    if (pushState === "unsupported") { toast(t("settings.notificationsUnsupported"), "error"); return; }
     setPushBusy(true);
     try {
       if (pushState === "subscribed") {
@@ -91,9 +94,9 @@ export default function ProfileSettings({ afterPreferences }: { afterPreferences
             role="switch"
             aria-checked={light}
             aria-label={t("misc.lightMode")}
-            style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: "pointer", padding: 3, background: light ? "var(--action)" : "rgba(128,128,128,0.35)", transition: "background .2s", display: "flex", justifyContent: light ? "flex-end" : "flex-start" }}
+            className="ui-switch"
           >
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+            <span aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -104,19 +107,16 @@ export default function ProfileSettings({ afterPreferences }: { afterPreferences
           <div className="u-between">
             <div>
               <div className="t-lg fw-6 u-text">{t("settings.notifications")}</div>
-              <div className="ui-muted">
-                {pushState === "denied" ? t("settings.notificationsBlocked") : pushState === "unsupported" ? t("settings.notificationsUnsupported") : null}
-              </div>
             </div>
             <button
               onClick={toggleNotifications}
-              disabled={pushBusy || pushState === "denied" || pushState === "loading" || pushState === "unsupported"}
+              disabled={pushBusy || pushState === "loading"}
               role="switch"
               aria-checked={pushOn}
               aria-label={t("misc.pushToggle")}
-              style={{ width: 48, height: 28, borderRadius: 14, border: "none", cursor: pushBusy || pushState === "denied" || pushState === "unsupported" ? "default" : "pointer", padding: 3, background: pushOn ? "var(--action)" : "rgba(128,128,128,0.35)", opacity: pushState === "denied" || pushState === "loading" || pushState === "unsupported" ? 0.5 : 1, transition: "background .2s", display: "flex", justifyContent: pushOn ? "flex-end" : "flex-start" }}
+              className="ui-switch"
             >
-              <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", display: "block", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+              <span aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -129,7 +129,8 @@ export default function ProfileSettings({ afterPreferences }: { afterPreferences
       <div className="card p-2">
         <button
           onClick={() => setOpen((o) => !o)}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 10px", background: "none", border: "none", cursor: "pointer", color: "var(--white)", fontSize: 14, fontWeight: 600 }}
+          className="settings-row-toggle"
+          aria-expanded={open}
         >
           <span className="d-iflex ai-c gap-2"><Icon e="🔒" size={14} /> {t("settings.changePassword")}</span>
           <span className="u-muted">{open ? "▲" : "▼"}</span>

@@ -169,7 +169,7 @@ export default function CoverPage() {
                       <div className="ui-muted">{c.team} · {c.requester?.full_name || "—"}</div>
                       {c.reason && <div className="ui-quote">“{c.reason}”</div>}
                     </div>
-                    {claimFor !== c.id && <button className="btn-gold" onClick={() => { setClaimFor(c.id); setGiveBack(""); }}>{t("cover.claim")}</button>}
+                    {claimFor !== c.id && <button className="btn-secondary" onClick={() => { setClaimFor(c.id); setGiveBack(""); }}>{t("cover.claim")}</button>}
                   </div>
                   {claimFor === c.id && (
                     <div className="mt-3 bt-1 pt-3">

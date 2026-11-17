@@ -384,7 +384,7 @@ export default function InventoryPage() {
                           <form className="row-actions" onSubmit={event => { event.preventDefault(); doSaveCount(p); }}>
                           <input type="number" inputMode="decimal" min="0" step="any" aria-label={`${t("inv.count")}: ${p.product}${p.unit ? ` (${p.unit})` : ""}`} value={entry[inventoryKey(p)] ?? ""} onChange={(e) => setEntry({ ...entry, [inventoryKey(p)]: e.target.value })}
                             placeholder={counted ? String(counted.ist) : "0"} className="form-input quantity-input" />
-                          <button type="submit" disabled={savingP !== null} className="btn-gold" aria-label={`${t("inv.count")}: ${p.product}`}>
+                          <button type="submit" disabled={savingP !== null} className="btn-secondary" aria-label={`${t("inv.count")}: ${p.product}`}>
                             {savingP === p.product ? "…" : t("inv.count")}
                           </button>
                           </form>

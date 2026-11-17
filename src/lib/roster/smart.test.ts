@@ -16,6 +16,13 @@ describe("smart scheduler", () => {
     const r = smartSchedule({ ...base, staff: [p("junior", { tier: 3 }), p("ace", { tier: 1 }), p("mid")], targets: [{ weekday: 4, team: "Kitchen", shift: "Night", needed: 1 }] });
     expect(r.roster.Friday[0].user_id).toBe("ace");
   });
+  it("stops at the hours the sales forecast supports and leaves the rest open as over budget", () => {
+    // Monday Morning is 7 h. Cap 10 h: one person fits, the second would make 14 h.
+    const r = smartSchedule({ ...base, hoursCap: { Monday: 10 }, staff: [p("a"), p("b")], targets: [{ weekday: 0, team: "Kitchen", shift: "Morning", needed: 2 }] });
+    expect(r.roster.Monday).toHaveLength(1);
+    expect(r.open).toEqual([{ day: "Monday", team: "Kitchen", shift: "Morning", missing: 1, budget: true }]);
+    expect(smartSchedule({ ...base, staff: [p("a"), p("b")], targets: [{ weekday: 0, team: "Kitchen", shift: "Morning", needed: 2 }] }).roster.Monday).toHaveLength(2);
+  });
   it("prefers whoever is furthest behind their contract hours", () => {
     const r = smartSchedule({ ...base, staff: [p("ahead", { workedH: 150 }), p("behind", { workedH: 20 })], targets: [{ weekday: 0, team: "Kitchen", shift: "Morning", needed: 1 }] });
     expect(r.roster.Monday[0].user_id).toBe("behind");

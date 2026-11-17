@@ -44,6 +44,8 @@ if (!process.argv.includes("--check")) {
     console.log("Building the staging copy (one-off, a few minutes)…");
     const build = spawnSync(process.execPath, [next, "build", "--webpack"], { cwd: app, stdio: "inherit", env: { ...process.env, ...config, NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1", SENTRY_DSN: "", NEXT_PUBLIC_SENTRY_DSN: "", SENTRY_AUTH_TOKEN: "" } });
     if (build.status !== 0) { process.exitCode = build.status ?? 1; throw Error("Staging build failed."); }
+    // next build can exit 0 without building (e.g. its security-upgrade prompt); never start an old or missing build.
+    if (!existsSync(resolve(app, ".next/BUILD_ID"))) { process.exitCode = 1; throw Error("No production build was produced — check the build output above (e.g. a Next.js upgrade prompt)."); }
   }
   const child = spawn(process.execPath, [next, ...args], {
     cwd: app, stdio: "inherit", env: {

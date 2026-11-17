@@ -7,7 +7,7 @@ import { useLang } from "@/components/LanguageProvider";
 
 const TABS = ["/", "/my-day", "/schedule", "/profile", "/shift", "/no-access"];
 const MY_DAY = ["/leave", "/hours", "/availability", "/leave-calendar", "/cover"];
-const PROFILE = ["/checklist", "/directory"]; // Workplace lives under Profile
+const PROFILE = ["/directory"]; // team directory lives under Profile; /checklist is on Home
 const OWN = ["/shift/", "/inventory/counts", "/expiry"];   // these pages render their own back link
 const SHIFT = ["/prep/plan", "/day-close", "/expiry", "/inventory"]; // shift-leader tasks, opened from the Inventory tab (/shift)
 const under = (path: string, roots: string[]) => roots.some((r) => path === r || path.startsWith(r.endsWith("/") ? r : r + "/"));

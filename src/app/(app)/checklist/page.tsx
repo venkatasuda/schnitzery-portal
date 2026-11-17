@@ -51,7 +51,7 @@ export default function ChecklistPage() {
   const done = shown.filter((t) => t.done).length;
 
   return (
-    <div style={{ maxWidth: 680, margin: "0 auto" }}>
+    <div className="page-narrow">
       <PageHeader title={s("Today's checklist", "Heutige Checkliste")} subtitle={`${done} / ${shown.length} ${s("done", "erledigt")}`}
         actions={canManage ? <div className="row-actions"><Link className="btn-secondary" href="/checklist/templates">{s("Manage templates", "Vorlagen verwalten")}</Link><Link className="btn-secondary" href="/checklist-status">{s("Status & history", "Status & Verlauf")}</Link></div> : undefined} />
       {error && <ErrorState message={s("Last change not confirmed. Check the list and retry.", "Letzte Änderung nicht bestätigt. Liste prüfen und erneut versuchen.")} onRetry={load} retryLabel={s("Refresh", "Aktualisieren")} />}

@@ -8,6 +8,13 @@ const MANAGER_PREFIXES = ["/action", "/analytics", "/approvals", "/attendance-hu
   "/overview", "/people-hub", "/roster", "/sales", "/schedule-hub", "/settings-hub", "/simulator", "/staff", "/stock-alerts",
   "/summary", "/targets", "/transfers", "/waste-branches", "/inventory"];
 
+// Shift-leader tools (inventory, expiry, prep planning, day close): managers and staff who are
+// shift leaders of their branch. Plain employees go to /no-access (Venky, 16 Nov 2026); the database refuses them too.
+const LEADER_PREFIXES = ["/shift", "/expiry", "/prep/plan", "/day-close", "/inventory/counts"]; // /temp, /waste: all employees
+export function isLeaderPath(path: string) {
+  return LEADER_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+}
+
 export function isManagerPath(path: string) {
   if (path === "/inventory/counts" || path.startsWith("/inventory/counts/")) return false; // shift-leader stocktake
   return MANAGER_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));

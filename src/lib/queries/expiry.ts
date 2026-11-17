@@ -8,12 +8,18 @@ import { uuid } from "@/lib/inventory/operations";
 import { readAll } from "@/lib/supabase/readAll";
 import { batchFlag,type StockBatch } from "@/lib/inventory/batches";
 
+// Inventory (waste, batches) is for shift leaders, managers and owners only; the database enforces the same rule.
+async function inventoryAllowed(supabase: Awaited<ReturnType<typeof getMe>>["supabase"], branchId: string | null | undefined) {
+  return !!branchId && (await supabase.rpc("can_plan_prep", { p_branch: branchId })).data === true;
+}
+
 
 
 // products for the picker
 export async function getBatchProducts() {
   const { supabase, user, branchId,profile } = await getMe();
   if (!user||profile?.status!=="active") return { ok: false, error: "Active account required.", products: [] };
+  if (!(await inventoryAllowed(supabase, branchId))) return { ok: false, error: "Shift leaders and managers only.", products: [] };
   const { data, error } = await readAll(supabase
     .from("inventory_master").select("product, category, unit, is_active")
     .eq("branch_id", branchId).eq("is_active", true).order("product").order("id"));
@@ -24,6 +30,7 @@ export async function getBatchProducts() {
 export async function addBatch(product: string, category: string, qty: number, unit: string, expiryDate: string, note: string,extra?:{command:string;lot:string;expiry_note:string}) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
+  if (!(await inventoryAllowed(supabase, branchId))) return { ok: false, error: "Shift leaders and managers only." };
   if (!branchId || !validInventoryItem({ product, category, unit })) return { ok: false, error: "Pick a product." };
   if (!Number.isFinite(qty) || !(qty > 0) || qty>=1e9 || typeof note!=="string"||note.length>1000) return { ok: false, error: "Check quantity and note." };
   if(extra&&(!uuid(extra.command)||typeof extra.lot!=="string"||extra.lot.length>160||typeof extra.expiry_note!=="string"||extra.expiry_note.length>500))return{ok:false,error:"Invalid batch reference."};
@@ -44,6 +51,7 @@ export async function addBatch(product: string, category: string, qty: number, u
 export async function getBatches(includeClosed=false) {
   const { supabase, user, branchId,profile } = await getMe();
   if (!user||profile?.status!=="active") return { ok: false, error: "Active account required.", batches: [] };
+  if (!(await inventoryAllowed(supabase, branchId))) return { ok: false, error: "Shift leaders and managers only.", batches: [] };
   const today = berlinToday();
   let query=supabase.from("stock_batches").select("id,product,category,unit,qty,remaining_qty,expiry_date,received_date,status,note,lot_number,expiry_note,receipt_reference,receipt_line_id,purchase_id,production_id").eq("branch_id",branchId);
   if(!includeClosed)query=query.eq("status","active");

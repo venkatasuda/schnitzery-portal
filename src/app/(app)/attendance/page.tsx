@@ -3,14 +3,12 @@
 import { PageHeader } from "@/components/ui";
 
 import { appLocale } from "@/lib/format";
-import { serverText } from "@/lib/i18n/serverMessages";
 import { berlinToday, mondayOfDate, monthRange } from "@/lib/time/berlinDate";
 
 import { useEffect, useState, useRef } from "react";
 import { getMyHistory } from "@/lib/queries/attendance";
-import { clockInWithCode, clockOutWithCode, clockWithQR } from "@/lib/queries/clockcode";
-import { isOnline, codeFromQR, type ClockAction } from "@/lib/offline/attendanceQueue";
-import { useClock, getGeo } from "@/components/attendance/useClock";
+import { useClock, parseBreaks, computeBreakMs } from "@/components/attendance/useClock";
+import { StatCell } from "@/components/attendance/ShiftHero";
 import NativeDialog from "@/components/NativeDialog";
 import OfflineReview from "@/components/OfflineReview";
 import { Skeleton, CardSkeleton } from "@/components/Skeleton";
@@ -23,7 +21,7 @@ export default function AttendancePage() {
   const { t, locale } = useLang();
   const dateLocale = locale === "de" ? "de-DE" : "en-US";
   // Clock status and actions: one shared implementation (also used by the Home hero card).
-  const { loading, working, setWorking, clockedIn, onBreak, session, message, setMessage, statusError, elapsed, refresh, saveForSync,
+  const { loading, working, clockedIn, onBreak, session, message, statusError, elapsed, refresh, byCode, byQR,
     clockIn: clockInAction, clockOut: clockOutAction, startBreak: breakStartAction, endBreak: breakEndAction } = useClock();
 
   // code entry
@@ -81,57 +79,13 @@ export default function AttendancePage() {
 
   async function submitCode() {
     setCodeErr(null);
-    const clean = codeValue.replace(/\D/g, "");
-    if (clean.length !== 6) { setCodeErr(t("att.enter6")); return; }
-    setWorking(true);
-    const action: ClockAction = codeMode === "out" ? "clock_out" : "clock_in";
-    if (!isOnline()) {
-      const saved = await saveForSync(action, clean);
-      setWorking(false); if (saved) setShowCode(false); else setCodeErr(t("att.offlineNotSaved"));
-      return;
-    }
-    const fn = codeMode === "out" ? clockOutWithCode : clockInWithCode;
-    const g = await getGeo();
-    try {
-      const res = await fn(clean, g?.lat, g?.lng);
-      setWorking(false);
-      if (res.ok) {
-        setShowCode(false);
-        setMessage(codeMode === "out" ? t("att.outCode") : t("att.inCode"));
-        await refresh().catch(() => setMessage(t("att.couldNotLoad")));
-      } else {
-        setCodeErr(res.error || t("att.failedShort"));
-      }
-    } catch {
-      const saved = await saveForSync(action, clean);
-      setWorking(false); if (saved) setShowCode(false); else setCodeErr(t("att.offlineNotSaved"));
-    }
+    const err = await byCode(codeMode, codeValue);
+    if (err) setCodeErr(err); else setShowCode(false);
   }
 
   async function handleScan(payload: string) {
     setShowScan(false);
-    setWorking(true);
-    const action: ClockAction = codeMode === "out" ? "clock_out" : "clock_in";
-    if (!isOnline()) {
-      await saveForSync(action, codeFromQR(payload));
-      setWorking(false);
-      return;
-    }
-    setMessage(t("att.readingQR"));
-    const g = await getGeo();
-    try {
-      const res = await clockWithQR(payload, codeMode, g?.lat, g?.lng);
-      setWorking(false);
-      if (res.ok) {
-        setMessage(codeMode === "out" ? t("att.outQR") : t("att.inQR"));
-        await refresh().catch(() => setMessage(t("att.couldNotLoad")));
-      } else {
-        setMessage(serverText(res.error ?? "", locale) || t("att.qrFailed"));
-      }
-    } catch {
-      await saveForSync(action, codeFromQR(payload));
-      setWorking(false);
-    }
+    await byQR(codeMode, payload);
   }
 
   // formatting
@@ -358,30 +312,6 @@ export default function AttendancePage() {
       )}
     </div>
   );
-}
-
-// at-a-glance status cell
-function StatCell({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="clock-cell">
-      <strong style={{ color }}>{value}</strong>
-      <span>{label}</span>
-    </div>
-  );
-}
-
-// break math
-function parseBreaks(raw: any): Array<{ start: string; end: string | null }> {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  try { return JSON.parse(raw); } catch { return []; }
-}
-function computeBreakMs(raw: any): number {
-  let ms = 0;
-  for (const b of parseBreaks(raw)) {
-    if (b.start && b.end) ms += Math.max(0, new Date(b.end).getTime() - new Date(b.start).getTime());
-  }
-  return ms;
 }
 
 // date ranges for the history tabs (Monday-start week, calendar month)

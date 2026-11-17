@@ -156,10 +156,9 @@ export default function ProfilePage() {
 
       {/* Preferences + Account — shared across all roles */}
       <ProfileSettings afterPreferences={<>
-        {/* Workplace (moved here from My Day): the daily checklist and the team directory. */}
+        {/* Workplace: the team directory (the daily checklist is on Home since 17 Nov 2026). */}
         <div className="section-label">{t("myday.tabWork")}</div>
         <div className="card profile-work">
-          <Link href="/checklist" className="btn-secondary">{t("checklist.title")}</Link>
           <Link href="/directory" className="btn-secondary">{t("myday.teamDirectory")}</Link>
         </div>
       </>} />

@@ -7,7 +7,7 @@ import { berlinToday } from "@/lib/time/berlinDate";
 
 export default function PrepPlanPage() {
   const { locale } = useLang();
-  return <div style={{ maxWidth: 760, margin: "0 auto" }}>
+  return <div className="page-narrow">
     <PageHeader title={locale === "de" ? "Vorbereitung planen" : "Plan prep"} />
     <PrepDay initialDay={berlinToday()} allowPicker={false} />
   </div>;

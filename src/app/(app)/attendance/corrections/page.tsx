@@ -198,7 +198,7 @@ export default function CorrectionsPage() {
                   </div>
                 )}
                 {r.status === "pending" && (
-                  <button onClick={() => cancel(r.id)} style={{ marginTop: 10, padding: "6px 12px", background: "none", border: "1px solid var(--border)", borderRadius: 8, color: "var(--gray)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("corr.cancel")}</button>
+                  <button className="btn-secondary ui-btn-sm mt-2" onClick={() => cancel(r.id)}>{t("corr.cancel")}</button>
                 )}
               </div>
             );

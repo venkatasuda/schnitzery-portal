@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isManagerPath, MANAGER_ROLES } from "@/lib/auth/manager-paths";
+import { isLeaderPath, isManagerPath, MANAGER_ROLES } from "@/lib/auth/manager-paths";
 
 // Single gatekeeper for auth. Runs on every request.
 // Avoids redirect loops by carefully checking the path BEFORE redirecting.
@@ -65,6 +65,20 @@ export async function proxy(request: NextRequest) {
       url.pathname = "/no-access";
       url.search = "";
       return NextResponse.redirect(url);
+    }
+  }
+
+  // Shift-leader tools: plain employees (not a shift leader of their branch) get "no access" too.
+  if (user && request.method === "GET" && isLeaderPath(path)) {
+    const { data: me } = await supabase.from("users").select("role, branch_id").eq("id", String(user.sub)).maybeSingle();
+    if (me && !MANAGER_ROLES.includes(String(me.role))) {
+      const { data: lead } = await supabase.rpc("can_plan_prep", { p_branch: me.branch_id });
+      if (lead !== true) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/no-access";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
     }
   }
 

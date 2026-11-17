@@ -329,7 +329,7 @@ html.light .btn-gold { color: #fff; }
 .management-nav-link svg { flex-shrink: 0; }
 .management-shell { padding-left: 240px; font-size: 14px; line-height: 1.5; }
 .management-shell h1, .management-shell h2, .management-shell h3 { font-family: var(--font-body); letter-spacing: -0.3px; }
-.workspace-page { max-width: 640px; margin: 0 auto; }
+.workspace-page { max-width: 720px; margin: 0 auto; } /* same as .page-narrow */
 .management-shell .workspace-page { max-width: none; margin: 0; }
 .management-shell .hub-tab-panel.active { display: block; }
 .management-shell .hub-tab-panel.workspace-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 20px; align-items: start; }
@@ -883,7 +883,7 @@ html:not(.light) .btn-danger { background: #c0392b; }
 .ui-link-quiet { width: 100%; min-height: 44px; margin-top: var(--space-2); background: none; border: 0; color: var(--text-muted); font-size: var(--text-md); cursor: pointer; }
 .ui-hidden { display: none; }
 .mx-auto { margin-left: auto; margin-right: auto; }
-.ui-narrow { max-width: 520px; margin: 0 auto; }
+.ui-narrow { max-width: 720px; margin: 0 auto; } /* same as .page-narrow */
 .ui-plain-list { margin: var(--space-2) 0 0; padding-left: var(--space-4); font-size: var(--text-sm); }
 .cookie-notice { position: fixed; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); z-index: 200; display: flex; justify-content: center; pointer-events: none; }
 .cookie-notice-card { pointer-events: auto; max-width: 620px; width: 100%; display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); box-shadow: var(--shadow); }
@@ -1400,11 +1400,12 @@ body.has-cookie-notice { padding-bottom: 120px; }
 .prep-steps-n { display: grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; background: var(--border); font-weight: 700; font-size: var(--text-sm); }
 .prep-steps button[aria-current="step"] .prep-steps-n { background: var(--action); color: var(--on-action); }
 .prep-card { display: grid; gap: 12px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
-.prep-left-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px 20px; margin: 0; padding: 0; border: 0; }
+.prep-left-list { display: grid; grid-template-columns: 1fr; gap: 0; margin: 0; padding: 0; border: 0; }
 .prep-left-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: var(--control-h); border-bottom: 1px solid var(--border); padding: 4px 0; font-weight: 600; }
 .prep-unit-input { display: inline-flex; align-items: center; gap: 6px; }
 .prep-unit-input em { font-style: normal; font-size: var(--text-xs); color: var(--text-muted); min-width: 28px; }
 .prep-unit-input input.form-input, .prep-num { width: 96px; min-width: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.prep-left-list .prep-unit-input em { min-width: 72px; } /* one column: inputs line up whatever the unit */
 .prep-table td, .prep-table th { vertical-align: middle; }
 .prep-table tr.is-zero { opacity: .55; }
 .prep-col-main { background: var(--accent-soft); }
@@ -1619,6 +1620,8 @@ body.has-cookie-notice { padding-bottom: 120px; }
 .roster-splh caption { text-align: left; padding: 0 0 var(--space-2); }
 .roster-splh th { white-space: normal; } .roster-splh td, .roster-splh thead th + th { text-align: right; }
 .floor-board a { color: var(--text); text-decoration: none; } .floor-board a:hover, .floor-board a:focus-visible { color: var(--gold); text-decoration: underline; }
+.day-close-channels .form-input { max-width: 10rem; }
+.channel-split td, .channel-split thead th + th { text-align: right; font-variant-numeric: tabular-nums; }
 .floor-board ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
 
 /* Employee Home: today's shift + clock (hero) */
@@ -1652,8 +1655,6 @@ body.has-cookie-notice { padding-bottom: 120px; }
 }
 
 /* Home quick log (temperature / waste dialogs) */
-.quick-log { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); margin: 0 0 var(--space-4); }
-.quick-log .btn-secondary { min-height: var(--control-h); }
 .quick-temp { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
 .quick-temp li { display: grid; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
 .quick-temp li > div:first-child { display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
@@ -1668,3 +1669,35 @@ body.has-cookie-notice { padding-bottom: 120px; }
 .roster-entry.is-warned { box-shadow: inset 3px 0 0 var(--warn); padding-left: var(--space-2); }
 .roster-entry.is-blocked { box-shadow: inset 3px 0 0 var(--danger); padding-left: var(--space-2); background: var(--danger-soft); }
 .global-sync:empty { display: none; } .global-sync { max-width: 1600px; margin: 0 auto; padding: 0 var(--space-4); }
+
+/* ── Consistency layer (17 Nov 2026) ─────────────────────────────────────────────────────────────
+   Two page widths: .page-narrow for forms, lists and employee screens; tables/boards use the full width.
+   Four button types, one shape: primary (.btn-gold, one per screen/section), secondary, quiet (.ui-link-btn),
+   danger (.btn-danger / .btn-quiet-danger). Same height, radius, padding and type everywhere. */
+.page-narrow { max-width: 720px; margin-inline: auto; }
+.page-top-gap { margin-top: var(--space-6, 40px); }
+.btn-gold, .btn-secondary, .btn-danger, .btn-quiet-danger { border-radius: var(--radius-sm); padding: 10px 16px; font-weight: 600; font-size: var(--text-md); min-height: var(--control-h); }
+/* Small buttons: smaller text everywhere; compact height only with a mouse — phones keep 44px touch targets. */
+.ui-btn-sm.btn-gold, .ui-btn-sm.btn-secondary, .ui-btn-sm.btn-danger, .ui-btn-sm.btn-quiet-danger { padding: 6px 12px; font-size: var(--text-sm); }
+@media (pointer: fine) { .ui-btn-sm.btn-gold, .ui-btn-sm.btn-secondary, .ui-btn-sm.btn-danger, .ui-btn-sm.btn-quiet-danger { min-height: var(--control-h-compact); } }
+.btn-block { width: 100%; }
+.settings-row-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--control-h); padding: 12px 10px; background: none; border: 0; color: var(--text); font: 600 var(--text-md)/1.4 var(--font-body); cursor: pointer; text-align: left; }
+/* .workspace-button (Approvals, Staff, Settings, Schedule hub, Labour, Profile) = the same four standard types. */
+.workspace-button { background: var(--dark2); color: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 16px; min-height: var(--control-h); font: 600 var(--text-md)/1.4 var(--font-body); }
+.workspace-button:hover:not(:disabled) { border-color: var(--gold-ink); }
+.workspace-button.primary, .workspace-button[aria-pressed="true"] { background: var(--action); border-color: transparent; color: var(--on-action); }
+.workspace-button.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.workspace-button.danger:hover:not(:disabled) { background: var(--danger-soft); }
+.workspace-button.success { background: transparent; color: var(--success); border-color: var(--success); }
+.workspace-button:disabled { opacity: .6; cursor: not-allowed; }
+/* Document buttons follow the secondary style (were pill-shaped and 36px on phones). */
+.doc-btn, .doc-upload { min-height: var(--control-h); border-radius: var(--radius-sm); font-weight: 600; }
+@media (pointer: fine) { .doc-btn, .doc-upload { min-height: var(--control-h-compact); } }
+.feature-card.is-locked { opacity: .55; cursor: not-allowed; } /* visible, not usable (plain employees: Inventory) */
+.clock-pick { display: grid; gap: var(--space-2); margin-top: var(--space-3); } /* Clock in/out popup: QR or code */
+.payslip-list { list-style: none; margin: 0; padding: 0; } .payslip-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--control-h); padding: var(--space-2) 0; border-top: 1px solid var(--border); }
+/* On/off switch (Profile: light mode, push notifications). */
+.ui-switch { display: flex; align-items: center; justify-content: flex-start; width: 48px; height: 28px; padding: 3px; border: 0; border-radius: 14px; background: var(--border-strong, rgba(128,128,128,.35)); cursor: pointer; transition: background .2s; flex: none; }
+.ui-switch[aria-checked="true"] { justify-content: flex-end; background: var(--action); }
+.ui-switch > span { display: block; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.ui-switch:disabled { opacity: .6; cursor: wait; }

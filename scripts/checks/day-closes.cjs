@@ -29,6 +29,7 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   await db.exec(fs.readFileSync("supabase/migrations/20261108120000_prep_lists.sql", "utf8"));
   await db.exec(fs.readFileSync("supabase/migrations/20261109090000_day_closes.sql", "utf8"));
   await db.exec(fs.readFileSync("supabase/migrations/20261109150000_temp_rooms.sql", "utf8"));
+  await db.exec(fs.readFileSync("supabase/migrations/20261116120000_day_close_delivery_channels.sql", "utf8"));
   const today = (await db.query("select ((now() at time zone 'Europe/Berlin')::date)::text d")).rows[0].d;
   await db.exec(`insert into public.shift_leaders(branch_id, user_id) values ('${B}', '${LEAD}');
     insert into public.temp_units(id, branch_id, name) values ('00000000-0000-0000-0000-0000000000f1', '${B}', 'Fridge 1'), ('00000000-0000-0000-0000-0000000000f2', '${B}', 'Fridge 2');
@@ -71,9 +72,17 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   await assert.rejects(close(LEAD, 2100, 400, 400, why, yesterday), /Reason required for sales/, "POS total differs from the recorded sales");
   await close(LEAD, 2100, 400, 400, { ...why, sales: "refund not in import" }, yesterday);
   assert.equal(Number((await db.query("select amount from public.daily_sales where branch_id = $1 and sale_date = $2::date", [B, yesterday])).rows[0].amount), 2000, "Imported sales are not overwritten");
+  // Delivery platforms (separate order printers, not in the till): the day's sales = till + platforms.
+  const withChannels = (ch) => as(LEAD, "select public.close_day($1, $2::date, 1500, 300, 300, $3::jsonb, null, $4::jsonb) id", [B, twoAgo, JSON.stringify({ temps: "no checks", checklists: "late" }), JSON.stringify(ch)]);
+  await assert.rejects(withChannels({ deliveroo: { gross: 10, orders: 1 } }), /Invalid delivery channels/, "Only Lieferando, Uber Eats, Wolt");
+  await assert.rejects(withChannels({ wolt: { gross: -5, orders: 1 } }), /Invalid delivery channels/, "No negative platform sales");
+  await assert.rejects(withChannels({ wolt: { gross: 10, orders: 1.5 } }), /Invalid delivery channels/, "Orders are whole numbers");
+  const chId = (await withChannels({ lieferando: { gross: 412.5, orders: 23 }, uber_eats: { gross: 180, orders: 9 }, wolt: { gross: 96.4, orders: 5 } })).rows[0].id;
+  assert.equal(Number((await db.query("select amount from public.daily_sales where branch_id = $1 and sale_date = $2::date", [B, twoAgo])).rows[0].amount), 2188.9, "1500 till + 412.50 + 180 + 96.40");
+  assert.equal((await db.query("select channels->'lieferando'->>'orders' o from public.day_closes where id = $1", [chId])).rows[0].o, "23", "Platform figures are kept with the close");
   await assert.rejects(close(MGR, 2430, 400, 400, {}), /Day already closed/, "One close per day");
   await assert.rejects(as(MGR, `update public.day_closes set counted_cash = 400 where id = '${id}'`), /permission denied/, "Closes cannot be edited");
-  assert.equal((await as(LEAD, "select count(*)::int n from public.day_closes")).rows[0].n, 2, "Shift leader reads closes");
+  assert.equal((await as(LEAD, "select count(*)::int n from public.day_closes")).rows[0].n, 3, "Shift leader reads closes");
   assert.equal((await as(STAFF, "select count(*)::int n from public.day_closes")).rows[0].n, 0, "Plain staff cannot read closes");
-  console.log("Day closes: shift leaders + managers only, reasons for every open point, cash difference, one immutable close per day.");
+  console.log("Day closes: shift leaders + managers only, reasons for every open point, cash difference, one immutable close per day, till + delivery platforms.");
 })().catch((e) => { console.error(e); process.exitCode = 1; });

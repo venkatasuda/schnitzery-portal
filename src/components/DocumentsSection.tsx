@@ -58,7 +58,7 @@ export default function DocumentsSection() {
   async function load() {
     setLoading(true);
     setLoadFailed(false);
-    try { const res=await listMyDocuments(); if(!res.ok)throw Error(); setDocs(res.docs||[]); }
+    try { const res=await listMyDocuments(); if(!res.ok)throw Error(); setDocs((res.docs||[]).filter((d) => d.doc_type !== "payslip")); } // payslips: My Day → Hours
     catch {setDocs([]);setLoadFailed(true);}
     finally {setLoading(false);}
   }

@@ -17,7 +17,7 @@ export default function ShiftDeliveryPage() {
   useEffect(() => { void load(); }, []);
   if (error) return <ErrorState message={s("Delivery form could not be loaded (shift leaders only).", "Lieferformular konnte nicht geladen werden (nur Schichtleitung).")} onRetry={load} retryLabel={s("Retry", "Erneut versuchen")} />;
   if (!data) return <CardSkeleton rows={4} />;
-  return <div style={{ maxWidth: 760, margin: "0 auto" }}>
+  return <div className="page-narrow">
     <Link className="inventory-back" href="/shift">← {s("Back to Inventory", "Zurück zu Inventar")}</Link>
     <PageHeader title={s("Record a delivery", "Lieferung erfassen")} subtitle={data.branch.name} />
     {saved > 0 && <p role="status">{s(`${saved} delivery saved.`, `${saved} Lieferung gespeichert.`)}</p>}
