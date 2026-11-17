@@ -105,7 +105,29 @@ Run what applies and report honestly what was and was not run:
 4. For UI: look at the screen at 375px and desktop width (staging or a browser preview).
 5. New migrations: say so explicitly; they must be run in production before merging.
 
-### 12. Self-check — run last, covers sections 1–17
+### 18. Laws of UX — Venky's checklist for every screen (17 Nov 2026)
+| Rule | What it means here |
+|---|---|
+| Few choices per screen (Hick) | One job per screen; secondary actions in an "More" menu or a second step. |
+| Large targets (Fitts) | Tap targets ≥ 44px (`--control-h`); the main action full-width on phones. |
+| Familiar patterns (Jakob) | Same controls as common apps: bottom tabs, back top-left, primary button bottom/right. |
+| Group related information (common region, proximity) | Related values in one card; label next to its value; actions next to what they act on. |
+| Chunk content | Lists of 5–9 per group; long forms split into steps. |
+| Respond within 400 ms (Doherty) | Instant feedback: optimistic state, `aria-busy`, skeletons, no blank waits. |
+| Highlight the primary action (Von Restorff) | Exactly one `btn-gold` per screen/section; everything else secondary. |
+| Essentials first (serial position) | What the person came for is at the top; totals and summaries first or last, never in the middle. |
+| End flows memorably (peak-end) | Clear success state after finishing ("Day closed", "Clocked in 10:31"), never a silent reset. |
+| Visible progress / goal gradient | Steps show "2 of 3", counts show "5/7 done"; start counters from what is already done. |
+| Simplify complexity (Tesler) | The system carries the complexity: defaults, auto-fill, calculated values instead of user math. |
+| Sensible defaults | Today's date, the user's branch, last-used values prefilled. |
+| Prevent errors | Disable impossible actions, constrain inputs (type, min/max, whole numbers), confirm destructive ones. |
+| Make errors recoverable | Plain-language error + retry; nothing typed is lost (drafts, autosave); undo or correction path. |
+| Pattern consistency | Same component for the same job across modules (Panel, Field, data-table, ConfirmDialog). |
+| Connect related elements (uniform connectedness) | Shared border/background or a line ties a value to its action or source. |
+| Reduce task time | Fewest taps from home to done; no detours through other pages. |
+| Reveal complexity gradually | Advanced options behind `<details>`/"More"; first view shows only the common path. |
+
+### 12. Self-check — run last, covers sections 1–18
 1. Buttons and inputs in one row share the same height (`--control-h`) and baseline; header switches sit top-right.
 2. Same sequence at 375px and 1920px, no horizontal page overflow, no orphaned metric.
 3. Numbers use `tabular-nums`; surfaces use the existing tokens.
@@ -115,3 +137,4 @@ Run what applies and report honestly what was and was not run:
 7. If a screen was changed, look at it at 375px and desktop width before calling it done (staging or a browser preview), and say plainly if that was not possible.
 8. Did I research existing codebase patterns first, strip out all generic "vibe-coded" filler, and keep every dashboard card role-relevant and actionable?
 9. Is the logic in `src/lib` or the database (not the component), are failures and concurrent edits handled, are reads bounded, and did the verification in section 17 pass?
+10. Does the screen pass the section 18 Laws of UX checklist (one primary action, large targets, essentials first, visible progress, errors prevented and recoverable)?

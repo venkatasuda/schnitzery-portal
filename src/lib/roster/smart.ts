@@ -32,6 +32,10 @@ export type SmartInput = {
   times: Map<string, ShiftTime>;
   minijobbers: Minijobber[];
   prevSunday?: SmartEntry[]; // last week's published Sunday: a late shift there blocks Monday morning (11 h rest)
+  // Paid hours the sales forecast supports per day (forecast ÷ sales-per-labour-hour target). A shift that would
+  // go over it stays open (budget: true) for the manager to decide.
+  // ponytail: shift span incl. breaks counts against the cap, so it errs on the safe side by the break length.
+  hoursCap?: Record<string, number>;
 };
 
 const REST_MIN = 11 * 60;
@@ -114,7 +118,7 @@ export function swapOptions(inp: Omit<SmartInput, "targets"> & { roster: Record<
 
 export function smartSchedule(inp: SmartInput) {
   const roster: Record<string, SmartEntry[]> = Object.fromEntries(WEEK_DAYS.map((d) => [d, []]));
-  const open: { day: string; team: string; shift: string; missing: number }[] = [];
+  const open: { day: string; team: string; shift: string; missing: number; budget?: boolean }[] = [];
   const mj = new Map(inp.minijobbers.map((m) => [m.id, m]));
   const plannedMins: Record<string, number> = {};
   const endAt: Record<string, number> = {};   // end of latest planned shift (real minutes)
@@ -129,6 +133,8 @@ export function smartSchedule(inp: SmartInput) {
   WEEK_DAYS.forEach((day, di) => {
     const date = dateOf(inp.weekStart, di), weekend = di === 4 || di === 5; // Fri, Sat
     const onDay = new Set<string>();
+    let dayMins = 0;
+    const cap = inp.hoursCap?.[day];
     const slots = inp.targets.filter((t) => t.weekday === di && t.needed > 0)
       .sort((a, b) => kindOrder(a.team, a.shift) - kindOrder(b.team, b.shift) || a.team.localeCompare(b.team));
     for (const slot of slots) {
@@ -155,8 +161,9 @@ export function smartSchedule(inp: SmartInput) {
         if (p.tier) v += (3 - p.tier) * 2;
         return v;
       };
-      let filled = 0;
+      let filled = 0, overBudget = false;
       for (let k = 0; k < slot.needed; k++) {
+        if (cap != null && dayMins + mins > cap * 60 + 1e-6) { overBudget = true; break; }
         const best = inp.staff.filter((p) => !blocked(p))
           .sort((a, b) => teamRank(a, slot.team) - teamRank(b, slot.team) || score(b) - score(a) || (plannedMins[a.id] || 0) - (plannedMins[b.id] || 0) || a.name.localeCompare(b.name))[0];
         if (!best) break;
@@ -165,9 +172,10 @@ export function smartSchedule(inp: SmartInput) {
         plannedMins[best.id] = (plannedMins[best.id] || 0) + mins;
         endAt[best.id] = Math.max(endAt[best.id] ?? -Infinity, e);
         planned.push({ date, user_id: best.id, mins });
+        dayMins += mins;
         filled++;
       }
-      if (filled < slot.needed) open.push({ day, team: slot.team, shift: slot.shift, missing: slot.needed - filled });
+      if (filled < slot.needed) open.push({ day, team: slot.team, shift: slot.shift, missing: slot.needed - filled, ...(overBudget ? { budget: true } : {}) });
     }
   });
   return { roster, open, assigned: planned.length, hours: Object.fromEntries(Object.entries(plannedMins).map(([id, m]) => [id, Math.round(m / 6) / 10])) };

@@ -13,6 +13,7 @@ import DashSection from "@/components/dash/DashSection";
 import { ForecastPanel, HealthPanel, type Insights } from "@/components/dash/OwnerInsights";
 import PerformanceBand from "@/components/dash/PerformanceBand";
 import ProfitBand, { type Leaks } from "@/components/dash/ProfitBand";
+import ChannelSplit from "@/components/dash/ChannelSplit";
 import { getInventoryInsights } from "@/lib/queries/inventory-insights";
 import { berlinMonday, addDays } from "@/lib/time/berlinDate";
 import { getOwnerInsights, getSetupProgress } from "@/lib/queries/owner-insights";
@@ -24,7 +25,6 @@ import { getViewMode } from "@/lib/viewMode";
 import Link from "next/link";
 import TeamTodayCard from "@/components/floor/TeamTodayCard";
 import ShiftHero from "@/components/attendance/ShiftHero";
-import QuickLog from "@/components/QuickLog";
 import StatusStrip from "@/components/StatusStrip";
 import Icon from "@/components/Icon";
 import { getT, getLocale } from "@/lib/i18n/server";
@@ -188,6 +188,7 @@ export default async function HomePage() {
           {isBranchOwner || hqBranchMode ? <>
             {mInsights?.profit && <ProfitBand profit={mInsights.profit} leaks={mLeaks} primeTarget={mTargets?.primePct ?? null} purchaseTarget={mTargets?.purchasePct ?? null} t={t} locale={locale} />}
             <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={null} t={t} locale={locale} />
+            <ChannelSplit locale={locale} />
             <ManagerDash part="now" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} />
             {mInsights && <PerformanceBand trend={mInsights.trend} labourTarget={mTargets?.labourPct ?? null} flash={mFlash} t={t} locale={locale} />}
           </> : <>
@@ -195,6 +196,7 @@ export default async function HomePage() {
             {mInsights && <PerformanceBand trend={mInsights.trend} labourTarget={mTargets?.labourPct ?? null} flash={mFlash} t={t} locale={locale} />}
             {mInsights?.profit && <ProfitBand profit={mInsights.profit} leaks={mLeaks} primeTarget={mTargets?.primePct ?? null} purchaseTarget={mTargets?.purchasePct ?? null} t={t} locale={locale} />}
             <OwnerCockpit cost={mCost} targets={mTargets} canEdit={mCanEditTargets} flash={null} t={t} locale={locale} />
+            <ChannelSplit locale={locale} />
           </>}
           {mInsights && <ForecastPanel data={mInsights} labourTarget={mTargets?.labourPct ?? null} t={t} locale={locale} />}
           <ManagerDash part="details" ops={mOps} live={mLive} ot={mOt} sched={mSched} clockedIn={staffClockedIn} onBreak={staffOnBreak} owner={isBranchOwner || hqBranchMode} cost={mCost} waste={mWaste} newHires={mNewHires} docs={{ missing: mDocsMissing, expired: mDocsExpired, pending: mDocsPending }} t={t} locale={locale} insights={mInsights} setup={mSetup} />
@@ -217,25 +219,8 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
 
   return (
     <>
-      {/* First: today's shift and the clock button (AI Studio review: no detour via /attendance). */}
-      <ShiftHero />
-      <QuickLog />
-      {/* Shift leaders: who is in today, first thing at the start of service. */}
-      {shiftLeader && <TeamTodayCard />}
-
-      {/* One Workplace list: clock first (highlighted while working), then the daily tools. Shift leaders get
-          Inventory, which already contains waste and expiry; everyone else keeps those two tiles. */}
-      <div className="section-label">{t("home.workplace")}</div>
-
-      <Shortcut href="/announcements" icon="📣" title={t("home.announcements")} />
-      <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
-      <Shortcut href="/prep" icon="🥗" title={t("home.prepList")} />
-      {shiftLeader
-        ? <Shortcut href="/shift" icon="📦" title={t("home.shiftInventory")} />
-        : <>
-          <Shortcut href="/expiry" icon="📅" title={t("home.expiry")} />
-        </>}
-      <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "14px 0 4px", padding: 16 }}>
+      {/* First: this month's hours against the target, then today's shift and the clock. */}
+      <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "0 0 12px", padding: 16 }}>
         {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
           <Stat value={`${(hours?.totalHours ?? 0).toLocaleString(locale === "de" ? "de-DE" : "en-GB")} h`} label={t("home.thisMonthStat")} color="var(--gold-ink)" />
@@ -243,6 +228,26 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
           {target == null && <Stat value="—" label={t("home.ofTarget")} />}
         </div>
       </div>
+      <ShiftHero />
+      {/* Everyone: today's team and the Workplace tools (temperatures, waste, checklists …). Shift leaders
+          additionally: Inventory (locked for plain employees here, in the proxy and in the database — 20261116140000). */}
+      <TeamTodayCard />
+
+      <div className="section-label">{t("home.workplace")}</div>
+
+      <Shortcut href="/announcements" icon="📣" title={t("home.announcements")} />
+      <Shortcut href="/incidents" icon="🚨" title={t("home.reportIncident")} />
+      <Shortcut href="/temp" icon="🌡️" title={t("home.tempLog")} />
+      <Shortcut href="/waste" icon="🗑️" title={t("home.wasteLog")} />
+      <Shortcut href="/checklist" icon="✅" title={locale === "de" ? "Checklisten" : "Checklists"} />
+      <Shortcut href="/prep" icon="🥗" title={t("home.prepList")} />
+      {shiftLeader
+        ? <Shortcut href="/shift" icon="📦" title={t("home.shiftInventory")} />
+        : <div className="feature-card is-locked" aria-disabled="true">
+            <div className="feature-icon"><Icon e="🔒" size={20} /></div>
+            <div className="u-flex1"><div className="feature-title">{t("home.shiftInventory")}</div>
+              <div className="feature-sub">{locale === "de" ? "Nur für Schichtleitung" : "Shift leaders only"}</div></div>
+          </div>}
     </>
   );
 }

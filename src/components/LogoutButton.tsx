@@ -44,19 +44,7 @@ export default function LogoutButton() {
     <button
       onClick={logout}
       disabled={busy}
-      style={{
-        width: "100%",
-        marginTop: 14,
-        padding: "13px",
-        background: "transparent",
-        border: "1px solid rgba(192,57,43,0.5)",
-        borderRadius: 12,
-        color: "var(--danger)",
-        fontSize: 15,
-        fontWeight: 700,
-        cursor: busy ? "default" : "pointer",
-        opacity: busy ? 0.6 : 1,
-      }}
+      className="btn-quiet-danger btn-block mt-3"
     >
       {busy ? t("auth.signingOut") : "↪  " + t("auth.logOut")}
     </button>

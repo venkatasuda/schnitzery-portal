@@ -20,6 +20,8 @@ import { checkRoster, isBlocking, type RosterIssue } from "@/lib/roster/check";
 import { askConfirm } from "@/components/ConfirmDialog";
 import { createClient } from "@/lib/supabase/client";
 import { getStaffingTargets } from "@/lib/queries/staffing";
+import { forecastWeek } from "@/lib/owner/insights";
+import { addDays } from "@/lib/time/berlinDate";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // Every team a manager can roster — not only the ones that happen to have preset
@@ -171,10 +173,13 @@ export default function RosterPage() {
         staff: onContract.map((p) => ({ id: p.id, name: p.full_name, team: p.team ?? null, contractHours: p.contractHours ?? null, tier: p.tier ?? null, workedH: p.workedH ?? 0, teams: p.teams })),
         times: new Map((st.ok ? st.items : []).map((x) => [`${x.team}|${x.shift}`, x])),
         minijobbers: plan.ok ? plan.minijobbers : [],
+        // Sales-per-labour-hour target set → never plan more paid hours a day than the forecast supports.
+        hoursCap: plan.ok && plan.splhTarget ? Object.fromEntries(forecastWeek(DAYS.map((_, i) => addDays(weekStart, i)), plan.history, [], {}).days
+          .flatMap((d, i) => (d.forecast == null ? [] : [[DAYS[i], d.forecast / plan.splhTarget!]]))) : undefined,
       });
       setRoster(res.roster as Roster); setOpenSlots(res.open.map(({ day, team, shift }) => ({ day, team, shift })));
-      const missing = res.open.reduce((n, o) => n + o.missing, 0);
-      toast(t("roster.smartDone", { n: res.assigned, o: missing }), missing ? "error" : "success");
+      const missing = res.open.reduce((n, o) => n + o.missing, 0), budget = res.open.filter((o) => o.budget).reduce((n, o) => n + o.missing, 0);
+      toast(t("roster.smartDone", { n: res.assigned, o: missing }) + (budget ? ` · ${t("roster.smartBudget", { n: budget })}` : ""), missing ? "error" : "success");
     } catch { toast(t("roster.loadFailed"), "error"); }
     finally { setDrafting(false); }
   }

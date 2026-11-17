@@ -7,6 +7,7 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { getMyHours } from "@/lib/queries/timepay";
 import { PageHeader,  Stat, StatGrid, ErrorState } from "@/components/ui";
 import { useLang } from "@/components/LanguageProvider";
+import MyPayslips from "@/components/MyPayslips";
 
 export default function HoursPage() {
   const { t, locale } = useLang();
@@ -70,6 +71,7 @@ export default function HoursPage() {
           )}
         </>
       )}
+      <MyPayslips />
     </div>
   );
 }

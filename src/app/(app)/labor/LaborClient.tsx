@@ -214,7 +214,7 @@ export default function LaborClient({ initial = null }: { initial?: Initial } = 
                 style={{ ...input, width: 72, padding: "8px 10px", textAlign: "right" }}
               />
               <label className="ui-muted">{t("lab.effectiveFrom")}<input type="date" aria-label={`${t("lab.effectiveFrom")} · ${p.full_name}`} min="2000-01-01" max={today()} disabled={!!savingWage} value={wageDates[p.id] || ""} onChange={e => setWageDates(cur => ({ ...cur, [p.id]: e.target.value }))} style={{ ...input, display: "block", width: 160 }} /></label>
-              <button onClick={() => saveWage(p.id)} disabled={!wageDates[p.id] || !!savingWage} style={{ padding: "8px 12px", minHeight: 44, background: !wageDates[p.id] ? "var(--dark3)" : "var(--action)", color: !wageDates[p.id] ? "var(--gray)" : "var(--on-action)", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: !wageDates[p.id] ? "default" : "pointer" }}>
+              <button className="btn-secondary ui-btn-sm" onClick={() => saveWage(p.id)} disabled={!wageDates[p.id] || !!savingWage}>
                 {savingWage === p.id ? t("common.saving") : t("lab.set")}
               </button>
               {!!p.history?.length && <details style={{ flexBasis: "100%", fontSize: 14 }}><summary>{t("lab.history")}</summary><ul>{p.history.map((h: any) => <li key={h.id}>{h.effective_from || t("lab.unconfirmedDate")} · {h.hourly_wage == null ? "—" : eur(Number(h.hourly_wage))} · {t("lab.recorded")} {new Date(h.recorded_at).toLocaleDateString(appLocale(locale), { timeZone: "Europe/Berlin" })}</li>)}</ul></details>}

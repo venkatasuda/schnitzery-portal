@@ -103,8 +103,7 @@ export default function StockAlertsPage() {
                 />
               </div>
               {edits[it.id] !== undefined && edits[it.id] !== String(it.level) && (
-                <button onClick={() => saveLevel(it.id)} disabled={savingId === it.id}
-                  style={{ padding: "8px 10px", borderRadius: 8, border: "none", cursor: "pointer", background: "var(--action)", color: "var(--on-action)", fontSize: 12, fontWeight: 700 }}>
+                <button className="btn-gold ui-btn-sm" onClick={() => saveLevel(it.id)} disabled={savingId === it.id}>
                   {savingId === it.id ? "…" : t("common.save")}
                 </button>
               )}

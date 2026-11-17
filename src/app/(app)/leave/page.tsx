@@ -99,7 +99,7 @@ export default function LeavePage() {
   });
 
   return (
-    <div style={{ maxWidth: 560, margin: "0 auto" }}>
+    <div className="page-narrow">
       <ReportTabs group="leave" />
       <PageHeader title={ <><Icon e="🌴" size={22} /> {t("leave.title")}</> } />
 

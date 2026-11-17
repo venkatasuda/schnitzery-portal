@@ -82,7 +82,7 @@ export default function AnnouncementsPage() {
 
       {canPost && (
         <>
-          <button onClick={() => setShowPost(!showPost)} style={{ ...primaryBtn, width: "100%", marginBottom: 14 }}>
+          <button className="btn-gold btn-block u-mb-3" onClick={() => setShowPost(!showPost)}>
             {showPost ? t("common.close") : t("announcements.postBtn")}
           </button>
           {showPost && (
@@ -127,8 +127,8 @@ export default function AnnouncementsPage() {
               <span className="ui-muted">— {a.author || "Manager"}</span>
               {canPost && (
                 <div className="u-hstack">
-                  <button onClick={() => pin(a)} disabled={busyId === a.id} style={miniBtn}>{a.pinned ? t("announcements.unpin") : t("announcements.pin")}</button>
-                  <button onClick={() => del(a.id)} disabled={busyId === a.id} style={{ ...miniBtn, color: "var(--danger)" }}>{t("common.delete")}</button>
+                  <button onClick={() => pin(a)} disabled={busyId === a.id} className="btn-secondary ui-btn-sm">{a.pinned ? t("announcements.unpin") : t("announcements.pin")}</button>
+                  <button onClick={() => del(a.id)} disabled={busyId === a.id} className="btn-quiet-danger ui-btn-sm">{t("common.delete")}</button>
                 </div>
               )}
             </div>
@@ -140,6 +140,4 @@ export default function AnnouncementsPage() {
 }
 
 const card: React.CSSProperties = { background: "var(--dark)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 };
-const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { width: "100%", padding: "13px", background: "var(--action)", color: "var(--on-action)", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" };
-const miniBtn: React.CSSProperties = { padding: "6px 12px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 7, color: "var(--white)", fontSize: 12, cursor: "pointer" };
+const input: React.CSSProperties = { width: "100%", padding: "11px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 14, boxSizing: "border-box", fontFamily: "inherit" };

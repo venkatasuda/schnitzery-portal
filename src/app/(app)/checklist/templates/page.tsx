@@ -44,7 +44,7 @@ export default function ChecklistTemplatesPage() {
   const groups = [...new Set((list ?? []).map((t) => t.section ? `${t.team} · ${t.section}` : t.team))];
 
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto" }}>
+    <div className="page-narrow">
       <PageHeader title={s("Checklist templates", "Checklisten-Vorlagen")}
         actions={<Link className="btn-secondary" href="/checklist">{s("Today's checklist", "Heutige Checkliste")}</Link>} />
       {error && <ErrorState message={error} onRetry={load} retryLabel={s("Refresh", "Aktualisieren")} />}

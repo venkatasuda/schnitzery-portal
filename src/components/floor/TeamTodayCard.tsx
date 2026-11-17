@@ -10,19 +10,20 @@ type Counts = { in: number; break: number; late: number; not_in: number; done: n
 export default function TeamTodayCard() {
   const { locale } = useLang();
   const s = (en: string, de: string) => (locale === "de" ? de : en);
-  const [counts, setCounts] = useState<Counts | null>(null);
+  const [counts, setCounts] = useState<Counts | null>(null), [full, setFull] = useState(false);
   useEffect(() => {
     let live = true;
-    const load = () => getTeamToday().then((r) => { if (live && r.ok) setCounts(r.counts); }).catch(() => undefined);
+    const load = () => getTeamToday().then((r) => { if (live && r.ok) { setCounts(r.counts); setFull(r.full); } }).catch(() => undefined);
     void load();
     const timer = setInterval(load, 60_000); // a floor view should not go stale during service
-    return () => { live = false; clearInterval(timer); };
+    window.addEventListener("sz-clock-changed", load); // own clock in / out shows at once
+    return () => { live = false; clearInterval(timer); window.removeEventListener("sz-clock-changed", load); };
   }, []);
   if (!counts) return null;
   const items: [keyof Counts, string, string][] = [
     ["in", s("In", "Da"), ""], ["break", s("Break", "Pause"), ""],
     ["late", s("Late", "Zu spät"), "is-alert"], ["not_in", s("Not in yet", "Noch nicht da"), ""],
-  ];
+  ].filter(([k]) => full || k !== "late") as [keyof Counts, string, string][];
   return (
     <Link href="/team-today" className="card team-today-card" aria-label={s("Today's team: open the list", "Team heute: Liste öffnen")}>
       <span className="team-today-title">{s("Today's team", "Team heute")}<span aria-hidden="true">›</span></span>

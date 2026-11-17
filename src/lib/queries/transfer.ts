@@ -14,13 +14,20 @@ function admin() {
   return createAdminClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
-// list of OTHER active branches (names only) for the source picker — managers only
+// Branches of the same owner (names only) for the source picker — managers only. The database enforces the
+// same rule on insert (migration 20261117090000_transfers_same_owner.sql).
+async function partnerIds(supabase: Awaited<ReturnType<typeof getMe>>["supabase"], branchId: string | null | undefined) {
+  if (!branchId) return new Set<string>();
+  const { data } = await supabase.rpc("transfer_partner_branches", { p_branch: branchId });
+  return new Set(((data as unknown as string[] | null) ?? []).map(String));
+}
 export async function getTransferBranches() {
-  const { user, branchId, profile } = await getMe();
+  const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", branches: [], isManager: false };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only.", branches: [], isManager: false };
+  const partners = await partnerIds(supabase, branchId);
   const { data } = await admin().from("branches").select("id, name, is_active").eq("is_active", true).order("name");
-  const branches = (data || []).filter((b: any) => b.id !== branchId).map((b: any) => ({ id: b.id, name: b.name }));
+  const branches = (data || []).filter((b: any) => b.id !== branchId && partners.has(b.id)).map((b: any) => ({ id: b.id, name: b.name }));
   return { ok: true, branches, isManager: true };
 }
 
@@ -47,6 +54,7 @@ export async function requestTransfer(sourceBranchId: string, product: string, c
   if (!user) return { ok: false, error: "Not logged in." };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only." };
   if (!sourceBranchId || sourceBranchId === branchId) return { ok: false, error: "Pick another branch." };
+  if (!(await partnerIds(supabase, branchId)).has(sourceBranchId)) return { ok: false, error: "Only branches of the same owner." };
   if (!branchId || !validInventoryItem({ product, category, unit })) return { ok: false, error: "Pick a product." };
   if (!Number.isFinite(qty) || !(qty > 0)) return { ok: false, error: "Enter a quantity." };
 

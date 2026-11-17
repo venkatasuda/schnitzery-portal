@@ -81,7 +81,7 @@ export default function KiosksPage() {
                     <input className="form-input" aria-label={t("kioskadm.addPlaceholder")} value={editLabel} onChange={(e) => setEditLabel(e.target.value)} onBlur={() => saveName(k.id)} onKeyDown={(e) => e.key === "Enter" && saveName(k.id)} autoFocus
                       />
                   ) : (
-                    <button type="button" onClick={() => { setEditId(k.id); setEditLabel(k.label); }} aria-label={`${t("common.edit")}: ${k.label}`} style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", cursor: "pointer", background: "none", border: 0, padding: 0, textAlign: "left" }}>{k.label}</button>
+                    <button type="button" onClick={() => { setEditId(k.id); setEditLabel(k.label); }} aria-label={`${t("common.edit")}: ${k.label}`} className="ui-link-btn kiosk-label-btn">{k.label}</button>
                   )}
                 </div>
                 <span style={{ fontSize: 12, fontWeight: 700, color: k.is_active ? "var(--success)" : "var(--gray)", background: k.is_active ? "rgba(88,214,141,0.15)" : "rgba(128,128,128,0.12)", padding: "3px 9px", borderRadius: 20 }}>
@@ -89,8 +89,8 @@ export default function KiosksPage() {
                 </span>
               </div>
               <div className="ui-row-actions">
-                <a href={`/kiosk?k=${k.id}`} target="_blank" rel="noreferrer" style={btn}>{t("kioskadm.openDisplay")}</a>
-                <button onClick={() => toggle(k)} style={{ ...btn, color: k.is_active ? "var(--danger)" : "var(--success)", borderColor: k.is_active ? "rgba(236,112,99,0.3)" : "rgba(88,214,141,0.3)" }}>
+                <a href={`/kiosk?k=${k.id}`} target="_blank" rel="noreferrer" className="btn-secondary ui-btn-sm u-flex1">{t("kioskadm.openDisplay")}</a>
+                <button onClick={() => toggle(k)} className={`${k.is_active ? "btn-quiet-danger" : "btn-secondary"} ui-btn-sm u-flex1`}>
                   {k.is_active ? t("kioskadm.deactivate") : t("kioskadm.activate")}
                 </button>
               </div>
@@ -105,4 +105,3 @@ export default function KiosksPage() {
   );
 }
 
-const btn: React.CSSProperties = { flex: 1, textAlign: "center", padding: "8px 10px", background: "var(--dark2)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--white)", fontSize: 12.5, fontWeight: 600, textDecoration: "none", cursor: "pointer" };

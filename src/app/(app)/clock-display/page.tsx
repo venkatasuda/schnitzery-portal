@@ -52,7 +52,7 @@ export default function ClockDisplayPage() {
     : "";
 
   return (
-    <div style={{ maxWidth: 520, margin: "0 auto", textAlign: "center" }}>
+    <div className="page-narrow u-center">
       <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-body)", marginBottom: 4 }}>
         <Icon e="📲" size={24} style={{ verticalAlign: "-3px", marginRight: 8 }} /> {t("cd.title")}
       </h1>

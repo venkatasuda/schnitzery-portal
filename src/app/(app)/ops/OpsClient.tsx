@@ -90,7 +90,7 @@ export default function OpsClient({ initial = null }: { initial?: Initial } = {}
           <option value="">{t("ops.filterShift")}: {t("ops.all")}</option>
           {(filters?.shifts || []).map((sh: string) => <option key={sh} value={sh}>{sh}</option>)}
         </select>
-        {date !== todayStr() && <button onClick={() => setDate(todayStr())} style={{ ...sel, color: "var(--gold)", cursor: "pointer" }}>{t("ops.today")}</button>}
+        {date !== todayStr() && <button className="btn-secondary ui-btn-sm" onClick={() => setDate(todayStr())}>{t("ops.today")}</button>}
       </div>
 
       {loading ? (

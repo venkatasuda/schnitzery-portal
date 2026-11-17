@@ -38,9 +38,9 @@ export default function WasteByBranchPage() {
     <div className="fade-up">
       <PageHeader title={ <><Icon e="🗑️" size={22} /> {t("wbranch.title")}</> } />
 
-      <div style={{ display: "flex", gap: 6, margin: "12px 0" }}>
+      <div className="ui-segmented" role="group" aria-label={t("wbranch.days", { n: days })}>
         {[7, 30, 90].map((d) => (
-          <button key={d} onClick={() => setDays(d)} style={{ padding: "6px 14px", borderRadius: 999, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700, background: days === d ? "var(--action)" : "rgba(255,255,255,0.06)", color: days === d ? "var(--on-action)" : "var(--gray)" }}>
+          <button key={d} type="button" aria-pressed={days === d} onClick={() => setDays(d)}>
             {t("wbranch.days", { n: d })}
           </button>
         ))}

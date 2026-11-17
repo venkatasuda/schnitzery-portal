@@ -9,7 +9,7 @@ import AvailabilityForm from "@/components/AvailabilityForm";
 export default function AvailabilityPage() {
   const { t } = useLang();
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto" }}>
+    <div className="page-narrow">
       <PageHeader title={ <><Icon e="🗓" size={22} /> {t("avail.title")}</> } />
       <AvailabilityForm />
     </div>

@@ -72,6 +72,8 @@ const DE: Record<string, string> = {
   "Invalid sales date or amount.": "Ungültiges Umsatzdatum oder ungültiger Betrag.",
   "Manager access with a branch is required.": "Nur für Manager mit zugewiesener Filiale.",
   "Managers only.": "Nur für Manager.",
+  "Only branches of the same owner.": "Nur Filialen desselben Inhabers.",
+  "Shift leaders and managers only.": "Nur für Schichtleitung und Leitung.",
   "Max must be greater than min.": "Maximum muss größer als Minimum sein.",
   "Message can't be empty.": "Nachricht darf nicht leer sein.",
   "Missing shift details.": "Schichtangaben fehlen.",

@@ -77,5 +77,17 @@ const fnFromMigration = (name) => MIG.match(new RegExp(`create or replace functi
   assert.ok(/accessible_branch_ids\(\) b where b = p_branch/.test(pay), "Payroll approval still checks branch access");
   assert.ok(!/"users"\."branch_id"\s*FROM/.test(MIG), "No home-branch-only policy may remain in the migration");
 
-  console.log("Multi-branch access: linked branches open for their managers; other branches and staff stay closed; wage and payroll follow the same rule.");
+  // Transfers only between branches of the same owner (20261117090000): owner of A + B; C belongs to someone else.
+  const ownerAB = "00000000-0000-0000-0000-000000000005";
+  await db.exec(`reset role; create schema if not exists private; grant usage on schema private to authenticated;
+    alter table branches add column if not exists is_active boolean default true;
+    insert into users(id, branch_id, role) values ('${ownerAB}','${A}','branch_owner'); insert into user_branches values ('${ownerAB}','${B}');`);
+  await db.exec(fs.readFileSync("supabase/migrations/20261117090000_transfers_same_owner.sql", "utf8"));
+  const transfer = (uid, from, to) => as(uid, () => db.query("insert into stock_transfers(from_branch_id, to_branch_id, status) values ($1,$2,'requested')", [from, to]));
+  await transfer(mgrA, A, B);
+  await assert.rejects(transfer(mgrA, C, B), /row-level security/, "No transfer from another owner's branch");
+  await assert.rejects(transfer(mgrC, A, C), /row-level security/, "Other owner's manager cannot request from A");
+  assert.deepEqual((await as(mgrA, () => db.query("select public.transfer_partner_branches($1) id", [A]))).rows.map((r) => r.id), [A, B].filter((x) => x !== A), "Partners of A: B only");
+  assert.equal((await as(mgrC, () => db.query("select public.transfer_partner_branches($1) id", [A]))).rows.length, 0, "No partner list for a branch you cannot access");
+  console.log("Multi-branch access: linked branches open for their managers; other branches and staff stay closed; wage and payroll follow the same rule; transfers only within the same owner.");
 })().catch((e) => { console.error(e); process.exitCode = 1; });

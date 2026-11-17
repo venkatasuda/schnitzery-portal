@@ -12,6 +12,7 @@ import AttendanceSync from "@/components/AttendanceSync";
 import ToastHost from "@/components/Toast";
 import ConfirmHost from "@/components/ConfirmDialog";
 import LanguageProvider from "@/components/LanguageProvider";
+import QueryProvider from "@/components/QueryProvider";
 import Icon from "@/components/Icon";
 import BranchPicker from "@/components/BranchPicker";
 import { activeBranchFor, branchChoices } from "@/lib/activeBranch";
@@ -57,7 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const activeBranch = showPicker ? (isHQ && viewMode === "hq" ? "hq" : await activeBranchFor(supabase, { role, branch_id: profile?.branch_id })) : null;
 
   return (
-    <LanguageProvider initialLocale={locale}>
+    <LanguageProvider initialLocale={locale}><QueryProvider>
     <div className={isManager ? "management-shell" : "employee-shell"} data-view={activeBranch === "hq" ? "hq" : undefined}>
       <a href="#main-content" className="skip-link">{locale === "de" ? "Zum Inhalt" : "Skip to content"}</a>
       {isManager && <ManagementNav role={navRole} />}
@@ -101,6 +102,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       {!isManager && <BottomNav role={navRole} />}
     </div>
-    </LanguageProvider>
+    </QueryProvider></LanguageProvider>
   );
 }
