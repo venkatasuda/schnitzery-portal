@@ -5,6 +5,7 @@ import { serverText } from "@/lib/i18n/serverMessages";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getStaffList, updateStaff } from "@/lib/queries/people";
+import { setShiftLeader } from "@/lib/queries/prep-list";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useLang } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
@@ -24,7 +25,12 @@ const TEAM_COLORS: Record<string, string> = { Manager: "var(--info)", Preparatio
 export default function StaffPage() {
   const { t, locale } = useLang();
   const teamLabel = (k: string) => (TEAMS.includes(k) ? t("teams." + k) : k);
-  const roleLabel = (k: string) => (ROLES.includes(k) ? t("roles." + k) : k);
+  const roleLabel = (k: string) => (ROLES.includes(k) || k === "super_admin" ? t("roles." + k) : k); // super_admin: label only, not assignable
+  // "Shift leader" sits in the Role list but is stored as role staff + a shift_leaders row (a permission, not a role),
+  // so pay, roster and minimum-hours rules stay those of an employee.
+  const leadLabel = locale === "de" ? "Schichtleitung" : "Shift leader";
+  const pickRole = (v: string) => (v === "shift_leader" ? { role: "staff", shift_leader: true } : { role: v, shift_leader: false });
+  const roleOptions = ["staff", "shift_leader", ...ROLES.slice(1)].map((rl) => <option key={rl} value={rl}>{rl === "shift_leader" ? leadLabel : roleLabel(rl)}</option>);
   const contractLabel = (k: string) => (CONTRACTS.includes(k) ? t("contracts." + k) : k);
   const statusLabel = (k: string) => (["active", "inactive"].includes(k) ? t("status." + k) : k);
   const [staff, setStaff] = useState<any[]>([]);
@@ -67,7 +73,7 @@ export default function StaffPage() {
       team: p.team || "", contract_type: p.contract_type || "",
       contract_hours: p.contract_hours ?? "", phone: p.phone || "",
       contract_end: p.contract_end || "", probation_end: p.probation_end || "",
-      role: p.role || "staff", status: p.status || "active",
+      role: p.role || "staff", status: p.status || "active", shift_leader: !!p.shift_leader,
       // Skill 1 is the Team above; Skill 2 and 3 are the other teams this person can work, in order of preference.
       skill2: workTeams(p.team, p.skills)[1] || "", skill3: workTeams(p.team, p.skills)[2] || "",
       skills: (p.skills || []).filter((s: string) => !skillTeam(s)).join(", "),
@@ -92,7 +98,13 @@ export default function StaffPage() {
     const same = (k: string) => k === "skills" ? JSON.stringify(next.skills) === JSON.stringify(p.skills || [])
       : k === "contract_hours" || k === "contract_end" || k === "probation_end" ? next[k] === (p[k] ?? null) : next[k] === (k === "role" ? p.role || "staff" : p[k] || "");
     const changed = Object.keys(next).filter((k) => !same(k));
-    if (!changed.length) { setEditId(null); return; }
+    // Shift leader (staff only): its own permission table, saved separately.
+    const wantLead = form.role === "staff" && form.shift_leader;
+    if (wantLead !== !!p.shift_leader) {
+      const r = await setShiftLeader(editId!, wantLead);
+      if (!r.ok) { setMsg(t("staff.failed")); return; }
+    }
+    if (!changed.length) { setEditId(null); if (wantLead !== !!p.shift_leader) { setMsg(t("staff.saved")); load(); } return; }
     const res = await updateStaff(editId!, Object.fromEntries(changed.map((k) => [k, next[k]])),
       Object.fromEntries(changed.filter((k) => k !== "skills").map((k) => [k, p[k] ?? null])));
     if (res.ok) { setMsg(t("staff.saved")); setEditId(null); load(); }
@@ -156,12 +168,13 @@ export default function StaffPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...addForm,
+          ...addForm, shift_leader: undefined,
           contract_hours: addForm.contract_hours === "" ? null : Number(addForm.contract_hours),
         }),
       });
       const data = await res.json();
-      if (data.ok) {
+      if (data.ok && addForm.shift_leader && !(await setShiftLeader(data.id, true)).ok) setAddMsg(t("staff.failed"));
+      else if (data.ok) {
         setAddMsg(t("staff.created"));
         setAddForm({ email: "", password: "", full_name: "", team: "", role: "staff", employee_code: "", contract_type: "", contract_hours: "", phone: "" });
         load();
@@ -219,8 +232,9 @@ export default function StaffPage() {
                 </select>
               </Field>
               <Field label={t("staff.role")}>
-                <select className="form-input" value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value })}>
-                  {ROLES.map((rl) => <option key={rl} value={rl}>{roleLabel(rl)}</option>)}
+                <select className="form-input" value={addForm.role === "staff" && addForm.shift_leader ? "shift_leader" : addForm.role}
+                  onChange={(e) => setAddForm({ ...addForm, ...pickRole(e.target.value) })}>
+                  {roleOptions}
                 </select>
               </Field>
               <Field label={t("profile.contract")}>
@@ -261,7 +275,7 @@ export default function StaffPage() {
                 </div>
                 <div className="u-flex1">
                   <div className="t-lg fw-6">{p.full_name || "—"} {p.employee_code && <span className="ui-muted">· {p.employee_code}</span>}{filter === "former" && <span className="ui-muted"> · {t("staff.former")}</span>}{p.login_locked && <span className="ui-tag-danger">🔒 {t("staff.locked")}</span>}{endsSoon(p.contract_end) && <span className="ui-tag-warn">{locale === "de" ? `Vertrag endet ${fmtDay(p.contract_end, locale)}` : `Contract ends ${fmtDay(p.contract_end, locale)}`}</span>}{endsSoon(p.probation_end) && <span className="ui-tag-warn">{locale === "de" ? `Probezeit endet ${fmtDay(p.probation_end, locale)}` : `Probation ends ${fmtDay(p.probation_end, locale)}`}</span>}</div>
-                  <div className="ui-muted">{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
+                  <div className="ui-muted">{p.team ? teamLabel(p.team) : t("directory.noTeam")} · {p.shift_leader && p.role === "staff" ? leadLabel : roleLabel(p.role)} · {p.contract_type ? contractLabel(p.contract_type) : "—"}</div>
                 </div>
               </div>
 
@@ -303,8 +317,9 @@ export default function StaffPage() {
                   </select>
                 </Field>
                 <Field label={t("staff.role")}>
-                  <select className="form-input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                    {ROLES.map((rl) => <option key={rl} value={rl}>{roleLabel(rl)}</option>)}
+                  <select className="form-input" value={form.role === "staff" && form.shift_leader ? "shift_leader" : form.role}
+                    onChange={(e) => setForm({ ...form, ...pickRole(e.target.value) })}>
+                    {roleOptions}
                   </select>
                 </Field>
                 <Field label={t("profile.contract")}>

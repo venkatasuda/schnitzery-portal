@@ -222,7 +222,7 @@ function StaffDash({ hours, clockedIn, onBreak, shiftLeader, t, locale }: {
       {/* First: this month's hours against the target, then today's shift and the clock. */}
       <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, margin: "0 0 12px", padding: 16 }}>
         {target != null && <ProgressRing pct={pct} label={t("home.ofTarget")} tone={pct >= 80 ? "green" : "gold"} size={108} />}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: `repeat(${target == null ? 3 : 2}, minmax(0, 1fr))`, gap: 10 }}>
           <Stat value={`${(hours?.totalHours ?? 0).toLocaleString(locale === "de" ? "de-DE" : "en-GB")} h`} label={t("home.thisMonthStat")} color="var(--gold-ink)" />
           <Stat value={hours?.shifts ?? 0} label={t("nav.shifts")} />
           {target == null && <Stat value="—" label={t("home.ofTarget")} />}

@@ -77,13 +77,14 @@ export async function getStaffList() {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in.", staff: [] };
   if (!isManager(profile?.role)) return { ok: false, error: "Managers only.", staff: [] };
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("branch_id", branchId)
-    .order("full_name");
+  const [{ data, error }, leaders] = await Promise.all([
+    supabase.from("users").select("*").eq("branch_id", branchId).order("full_name"),
+    supabase.from("shift_leaders").select("user_id").eq("branch_id", branchId),
+  ]);
   if (error) return { ok: false, error: error.message, staff: [] };
-  return { ok: true, staff: data || [] };
+  // Shift leader is a permission on top of the Staff role (shift_leaders), shown and set on this page too.
+  const lead = new Set((leaders.data || []).map((l: { user_id: string }) => l.user_id));
+  return { ok: true, staff: (data || []).map((u) => ({ ...u, shift_leader: lead.has(u.id) })) };
 }
 
 // ── MANAGER: update a staff member's details ──
