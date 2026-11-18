@@ -125,7 +125,7 @@ export default function DocumentsSection() {
         <CardSkeleton rows={2} />
       ) : groupKeys.length === 0 ? (
         <div className="card ui-empty-msg">
-          {t("documents.none")}<br />{t("documents.noneHint")}
+          {t("documents.none")}
         </div>
       ) : (
         <div className="d-flex f-col gap-3">

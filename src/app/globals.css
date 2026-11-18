@@ -1701,3 +1701,4 @@ body.has-cookie-notice { padding-bottom: 120px; }
 .ui-switch[aria-checked="true"] { justify-content: flex-end; background: var(--action); }
 .ui-switch > span { display: block; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
 .ui-switch:disabled { opacity: .6; cursor: wait; }
+.team-today-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); } /* 3 or 4 boxes always fill the row */
