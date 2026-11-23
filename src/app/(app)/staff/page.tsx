@@ -72,7 +72,7 @@ export default function StaffPage() {
       full_name: p.full_name || "", employee_code: p.employee_code || "",
       team: p.team || "", contract_type: p.contract_type || "",
       contract_hours: p.contract_hours ?? "", phone: p.phone || "",
-      contract_end: p.contract_end || "", probation_end: p.probation_end || "",
+      contract_end: p.contract_end || "", probation_end: p.probation_end || "", start_date: p.start_date || "",
       role: p.role || "staff", status: p.status || "active", shift_leader: !!p.shift_leader,
       // Skill 1 is the Team above; Skill 2 and 3 are the other teams this person can work, in order of preference.
       skill2: workTeams(p.team, p.skills)[1] || "", skill3: workTeams(p.team, p.skills)[2] || "",
@@ -92,11 +92,11 @@ export default function StaffPage() {
       team: form.team, contract_type: form.contract_type,
       contract_hours: form.contract_hours === "" ? null : Number(form.contract_hours),
       phone: form.phone, role: form.role,
-      contract_end: form.contract_end || null, probation_end: form.probation_end || null,
+      contract_end: form.contract_end || null, probation_end: form.probation_end || null, start_date: form.start_date || null,
       skills: [...new Set([form.skill2, form.skill3].filter((x: string) => x && x !== form.team)), ...form.skills.split(",").map((s: string) => s.trim()).filter((s: string) => s && !skillTeam(s))],
     };
     const same = (k: string) => k === "skills" ? JSON.stringify(next.skills) === JSON.stringify(p.skills || [])
-      : k === "contract_hours" || k === "contract_end" || k === "probation_end" ? next[k] === (p[k] ?? null) : next[k] === (k === "role" ? p.role || "staff" : p[k] || "");
+      : k === "contract_hours" || k === "contract_end" || k === "probation_end" || k === "start_date" ? next[k] === (p[k] ?? null) : next[k] === (k === "role" ? p.role || "staff" : p[k] || "");
     const changed = Object.keys(next).filter((k) => !same(k));
     // Shift leader (staff only): its own permission table, saved separately.
     const wantLead = form.role === "staff" && form.shift_leader;
@@ -330,6 +330,7 @@ export default function StaffPage() {
                 <Field label={t("profile.contractHours")}><input className="form-input" type="number" value={form.contract_hours} onChange={(e) => setForm({ ...form, contract_hours: e.target.value })} placeholder="20" /></Field>
                 <Field label={t("profile.phone")}><input className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
                 <Field label={locale === "de" ? "Befristet bis (leer = unbefristet)" : "Fixed-term until (empty = open-ended)"}><input className="form-input" type="date" value={form.contract_end} onChange={(e) => setForm({ ...form, contract_end: e.target.value })} /></Field>
+                <Field label={locale === "de" ? "Eintrittsdatum" : "Start date"}><input className="form-input" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></Field>
                 <Field label={locale === "de" ? "Probezeit bis" : "Probation until"}><input className="form-input" type="date" value={form.probation_end} onChange={(e) => setForm({ ...form, probation_end: e.target.value })} /></Field>
               </div>
               <div className="inventory-insight-coverage">

@@ -2,6 +2,8 @@
 -- "Same owner" = one active branch owner has access to both branches (home branch or user_branches).
 -- Existing transfer flow is unchanged (request → send → receiving branch records the actual quantity).
 -- Run once in production before merging; safe to run twice.
+
+
 begin;
 
 create or replace function private.same_owner(p_a uuid, p_b uuid) returns boolean

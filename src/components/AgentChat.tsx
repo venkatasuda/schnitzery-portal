@@ -7,7 +7,8 @@ import { useLang } from "@/components/LanguageProvider";
 // transcript to /api/agent/chat and renders the reply. No streaming (v1).
 type Msg = { role: "user" | "assistant"; content: string; sources?: { tool: string; asOf?: string; scope?: string; from?: string; to?: string }[] };
 
-export default function AgentChat() {
+// onBusy: the floating robot shows its "thinking" face while a reply is on the way.
+export default function AgentChat({ onBusy }: { onBusy?: (busy: boolean) => void } = {}) {
   const { t } = useLang();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -15,6 +16,7 @@ export default function AgentChat() {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy]);
+  useEffect(() => { onBusy?.(busy); }, [busy, onBusy]);
 
   async function send() {
     const text = input.trim();

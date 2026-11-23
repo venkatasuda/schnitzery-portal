@@ -51,6 +51,18 @@ export default function ProfileSettings({ afterPreferences }: { afterPreferences
 
   const pushOn = pushState === "subscribed";
 
+  // ── Animated assistant robot (managers with the assistant only; off = plain button) ──
+  const [hasRobot, setHasRobot] = useState(false), [robotOn, setRobotOn] = useState(true);
+  useEffect(() => {
+    setHasRobot(!!document.querySelector(".assistant-launcher"));
+    try { setRobotOn(localStorage.getItem("sz-robot") !== "off"); } catch { /* storage blocked: keep default */ }
+  }, []);
+  function toggleRobot() {
+    const next = !robotOn; setRobotOn(next);
+    try { localStorage.setItem("sz-robot", next ? "on" : "off"); } catch { /* storage blocked: only this page */ }
+    window.dispatchEvent(new Event("sz-robot-changed"));
+  }
+
   // ── Change Password ──
   const [open, setOpen] = useState(false);
   const [pw, setPw] = useState("");
@@ -121,6 +133,13 @@ export default function ProfileSettings({ afterPreferences }: { afterPreferences
           </div>
         </div>
       )}
+
+      {hasRobot && <div className="card mt-3">
+        <div className="u-between">
+          <div className="t-lg fw-6 u-text">{t("settings.robot")}</div>
+          <button onClick={toggleRobot} role="switch" aria-checked={robotOn} aria-label={t("settings.robot")} className="ui-switch"><span aria-hidden="true" /></button>
+        </div>
+      </div>}
 
       {afterPreferences}
 

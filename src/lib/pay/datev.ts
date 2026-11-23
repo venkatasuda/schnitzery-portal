@@ -3,12 +3,13 @@
 // them into pay and tax-free SFN surcharges. Format per DATEV's LODAS ASCII interface.
 // ponytail: LODAS only; add DATEV Lohn und Gehalt when a tax advisor asks for it.
 
-export const DATEV_KINDS = ["regular", "overtime", "night", "sunday", "holiday"] as const;
+export const DATEV_KINDS = ["regular", "overtime", "night", "sunday", "holiday", "sick"] as const;
 export type DatevKind = typeof DATEV_KINDS[number];
 export type DatevSettings = { beraterNr: string; mandantNr: string; lohnarten: Partial<Record<DatevKind, string>> };
-export type DatevRow = { name: string; code: string; regularH?: number; overtimeH?: number; nightH?: number; sundayH?: number; holidayH?: number };
+// sick = sick-pay hours (Entgeltfortzahlung, § 4 EFZG); their night/Sunday surcharges are taxable and stay in the CSV.
+export type DatevRow = { name: string; code: string; regularH?: number; overtimeH?: number; nightH?: number; sundayH?: number; holidayH?: number; sickH?: number };
 
-const FIELD: Record<DatevKind, keyof DatevRow> = { regular: "regularH", overtime: "overtimeH", night: "nightH", sunday: "sundayH", holiday: "holidayH" };
+const FIELD: Record<DatevKind, keyof DatevRow> = { regular: "regularH", overtime: "overtimeH", night: "nightH", sunday: "sundayH", holiday: "holidayH", sick: "sickH" };
 const digits = (s: string, min: number, max: number) => new RegExp(`^\\d{${min},${max}}$`).test(s);
 
 export function datevSettingsError(s: DatevSettings): string | null {

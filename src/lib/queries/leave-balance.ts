@@ -10,30 +10,35 @@ import { bwHolidays } from "@/lib/time/holidays";
 // Baden-Württemberg public holidays for the year(s) the request spans.
 
 
-// Count Werktage between two dates (inclusive): skip Sundays + public holidays.
-function werktageBetween(from: string, to: string, holidays: Set<string>) {
+// Werktage between two dates (inclusive): every day except Sundays + public holidays.
+function werktage(from: string, to: string, holidays: Set<string>): string[] {
   const d = new Date(`${from}T00:00:00Z`);
   const end = new Date(`${to}T00:00:00Z`);
-  if (isNaN(d.getTime()) || isNaN(end.getTime()) || end < d) return 0;
-  let count = 0;
+  if (isNaN(d.getTime()) || isNaN(end.getTime()) || end < d) return [];
+  const out: string[] = [];
   while (d <= end) {
     const iso = d.toISOString().slice(0, 10);
-    if (d.getUTCDay() !== 0 && !holidays.has(iso)) count++; // 0 = Sunday
+    if (d.getUTCDay() !== 0 && !holidays.has(iso)) out.push(iso); // 0 = Sunday
     d.setUTCDate(d.getUTCDate() + 1);
   }
-  return count;
+  return out;
 }
 
 async function computeBalance(supabase: any, userId: string, allowance: number | null) {
   const year = new Date().getFullYear();
   const holidays = new Set([...bwHolidays(year), ...bwHolidays(year + 1)]);
-  const { data: reqs } = await supabase
+  const { data: reqs, error } = await supabase
     .from("leave_requests")
-    .select("from_date, to_date, status")
-    .eq("user_id", userId).eq("status", "approved").eq("leave_type", "vacation") // sick / unpaid / special leave never reduce holidays
-    .gte("from_date", `${year}-01-01`).lte("from_date", `${year}-12-31`);
+    .select("from_date, to_date, leave_type, sick_note_url, eau_confirmed")
+    .eq("user_id", userId).eq("status", "approved").in("leave_type", ["vacation", "sick"]) // unpaid / special leave never reduce holidays
+    .lte("from_date", `${year}-12-31`).gte("to_date", `${year - 1}-12-01`);
+  if (error) throw new Error(error.message);
+  // § 9 BUrlG: sick days during holiday with a doctor's note (uploaded or eAU ticked) do not count as holiday.
+  const sick = new Set<string>();
+  for (const r of reqs || []) if (r.leave_type === "sick" && (r.sick_note_url || r.eau_confirmed) && r.from_date && r.to_date) for (const d of werktage(r.from_date, r.to_date, holidays)) sick.add(d);
   let used = 0;
-  for (const r of reqs || []) if (r.from_date && r.to_date) used += werktageBetween(r.from_date, r.to_date, holidays);
+  for (const r of reqs || []) if (r.leave_type === "vacation" && r.from_date && r.to_date && r.from_date >= `${year}-01-01`)
+    used += werktage(r.from_date, r.to_date, holidays).filter((d) => !sick.has(d)).length;
   const total = allowance ?? 0;
   return { allowance: total, used, remaining: Math.max(0, total - used), year };
 }
@@ -47,8 +52,8 @@ export async function getMyLeaveBalance() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, error: "Not logged in." };
   const { data: me } = await supabase.from("users").select("annual_leave_days").eq("id", user.id).single();
-  const b = await computeBalance(supabase, user.id, me?.annual_leave_days ?? null);
-  return { ok: true as const, ...b };
+  try { return { ok: true as const, ...(await computeBalance(supabase, user.id, me?.annual_leave_days ?? null)) }; }
+  catch (e) { return { ok: false as const, error: e instanceof Error ? e.message : "Load failed." }; }
 }
 
 export async function getStaffLeaveBalance(userId: string) {
@@ -57,8 +62,8 @@ export async function getStaffLeaveBalance(userId: string) {
   if (!isManager(role)) return { ok: false as const, error: "Managers only." };
   const { data: tgt } = await supabase.from("users").select("branch_id, annual_leave_days").eq("id", userId).single();
   if (!tgt || tgt.branch_id !== branchId) return { ok: false as const, error: "Not in your branch." };
-  const b = await computeBalance(supabase, userId, tgt.annual_leave_days ?? null);
-  return { ok: true as const, ...b };
+  try { return { ok: true as const, ...(await computeBalance(supabase, userId, tgt.annual_leave_days ?? null)) }; }
+  catch (e) { return { ok: false as const, error: e instanceof Error ? e.message : "Load failed." }; }
 }
 
 export async function setLeaveAllowance(userId: string, days: number) {

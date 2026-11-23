@@ -92,7 +92,7 @@ export async function updateStaff(staffId: string, fields: {
   full_name?: string; employee_code?: string; team?: string;
   contract_type?: string; contract_hours?: number | null;
   phone?: string; role?: string; status?: string; skills?: string[];
-  contract_end?: string | null; probation_end?: string | null;
+  contract_end?: string | null; probation_end?: string | null; start_date?: string | null;
 }, expected?: Record<string, string | number | null>) {
   // expected: the values the form loaded for the fields it is changing. The update only applies while the row
   // still has them, so two managers editing the same person cannot silently overwrite each other.
@@ -116,12 +116,12 @@ export async function updateStaff(staffId: string, fields: {
   }
   // Same rules as the database guard (migration 20261024200000): your own row only for
   // contact details; other people only when they rank strictly below you.
-  for (const k of ["contract_end", "probation_end"] as const) {
+  for (const k of ["contract_end", "probation_end", "start_date"] as const) {
     const v = fields[k];
     if (v !== undefined && v !== null && !isCalendarDate(v)) return { ok: false, error: "Invalid date." };
   }
   if (staffId === user.id && (fields.employee_code !== undefined || fields.contract_type !== undefined || fields.contract_hours !== undefined
-    || fields.contract_end !== undefined || fields.probation_end !== undefined)) {
+    || fields.contract_end !== undefined || fields.probation_end !== undefined || fields.start_date !== undefined)) {
     return { ok: false, error: "You can't change your own contract details." };
   }
   if (staffId !== user.id && callerRole !== "super_admin" && rankOf(target.role) >= rankOf(callerRole)) {
@@ -140,7 +140,7 @@ export async function updateStaff(staffId: string, fields: {
   }
 
   const update: Record<string, unknown> = {};
-  for (const k of ["full_name", "employee_code", "team", "contract_type", "phone", "role", "status", "skills", "contract_end", "probation_end"] as const) {
+  for (const k of ["full_name", "employee_code", "team", "contract_type", "phone", "role", "status", "skills", "contract_end", "probation_end", "start_date"] as const) {
     if (fields[k] !== undefined) update[k] = fields[k];
   }
   if (fields.contract_hours !== undefined) update.contract_hours = fields.contract_hours;

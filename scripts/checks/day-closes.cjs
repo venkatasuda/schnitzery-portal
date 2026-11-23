@@ -30,6 +30,7 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   await db.exec(fs.readFileSync("supabase/migrations/20261109090000_day_closes.sql", "utf8"));
   await db.exec(fs.readFileSync("supabase/migrations/20261109150000_temp_rooms.sql", "utf8"));
   await db.exec(fs.readFileSync("supabase/migrations/20261116120000_day_close_delivery_channels.sql", "utf8"));
+  const slotMig = fs.readFileSync("supabase/migrations/20261118090000_temp_check_slot.sql", "utf8"); await db.exec(slotMig); await db.exec(slotMig);
   const today = (await db.query("select ((now() at time zone 'Europe/Berlin')::date)::text d")).rows[0].d;
   await db.exec(`insert into public.shift_leaders(branch_id, user_id) values ('${B}', '${LEAD}');
     insert into public.temp_units(id, branch_id, name) values ('00000000-0000-0000-0000-0000000000f1', '${B}', 'Fridge 1'), ('00000000-0000-0000-0000-0000000000f2', '${B}', 'Fridge 2');
@@ -50,6 +51,13 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
   assert.equal(snap.clocked_in.length, 1, "Ali still clocked in");
   await assert.rejects(as(STAFF, "select public.day_close_snapshot($1, $2::date) s", [B, today]), /Day close access required/, "Plain staff cannot see the close");
   const yesterday = (await db.query("select ((now() at time zone 'Europe/Berlin')::date - 1)::text d")).rows[0].d;
+  // The picked check wins over the time: a late opening check (16:00) is still the opening check; no slot = time rule.
+  await db.exec(`insert into public.temp_logs(branch_id, unit_id, work_date, recorded_at, slot) values
+      ('${B}', '00000000-0000-0000-0000-0000000000f1', '${yesterday}', ('${yesterday} 16:00'::timestamp at time zone 'Europe/Berlin'), 'opening'),
+      ('${B}', '00000000-0000-0000-0000-0000000000f2', '${yesterday}', ('${yesterday} 16:05'::timestamp at time zone 'Europe/Berlin'), 'opening');
+    insert into public.temp_logs(branch_id, unit_id, work_date, recorded_at) values
+      ('${B}', '00000000-0000-0000-0000-0000000000f1', '${yesterday}', ('${yesterday} 22:00'::timestamp at time zone 'Europe/Berlin'));`);
+  assert.deepEqual((await as(LEAD, "select public.day_close_snapshot($1, $2::date) s", [B, yesterday])).rows[0].s.temps, { units: 2, logged: 1 }, "Fridge 2 has two opening checks, no closing");
   assert.deepEqual((await as(LEAD, "select public.day_close_snapshot($1, $2::date) s", [B, yesterday])).rows[0].s.checklists, { total: 1, done: 0 }, "Checklist never opened: the weekday's templates still count as open");
   // Codex T2: finished unrelated tasks must not hide a required template nobody opened.
   const twoAgo = (await db.query("select ((now() at time zone 'Europe/Berlin')::date - 2)::text d")).rows[0].d;
