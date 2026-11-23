@@ -22,6 +22,7 @@ export default function TempPage() {
   const [tab, setTab] = useState<"check" | "history" | "units">("check");
   const [loading, setLoading] = useState(true);
   const [isMgr, setIsMgr] = useState(false);
+  const [slot, setSlot] = useState<"opening" | "closing" | null>(null); // picked check; preset from the time on first load
 
   const [units, setUnits] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -38,7 +39,7 @@ export default function TempPage() {
     // A failed request must end the skeleton and say so, not spin forever.
     try {
     const [u, s] = await Promise.all([getTempUnits(), getTempSummary()]);
-    if (u.ok) { setUnits(u.units || []); setIsMgr(u.isManager); }
+    if (u.ok) { setUnits(u.units || []); setIsMgr(u.isManager); setSlot((cur) => cur ?? (u.closingNow ? "closing" : "opening")); }
     if (s.ok) setSummary(s);
     setLoading(false);
     } catch { toast(t("common.loadFailed"), "error"); }
@@ -54,14 +55,16 @@ export default function TempPage() {
     const v = val[u.id];
     if (v === undefined || v === "") { toast(t("temp.enterTemp"), "error"); return; }
     setBusy(u.id);
-    const r = await logTemp(u.id, Number(v), "", action[u.id] || "");
+    const r = await logTemp(u.id, Number(v), "", action[u.id] || "", slot ?? "opening");
     setBusy(null);
     if (r.ok) {
       toast(r.inRange ? t("temp.logged") : t("temp.loggedBreach"), r.inRange ? "success" : "error");
       setVal((s) => ({ ...s, [u.id]: "" })); setAction((s) => ({ ...s, [u.id]: "" }));
       loadCore();
-    } else toast(r.error || t("temp.failed"), "error");
+    } else if ((r as any).alreadyDone) { toast(s("Someone already recorded this check.", "Diese Kontrolle wurde schon erfasst."), "error"); loadCore(); }
+    else toast(r.error || t("temp.failed"), "error");
   }
+  const hhmm = (iso: string) => new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 
   async function doAddUnit() {
     if (!nu.name || nu.min === "" || nu.max === "") { toast(t("temp.unitFields"), "error"); return; }
@@ -110,11 +113,18 @@ export default function TempPage() {
           {/* CHECK / LOG */}
           {tab === "check" && (
             <div>
+              {units.length > 0 && slot && (
+                <div className="ui-segmented" role="group" aria-label={s("Which check", "Welche Kontrolle")}>
+                  <button type="button" aria-pressed={slot === "opening"} onClick={() => setSlot("opening")}>{s("Opening check", "Öffnungskontrolle")}</button>
+                  <button type="button" aria-pressed={slot === "closing"} onClick={() => setSlot("closing")}>{s("Closing check", "Schlusskontrolle")}</button>
+                </div>
+              )}
               {units.length === 0 ? (
                 <div className="card ui-empty-msg">{isMgr ? t("temp.noUnitsMgr") : t("temp.noUnits")}</div>
               ) : rooms.map(([room, list]) => <section key={room} className="temp-room">
                 <h2 className="temp-room-title">{roomLabel(room)} <span>{list.filter((u) => u.opening && u.closing).length} / {list.length}</span></h2>
                 {list.map((u) => {
+                const doneNow = slot ? u.done?.[slot] : null;
                 const oor = outOfRange(u, val[u.id] || "");
                 const lt = u.latest;
                 return (
@@ -129,6 +139,11 @@ export default function TempPage() {
                         <span className={u.closing ? "is-done" : ""}>{u.closing ? "✓ " : ""}{s("Closing", "Schluss")}</span>
                       </div>
                     </div>
+                    {doneNow ? (
+                      <div className="t-sm tone-success mt-3" role="status">
+                        ✓ {slot === "closing" ? s("Closing check done", "Schlusskontrolle erledigt") : s("Opening check done", "Öffnungskontrolle erledigt")} · {doneNow.temp}°C · {hhmm(doneNow.recorded_at)}{doneNow.recorded_by_name ? ` · ${doneNow.recorded_by_name}` : ""}
+                      </div>
+                    ) : <>
                     <div className="d-flex gap-2 mt-3 ai-c">
                       <input aria-label={`${u.name} °C`} type="number" inputMode="decimal" value={val[u.id] ?? ""} onChange={(e) => setVal((s) => ({ ...s, [u.id]: e.target.value }))}
                         placeholder="°C" style={{ width: 90, padding: "9px 10px", borderRadius: 8, background: "var(--dark2)", color: oor ? "var(--danger)" : "var(--white)", border: `1px solid ${oor ? "rgba(231,76,60,0.5)" : "rgba(255,255,255,0.12)"}`, fontSize: 14, textAlign: "center", fontWeight: 600 }} />
@@ -141,6 +156,7 @@ export default function TempPage() {
                           placeholder={t("temp.correctivePh")} />
                       </div>
                     )}
+                    </>}
                   </div>
                 );
               })}</section>)}

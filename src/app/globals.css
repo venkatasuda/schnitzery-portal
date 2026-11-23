@@ -281,6 +281,36 @@ html.light .btn-gold { color: #fff; }
 .assistant-source { display: block; color: var(--gray); line-height: 1.6; font-size: 11px; margin: 6px 4px; }
 .assistant-popover .card { border: 0; padding: 0; margin: 12px 0 0; overflow-wrap: anywhere; }
 .assistant-popover input { min-width: 0; }
+/* Ops Assistant robot (src/components/RobotMascot.tsx): poses cross-fade, face drawn on the empty visor. */
+.assistant-launcher.is-robot { width: 76px; height: 76px; padding: 0; gap: 0; justify-content: center; border: 0; border-radius: 50%; background: transparent; box-shadow: none; }
+.assistant-launcher.is-robot:focus-visible { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+.robot { --robot-eye: #fcbe47; position: relative; display: block; width: 100%; height: 100%; transform-origin: 50% 90%; animation: robot-bob 3.2s ease-in-out infinite; filter: drop-shadow(0 4px 6px rgb(0 0 0 / 18%)); }
+.robot img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .25s ease; user-select: none; }
+.robot img.on { opacity: 1; }
+.robot-face { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.robot-eye { fill: var(--robot-eye); transform-box: fill-box; transform-origin: center; }
+.robot-line { fill: none; stroke: var(--robot-eye); stroke-width: 11; stroke-linecap: round; }
+.robot-thick { stroke-width: 16; }
+.robot-z { fill: var(--gray); font: 600 64px/1 var(--font-body); opacity: 0; animation: robot-z 3s ease-in-out infinite; }
+.robot-z2 { animation-delay: 1.5s; font-size: 48px; }
+.robot-eyes { transition: transform .3s ease; }
+.robot[data-mood="idle"] .robot-eye, .robot[data-mood="hello"] .robot-eye { animation: robot-blink 5s infinite; }
+.robot[data-mood="hello"] { animation: robot-wiggle .5s ease-in-out 3, robot-bob 3.2s ease-in-out 1.5s infinite; }
+.robot[data-mood="think"] { animation: robot-tilt 2.4s ease-in-out infinite; }
+.robot[data-mood="alert"] { animation: robot-hop .5s ease-out 2; }
+.robot[data-mood="problem"] { animation: robot-shiver .3s linear 3; }
+.robot[data-mood="done"] { animation: robot-wiggle .45s ease-in-out 3; }
+.robot[data-mood="sleep"] { animation: robot-breathe 5s ease-in-out infinite; }
+@keyframes robot-bob { 50% { transform: translateY(-4%); } }
+@keyframes robot-blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+@keyframes robot-tilt { 50% { transform: rotate(-5deg); } }
+@keyframes robot-hop { 40% { transform: translateY(-12%); } }
+@keyframes robot-shiver { 25% { transform: translateX(-2%); } 75% { transform: translateX(2%); } }
+@keyframes robot-wiggle { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes robot-breathe { 50% { transform: scale(.97, 1.02); } }
+@keyframes robot-z { 0% { opacity: 0; transform: translate(0, 0); } 40% { opacity: .8; } 100% { opacity: 0; transform: translate(30px, -60px); } }
+@media (prefers-reduced-motion: reduce) { .robot, .robot *, .robot img { animation: none !important; transition: none !important; } }
+.assistant-bubble { position: fixed; z-index: 999; right: 24px; bottom: 108px; max-width: min(260px, calc(100vw - 32px)); padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--dark); color: var(--text); box-shadow: var(--shadow); font-size: var(--text-sm); line-height: 1.45; }
 .management-shell .analytics-workspace > .card { box-shadow: none; }
 .management-shell .management-brand { font-size: 22px; }
 .management-shell .management-nav-link.active { box-shadow: inset 3px 0 var(--gold-ink); }
@@ -584,6 +614,8 @@ textarea.form-input { min-height: 100px; resize: vertical; }
 
 @media (max-width: 600px) {
   .assistant-launcher { width: 44px; height: 44px; padding: 0; gap: 0; justify-content: center; font-size: 0; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .assistant-launcher.is-robot { width: 60px; height: 60px; }
+  .assistant-bubble { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
 }
 
 /* ── Design system (Release F, docs/DESIGN-SYSTEM.md) ───────────────────────
@@ -647,6 +679,8 @@ html.light { --warn-soft: #fdf3e1; --info-soft: #e8f1fb; --accent-line: #a9d3cc;
 .ui-muted-md { font-size: var(--text-sm); color: var(--text-muted); }
 .ui-meta { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
 .ui-note { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2); }
+.sick-checks { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-2); font-size: var(--text-sm); }
+.sick-checks li { line-height: 1.5; }
 .ui-sub { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-3); line-height: 1.5; }
 .ui-lede { font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-4); line-height: 1.6; }
 .ui-body { font-size: var(--text-sm); color: var(--text); }

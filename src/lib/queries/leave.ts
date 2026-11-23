@@ -141,6 +141,17 @@ export async function getSickNoteUrl(leaveId: string) {
   return { ok: true, url: data.signedUrl };
 }
 
+// ── MANAGER: tick that the electronic sick note (eAU) was retrieved from the health insurer ──
+// Database checks manager + branch + sick leave (set_eau_confirmed, migration 20261123090000).
+export async function setEauConfirmed(leaveId: string, value: boolean) {
+  const { supabase, user } = await getMe();
+  if (!user) return { ok: false, error: "Not logged in." };
+  if (typeof leaveId !== "string" || !/^[0-9a-f-]{36}$/i.test(leaveId) || typeof value !== "boolean") return { ok: false, error: "Invalid request." };
+  const { error } = await supabase.rpc("set_eau_confirmed" as never, { p_id: leaveId, p_value: value } as never);
+  if (error) return { ok: false, error: error.code === "42501" ? "Not found or no access." : error.message };
+  return { ok: true };
+}
+
 // ── MANAGER: all pending items (leave + swaps) for the branch ──
 export async function getPendingApprovals() {
   const { supabase, user, branchId, profile } = await getMe();

@@ -13,6 +13,7 @@ import { toast } from "@/components/Toast";
 import { CardSkeleton } from "@/components/Skeleton";
 import { PageHeader,  Field, Stat, StatGrid } from "@/components/ui";
 import DatevExport from "@/components/DatevExport";
+import SickPayChecks from "@/components/SickPayChecks";
 import PayslipUpload from "@/components/PayslipUpload";
 import PayrollPrecheck from "@/components/PayrollPrecheck";
 
@@ -77,9 +78,9 @@ export default function PayrollExportPage() {
   // Shared export matrix
   function matrix() {
     const header = [t("pay.cCode"), t("pay.cName"), t("pay.cTeam"), t("pay.cShifts"), t("pay.cRegular"), t("pay.cOvertime"),
-      t("pay.cWeekend"), t("pay.cHoliday"), t("pay.cNight"), t("pay.cBreak"), t("pay.cPaid"), t("pay.cWage"), t("pay.cGross")];
-    const body = rows.map((r) => [r.code, r.name, r.team, r.shifts, r.regularH, r.overtimeH, r.weekendH, r.holidayH, r.nightH, r.breakH, r.paidH, r.wage ?? (r.rates?.length > 1 ? r.rates.map((v: any) => `${v.wage} EUR/h: ${v.paidMin} min`).join("; ") : ""), r.gross ?? ""]);
-    const totalRow = ["", t("pay.cTotal"), "", "", totals.regularH, totals.overtimeH, totals.weekendH, totals.holidayH, totals.nightH, totals.breakH, totals.paidH, "", totals.gross];
+      t("pay.cWeekend"), t("pay.cHoliday"), t("pay.cNight"), t("pay.cBreak"), t("pay.cPaid"), t("pay.cSickDays"), t("pay.cSick"), t("pay.cSickNight"), t("pay.cSickSunday"), t("pay.cSickHoliday"), t("pay.cSickPay"), t("pay.cWage"), t("pay.cGross")];
+    const body = rows.map((r) => [r.code, r.name, r.team, r.shifts, r.regularH, r.overtimeH, r.weekendH, r.holidayH, r.nightH, r.breakH, r.paidH, r.sickDays ?? 0, r.sickH ?? 0, r.sickNightH ?? 0, r.sickSundayH ?? 0, r.sickHolidayH ?? 0, r.sickPay ?? "", r.wage ?? (r.rates?.length > 1 ? r.rates.map((v: any) => `${v.wage} EUR/h: ${v.paidMin} min`).join("; ") : ""), r.gross ?? ""]);
+    const totalRow = ["", t("pay.cTotal"), "", "", totals.regularH, totals.overtimeH, totals.weekendH, totals.holidayH, totals.nightH, totals.breakH, totals.paidH, "", totals.sickH ?? 0, "", "", "", "", "", totals.gross];
     return { header, body, totalRow };
   }
 
@@ -197,10 +198,11 @@ export default function PayrollExportPage() {
 
           <div className="table-scroll" role="region" aria-label={t("pay.reportTitle")} tabIndex={0}>
             <table className="data-table">
-              <thead><tr><th scope="col" className="ui-sticky-col">{t("pay.cName")}</th>{["cShifts", "cPaid", "cRegular", "cOvertime", "cBreak", "cWeekend", "cHoliday", "cNight", "cWage", "cGross"].map(key => <th key={key} scope="col" className="numeric">{t(`pay.${key}`)}</th>)}</tr></thead>
+              <thead><tr><th scope="col" className="ui-sticky-col">{t("pay.cName")}</th>{["cShifts", "cPaid", "cRegular", "cOvertime", "cBreak", "cWeekend", "cHoliday", "cNight", "cSick", "cSickPay", "cWage", "cGross"].map(key => <th key={key} scope="col" className="numeric">{t(`pay.${key}`)}</th>)}</tr></thead>
               <tbody>{rows.map(r => <tr key={r.userId || r.code || r.name}>
                 <th scope="row" className="ui-sticky-col">{r.name}<div className="muted">{r.code} · {r.team}</div>{r.invalidShifts > 0 && <div><Link href="/attendance-hub">{t("pay.invalidShifts", { count: r.invalidShifts })}</Link></div>}</th>
-                {[r.shifts, r.paidH, r.regularH, r.overtimeH, r.breakH, r.weekendH, r.holidayH, r.nightH].map((value, i) => <td key={i} className="numeric">{value}</td>)}
+                {[r.shifts, r.paidH, r.regularH, r.overtimeH, r.breakH, r.weekendH, r.holidayH, r.nightH, r.sickH ?? 0].map((value, i) => <td key={i} className="numeric">{value}</td>)}
+                <td className="numeric">{r.sickDays ? eur(r.sickPay) : "—"}</td>
                 <td className="numeric">{r.wage == null ? r.gross != null && r.rates?.length > 1 ? r.rates.map((v: any) => eur(v.wage)).join(" / ") : <Link href="/labor">{t("pay.setWage")}</Link> : eur(r.wage)}</td>
                 <td className="numeric fw-7">{eur(r.gross)}</td>
               </tr>)}</tbody>
@@ -213,6 +215,7 @@ export default function PayrollExportPage() {
             <button onClick={downloadExcel} className="btn-secondary">{t("pay.exportExcel")}</button>
             <button onClick={payrollReport} className="btn-secondary">{t("pay.exportReport")}</button>
           </div>
+          <SickPayChecks rows={rows} frozen={run.status === "approved"} onChanged={load} />
           <DatevExport month={month} rows={rows} approved={run.status === "approved"} />
           <PayslipUpload month={month} people={rows} />
           <div className="ui-note">{t("pay.overlapNote")}</div>

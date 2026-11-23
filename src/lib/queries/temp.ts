@@ -17,25 +17,33 @@ export async function getTempUnits() {
     .from("temp_units").select("*").eq("branch_id", branchId).eq("is_active", true).order("sort").order("name");
 
   const { data: todayLogs } = await supabase
-    .from("temp_logs").select("unit_id, temp, in_range, recorded_at, recorded_by_name")
+    .from("temp_logs").select("unit_id, temp, in_range, recorded_at, recorded_by_name, slot")
     .eq("branch_id", branchId).eq("work_date", today).order("recorded_at", { ascending: false });
 
   const latest: Record<string, any> = {};
-  const opening = new Set<string>(), closing = new Set<string>();
+  // In-range reading per unit and check: the check is done, no second entry (re-check only after out of range).
+  const done: Record<Slot, Record<string, any>> = { opening: {}, closing: {} };
+  const any: Record<Slot, Set<string>> = { opening: new Set(), closing: new Set() };
   for (const l of todayLogs || []) {
     if (!latest[l.unit_id]) latest[l.unit_id] = l; // first seen = latest (desc order)
-    (isClosing(l.recorded_at) ? closing : opening).add(l.unit_id);
+    const sl = slotOf(l);
+    any[sl].add(l.unit_id);
+    if (l.in_range && !done[sl][l.unit_id]) done[sl][l.unit_id] = l;
   }
 
   const enriched = (units || []).map((u: any) => ({
     ...u,
-    opening: opening.has(u.id), closing: closing.has(u.id),
-    latest: latest[u.id] || null,
+    opening: any.opening.has(u.id), closing: any.closing.has(u.id),
+    latest: latest[u.id] || null, done: { opening: done.opening[u.id] || null, closing: done.closing[u.id] || null },
   }));
   return { ok: true, units: enriched, isManager: isManager(profile?.role), closingNow: isClosing(new Date().toISOString()) };
 }
 
-// Two checks a day: before 15:00 Berlin = opening, from 15:00 = closing (same rule as the day close).
+type Slot = "opening" | "closing";
+// The employee picks Opening or Closing (temp_logs.slot); rows without one fall back to the time rule.
+const slotOf = (l: { slot?: string | null; recorded_at: string }): Slot => (l.slot === "closing" || l.slot === "opening" ? l.slot : isClosing(l.recorded_at) ? "closing" : "opening");
+
+// Default check for "now": before 15:00 Berlin = opening, from 15:00 = closing.
 function isClosing(iso: string) {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Berlin", hour: "2-digit", hour12: false }).format(new Date(iso))) >= 15;
 }
@@ -63,9 +71,10 @@ export async function removeTempUnit(id: string) {
 }
 
 // ── Record a reading. Out-of-range requires a corrective action. ──
-export async function logTemp(unitId: string, temp: number, note: string, correctiveAction: string) {
+export async function logTemp(unitId: string, temp: number, note: string, correctiveAction: string, slot: Slot) {
   const { supabase, user, branchId, profile } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
+  if (slot !== "opening" && slot !== "closing") return { ok: false, error: "Pick Opening or Closing." };
   if (!unitId || temp === null || temp === undefined || Number.isNaN(temp)) return { ok: false, error: "Enter a temperature." };
 
   const { data: unit } = await supabase
@@ -77,10 +86,18 @@ export async function logTemp(unitId: string, temp: number, note: string, correc
     return { ok: false, error: "Out of range — please record a corrective action.", needsAction: true };
   }
 
+  // One check per unit per slot (opening / closing). A second reading is only allowed while the slot has no
+  // in-range reading yet, i.e. a re-check after an out-of-range reading and its corrective action.
+  // ponytail: app-level check; two phones saving within the same second could still both pass. DB unique index if that ever happens.
+  const { data: slotLogs } = await supabase.from("temp_logs").select("recorded_at, recorded_by_name, slot")
+    .eq("unit_id", unitId).eq("work_date", berlinToday()).eq("in_range", true);
+  const done = (slotLogs || []).find((l: any) => slotOf(l) === slot);
+  if (done) return { ok: false, error: "This check is already recorded.", alreadyDone: true };
+
   const { error } = await supabase.from("temp_logs").insert({
     branch_id: branchId, unit_id: unitId, temp, in_range: inRange,
     note: note || null, corrective_action: !inRange ? correctiveAction : null,
-    recorded_by: user.id, recorded_by_name: profile?.full_name || null, work_date: berlinToday(),
+    recorded_by: user.id, recorded_by_name: profile?.full_name || null, work_date: berlinToday(), slot,
   });
   if (error) return { ok: false, error: error.message };
   return { ok: true, inRange };
@@ -104,15 +121,21 @@ export async function getTempSummary() {
   const { supabase, user, branchId } = await getMe();
   if (!user) return { ok: false, error: "Not logged in." };
   const today = berlinToday();
-  const { data: units } = await supabase
-    .from("temp_units").select("id").eq("branch_id", branchId).eq("is_active", true);
-  const { data: logs } = await supabase
-    .from("temp_logs").select("unit_id, in_range, recorded_at").eq("branch_id", branchId).eq("work_date", today);
+  const { data: units, error: uErr } = await supabase
+    .from("temp_units").select("id, name").eq("branch_id", branchId).eq("is_active", true);
+  const { data: logs, error: lErr } = await supabase
+    .from("temp_logs").select("unit_id, in_range, recorded_at, slot, temp").eq("branch_id", branchId).eq("work_date", today).order("recorded_at");
+  if (uErr || lErr) return { ok: false, error: (uErr || lErr)!.message };
 
   const active = new Set((units || []).map((u: any) => u.id));
-  const checks = new Set((logs || []).filter((l: any) => active.has(l.unit_id)).map((l: any) => `${l.unit_id}|${isClosing(l.recorded_at) ? "c" : "o"}`));
+  const checks = new Set((logs || []).filter((l: any) => active.has(l.unit_id)).map((l: any) => `${l.unit_id}|${slotOf(l)}`));
   const breaches = (logs || []).filter((l: any) => !l.in_range).length;
   const total = active.size * 2; // opening + closing per unit
+  // Still out of range = the unit's latest reading today is out of range (a good re-check clears it).
+  const latest = new Map<string, any>(); for (const l of logs || []) if (active.has(l.unit_id)) latest.set(l.unit_id, l);
+  const openBreaches = [...latest.values()].filter((l) => !l.in_range)
+    .map((l) => ({ name: (units || []).find((u: any) => u.id === l.unit_id)?.name || "", temp: Number(l.temp) }));
+  const missing = (slot: "opening" | "closing") => [...active].filter((id) => !checks.has(`${id}|${slot}`)).length;
   return {
     ok: true,
     totalUnits: active.size,
@@ -120,5 +143,6 @@ export async function getTempSummary() {
     doneChecks: checks.size,
     pending: Math.max(0, total - checks.size),
     breachesToday: breaches,
+    openBreaches, openingMissing: missing("opening"), closingMissing: missing("closing"),
   };
 }

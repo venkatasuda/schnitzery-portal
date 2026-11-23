@@ -1648,6 +1648,7 @@ export type Database = {
           recorded_at: string
           recorded_by: string | null
           recorded_by_name: string | null
+          slot: string
           temp: number
           unit_id: string
           work_date: string
@@ -1661,6 +1662,7 @@ export type Database = {
           recorded_at?: string
           recorded_by?: string | null
           recorded_by_name?: string | null
+          slot?: string
           temp: number
           unit_id: string
           work_date: string
@@ -1674,6 +1676,7 @@ export type Database = {
           recorded_at?: string
           recorded_by?: string | null
           recorded_by_name?: string | null
+          slot?: string
           temp?: number
           unit_id?: string
           work_date?: string

@@ -34,6 +34,7 @@ const B = "00000000-0000-0000-0000-00000000000b", MGR = "00000000-0000-0000-0000
     insert into public.users(id, role, branch_id, full_name) values ('${MGR}', 'manager', '${B}', 'Mia'), ('${LEAD}', 'staff', '${B}', 'Lea'), ('${ANA}', 'staff', '${B}', 'Ana'), ('${OFF}', 'staff', '${B}', 'Off-duty lead');
     insert into public.shift_leaders values ('${B}', '${LEAD}'), ('${B}', '${OFF}');`);
   const m = fs.readFileSync("supabase/migrations/20261111160000_ops_reminders.sql", "utf8"); await db.exec(m); await db.exec(m);
+  const sm = fs.readFileSync("supabase/migrations/20261118090000_temp_check_slot.sql", "utf8"); await db.exec(sm); await db.exec(sm); // reminders read temp_logs.slot
   const def = (await db.query("select pg_get_functiondef('public.notification_sweep()'::regprocedure) d")).rows[0].d;
   assert.equal(def.split("perform private.ops_reminders();").length - 1, 1, "Reminders call added exactly once");
   assert.equal(def.split("fri_sat_start is not null then fri_sat_start").length - 1, 2, "Both shift-time lookups use Fri/Sat times");
